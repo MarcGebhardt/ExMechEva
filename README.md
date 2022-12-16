@@ -1,2 +1,2 @@
 # ExMechEva
-Evaluation of Experimental Mechanics
+Evaluation of data determined by means of experimental mechanics
