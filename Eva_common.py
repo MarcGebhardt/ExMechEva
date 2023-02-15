@@ -2852,111 +2852,7 @@ def Geo_curve_TBC(func, params, length, outopt='signed_curvature'):
     r=TP_radius(pts, outopt=outopt)
     return r
 
-#%% Plotting
-def plt_handle_suffix(fig, path='foo', tight=True, show=True, 
-                      save=True, s_types=["pdf","png"], 
-                      clear=True, close=True):
-    """
-    Handler for end of plotting procedure.
 
-    Parameters
-    ----------
-    fig : matplotlib.pyplot.figure
-        Figure instance.
-    path : str, optional
-        Save path. The default is 'foo'.
-    tight : bool, optional
-        Tight the layout. The default is True.
-    show : bool, optional
-        Show figure. The default is True.
-    save : bool, optional
-        Save figure. The default is True.
-    s_types : list of str, optional
-        Types in which the figure is saved. The default is ["pdf","png"].
-    clear : bool, optional
-        Clear figure instance. The default is True.
-    close : bool, optional
-        Close figure window. The default is True.
-
-    Returns
-    -------
-    None.
-
-    """
-    if tight: fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    if show:  plt.show()
-    if save:
-        for st in s_types:
-            # plt.savefig(path+'.'+st)
-            fig.savefig(path+'.'+st)
-    if clear: fig.clf()
-    if close: plt.close(fig)
-
-def tick_label_renamer(ax, renamer={}, axis='both'):
-    def get_ren_label(ax, renamer, axis):
-        if axis=='x':
-            label = ax.get_xticklabels()
-        elif axis=='y':
-            label = ax.get_yticklabels()
-        else:
-            raise NotImplementedError('Axis %s not implemented!'%axis)
-        label = pd.Series([item.get_text() for item in label])
-        label = label.replace(renamer).values
-        if axis=='x':
-            label = ax.set_xticklabels(label)
-        elif axis=='y':
-            label = ax.set_yticklabels(label)
-        else:
-            raise NotImplementedError('Axis %s not implemented!'%axis)
-    if axis=='both':
-        get_ren_label(ax=ax, renamer=renamer, axis='x')
-        get_ren_label(ax=ax, renamer=renamer, axis='y')
-    elif axis=='x':
-        get_ren_label(ax=ax, renamer=renamer, axis='x')
-    elif axis=='y':
-        get_ren_label(ax=ax, renamer=renamer, axis='y')
-    else:
-        raise NotImplementedError('Axis %s not implemented!'%axis)
-        
-def tick_legend_renamer(ax, renamer={}, title=''):
-    # legend = ax.axes.flat[0].get_legend()
-    legend = ax.axes.get_legend()
-    if title != '':
-        legend.set_title(title)
-    for i in legend.texts:
-        i.set_text(renamer[i.get_text()])
-    
-def tick_label_inserter(ax, pos=0, ins='', axis='both'):
-    def get_ren_label(ax, pos, ins, axis):
-        if axis=='x':
-            label = ax.get_xticklabels()
-        elif axis=='y':
-            label = ax.get_yticklabels()
-        else:
-            raise NotImplementedError('Axis %s not implemented!'%axis)
-        label = pd.Series([item.get_text() for item in label])
-        if pos == 0:
-            label = label.apply(lambda x: '{}{}'.format(ins,x))
-        elif pos == -1:
-            label = label.apply(lambda x: '{}{}'.format(x,ins))
-        else:
-            label = label.apply(lambda x: '{}{}{}'.format(x[:pos],ins,x[pos:]))
-        label = label.values
-        if axis=='x':
-            label = ax.set_xticklabels(label)
-        elif axis=='y':
-            label = ax.set_yticklabels(label)
-        else:
-            raise NotImplementedError('Axis %s not implemented!'%axis)
-    if axis=='both':
-        get_ren_label(ax=ax, pos=pos, ins=ins, axis='x')
-        get_ren_label(ax=ax, pos=pos, ins=ins, axis='y')
-    elif axis=='x':
-        get_ren_label(ax=ax, pos=pos, ins=ins, axis='x')
-    elif axis=='y':
-        get_ren_label(ax=ax, pos=pos, ins=ins, axis='y')
-    else:
-        raise NotImplementedError('Axis %s not implemented!'%axis)  
 #%% Statistics
 
 def stat_outliers(data, option='IQR', span=1.5,
@@ -3145,6 +3041,14 @@ def confidence_interval(data, confidence=0.95, method="Seaborn_Bootstrap",
         raise NotImplementedError("Method %s not implemented!"%method)
     return CI
 
+def agg_add_ci(pdo, agg_funcs=['mean','std','min','max']):
+    """Adds confidence interval to pandas aggregate function"""
+    a=pdo.agg(agg_funcs)
+    a1=pdo.agg(confidence_interval)
+    a1.index=['ci_min','ci_max']
+    a=pd.concat([a,a1])
+    return a
+
 def group_Anova(df, groupby, ano_Var, group_str=None, ano_str=None, alpha=0.05):
     ano_data=pd.Series([],dtype='O')
     j=0
@@ -3280,6 +3184,8 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
                 stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
             elif mcomp=='mannwhitneyu':
                 stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
+            elif mcomp=='wilcoxon':
+                stats_test  = wraps(partial(stats.wilcoxon, **mkws))(stats.wilcoxon)
             else:
                 raise NotImplementedError('Method %s for multi comparison not implemented!'%mcomp)
             t = mcp.allpairtest(stats_test, alpha=alpha*Ffwalpha, method=mpadj)[0]
@@ -3301,7 +3207,8 @@ def MComp_interpreter(T_Result):
     else:
         t=pd.DataFrame(T_Result.summary().data[1:], columns=T_Result.summary().data[0])
     df_True = t.loc[t.reject==True,:]
-    letters = list(string.ascii_lowercase)
+    # letters = list(string.ascii_lowercase)
+    letters = list(string.ascii_lowercase)+list(string.ascii_uppercase) # List out of index
     n = 0
     txt=''
     
@@ -3416,3 +3323,162 @@ def MComp_interpreter(T_Result):
     
     dict2 = dict(sorted(dictionary.items())) # the final output
     return dict2, txt
+
+#%% Plotting
+def plt_handle_suffix(fig, path='foo', tight=True, show=True, 
+                      save=True, s_types=["pdf","png"], 
+                      clear=True, close=True):
+    """
+    Handler for end of plotting procedure.
+
+    Parameters
+    ----------
+    fig : matplotlib.pyplot.figure
+        Figure instance.
+    path : str, optional
+        Save path. The default is 'foo'.
+    tight : bool, optional
+        Tight the layout. The default is True.
+    show : bool, optional
+        Show figure. The default is True.
+    save : bool, optional
+        Save figure. The default is True.
+    s_types : list of str, optional
+        Types in which the figure is saved. The default is ["pdf","png"].
+    clear : bool, optional
+        Clear figure instance. The default is True.
+    close : bool, optional
+        Close figure window. The default is True.
+
+    Returns
+    -------
+    None.
+
+    """
+    if tight: fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    if show:  plt.show()
+    if save:
+        for st in s_types:
+            # plt.savefig(path+'.'+st)
+            fig.savefig(path+'.'+st)
+    if clear: fig.clf()
+    if close: plt.close(fig)
+
+def tick_label_renamer(ax, renamer={}, axis='both'):
+    def get_ren_label(ax, renamer, axis):
+        if axis=='x':
+            label = ax.get_xticklabels()
+        elif axis=='y':
+            label = ax.get_yticklabels()
+        else:
+            raise NotImplementedError('Axis %s not implemented!'%axis)
+        label = pd.Series([item.get_text() for item in label])
+        label = label.replace(renamer).values
+        if axis=='x':
+            label = ax.set_xticklabels(label)
+        elif axis=='y':
+            label = ax.set_yticklabels(label)
+        else:
+            raise NotImplementedError('Axis %s not implemented!'%axis)
+    if axis=='both':
+        get_ren_label(ax=ax, renamer=renamer, axis='x')
+        get_ren_label(ax=ax, renamer=renamer, axis='y')
+    elif axis=='x':
+        get_ren_label(ax=ax, renamer=renamer, axis='x')
+    elif axis=='y':
+        get_ren_label(ax=ax, renamer=renamer, axis='y')
+    else:
+        raise NotImplementedError('Axis %s not implemented!'%axis)
+        
+def tick_legend_renamer(ax, renamer={}, title=''):
+    # legend = ax.axes.flat[0].get_legend()
+    legend = ax.axes.get_legend()
+    if title != '':
+        legend.set_title(title)
+    for i in legend.texts:
+        i.set_text(renamer[i.get_text()])
+    
+def tick_label_inserter(ax, pos=0, ins='', axis='both'):
+    def get_ren_label(ax, pos, ins, axis):
+        if axis=='x':
+            label = ax.get_xticklabels()
+        elif axis=='y':
+            label = ax.get_yticklabels()
+        else:
+            raise NotImplementedError('Axis %s not implemented!'%axis)
+        label = pd.Series([item.get_text() for item in label])
+        if pos == 0:
+            label = label.apply(lambda x: '{}{}'.format(ins,x))
+        elif pos == -1:
+            label = label.apply(lambda x: '{}{}'.format(x,ins))
+        else:
+            label = label.apply(lambda x: '{}{}{}'.format(x[:pos],ins,x[pos:]))
+        label = label.values
+        if axis=='x':
+            label = ax.set_xticklabels(label)
+        elif axis=='y':
+            label = ax.set_yticklabels(label)
+        else:
+            raise NotImplementedError('Axis %s not implemented!'%axis)
+    if axis=='both':
+        get_ren_label(ax=ax, pos=pos, ins=ins, axis='x')
+        get_ren_label(ax=ax, pos=pos, ins=ins, axis='y')
+    elif axis=='x':
+        get_ren_label(ax=ax, pos=pos, ins=ins, axis='x')
+    elif axis=='y':
+        get_ren_label(ax=ax, pos=pos, ins=ins, axis='y')
+    else:
+        raise NotImplementedError('Axis %s not implemented!'%axis)
+        
+#%%% Seaborn extra
+import seaborn as sns
+def sns_pointplot_MMeb(ax, data, x,y, hue=None,
+                       dodge=0.2, join=False, palette=None,
+                       markers=['o','P'], scale=1, barsabove=True, capsize=4,
+                       controlout=False):
+    """Generate Pointplot with errorbars marking minimum and maximum instead of CI."""
+    axt = sns.pointplot(data=data, 
+                         x=x, y=y, hue=hue,
+                         ax=ax, join=join, dodge=dodge, legend=False,scale=scale,
+                         markers=markers, palette=palette,
+                         ci=None, errwidth=1, capsize=.1)
+    if hue is None:
+        # erragg = data.groupby(x).agg(['mean','min','max'])[y]
+        erragg = data.groupby(x).agg(['mean','min','max'],sort=False)[y]
+    else:
+        # erragg = data.groupby([hue,x]).agg(['mean','min','max'])[y]
+        erragg = data.groupby([hue,x]).agg(['mean','min','max'],sort=False)[y]
+    # very qnd!!! (sonst falsch zugeordnet, prüfen!!!)
+    if hue is not None:
+        orgind=[data[hue].drop_duplicates().to_list(),data[x].drop_duplicates().to_list()]
+        erragg=erragg.sort_index().loc(axis=0)[pd.MultiIndex.from_product(orgind)]
+        
+    errors=erragg.rename({'mean':'M','min':'I','max':'A'},axis=1)
+    errors=errors.eval('''Min = M-I
+                          Max = A-M''').loc(axis=1)[['Min','Max']].T
+    i=0
+    for point_pair in axt.collections:
+        if hue is None:
+            if i<1:
+                i+=1
+                colors=point_pair.get_facecolor()[0]
+                x_coords = []
+                y_coords = []
+                for x, y in point_pair.get_offsets():
+                    x_coords.append(x)
+                    y_coords.append(y)
+                ax.errorbar(x_coords, y_coords, yerr=errors.values,
+                            c=colors, fmt=' ', zorder=-1, barsabove=barsabove, capsize=capsize)
+        elif (i<=len(errors.columns.get_level_values(0).drop_duplicates())-1):
+            errcol=errors.columns.get_level_values(0).drop_duplicates()[i]
+            i+=1
+            colors=point_pair.get_facecolor()[0]
+            x_coords = []
+            y_coords = []
+            for x, y in point_pair.get_offsets():
+                x_coords.append(x)
+                y_coords.append(y)
+            ax.errorbar(x_coords, y_coords, yerr=errors.loc(axis=1)[errcol].values,
+                        c=colors, fmt=' ', zorder=-1, barsabove=barsabove, capsize=capsize)
+    if controlout:
+        return erragg
