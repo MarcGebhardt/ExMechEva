@@ -21,6 +21,8 @@ ToDo:
     - Ende Plot variabel (wenn kein B, dann E?)
     - stdn und stdnwoso sollte in coefficient of variation umbenannt werden (siehe Eva_common)
     - Eventuell entfernen rel_steps bei Methode D
+    - eu_opt-Ausgabe anpassen, wenn NaN
+    - 102B produziert H,H statt H,U in messu output!
 Changelog:
     - 21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)
     - 21-10-25: Ende Auswertung erst nach maximaler Kraft
@@ -3792,7 +3794,7 @@ def main():
     
     if option == 'single':
         ser='S2'
-        des='MMS205'
+        des='MMS212'
         mfile_add = 'G' #Suffix of variants of measurements (p.E. diffferent moistures)
 
         prot_dtyp={'OPT_File_Meas': str, 'OPT_File_DIC': str}
