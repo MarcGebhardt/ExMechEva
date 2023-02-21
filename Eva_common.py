@@ -3056,7 +3056,8 @@ def group_Anova(df, groupby, ano_Var, group_str=None, ano_str=None, alpha=0.05):
         ano_data[j]=df.loc[df[groupby]==i] #Achtung: keine statistics-Abfrage!
         j+=1
     ano_df1=df[groupby].drop_duplicates().count()-1 #Freiheitsgrad 1 = Gruppen - 1
-    ano_df2=df.count()[0]-(ano_df1+1) #Freiheitsgrad 2 = Testpersonen - Gruppen
+    # ano_df2=df.count()[0]-(ano_df1+1) #Freiheitsgrad 2 = Testpersonen - Gruppen
+    ano_df2=df[ano_Var].count()-(ano_df1+1) #Freiheitsgrad 2 = Testpersonen - Gruppen #23-02-20: auf Var bezogen
     
     if ano_str is None:
         ano_str = ano_Var
@@ -3147,7 +3148,8 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
         ano_data[j]=df.loc[df[groupby]==i] #Achtung: keine statistics-Abfrage!
         j+=1
     ano_df1=df[groupby].drop_duplicates().count()-1 #Freiheitsgrad 1 = Gruppen - 1
-    ano_df2=df.count()[0]-(ano_df1+1) #Freiheitsgrad 2 = Testpersonen - Gruppen
+    # ano_df2=df.count()[0]-(ano_df1+1) #Freiheitsgrad 2 = Testpersonen - Gruppen
+    ano_df2=df[ano_Var].count()-(ano_df1+1) #Freiheitsgrad 2 = Testpersonen - Gruppen #23-02-20: auf Var bezogen
     if ano_str is None:
         ano_str = ano_Var
     if group_str is None:

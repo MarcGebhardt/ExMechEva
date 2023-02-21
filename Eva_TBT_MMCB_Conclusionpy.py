@@ -235,7 +235,11 @@ dft['DMWtoA']=(dft.Mass-tmp)/tmp
 ## Wassergehaltsänderung org als df
 # dft_A=dft.loc(axis=0)[:,'G'][['Mass_org']]
 # dft_A.columns=['Mass']
-dft_A=dft.loc(axis=0)[:,'G'][['Series','Donor','Side_LR','Side_pd','Mass_org']].copy(deep=True)
+# dft_A=dft.loc(axis=0)[:,'G'][['Series','Donor','Side_LR','Side_pd','Mass_org']].copy(deep=True)
+dft_A=dft.loc(axis=0)[:,'G'][['Designation','Series','Donor','Origin',
+                              'Side_LR','Side_pd','Mass_org',
+                              'thickness_1','thickness_2','thickness_3',
+                              'width_1','width_2','width_3','Length']].copy(deep=True)
 dft_A.columns=dft_A.columns.str.replace('Mass_org','Mass')
 dft_A.index.set_levels(dft_A.index.get_level_values(1).str.replace('G','A'), 
                        level=1, inplace=True, verify_integrity=False)
@@ -254,8 +258,10 @@ tmp2=(dft[['width_1','width_2','width_3']].mean(axis=1)*dft[['thickness_1','thic
 tmp['VolTot']=tmp['Mass']*0 + tmp2 # Volumen aus Geometrie
 tmp['WC_vol']=tmp['VolW']/tmp['VolTot']
 
-dft=pd.concat([dft,tmp[['WC_gra','WC_vol']].query("Variant != 'A'")],axis=1)
-dft_A=pd.concat([dft_A,tmp[['WC_gra','WC_vol']].query("Variant == 'A'")],axis=1)
+# dft=pd.concat([dft,tmp[['WC_gra','WC_vol']].query("Variant != 'A'")],axis=1)
+# dft_A=pd.concat([dft_A,tmp[['WC_gra','WC_vol']].query("Variant == 'A'")],axis=1)
+dft=pd.concat([dft,tmp[['VolTot','MassW','WC_gra','WC_vol']].query("Variant != 'A'")],axis=1)
+dft_A=pd.concat([dft_A,tmp[['VolTot','MassW','WC_gra','WC_vol']].query("Variant == 'A'")],axis=1)
 dft[['WC_gra_toA','WC_vol_toA']]=dft[['WC_gra','WC_vol']]-dft_A[['WC_gra','WC_vol']].droplevel(1)
 dft[['WC_gra_rDA','WC_vol_rDA']]=relDev(dft[['WC_gra','WC_vol']],dft_A[['WC_gra','WC_vol']].droplevel(1))
 
@@ -442,6 +448,21 @@ t2=t2.reset_index()
 # t2['Numsch']=t2.Designation.apply(lambda x: '{0}'.format(x[-3:]))
 t2=t2.sort_values(['Designation','Variant'])
 
+
+dft_comb=pd.concat([dft,dft_A],axis=0).sort_index()
+dft_comb=pd.concat([dft_comb,cEEm_eva,cH_eva],axis=1)
+
+#%% Data-Export
+rel_col_com=['Designation','Series','Donor','Origin','Side_LR','Side_pd']
+rel_col_geo=['thickness_1','thickness_2','thickness_3',
+             'width_1','width_2','width_3','Length']
+rel_col_add=['VolTot','Mass','MassW','WC_gra','WC_vol',
+             'WC_gra_rDA','WC_vol_rDA']
+rel_col_mec=['statistics','fu','eu_opt',
+             'lu_F_mean','DEFlutoB','DEFlutoG','lu_F_ratio',
+             'Hyst_AP','Hyst_APn','DHAPntoB','DHAPntoG']
+dft_comb_rel = dft_comb[rel_col_com+rel_col_geo+rel_col_add+rel_col_mec]
+dft_comb_rel.to_excel(out_full+'.xlsx', sheet_name='Conclusion')
 
 #%%Logging - descriptive
 
@@ -771,6 +792,7 @@ tmp.groupby('Variant')['DMWtoG'].apply(stat_agg,**{'sfunc':stats.shapiro})
 
 
 #%%% Gruppenanalyse
+#%%%% Varianzanalyse Varianten
 Evac.MG_strlog("\n "+"="*100, log_mg, 1, printopt=False)
 Evac.MG_strlog("\n Variants: ", log_mg, 1, printopt=False)
 Evac.MG_strlog("\n  %s water content based on dry mass vs. variant:"%mpop,
@@ -878,25 +900,89 @@ Evac.MG_strlog(Evac.str_indent("WC_vol C equal B: %s"%str(tmp2),6),
                log_mg,1, printopt=False)
 
 
-
+#%%%% Varianzanalysen Spender
 Evac.MG_strlog("\n\n "+"="*100, log_mg, 1, printopt=False)
 Evac.MG_strlog("\n Donordata: ", log_mg, 1, printopt=False)
 csdoda=pd.merge(left=pd.concat([cs,cEEm_eva],axis=1),right=doda,
                 left_on='Donor',right_index=True).reset_index()
-Evac.MG_strlog("\n  %s water content (org) vs. donor:"%mpop,
+# Evac.MG_strlog("\n  %s water content (org) vs. donor:"%mpop,
+#                log_mg, 1, printopt=False)
+# txt,_,T = Evac.group_ANOVA_MComp(df=csdoda[csdoda.Variant=='B'], groupby='Donor', 
+#                                  ano_Var='DMWorg',
+#                                  group_str='Donor', ano_str='DMWorg',
+#                                  mpop=mpop, alpha=alpha,  
+#                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
+# Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+
+# Evac.MG_strlog("\n  %s water loss vs. donor:"%mpop,
+#                log_mg, 1, printopt=False)
+# txt,_,T = Evac.group_ANOVA_MComp(df=csdoda[csdoda.Variant=='B'], groupby='Donor', 
+#                                  ano_Var='DMWtoG',
+#                                  group_str='Donor', ano_str='DMWBtoG',
+#                                  mpop=mpop, alpha=alpha,  
+#                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
+# Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+Evac.MG_strlog("\n  %s water content vs. donor:"%mpop,
                log_mg, 1, printopt=False)
-txt,_,T = Evac.group_ANOVA_MComp(df=csdoda[csdoda.Variant=='B'], groupby='Donor', 
-                                 ano_Var='DMWorg',
-                                 group_str='Donor', ano_str='DMWorg',
+txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'A'], groupby='Donor', 
+                                 ano_Var='WC_vol',
+                                 group_str='Donor', ano_str='A: WC',
+                                 mpop=mpop, alpha=alpha,  
+                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
+Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'B'], groupby='Donor', 
+                                 ano_Var='WC_vol',
+                                 group_str='Donor', ano_str='B: WC',
+                                 mpop=mpop, alpha=alpha,  
+                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
+Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'L'], groupby='Donor', 
+                                 ano_Var='WC_vol',
+                                 group_str='Donor', ano_str='L: WC',
                                  mpop=mpop, alpha=alpha,  
                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
 Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
 
-Evac.MG_strlog("\n  %s water loss vs. donor:"%mpop,
+
+Evac.MG_strlog("\n  %s deviation water content vs. donor:"%mpop,
                log_mg, 1, printopt=False)
-txt,_,T = Evac.group_ANOVA_MComp(df=csdoda[csdoda.Variant=='B'], groupby='Donor', 
-                                 ano_Var='DMWtoG',
-                                 group_str='Donor', ano_str='DMWBtoG',
+txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'B'], groupby='Donor', 
+                                 ano_Var='WC_vol_rDA',
+                                 group_str='Donor', ano_str='B: WC to fresh',
+                                 mpop=mpop, alpha=alpha,  
+                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
+Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'C'], groupby='Donor', 
+                                 ano_Var='WC_vol_rDA',
+                                 group_str='Donor', ano_str='C: WC to fresh',
+                                 mpop=mpop, alpha=alpha,  
+                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
+Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'L'], groupby='Donor', 
+                                 ano_Var='WC_vol_rDA',
+                                 group_str='Donor', ano_str='L: WC to fresh',
+                                 mpop=mpop, alpha=alpha,  
+                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
+Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+
+Evac.MG_strlog("\n  %s deviation Youngs Modulus vs. donor:"%mpop,
+               log_mg, 1, printopt=False)
+txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'G'], groupby='Donor', 
+                                 ano_Var='DEFlutoB',
+                                 group_str='Donor', ano_str='G: YM to saturated',
+                                 mpop=mpop, alpha=alpha,  
+                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
+Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'L'][['Donor','DEFlutoG']].dropna(axis=0), 
+                                 groupby='Donor', 
+                                 ano_Var='DEFlutoG',
+                                 group_str='Donor', ano_str='L: YM to dry (NaN dropped',
+                                 mpop=mpop, alpha=alpha,  
+                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
+Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'C'], groupby='Donor', 
+                                 ano_Var='DEFlutoB',
+                                 group_str='Donor', ano_str='C: YM to saturated',
                                  mpop=mpop, alpha=alpha,  
                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
 Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
@@ -1012,21 +1098,21 @@ def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
 
 Evac.MG_strlog("\n\n "+"="*100, log_mg, 1, printopt=False)
 Evac.MG_strlog("\n Repatability (Series dependence): ", log_mg, 1, printopt=False)
-dft_comb=pd.concat([dft,dft_A],axis=0).sort_index()
-dft_comb=pd.concat([dft_comb,cEEm_eva,cH_eva],axis=1)
 tmp=Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
                     group_sub=['A'],
                     ano_Var=['WC_vol'],
                     mcomp='mannwhitneyu', mkws={},
                     rel=False, rel_keys=[])
 tmp2=Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
-                    group_sub=['B','C','L'],
+                    # group_sub=['B','C','L'],
+                     group_sub=['B','C','D','E','F','H','I','J','K','L'],
                     ano_Var=['WC_vol','WC_vol_rDA'],
                     mcomp='mannwhitneyu', mkws={},
                     rel=False, rel_keys=[])
 tmp=pd.concat([tmp,tmp2],axis=0)
 tmp2=Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
-                     group_sub=['C','G','L'],
+                     # group_sub=['C','G','L'],
+                     group_sub=['C','D','E','F','G','H','I','J','K','L'],
                     ano_Var=['DEFlutoB','DHAPntoB'],
                     mcomp='mannwhitneyu', mkws={},
                     rel=False, rel_keys=[])
@@ -1034,6 +1120,80 @@ tmp=pd.concat([tmp,tmp2],axis=0)
 Evac.MG_strlog(Evac.str_indent(tmp.sort_index().to_string(),3),
                log_mg,1, printopt=False)
 
+def CD_rep(pdo, groupby='Series', var='DEFlutoB', 
+           det_met='SM-RRT', outtype='txt', tnform='{:.3e}'):
+    grsagg=pdo.groupby(groupby)[var].agg(['mean','std','count'])
+    grs_sumhrn=grsagg['count'].apply(lambda x: 1/(2*x)).sum()
+    grs_MD=grsagg['mean'].max()-grsagg['mean'].min()
+    
+    CDF= 1.96 * 2**0.5 # 2.8 only implemented for 95%-probability level (only two groups?)
+    if det_met=='SM-RRT': #https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf
+        allagg=pdo[var].agg(['mean','std','count'])
+        CD=CDF*allagg['std']*np.sqrt(grs_sumhrn)
+    elif det_met=='CV-DC': #https://flexikon.doccheck.com/de/Kritische_Differenz
+        allagg=pdo[var].agg(['max',Evac.coefficient_of_variation])
+        CD=abs(allagg['coefficient_of_variation']*CDF*allagg['max'])
+    elif det_met=='CV': #https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887
+        allagg=pdo[var].agg([Evac.coefficient_of_variation])
+        CD=abs(allagg['coefficient_of_variation'])*CDF
+    elif det_met=='SD': #https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1
+        allagg=pdo[var].agg(['std'])
+        CD=abs(allagg['std'])*CDF
+    else:
+        raise NotImplementedError("Method %s not implemented!"%det_met)
+        
+    # MD_l_CD=True if abs(grs_MD) < CD else False
+    MD_l_CD=False
+    t_grs_MD=tnform.format(grs_MD)
+    t_CD    =tnform.format(CD)
+    txt="{} >  {} -> Repeatability not verified!".format(t_grs_MD,t_CD,)
+    if abs(grs_MD) <= CD:
+        MD_l_CD=True
+        txt="{} <= {} -> Repeatability verified!".format(t_grs_MD,t_CD,)
+    
+    if outtype=='Ser_all':
+        out= pd.Series({'df_groups_agg':grsagg,'df_all_agg':allagg,
+                        'groups_MD':grs_MD, 'CD':CD, 'MDlCD':MD_l_CD})
+    elif outtype=='Tuple_all':
+        out=grsagg,allagg,grs_MD,CD,MD_l_CD
+    elif outtype=='txt':
+        out= txt
+    return out
+
+# det_met_CD_rep='SM-RRT'
+det_met_CD_rep='SD'
+Evac.MG_strlog("\n\n  - Critical Differences (Method:%s):"%det_met_CD_rep,
+               log_mg,1, printopt=False)
+Evac.MG_strlog("\n\n    - Water content:",
+               log_mg,1, printopt=False)
+for i in ['A','B','C','D','E','F','H','I','J','K','L']:
+    tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
+                        var='WC_vol', det_met=det_met_CD_rep, outtype='txt')
+    Evac.MG_strlog(Evac.str_indent(tmp,6),
+                   log_mg,1, printopt=False)
+Evac.MG_strlog("\n\n    - Relative deviation of water content to fresh:",
+               log_mg,1, printopt=False)
+for i in ['B','C','D','E','F','H','I','J','K','L']:
+    tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
+                        var='WC_vol_rDA', det_met=det_met_CD_rep,outtype='txt')
+    Evac.MG_strlog(Evac.str_indent(tmp,6),
+                   log_mg,1, printopt=False)
+Evac.MG_strlog("\n\n    - Relative deviation of YM to saturated:",
+               log_mg,1, printopt=False)
+# tmp='- G: '+CD_rep(dft_comb.loc(axis=0)[:,'G'], groupby='Series', 
+#                     var='DEFlutoB', det_met=det_met_CD_rep, outtype='txt')
+for i in ['C','D','E','F','H','I','J','K','L']:
+    tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
+                        var='DEFlutoB', det_met=det_met_CD_rep,outtype='txt')
+    Evac.MG_strlog(Evac.str_indent(tmp,6),
+                   log_mg,1, printopt=False)
+Evac.MG_strlog("\n\n    - Relative deviation of normed hysteresis area to saturated:",
+               log_mg,1, printopt=False)
+for i in ['C','D','E','F','H','I','J','K','L']:
+    tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
+                        var='DHAPntoB', det_met=det_met_CD_rep,outtype='txt')
+    Evac.MG_strlog(Evac.str_indent(tmp,6),
+                   log_mg,1, printopt=False)
 
 #%%% Plots
 
@@ -1426,6 +1586,63 @@ ax[0].set_xlabel('Influences')
 ax[0].set_ylabel('Influences')
 plt.show()
 
+
+tmp=dft_comb.loc(axis=0)[:,'A'][['thickness_1','thickness_2','thickness_3']].mean(axis=1).droplevel(1)
+tmp.name='t_mean'
+tmp2=dft_comb.loc(axis=0)[:,'A']['VolTot'].droplevel(1)
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,['A','G']][['Mass']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,'A'][['WC_vol']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,['B','C','L']][['WC_vol_rDA']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,['C','G','L']][['DEFlutoB']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,['C','G','L']][['DHAPntoB']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp_ren={'t_mean':r'$\overline{t}$','VolTot':r'$V_{total}$',
+         ('Mass','A'): r'$m_{fresh}$',('Mass','G'): r'$m_{dry}$',
+         ('WC_vol','A'): r'$\Phi_{vol,fresh}$',
+         ('WC_vol_rDA','B'):r'$D_{\Phi_{vol},B-fresh}$',
+         ('WC_vol_rDA','C'):r'$D_{\Phi_{vol},C-fresh}$',
+         ('WC_vol_rDA','L'):r'$D_{\Phi_{vol},L-fresh}$',
+         ('DEFlutoB','C'):r'$D_{E,C-sat}$',
+         ('DEFlutoB','G'):r'$D_{E,G-sat}$',
+         ('DEFlutoB','L'):r'$D_{E,L-sat}$',
+         ('DHAPntoB','C'):r'$D_{H_{n},C-sat}$',
+         ('DHAPntoB','G'):r'$D_{H_{n},G-sat}$',
+         ('DHAPntoB','L'):r'$D_{H_{n},L-sat}$'}
+fig, ax = plt.subplots(nrows=2, ncols=2, 
+                       gridspec_kw={'width_ratios': [29, 1],
+                                    'height_ratios': [1,1.4]},
+                       figsize = (6.3,3.54))
+tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',('Mass','A'),('Mass','G'),('WC_vol','A')],
+                                [('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','C'),('WC_vol_rDA','L')]]
+g=sns.heatmap(tmp3.rename(index=tmp_ren,columns=tmp_ren).round(2), 
+              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+              xticklabels=1, ax=ax[0,0],cbar_ax=ax[0,1])
+ax[0,0].set_title("Influences on water manipulation")
+ax[0,0].tick_params(axis='x', labelrotation=0, labelsize=8)
+ax[0,0].tick_params(axis='y', labelrotation=0, labelsize=8)
+ax[0,1].tick_params(axis='y', labelsize=8)
+ax[0,0].set_xlabel('Selected parameters')
+ax[0,0].set_ylabel('Selected influences')
+tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',('Mass','A'),('Mass','G'),
+                                 ('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','L')],
+                                [('DEFlutoB','C'),('DEFlutoB','G'),('DEFlutoB','L'),
+                                 ('DHAPntoB','C'),('DHAPntoB','G'),('DHAPntoB','L')]]
+g=sns.heatmap(tmp3.rename(index=tmp_ren,columns=tmp_ren).round(2), 
+              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+              xticklabels=1, ax=ax[1,0],cbar_ax=ax[1,1])
+ax[1,0].set_title("Influences on mechanical parameters")
+ax[1,0].tick_params(axis='x', labelrotation=0, labelsize=8)
+ax[1,0].tick_params(axis='y', labelrotation=0, labelsize=8)
+ax[1,1].tick_params(axis='y', labelsize=8)
+ax[1,0].set_xlabel('Selected parameters')
+ax[1,0].set_ylabel('Selected influences')
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=out_full+'-Corr-Sel',**plt_Fig_dict)
 
 #%%% Regression
 #%%%% Berechnung
