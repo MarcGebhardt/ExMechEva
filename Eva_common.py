@@ -3078,7 +3078,7 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
                       group_str=None, ano_str=None,
                       mpop = "ANOVA", alpha=0.05, group_ren={},
                       do_mcomp_a=1, mcomp='TukeyHSD', mpadj='bonf', Ffwalpha=2,
-                      mkws={}, 
+                      mkws={}, nan_policy='omit',
                       add_T_ind=3, add_out = False):
     """
     Performs an one way ANOVA and multi comparision test for given variable, in respect to given groups.
@@ -3123,6 +3123,8 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
         Keyword arguments for used multi comparision test.
         p.e.: {'equal_var': False, 'nan_policy': 'omit'}
         The default is {}. 
+    nan_policy : str, optional
+        Handling of NaN values. The default is 'omit'.
     add_T_ind : int, optional
         Additional indentation of lines in txt for Tukey HSD. The default is 3.
     add_out : bool, optional
@@ -3138,16 +3140,37 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
         Results of multi comaprison test.
     """
     from statsmodels.stats.multicomp import (pairwise_tukeyhsd, MultiComparison)
+    atxt=''
+    df=df.copy(deep=True) #No Override
+    if not groupby in df.columns:
+        if groupby in df.index.names:
+            df[groupby]=df.index.get_level_values(groupby)
+        else:
+            raise KeyError("Group ether in columns nor in index names!")
     if not len(group_ren.keys()) == 0:
-        df[groupby] = df[groupby].replace(group_ren)
+        # df[groupby] = df[groupby].replace(group_ren) #SettingWithCopyWarning
+        df[groupby].replace(group_ren, inplace=True)
     # direct implemented, else: RecursionError: maximum recursion depth exceeded while calling a Python object
     # Atxt = group_ANOVA_Tukey(df, groupby, ano_Var, group_str, ano_str, alpha)
     ano_data=pd.Series([],dtype='O')
     j=0
+    # for i in df[groupby].drop_duplicates().values:
+    #     ano_data[j]=df.loc[df[groupby]==i] #Achtung: keine statistics-Abfrage!
+    #     j+=1
+    # ano_df1=df[groupby].drop_duplicates().count()-1 #Freiheitsgrad 1 = Gruppen - 1
     for i in df[groupby].drop_duplicates().values:
-        ano_data[j]=df.loc[df[groupby]==i] #Achtung: keine statistics-Abfrage!
-        j+=1
-    ano_df1=df[groupby].drop_duplicates().count()-1 #Freiheitsgrad 1 = Gruppen - 1
+        tmp=df.loc[df[groupby]==i][ano_Var]
+        if nan_policy == 'raise':
+            if tmp.isna().any():
+                raise ValueError('NaN in group %s detected!'%i)
+        elif nan_policy == 'omit':
+            tmp=tmp.dropna()
+        if tmp.count()==0:
+            atxt += '(-%s)'%i
+        else:
+            ano_data[i]=tmp
+            j+=1
+    ano_df1=j-1 #Freiheitsgrad 1 = Gruppen - 1
     # ano_df2=df.count()[0]-(ano_df1+1) #Freiheitsgrad 2 = Testpersonen - Gruppen
     ano_df2=df[ano_Var].count()-(ano_df1+1) #Freiheitsgrad 2 = Testpersonen - Gruppen #23-02-20: auf Var bezogen
     if ano_str is None:
@@ -3155,20 +3178,24 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
     if group_str is None:
         group_str = groupby
     if mpop in ["ANOVA", "f_oneway", "F-Test"]:
-        [F,p]=stats.f_oneway(*[ano_data[i][ano_Var] for i in ano_data.index])
+        [F,p]=stats.f_oneway(*[ano_data[i] for i in ano_data.index])
     elif mpop in ["Kruskal-Wallis H-test", "kruskal", "H-test", "Kruskal-Wallis"]:
-        [F,p]=stats.kruskal(*[ano_data[i][ano_Var] for i in ano_data.index])
+        [F,p]=stats.kruskal(*[ano_data[i] for i in ano_data.index])
+    elif mpop in ["Friedmann", "FriedmannChi²", "friedmann", "friedmanchisquare"]:
+        [F,p]=stats.friedmanchisquare(*[ano_data[i] for i in ano_data.index])
     else:
         raise NotImplementedError('Method %s for population test not implemented!'%mpop)
     if p < alpha:
         rtxt = 'H0 rejected!'
         if do_mcomp_a > 0: do_mcomp_a+=1
+        H0=False
     else:
         rtxt = 'Fail to reject H0!'
+        H0=True
     Atxt=("- F(%3d,%4d) = %7.3f, p = %.3e, for %s to %s (%s)"%(ano_df1,ano_df2,
                                                                F,p,
                                                                ano_str,group_str,
-                                                               rtxt)) # Gruppen sind signifikant verschieden bei p<0.05    
+                                                               rtxt+atxt)) # Gruppen sind signifikant verschieden bei p<0.05    
     if do_mcomp_a >= 2:
         # t = pairwise_tukeyhsd(endog=df[ano_Var], groups=df[groupby], alpha=alpha)
         mcp = MultiComparison(data=df[ano_Var], groups=df[groupby])
@@ -3196,8 +3223,16 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
     else:
         t='No multi comparision done, see do_mcomp_a.'
         txt = Atxt
-    if add_out:
+    if add_out==True:
         return txt, [F,p], t
+    elif add_out=='Series':
+        return pd.Series({"DF1": ano_df1, "DF2":ano_df2,
+                          "Stat":F, "p": p, "H0": H0,
+                          "txt": txt, "MCP": t})
+    elif add_out=='Test':
+        return pd.Series({"DF1": ano_df1, "DF2":ano_df2,
+                          "Stat":F, "p": p, "H0": H0,
+                          "txt": txt, "MCP": t}), ano_data
     else:
         return txt
     

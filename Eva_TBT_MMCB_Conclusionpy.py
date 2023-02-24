@@ -245,6 +245,7 @@ dft_A.index.set_levels(dft_A.index.get_level_values(1).str.replace('G','A'),
                        level=1, inplace=True, verify_integrity=False)
 tmp=dft.Mass.loc(axis=0)[:,'G'].droplevel(1)
 dft_A['DMWtoG']=(dft_A.Mass-tmp)/tmp
+dft_A['statistics']=False
 
 # Wassergehalt (gravimetrisch und volumetrisch)
 tmp=pd.concat([dft[['Mass']],dft_A[['Mass']]]).sort_index()
@@ -601,6 +602,26 @@ tmp2=Evac.agg_add_ci(tmp2.loc(axis=1)[tmp2.columns.str.contains("DeAd_")],agg_fu
 Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),6),
                log_mg, printopt=False)
 
+Evac.MG_strlog("\n\n   - Water content relative deviation to original (volumetric):",
+               log_mg, printopt=False)
+tmp=dft['WC_vol_rDA'].unstack()
+Evac.MG_strlog("\n    - to variants:",
+               log_mg, printopt=False)
+Evac.MG_strlog(Evac.str_indent(Evac.agg_add_ci(tmp, agg_funcs).to_string(),6),
+               log_mg, printopt=False)
+Evac.MG_strlog("\n    - Ratio of ad- to desorption:",
+               log_mg, printopt=False)
+tmp2=tmp.eval('''
+              DeAd_WST = L / B
+              DeAd_100 = K / C
+              DeAd_090 = J / D
+              DeAd_075 = I / E
+              DeAd_060 = H / F
+              ''')
+tmp2=Evac.agg_add_ci(tmp2.loc(axis=1)[tmp2.columns.str.contains("DeAd_")],agg_funcs)
+Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),6),
+               log_mg, printopt=False)
+
 Evac.MG_strlog("\n\n   - Youngs Modulus (fixed range-mean load and unload):",
                log_mg, printopt=False)
 tmp=cEEm_eva['lu_F_mean'].unstack()
@@ -901,6 +922,43 @@ Evac.MG_strlog(Evac.str_indent("WC_vol C equal B: %s"%str(tmp2),6),
 
 
 #%%%% Varianzanalysen Spender
+def group_ANOVA_MComp_multi(df, group_main='Series', group_sub=['A'],
+                            ano_Var=['WC_vol'],
+                            mpop = "ANOVA", alpha=0.05, group_ren={},
+                            do_mcomp_a=0, mcomp='TukeyHSD', mpadj='bonf', Ffwalpha=2,
+                            mkws={},
+                            Transpose=True):
+    df_out=pd.DataFrame([],dtype='O')
+    for av in ano_Var:
+        if len(group_sub) == 0:
+            tmp=Evac.group_ANOVA_MComp(df=df, groupby=group_main, 
+                                       ano_Var=av,
+                                       group_str=group_main,
+                                       ano_str=av,
+                                       mpop=mpop, alpha=alpha,
+                                       mcomp=mcomp, mkws=mkws,
+                                       add_out = 'Series')
+            # name='_'.join([group_main,av,sg])
+            name=av
+            df_out[name]=tmp
+        else:
+            for sg in group_sub:
+                tmp=Evac.group_ANOVA_MComp(df=df, groupby=(group_main,sg), 
+                                           ano_Var=(av,sg),
+                                           group_str=group_main,
+                                           ano_str='_'.join([av,sg]),
+                                           mpop=mpop, alpha=alpha,
+                                           mcomp=mcomp, mkws=mkws,
+                                           add_out = 'Series')
+                # name='_'.join([group_main,av,sg])
+                name='_'.join([av,sg])
+                df_out[name]=tmp
+    if Transpose:
+        df_out=df_out.T
+    return df_out
+MCompdf_kws={'do_mcomp_a':0, 'mcomp':'mannwhitneyu', 'mpadj':'holm', 
+             'Ffwalpha':2, 'mkws':{}}
+
 Evac.MG_strlog("\n\n "+"="*100, log_mg, 1, printopt=False)
 Evac.MG_strlog("\n Donordata: ", log_mg, 1, printopt=False)
 csdoda=pd.merge(left=pd.concat([cs,cEEm_eva],axis=1),right=doda,
@@ -924,25 +982,31 @@ csdoda=pd.merge(left=pd.concat([cs,cEEm_eva],axis=1),right=doda,
 # Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
 Evac.MG_strlog("\n  %s water content vs. donor:"%mpop,
                log_mg, 1, printopt=False)
-txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'A'], groupby='Donor', 
-                                 ano_Var='WC_vol',
-                                 group_str='Donor', ano_str='A: WC',
-                                 mpop=mpop, alpha=alpha,  
-                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
-Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
-txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'B'], groupby='Donor', 
-                                 ano_Var='WC_vol',
-                                 group_str='Donor', ano_str='B: WC',
-                                 mpop=mpop, alpha=alpha,  
-                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
-Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
-txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'L'], groupby='Donor', 
-                                 ano_Var='WC_vol',
-                                 group_str='Donor', ano_str='L: WC',
-                                 mpop=mpop, alpha=alpha,  
-                                 group_ren=doda.Naming.to_dict(), **MComp_kws)
-Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
-
+# txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'A'], groupby='Donor', 
+#                                  ano_Var='WC_vol',
+#                                  group_str='Donor', ano_str='A: WC',
+#                                  mpop=mpop, alpha=alpha,  
+#                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
+# Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+# txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'B'], groupby='Donor', 
+#                                  ano_Var='WC_vol',
+#                                  group_str='Donor', ano_str='B: WC',
+#                                  mpop=mpop, alpha=alpha,  
+#                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
+# Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+# txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'L'], groupby='Donor', 
+#                                  ano_Var='WC_vol',
+#                                  group_str='Donor', ano_str='L: WC',
+#                                  mpop=mpop, alpha=alpha,  
+#                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
+# Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
+tmp2=group_ANOVA_MComp_multi(df=dft_comb.unstack(), 
+                           group_main='Donor', 
+                           group_sub=['A','B','L'],
+                           ano_Var=['WC_vol'],
+                           mpop=mpop, alpha=alpha,  
+                           group_ren={}, **MCompdf_kws)
+Evac.MG_strlog(Evac.str_indent(tmp2.to_string()),log_mg,1, printopt=False)
 
 Evac.MG_strlog("\n  %s deviation water content vs. donor:"%mpop,
                log_mg, 1, printopt=False)
@@ -987,6 +1051,7 @@ txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'C'], groupby='Donor'
                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
 Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
 
+#%%%% Varianzanalysen Serie
 from functools import partial, wraps
 def Hypo_test(df, groupby, ano_Var,
               group_str=None, ano_str=None,
@@ -2654,6 +2719,101 @@ plt_ax_Reg(pdo=tmp2.query("Variant>='G'"),
 fig.suptitle('') 
 Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
+#%%% Hypothest Serie
+# tmp=pd.concat([cs['WC_vol_rDA'],cEEm_eva['DEFlutoB']],axis=1)
+# tmp2=tmp.query("Variant<='G'").groupby(axis=0,level='Key').apply(lambda x: Regfitret(pdo=x, 
+#           x='WC_vol_rDA', y='DEFlutoB',
+#           name='exponential_x0', guess = dict(a=0, b=0.01, c=-1),
+#           xl=r'D_{\Phi_{vol},org}',yl=r'D_{E,sat,des}', 
+#           t_form='{a:.3e},{b:.3e},{c:.3f}'))
+# tmp2=tmp2.apply(pd.Series)
+
+# fig, ax1 = plt.subplots()
+# for i in tmp2.index:
+#     plt_ax_Reg(pdo=tmp.query("Variant<='G'"), x='WC_vol_rDA', y='DEFlutoB',
+#                 fit=tmp2.loc[i], ax=ax1, label_f=False,
+#                 xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat}$', title=None)
+# ax1.legend([None])
+# fig.suptitle('')
+# Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+fig, ax1 = plt.subplots()
+tmp2=pd.concat([cs[['Series','WC_vol_rDA']],cEEm_eva['DEFlutoB']],axis=1)
+tmp21=tmp2.query("Series=='1'")
+tmp22=tmp2.query("Series=='2'")
+tmp=Regfitret(pdo=tmp2.query("Variant<='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+          name='exponential_x0', guess = dict(a=0, b=0.01, c=-1),
+          xl=r'D_{\Phi_{vol},org}',yl=r'D_{E,sat}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg(pdo=tmp2.query("Variant<='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+            fit=tmp, ax=ax1, label_f=True, label_d='Data complete',
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat}$', 
+            title='bla',
+            skws=dict(color=sns.color_palette("tab10")[3]),
+            lkws=dict(color=sns.color_palette("tab10")[1]))
+tmp=Regfitret(pdo=tmp21.query("Variant<='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+          name='exponential_x0', guess = dict(a=0, b=0.01, c=-1),
+          xl=r'D_{\Phi_{vol},org}',yl=r'D_{E,sat,1}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg(pdo=tmp21.query("Variant<='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+            fit=tmp, ax=ax1, label_f=True, label_d='Data Series 1',
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat,1}$', 
+            title='bla',
+            skws=dict(color=sns.color_palette("tab10")[0]),
+            lkws=dict(color=sns.color_palette("tab10")[2]))
+tmp=Regfitret(pdo=tmp22.query("Variant<='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+          name='exponential_x0', guess = dict(a=0, b=0.01, c=-1),
+          xl=r'D_{\Phi_{vol},org}',yl=r'D_{E,sat,2}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg(pdo=tmp22.query("Variant<='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+            fit=tmp, ax=ax1, label_f=True, label_d='Data Series 2',
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat,2}$', 
+            title='Relation between relative deviation of Youngs Modulus to saturated\nand relative deviation of water content to fresh (Desorption, separated by series)',
+            skws=dict(color=sns.color_palette("tab10")[4]),
+            lkws=dict(color=sns.color_palette("tab10")[5]))
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+fig, ax1 = plt.subplots()
+tmp2=pd.concat([cs[['Series','WC_vol_rDA']],cEEm_eva['DEFlutoB']],axis=1)
+tmp21=tmp2.query("Series=='1'")
+tmp22=tmp2.query("Series=='2'")
+tmp=Regfitret(pdo=tmp2.query("Variant>='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+          name='exponential', guess = dict(a=0.01, b=0.01, c=1),
+          xl=r'D_{\Phi_{vol},org}',yl=r'D_{E,sat}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg(pdo=tmp2.query("Variant>='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+            fit=tmp, ax=ax1, label_f=True, label_d='Data complete',
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat}$  ', 
+            title='bla',
+            skws=dict(color=sns.color_palette("tab10")[3]),
+            lkws=dict(color=sns.color_palette("tab10")[1]))
+tmp=Regfitret(pdo=tmp21.query("Variant>='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+          name='exponential', guess = dict(a=0.01, b=0.01, c=1),
+          xl=r'D_{\Phi_{vol},org}',yl=r'D_{E,sat,1}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg(pdo=tmp21.query("Variant>='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+            fit=tmp, ax=ax1, label_f=True, label_d='Data Series 1',
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat,1}$', 
+            title='bla',
+            skws=dict(color=sns.color_palette("tab10")[0]),
+            lkws=dict(color=sns.color_palette("tab10")[2]))
+tmp=Regfitret(pdo=tmp22.query("Variant>='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+          name='exponential', guess = dict(a=0.01, b=0.01, c=1),
+          xl=r'D_{\Phi_{vol},org}',yl=r'D_{E,sat,2}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg(pdo=tmp22.query("Variant>='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+            fit=tmp, ax=ax1, label_f=True, label_d='Data Series 2',
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat,2}$', 
+            title='Relation between relative deviation of Youngs Modulus to saturated\nand relative deviation of water content to fresh (Adsorptionf, separated by series)',
+            skws=dict(color=sns.color_palette("tab10")[4]),
+            lkws=dict(color=sns.color_palette("tab10")[5]))
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 #%% Close log
 
 log_mg.close()
