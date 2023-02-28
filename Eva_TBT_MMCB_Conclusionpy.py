@@ -4,7 +4,7 @@ Created on Wed Mar 30 12:43:41 2022
 
 @author: mgebhard
 """
-
+#%% Imports
 import os
 import copy
 from datetime import date
@@ -38,10 +38,361 @@ plt_Fig_dict={'tight':True, 'show':True,
 plt_Fig_dict={'tight':True, 'show':True, 
               'save':False, 's_types':["pdf","png"], 
               'clear':True, 'close':True}
-
+#%% Functions
 def relDev(pdo, pdr):
     out = (pdo - pdr)/pdr
     return out
+
+def CD_rep(pdo, groupby='Series', var='DEFlutoB', 
+           det_met='SM-RRT', outtype='txt', tnform='{:.3e}'):
+    """ Calculate critical differences and compare to given.
+    """
+    # grsagg=pdo.groupby(groupby)[var].agg(['mean','std','count'])
+    grsagg=pdo[[groupby,var]].groupby(groupby).agg(['mean','std','count'])
+    if isinstance(var,tuple):
+        grsagg=grsagg.droplevel([0,1],axis=1)
+    grs_sumhrn=grsagg['count'].apply(lambda x: 1/(2*x)).sum()
+    grs_MD=grsagg['mean'].max()-grsagg['mean'].min()
+    
+    CDF= 1.96 * 2**0.5 # 2.8 only implemented for 95%-probability level (only two groups?)
+    if det_met=='SM-RRT': #https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf
+        allagg=pdo[var].agg(['mean','std','count'])
+        CD=CDF*allagg['std']*np.sqrt(grs_sumhrn)
+    elif det_met=='CV-DC': #https://flexikon.doccheck.com/de/Kritische_Differenz
+        allagg=pdo[var].agg(['max',Evac.coefficient_of_variation])
+        CD=abs(allagg['coefficient_of_variation']*CDF*allagg['max'])
+    elif det_met=='CV': #https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887
+        allagg=pdo[var].agg([Evac.coefficient_of_variation])
+        CD=abs(allagg['coefficient_of_variation'])*CDF
+    elif det_met=='SD': #https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1
+        allagg=pdo[var].agg(['std'])
+        CD=abs(allagg['std'])*CDF
+    else:
+        raise NotImplementedError("Method %s not implemented!"%det_met)
+        
+    eta = grs_MD/CD
+    # MD_l_CD=True if abs(grs_MD) < CD else False
+    MD_l_CD=False
+    t_grs_MD=tnform.format(grs_MD)
+    t_CD    =tnform.format(CD)
+    txt="{} >  {} -> Repeatability not verified! (eta={})".format(t_grs_MD,t_CD,eta,)
+    if abs(grs_MD) <= CD:
+        MD_l_CD=True
+        txt="{} <= {} -> Repeatability verified! (eta={})".format(t_grs_MD,t_CD,eta,)
+    
+    if outtype=='Ser_all':
+        out= pd.Series({'df_groups_agg':grsagg,'df_all_agg':allagg,
+                        'groups_MD':grs_MD, 'CD':CD, 'eta':eta, 'MDlCD':MD_l_CD})
+    elif outtype=='Tuple_all':
+        out=grsagg,allagg,grs_MD,CD,eta,MD_l_CD
+    elif outtype=='txt':
+        out= txt
+    elif outtype=='Series':
+        out= pd.Series({'MD':grs_MD,'CD':CD, 'eta':eta, 'H0': MD_l_CD})
+    return out
+
+
+def CD_test_multi(df, group_main='Series', group_sub=['A'],
+                    ano_Var=['WC_vol'],
+                    det_met='SM-RRT',
+                    Transpose=True):
+    df_out=pd.DataFrame([],dtype='O')
+    # for sg in group_sub:
+    #     for av in ano_Var:
+    for av in ano_Var:
+        for sg in group_sub:
+            tmp=CD_rep(pdo=df, groupby=(group_main,sg), 
+                          var=(av,sg), det_met=det_met,
+                          outtype = 'Series')
+            # name='_'.join([group_main,av,sg])
+            name='_'.join([av,sg])
+            df_out[name]=tmp
+    if Transpose:
+        df_out=df_out.T
+    return df_out
+
+def group_ANOVA_MComp_multi(df, group_main='Series', group_sub=['A'],
+                            ano_Var=['WC_vol'],
+                            mpop = "ANOVA", alpha=0.05, group_ren={},
+                            do_mcomp_a=0, mcomp='TukeyHSD', mpadj='bonf', Ffwalpha=1,
+                            mkws={},
+                            Transpose=True):
+    df_out=pd.DataFrame([],dtype='O')
+    for av in ano_Var:
+        if len(group_sub) == 0:
+            tmp=Evac.group_ANOVA_MComp(df=df, groupby=group_main, 
+                                       ano_Var=av,
+                                       group_str=group_main,
+                                       ano_str=av,
+                                       mpop=mpop, alpha=alpha,
+                                       do_mcomp_a=do_mcomp_a, 
+                                       mcomp=mcomp, 
+                                       mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
+                                       add_out = 'Series')
+            # name='_'.join([group_main,av,sg])
+            name=av
+            df_out[name]=tmp
+        else:
+            for sg in group_sub:
+                tmp=Evac.group_ANOVA_MComp(df=df, groupby=(group_main,sg), 
+                                           ano_Var=(av,sg),
+                                           group_str=group_main,
+                                           ano_str='_'.join([av,sg]),
+                                           mpop=mpop, alpha=alpha,
+                                           do_mcomp_a=do_mcomp_a, 
+                                           mcomp=mcomp, 
+                                           mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
+                                           add_out = 'Series')
+                # name='_'.join([group_main,av,sg])
+                name='_'.join([av,sg])
+                df_out[name]=tmp
+    if Transpose:
+        df_out=df_out.T
+    return df_out
+
+from functools import partial, wraps
+def Hypo_test(df, groupby, ano_Var,
+              group_str=None, ano_str=None,
+              alpha=0.05, group_ren={},
+              mcomp='TukeyHSD', mkws={},
+              rel=False, rel_keys=[],
+              add_T_ind=3, add_out = False):
+    if ano_str is None:
+        ano_str = ano_Var
+    if group_str is None:
+        group_str = groupby
+    dft = df.copy(deep=True)
+    if rel and rel_keys!=[]:
+        # dft.index = pd.MultiIndex.from_frame(dft.loc(axis=1)[np.concatenate((rel_keys,
+        #                                                                      [groupby]))])
+        dft.index = pd.MultiIndex.from_frame(dft.loc(axis=1)[rel_keys+[groupby]])
+
+    else:
+        dft.index = pd.MultiIndex.from_arrays([dft.index,
+                                               dft.loc(axis=1)[groupby]])
+    dft = dft[ano_Var]
+    dft = dft.unstack(level=-1)
+    if rel: dft=dft.dropna(axis=0)
+    
+    dfgr=dft.columns.values
+    if not len(dfgr)==2:
+        raise ValueError('More than two groups (%s)!'%dfgr)
+    a = dft[dfgr[0]].dropna()
+    b = dft[dfgr[1]].dropna()
+    ano_df2=a.count()+b.count()-2 #Freiheitsgrad = Testpersonen pro Gruppe - 1
+    
+    if mcomp=='TukeyHSD':
+        stats_test  = wraps(partial(stats.tukey_hsd, **mkws))(stats.tukey_hsd)
+    elif mcomp=='ttest_ind':
+        stats_test  = wraps(partial(stats.ttest_ind, **mkws))(stats.ttest_ind)
+    elif mcomp=='ttest_rel':
+        stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
+    elif mcomp=='mannwhitneyu':
+        stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
+    elif mcomp=='wilcoxon':
+        stats_test  = wraps(partial(stats.wilcoxon, **mkws))(stats.wilcoxon)
+    else:
+        raise NotImplementedError('Method %s for multi comparison not implemented!'%mcomp)
+    t = stats_test(a,b)
+    F = t.statistic
+    p = t.pvalue
+    if p < alpha:
+        rtxt = 'H0 rejected!'
+        H0=False
+    else:
+        rtxt = 'Fail to reject H0!'
+        H0=True
+    txt=("- F(%d) = %.3e, p = %.3e, for %s to %s (%s)"%(ano_df2,
+                                                          F,p,
+                                                          ano_str,group_str,
+                                                          rtxt)) # Gruppen sind signifikant verschieden bei p<0.05
+    if add_out is True:
+        return txt, t
+    elif add_out=='Series':
+        return pd.Series({'DF2':ano_df2, 'Stat':F, 'p':p, 'H0':H0})
+    elif add_out=='Test':
+        return dft, pd.Series({'DF2':ano_df2, 'Stat':F, 'p':p, 'H0':H0}), txt
+    else:
+        return txt
+
+def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
+                    ano_Var=['WC_vol'],
+                    mcomp='mannwhitneyu', alpha=0.05, mkws={},
+                    rel=False, rel_keys=[],
+                    Transpose=True):
+    df_out=pd.DataFrame([],dtype='O')
+    # for sg in group_sub:
+    #     for av in ano_Var:
+    for av in ano_Var:
+        for sg in group_sub:
+            tmp=Hypo_test(df=df, groupby=(group_main,sg), 
+                          ano_Var=(av,sg), alpha=alpha,
+                          mcomp=mcomp, mkws=mkws,
+                          # rel=rel, rel_keys=rel_keys, add_out = 'Series')
+                          rel=rel, rel_keys=[(x,sg) for x in rel_keys], 
+                          add_out = 'Series')
+            # name='_'.join([group_main,av,sg])
+            name='_'.join([av,sg])
+            df_out[name]=tmp
+    if Transpose:
+        df_out=df_out.T
+    return df_out
+
+def Multi_conc(df, group_main='Donor', anat='VA', 
+               met='Kruskal', alpha=0.05,
+               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
+                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
+                       'Hyst_APn':['B'],'DHAPntoB':['C','G','L']},
+               rel=False, rel_keys=[], kws={}):
+    out=pd.DataFrame([],dtype='O')
+    for i in stdict.keys():
+        if anat=='VA':
+            out2=group_ANOVA_MComp_multi(df=df, 
+                                 group_main=group_main, 
+                                 group_sub=stdict[i],
+                                 ano_Var=[i],
+                                 mpop=met, alpha=alpha, **kws)
+        elif anat=='HT':
+            out2=Hypo_test_multi(df=df, 
+                                 group_main=group_main, 
+                                 group_sub=stdict[i],
+                                 ano_Var=[i], mcomp=met, alpha=alpha,
+                                 rel=rel, rel_keys=rel_keys, **kws)
+        elif anat=='CD':
+            out2=CD_test_multi(df=df, 
+                                 group_main=group_main, 
+                                 group_sub=stdict[i],
+                                 ano_Var=[i], det_met=met, **kws)
+        out=pd.concat([out,out2])
+    out.index=pd.MultiIndex.from_product([[group_main],out.index])
+    return out
+
+import lmfit
+def func_exp(x, a, b, c):
+    """Return values from a general exponential function."""
+    return a + b * np.exp(c * x)
+
+def func_exp_str(xl, yl, 
+                 a, b, c, 
+                 t_form='{a:.3e},{b:.3e},{c:.3e}'):
+    """Return string from a general exponential function."""
+    txtc = t_form.format(**{'a':a,'b':b,'c':c},).split(',')
+    # txt = r'{y} = {0} + {1} $e$^{{2}{x}}'.format(*txtc,**{'y':yl,'x':xl},)
+    txtd = '{0}\,{1}'.format(txtc[2],xl,)
+    # txt = r'{y} = {0} + {1} $e^{2}{3}{4}$'.format(txtc[0],txtc[1],
+    #                                             '{',txtd,'}',**{'y':yl},)
+    if a==0:
+        txt = r'${y}\,=\,{0}\,e^{1}{2}{3}$'.format(txtc[1],
+                                                    '{',txtd,'}',**{'y':yl},)
+    elif a==(-b):
+        txt = r'${y}\,=\,{0}\,(e^{1}{2}{3}-1)$'.format(txtc[1],
+                                                '{',txtd,'}',**{'y':yl},)
+    else:
+        txt = r'${y}\,=\,{0}\,+\,{1}\,e^{2}{3}{4}$'.format(txtc[0],txtc[1],
+                                                    '{',txtd,'}',**{'y':yl},)
+    # txt = r'{y} = {0} + {1} $e$^{2}{3}{4}'.format(txtc[0],txtc[1],
+    #                                             '(',txtd,')',**{'y':yl},)
+    return txt
+
+
+def func_lin(x, a, b):
+    """Return values from a general linear function."""
+    return a + b * x
+
+def func_lin_str(xl, yl, 
+                 a, b,
+                 t_form='{a:.3e},{b:.3e}'):
+    """Return string from a general linear function."""
+    txtc = t_form.format(**{'a':a,'b':b},).split(',')
+    if a==0:
+        txt = r'${y}\,=\,{0}\,{x}$'.format(txtc[1],
+                                           **{'y':yl,'x':xl},)
+    else:
+        txt = r'${y}\,=\,{0}\,+\,{1}\,{x}$'.format(txtc[0],txtc[1],
+                                                   **{'y':yl,'x':xl},)
+    return txt
+
+def plt_Regc(pdo, x, y, xl,yl, 
+             fit,
+             title, path, plt_Fig_dict):
+    fig, ax1 = plt.subplots()
+    ax1.grid(True)
+    ax1.set_title(title)
+    sns.scatterplot(x=x, y=y, data=pdo, ax=ax1, label='data')
+    xtmp = np.linspace(pdo[x].min(), pdo[x].max(), 101)
+    ytmp = fit.model.eval(x=xtmp, **fit.result.params.valuesdict())
+    sns.lineplot(x=xtmp, y=ytmp, ax=ax1, label='fit')
+    ax1.set_xlabel(xl+' / -')
+    ax1.set_ylabel(yl+' / -')
+    ax1.legend()
+    fig.suptitle('')
+    Evac.plt_handle_suffix(fig,path=path,**plt_Fig_dict)
+    
+def plt_ax_Reg(pdo, x, y,  
+               fit={}, ax=None, label_d='Data', label_f=False,
+               xlabel=None, ylabel=None, title=None,
+               skws={}, lkws={}):
+    if ax is None: ax = plt.gca()
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    sns.scatterplot(x=x, y=y, data=pdo, ax=ax, label=label_d, **skws)
+    xtmp = np.linspace(pdo[x].min(), pdo[x].max(), 101)
+    ytmp = fit['Model'].eval(x=xtmp, **fit['PD'])
+    if label_f:
+        ltxt=fit['Exp_txt']+' ($R²$={:.3f})'.format(fit['Rquad'])
+    else:
+        ltxt='Fit-%s'%fit['Name']
+    sns.lineplot(x=xtmp, y=ytmp, ax=ax, label=ltxt, **lkws)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.legend()
+    return ax
+
+def plt_ax_Reg_fo(pdo, x,   
+                  fit={}, ax=None, label_f=False, lkws={}):
+    if ax is None: ax = plt.gca()
+    xtmp = np.linspace(pdo[x].min(), pdo[x].max(), 101)
+    ytmp = fit['Model'].eval(x=xtmp, **fit['PD'])
+    if label_f:
+        ltxt=fit['Exp_txt']+' ($R²$={:.3f})'.format(fit['Rquad'])
+    else:
+        ltxt='Fit-%s'%fit['Name']
+    sns.lineplot(x=xtmp, y=ytmp, ax=ax, label=ltxt, **lkws)
+    return ax
+
+def Regfitret(pdo, x,y, name='exponential', guess = dict(a=-0.01, b=0.1, c=-1),
+              xl=r'$X$', yl=r'$Y$', t_form='{a:.3e},{b:.3e},{c:.3e}', max_nfev=1000):
+    if name in ['linear','linear_nc']:
+        func=func_lin
+        func_str=func_lin_str
+    elif name in ['exponential','exponential_nc','exponential_x0']:
+        func=func_exp
+        func_str=func_exp_str
+    else:
+        raise NotImplementedError('Type %s not implemented!'%name)
+    model=lmfit.Model(func)
+    params=model.make_params()
+    if name in ['linear_nc','exponential_nc']:
+        params.add('a', value=0, vary=False)
+    elif name in ['linear_x0']:
+        params.add('a', value=guess['a'], vary=False)
+    elif name in ['exponential_x0']:
+        y0=guess.pop('a')
+        params.add('a', value=None, expr="{:.8e}-b".format(y0), vary=False)
+    # fit = model.fit(pdo[y], x=pdo[x], nan_policy='omit', **guess)
+    fit = model.fit(pdo[y], x=pdo[x], params=params, nan_policy='omit', **guess)
+    Rquad  = 1 - fit.residual.var() / np.nanvar(pdo[y])      
+    fit.rsqur=Rquad
+    rtxt=lmfit.fit_report(fit.result)
+    rtxt=rtxt.replace("\n[[Variables]]",
+                      "\n    R-square           = %1.8f\n[[Variables]]"%Rquad)
+    etxt=func_str(xl=xl, yl=yl, t_form=t_form, **fit.result.params.valuesdict())
+    out = {'Name': name, 'Model': model, 'Result': fit, 
+           'PD': fit.result.params.valuesdict(),
+           'Exp_txt': etxt, 'Rep_txt': rtxt, 'Rquad': Rquad}
+    return out
+
 # =============================================================================
 #%% Einlesen und auswählen
 # data="S1"
@@ -222,6 +573,7 @@ dft.Failure_code = t
 dft['statistics'] = Evac.list_interpreter(dft.Failure_code, no_stats_fc)
 dft['RHenv'] = dft.index.droplevel(0) # SettingWithCopyWarning
 dft['RHenv'] = dft['RHenv'] .map(Variants_env_relH)
+dft['RHstore'] =dft['Humidity_store']/100
 
 #%% Prepare
 # Wassergehalt
@@ -233,14 +585,18 @@ tmp=dft.Mass_org.loc(axis=0)[:,'G'].droplevel(1)
 dft['DMWtoA']=(dft.Mass-tmp)/tmp
 
 ## Wassergehaltsänderung org als df
-# dft_A=dft.loc(axis=0)[:,'G'][['Mass_org']]
-# dft_A.columns=['Mass']
-# dft_A=dft.loc(axis=0)[:,'G'][['Series','Donor','Side_LR','Side_pd','Mass_org']].copy(deep=True)
-dft_A=dft.loc(axis=0)[:,'G'][['Designation','Series','Donor','Origin',
-                              'Side_LR','Side_pd','Mass_org',
-                              'thickness_1','thickness_2','thickness_3',
-                              'width_1','width_2','width_3','Length']].copy(deep=True)
-dft_A.columns=dft_A.columns.str.replace('Mass_org','Mass')
+# # dft_A=dft.loc(axis=0)[:,'G'][['Mass_org']]
+# # dft_A.columns=['Mass']
+# # dft_A=dft.loc(axis=0)[:,'G'][['Series','Donor','Side_LR','Side_pd','Mass_org']].copy(deep=True)
+# dft_A=dft.loc(axis=0)[:,'G'][['Designation','Type','Series','Donor','Origin',
+#                               'Side_LR','Side_pd','Mass_org',
+#                               'thickness_1','thickness_2','thickness_3',
+#                               'width_1','width_2','width_3','Length']].copy(deep=True)
+# dft_A.columns=dft_A.columns.str.replace('Mass_org','Mass')
+dft_A=dft.loc(axis=0)[:,'G'].loc(axis=1)['Designation':'geo_MoI_mid'].copy(deep=True)
+tmp=dft.loc(axis=0)[:,'G'].loc(axis=1)[idx['Side_LR','Side_pd','Series','Numsch']].copy(deep=True)
+dft_A=pd.concat([dft_A,tmp],axis=1)
+dft_A['Mass']=dft_A['Mass_org']
 dft_A.index.set_levels(dft_A.index.get_level_values(1).str.replace('G','A'), 
                        level=1, inplace=True, verify_integrity=False)
 tmp=dft.Mass.loc(axis=0)[:,'G'].droplevel(1)
@@ -258,11 +614,12 @@ tmp['VolDry']=tmp['Mass']*0 + tmp2/(1.362/1000) # Reindichte Gewebe in g/mm³ au
 tmp2=(dft[['width_1','width_2','width_3']].mean(axis=1)*dft[['thickness_1','thickness_2','thickness_3']].mean(axis=1)*dft['Length']).loc(axis=0)[:,'G'].droplevel(1)
 tmp['VolTot']=tmp['Mass']*0 + tmp2 # Volumen aus Geometrie
 tmp['WC_vol']=tmp['VolW']/tmp['VolTot']
+tmp['Density_app']=tmp['Mass']/tmp['VolTot']
 
 # dft=pd.concat([dft,tmp[['WC_gra','WC_vol']].query("Variant != 'A'")],axis=1)
 # dft_A=pd.concat([dft_A,tmp[['WC_gra','WC_vol']].query("Variant == 'A'")],axis=1)
-dft=pd.concat([dft,tmp[['VolTot','MassW','WC_gra','WC_vol']].query("Variant != 'A'")],axis=1)
-dft_A=pd.concat([dft_A,tmp[['VolTot','MassW','WC_gra','WC_vol']].query("Variant == 'A'")],axis=1)
+dft  =pd.concat([dft,  tmp[['VolTot','Density_app','MassW','WC_gra','WC_vol']].query("Variant != 'A'")],axis=1)
+dft_A=pd.concat([dft_A,tmp[['VolTot','Density_app','MassW','WC_gra','WC_vol']].query("Variant == 'A'")],axis=1)
 dft[['WC_gra_toA','WC_vol_toA']]=dft[['WC_gra','WC_vol']]-dft_A[['WC_gra','WC_vol']].droplevel(1)
 dft[['WC_gra_rDA','WC_vol_rDA']]=relDev(dft[['WC_gra','WC_vol']],dft_A[['WC_gra','WC_vol']].droplevel(1))
 
@@ -303,9 +660,6 @@ t_abs=t[t.Variant>='G']
 t_ona=t.dropna().sort_values(['Designation','Variant'])
 t_ona_abs=t_abs.dropna().sort_values(['Designation','Variant'])
 t_ona_des=t_des.dropna().sort_values(['Designation','Variant'])
-# HDf-neu erstellen (in Prot hinzugefügt)
-# doda['Date_SpPrep']=pd.to_datetime(cs.loc(axis=0)[:,'B'].groupby('Donor')['Date_SpPrep'].max())
-# doda['Storagetime']=(doda['Date_SpPrep']-doda['Date_Death']).dt.days
 
 
 #%% Prepare load and unload (09.12.22) (should be done in original evaluation)
@@ -453,11 +807,15 @@ t2=t2.sort_values(['Designation','Variant'])
 dft_comb=pd.concat([dft,dft_A],axis=0).sort_index()
 dft_comb=pd.concat([dft_comb,cEEm_eva,cH_eva],axis=1)
 
+dft_doda_comb=pd.merge(left=dft_comb,right=doda,
+                       left_on='Donor',right_index=True)
+dft_doda_comb['Storage_Time']=(dft_doda_comb['Date_SpPrep']-dft_doda_comb['Date_Death']).dt.days
+
 #%% Data-Export
 rel_col_com=['Designation','Series','Donor','Origin','Side_LR','Side_pd']
 rel_col_geo=['thickness_1','thickness_2','thickness_3',
              'width_1','width_2','width_3','Length']
-rel_col_add=['VolTot','Mass','MassW','WC_gra','WC_vol',
+rel_col_add=['VolTot','RHstore','Mass','Density_app','MassW','WC_gra','WC_vol',
              'WC_gra_rDA','WC_vol_rDA']
 rel_col_mec=['statistics','fu','eu_opt',
              'lu_F_mean','DEFlutoB','DEFlutoG','lu_F_ratio',
@@ -507,15 +865,17 @@ Evac.MG_strlog("\n\n   - Storage conditions:",
                log_mg, printopt=False)
 Evac.MG_strlog("\n\n    - Difference actual-envisaged",
                log_mg, printopt=False)
-tmp=dft[['Humidity_store','RHenv']]
-tmp=tmp.eval("Humidity_store-RHenv*100").groupby('Variant').agg(agg_funcs)
-Evac.MG_strlog(Evac.str_indent(tmp.to_string(),6),
+# tmp=dft[['Humidity_store','RHenv']]
+# tmp=tmp.eval("Humidity_store-RHenv*100").groupby('Variant').agg(agg_funcs)
+tmp=dft[['RHstore','RHenv']]
+tmp2=tmp.eval("RHstore-RHenv").groupby('Variant').agg(agg_funcs)
+Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),6),
                log_mg, printopt=False)
 Evac.MG_strlog("\n\n    - Relative deviation actual-envisaged",
                log_mg, printopt=False)
-tmp=dft[['Humidity_store','RHenv']]
-tmp=relDev(tmp['Humidity_store'],tmp['RHenv']*100).groupby('Variant').agg(agg_funcs)
-Evac.MG_strlog(Evac.str_indent(tmp.to_string(),6),
+# tmp2=relDev(tmp['Humidity_store'],tmp['RHenv']*100).groupby('Variant').agg(agg_funcs)
+tmp2=relDev(tmp['RHstore'],tmp['RHenv']).groupby('Variant').agg(agg_funcs)
+Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),6),
                log_mg, printopt=False)
 
 
@@ -774,7 +1134,7 @@ if stat_ttype_parametric:
     mpop="ANOVA"
     # Tukey HSD test:
     MComp_kws={'do_mcomp_a':2, 'mcomp':'TukeyHSD', 'mpadj':'', 
-                'Ffwalpha':2, 'mkws':{}, 'add_T_ind':3, 'add_out':True}
+                'Ffwalpha':1, 'mkws':{}, 'add_T_ind':3, 'add_out':True}
     # # Independendent T-test:
     # MComp_kws={'do_mcomp_a':2, 'mcomp':'ttest_ind', 'mpadj':'holm', 
     #            'Ffwalpha':2, 'mkws':{'equal_var': False, 'nan_policy': 'omit'},
@@ -784,11 +1144,13 @@ else:
     mpop="Kruskal-Wallis H-test"
     # Mann-Whitney U test: (two independent)
     MComp_kws={'do_mcomp_a':2, 'mcomp':'mannwhitneyu', 'mpadj':'holm', 
-                'Ffwalpha':2, 'mkws':{}, 'add_T_ind':3, 'add_out':True}
+                'Ffwalpha':1, 'mkws':{}, 'add_T_ind':3, 'add_out':True}
     # # Wilcoxon W test: (two related-or difference)
     # MComp_kws={'do_mcomp_a':2, 'mcomp':'wilcoxon', 'mpadj':'holm', 
     #             'Ffwalpha':2, 'mkws':{}, 'add_T_ind':3, 'add_out':True}
     mcorr="spearman"
+    MCompdf_kws={'do_mcomp_a':1, 'mcomp':'mannwhitneyu', 'mpadj':'holm', 
+                 'Ffwalpha':1, 'mkws':{}}
     
 #%%% Normalverteilung
 # fig, ax1 = plt.subplots()
@@ -884,10 +1246,13 @@ Evac.MG_strlog("\n   -> Multicomparison relationship interpretation (groups that
 Evac.MG_strlog(Evac.str_indent(d,6), log_mg,1,printopt=False)
 
 tmp2=stats.wilcoxon(cEEm_eva.loc[idx[:,'C'],'DEFlutoB'])
-Evac.MG_strlog(Evac.str_indent("WC_vol C equal B: %s"%str(tmp2),6), 
+Evac.MG_strlog(Evac.str_indent("DEtoB C equal B: %s"%str(tmp2),6), 
                log_mg,1, printopt=False)
 tmp2=stats.wilcoxon(cEEm_eva.loc[idx[:,'D'],'DEFlutoB'])
-Evac.MG_strlog(Evac.str_indent("WC_vol D equal B: %s"%str(tmp2),6), 
+Evac.MG_strlog(Evac.str_indent("DEtoB D equal B: %s"%str(tmp2),6), 
+               log_mg,1, printopt=False)
+tmp2=stats.wilcoxon(cEEm_eva.loc[idx[:,'G'],'DEFlutoB'])
+Evac.MG_strlog(Evac.str_indent("DEtoB G equal B: %s"%str(tmp2),6), 
                log_mg,1, printopt=False)
 
 
@@ -903,6 +1268,15 @@ d,txt2 = Evac.MComp_interpreter(T)
 Evac.MG_strlog("\n   -> Multicomparison relationship interpretation (groups that share similar letter have an equal mean):",
                log_mg,1,printopt=False)
 Evac.MG_strlog(Evac.str_indent(d,6), log_mg,1,printopt=False)
+tmp2=stats.wilcoxon((cEEm_eva.loc[idx[:,['C','B']],'lu_F_mean']).unstack().diff(axis=1).iloc[:,1])
+Evac.MG_strlog(Evac.str_indent("E C equal B: %s"%str(tmp2),6), 
+               log_mg,1, printopt=False)
+tmp2=stats.wilcoxon((cEEm_eva.loc[idx[:,['G','B']],'lu_F_mean']).unstack().diff(axis=1).iloc[:,1])
+Evac.MG_strlog(Evac.str_indent("E G equal B: %s"%str(tmp2),6), 
+               log_mg,1, printopt=False)
+tmp2=stats.wilcoxon((cEEm_eva.loc[idx[:,['L','B']],'lu_F_mean']).unstack().diff(axis=1).iloc[:,1].dropna())
+Evac.MG_strlog(Evac.str_indent("E L equal B: %s"%str(tmp2),6), 
+               log_mg,1, printopt=False)
 
 Evac.MG_strlog("\n\n  %s normed hysteris area deviation (to saturated) vs. variant (nan's  dropped):"%mpop,
                log_mg, 1, printopt=False)
@@ -917,52 +1291,24 @@ Evac.MG_strlog("\n  -> Multicomparison relationship interpretation (groups that 
                 log_mg,1,printopt=False)
 Evac.MG_strlog(Evac.str_indent(d,6), log_mg,1,printopt=False)
 tmp2=stats.wilcoxon(cH_eva.loc[idx[:,'C'],'DHAPntoB'])
-Evac.MG_strlog(Evac.str_indent("WC_vol C equal B: %s"%str(tmp2),6), 
+Evac.MG_strlog(Evac.str_indent("Hystereseisarea C equal B: %s"%str(tmp2),6), 
                log_mg,1, printopt=False)
+
+Evac.MG_strlog("\n\n  %s Conclusion:"%mpop,
+               log_mg, 1, printopt=False)
+tmp3=group_ANOVA_MComp_multi(df=dft_comb,
+                group_main='Variant',group_sub=[],
+               ano_Var=['WC_vol','WC_vol_rDA','lu_F_mean','DEFlutoB','Hyst_APn','DHAPntoB'], 
+               mpop=mpop, alpha=alpha, **MCompdf_kws)
+Evac.MG_strlog(Evac.str_indent(tmp3.loc(axis=1)['DF1':'H0'].to_string()),
+               log_mg,1, logopt=False)
 
 
 #%%%% Varianzanalysen Spender
-def group_ANOVA_MComp_multi(df, group_main='Series', group_sub=['A'],
-                            ano_Var=['WC_vol'],
-                            mpop = "ANOVA", alpha=0.05, group_ren={},
-                            do_mcomp_a=0, mcomp='TukeyHSD', mpadj='bonf', Ffwalpha=2,
-                            mkws={},
-                            Transpose=True):
-    df_out=pd.DataFrame([],dtype='O')
-    for av in ano_Var:
-        if len(group_sub) == 0:
-            tmp=Evac.group_ANOVA_MComp(df=df, groupby=group_main, 
-                                       ano_Var=av,
-                                       group_str=group_main,
-                                       ano_str=av,
-                                       mpop=mpop, alpha=alpha,
-                                       mcomp=mcomp, mkws=mkws,
-                                       add_out = 'Series')
-            # name='_'.join([group_main,av,sg])
-            name=av
-            df_out[name]=tmp
-        else:
-            for sg in group_sub:
-                tmp=Evac.group_ANOVA_MComp(df=df, groupby=(group_main,sg), 
-                                           ano_Var=(av,sg),
-                                           group_str=group_main,
-                                           ano_str='_'.join([av,sg]),
-                                           mpop=mpop, alpha=alpha,
-                                           mcomp=mcomp, mkws=mkws,
-                                           add_out = 'Series')
-                # name='_'.join([group_main,av,sg])
-                name='_'.join([av,sg])
-                df_out[name]=tmp
-    if Transpose:
-        df_out=df_out.T
-    return df_out
-MCompdf_kws={'do_mcomp_a':0, 'mcomp':'mannwhitneyu', 'mpadj':'holm', 
-             'Ffwalpha':2, 'mkws':{}}
+
 
 Evac.MG_strlog("\n\n "+"="*100, log_mg, 1, printopt=False)
 Evac.MG_strlog("\n Donordata: ", log_mg, 1, printopt=False)
-csdoda=pd.merge(left=pd.concat([cs,cEEm_eva],axis=1),right=doda,
-                left_on='Donor',right_index=True).reset_index()
 # Evac.MG_strlog("\n  %s water content (org) vs. donor:"%mpop,
 #                log_mg, 1, printopt=False)
 # txt,_,T = Evac.group_ANOVA_MComp(df=csdoda[csdoda.Variant=='B'], groupby='Donor', 
@@ -1051,92 +1397,60 @@ txt,_,T = Evac.group_ANOVA_MComp(df=dft_comb.loc(axis=0)[:,'C'], groupby='Donor'
                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
 Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
 
+
+Evac.MG_strlog("\n\n  Hypothesistests to donordata (H-test):",
+               log_mg, 1, printopt=False)
+tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Donor', anat='VA',
+               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
+                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
+                       'Hyst_APn':['B'],'DHAPntoB':['C','G','L']}, 
+               met=mpop, alpha=alpha, kws=MCompdf_kws)
+Evac.MG_strlog(Evac.str_indent(tmp3.loc(axis=1)['DF1':'H0'].to_string()),
+               log_mg,1, printopt=False)
+Evac.MG_strlog("\n  -> Multicomparision (Mann-Whitney-U)):",
+               log_mg, 1, printopt=False)
+for i in tmp3.loc[tmp3.H0 == False].index:
+    txt="{}:\n{}".format(i,tmp3.loc[i,'MCP'],)
+    Evac.MG_strlog(Evac.str_indent(txt,5),
+                   log_mg,1, printopt=False)
+    
+Evac.MG_strlog("\n\n  Hypothesistests to location (proximal/distal) (Mann-Whitney-U/Wilcoxon):",
+               log_mg, 1, printopt=False)
+tmp2=Multi_conc(df=dft_comb.unstack(),group_main='Side_pd', anat='HT',
+               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
+                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
+                       'Hyst_APn':['B'],'DHAPntoB':['C','G','L']}, 
+               met='mannwhitneyu', alpha=alpha, 
+               rel=False, rel_keys=['Donor','Side_LR'], kws={})
+tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Side_pd', anat='HT',
+               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
+                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
+                       'Hyst_APn':['B'],'DHAPntoB':['C','G','L']}, 
+               met='wilcoxon', alpha=alpha, 
+               rel=True, rel_keys=['Donor','Side_LR'], kws={})
+tmp=pd.concat([tmp2, tmp3], axis=1, keys=['mannwhitneyu', 'wilcoxon'])
+Evac.MG_strlog(Evac.str_indent(tmp.to_string()),
+               log_mg,1, printopt=False)
+
+Evac.MG_strlog("\n\n  Hypothesistests to side (left/right) (Mann-Whitney-U/Wilcoxon):",
+               log_mg, 1, printopt=False)
+tmp2=Multi_conc(df=dft_comb.unstack(),group_main='Side_LR', anat='HT',
+               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
+                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
+                       'Hyst_APn':['B'],'DHAPntoB':['C','G','L']}, 
+               met='mannwhitneyu', alpha=alpha, 
+               rel=False, rel_keys=['Donor','Side_pd'], kws={})
+tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Side_LR', anat='HT',
+               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
+                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
+                       'Hyst_APn':['B'],'DHAPntoB':['C','G','L']}, 
+               met='wilcoxon', alpha=alpha, 
+               rel=True, rel_keys=['Donor','Side_pd'], kws={})
+tmp=pd.concat([tmp2, tmp3], axis=1, keys=['mannwhitneyu', 'wilcoxon'])
+Evac.MG_strlog(Evac.str_indent(tmp.to_string()),
+               log_mg,1, printopt=False)
+
 #%%%% Varianzanalysen Serie
-from functools import partial, wraps
-def Hypo_test(df, groupby, ano_Var,
-              group_str=None, ano_str=None,
-              alpha=0.05, group_ren={},
-              mcomp='TukeyHSD', mkws={},
-              rel=False, rel_keys=[],
-              add_T_ind=3, add_out = False):
-    if ano_str is None:
-        ano_str = ano_Var
-    if group_str is None:
-        group_str = groupby
-    dft = df.copy(deep=True)
-    if rel and rel_keys!=[]:
-        dft.index = pd.MultiIndex.from_frame(dft.loc(axis=1)[np.concatenate((rel_keys,
-                                                                             [groupby]))])
-    else:
-        dft.index = pd.MultiIndex.from_arrays([dft.index,
-                                               dft.loc(axis=1)[groupby]])
-    dft = dft[ano_Var]
-    dft = dft.unstack(level=-1)
-    if rel: dft=dft.dropna(axis=0)
-    
-    dfgr=dft.columns.values
-    if not len(dfgr)==2:
-        raise ValueError('More than two groups (%s)!'%dfgr)
-    a = dft[dfgr[0]].dropna()
-    b = dft[dfgr[1]].dropna()
-    ano_df2=a.count()+b.count()-2 #Freiheitsgrad = Testpersonen pro Gruppe - 1
-    
-    if mcomp=='TukeyHSD':
-        stats_test  = wraps(partial(stats.tukey_hsd, **mkws))(stats.tukey_hsd)
-    elif mcomp=='ttest_ind':
-        stats_test  = wraps(partial(stats.ttest_ind, **mkws))(stats.ttest_ind)
-    elif mcomp=='ttest_rel':
-        stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
-    elif mcomp=='mannwhitneyu':
-        stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
-    elif mcomp=='wilcoxon':
-        stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.wilcoxon)
-    else:
-        raise NotImplementedError('Method %s for multi comparison not implemented!'%mcomp)
-    t = stats_test(a,b)
-    F = t.statistic
-    p = t.pvalue
-    if p < alpha:
-        rtxt = 'H0 rejected!'
-        H0=False
-    else:
-        rtxt = 'Fail to reject H0!'
-        H0=True
-    txt=("- F(%d) = %.3e, p = %.3e, for %s to %s (%s)"%(ano_df2,
-                                                          F,p,
-                                                          ano_str,group_str,
-                                                          rtxt)) # Gruppen sind signifikant verschieden bei p<0.05
-    if add_out is True:
-        return txt, t
-    elif add_out=='Series':
-        return pd.Series({'D':ano_df2, 'F':F, 'p':p, 'H0':H0})
-    elif add_out=='Test':
-        return dft, pd.Series({'D':ano_df2, 'F':F, 'p':p, 'H0':H0}), txt
-    else:
-        return txt
-
-def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
-                    ano_Var=['WC_vol'],
-                    mcomp='mannwhitneyu', mkws={},
-                    rel=False, rel_keys=[],
-                    Transpose=True):
-    df_out=pd.DataFrame([],dtype='O')
-    # for sg in group_sub:
-    #     for av in ano_Var:
-    for av in ano_Var:
-        for sg in group_sub:
-            tmp=Hypo_test(df=df, groupby=(group_main,sg), 
-                          ano_Var=(av,sg), 
-                          mcomp=mcomp, mkws=mkws,
-                          rel=rel, rel_keys=rel_keys, add_out = 'Series')
-            # name='_'.join([group_main,av,sg])
-            name='_'.join([av,sg])
-            df_out[name]=tmp
-    if Transpose:
-        df_out=df_out.T
-    return df_out
-
-
 # tmp=Hypo_test(df=dft.loc(axis=0)[:,'B'], groupby='Series', ano_Var='WC_vol', 
 #             mcomp='wilcoxon', rel=True, rel_keys=['Donor','Side_pd'],add_out = True)
 # tmp=Hypo_test(df=dft.loc(axis=0)[:,'B'].droplevel(1), groupby='Series', 
@@ -1162,7 +1476,7 @@ def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
 #                     rel=False, rel_keys=[])
 
 Evac.MG_strlog("\n\n "+"="*100, log_mg, 1, printopt=False)
-Evac.MG_strlog("\n Repatability (Series dependence): ", log_mg, 1, printopt=False)
+Evac.MG_strlog("\n Repeatability (Series dependence): ", log_mg, 1, printopt=False)
 tmp=Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
                     group_sub=['A'],
                     ano_Var=['WC_vol'],
@@ -1185,45 +1499,7 @@ tmp=pd.concat([tmp,tmp2],axis=0)
 Evac.MG_strlog(Evac.str_indent(tmp.sort_index().to_string(),3),
                log_mg,1, printopt=False)
 
-def CD_rep(pdo, groupby='Series', var='DEFlutoB', 
-           det_met='SM-RRT', outtype='txt', tnform='{:.3e}'):
-    grsagg=pdo.groupby(groupby)[var].agg(['mean','std','count'])
-    grs_sumhrn=grsagg['count'].apply(lambda x: 1/(2*x)).sum()
-    grs_MD=grsagg['mean'].max()-grsagg['mean'].min()
-    
-    CDF= 1.96 * 2**0.5 # 2.8 only implemented for 95%-probability level (only two groups?)
-    if det_met=='SM-RRT': #https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf
-        allagg=pdo[var].agg(['mean','std','count'])
-        CD=CDF*allagg['std']*np.sqrt(grs_sumhrn)
-    elif det_met=='CV-DC': #https://flexikon.doccheck.com/de/Kritische_Differenz
-        allagg=pdo[var].agg(['max',Evac.coefficient_of_variation])
-        CD=abs(allagg['coefficient_of_variation']*CDF*allagg['max'])
-    elif det_met=='CV': #https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887
-        allagg=pdo[var].agg([Evac.coefficient_of_variation])
-        CD=abs(allagg['coefficient_of_variation'])*CDF
-    elif det_met=='SD': #https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1
-        allagg=pdo[var].agg(['std'])
-        CD=abs(allagg['std'])*CDF
-    else:
-        raise NotImplementedError("Method %s not implemented!"%det_met)
-        
-    # MD_l_CD=True if abs(grs_MD) < CD else False
-    MD_l_CD=False
-    t_grs_MD=tnform.format(grs_MD)
-    t_CD    =tnform.format(CD)
-    txt="{} >  {} -> Repeatability not verified!".format(t_grs_MD,t_CD,)
-    if abs(grs_MD) <= CD:
-        MD_l_CD=True
-        txt="{} <= {} -> Repeatability verified!".format(t_grs_MD,t_CD,)
-    
-    if outtype=='Ser_all':
-        out= pd.Series({'df_groups_agg':grsagg,'df_all_agg':allagg,
-                        'groups_MD':grs_MD, 'CD':CD, 'MDlCD':MD_l_CD})
-    elif outtype=='Tuple_all':
-        out=grsagg,allagg,grs_MD,CD,MD_l_CD
-    elif outtype=='txt':
-        out= txt
-    return out
+
 
 # det_met_CD_rep='SM-RRT'
 det_met_CD_rep='SD'
@@ -1260,7 +1536,72 @@ for i in ['C','D','E','F','H','I','J','K','L']:
     Evac.MG_strlog(Evac.str_indent(tmp,6),
                    log_mg,1, printopt=False)
 
+tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Series', anat='CD',
+                stdict={'WC_vol':['A','B','C','D','E','F','H','I','J','K','L'],
+                        'WC_vol_rDA':['B','C','D','E','F','H','I','J','K','L'],
+                        'lu_F_mean':['B','C','D','E','F','G','H','I','J','K','L'],
+                        'DEFlutoB':['C','D','E','F','H','I','J','K','L'],
+                        'Hyst_APn':['B','C','D','E','F','G','H','I','J','K','L'],
+                        'DHAPntoB':['C','D','E','F','H','I','J','K','L']},
+                met=det_met_CD_rep)
+
+Evac.MG_strlog("\n\n  - Descriptive (Mean-values):",
+               log_mg,1, printopt=False)
+tmp=dft_comb.reset_index().groupby(['Variant','Series'])[['WC_vol','WC_vol_rDA','DEFlutoB']].mean().unstack()
+Evac.MG_strlog(Evac.str_indent(tmp.to_string(),4),log_mg,1, printopt=False)
+
+Evac.MG_strlog("\n\n  - Regression (exponential):",
+               log_mg,1, printopt=False)
+Evac.MG_strlog("\n\n    - Parameters:",
+               log_mg,1, printopt=False)
+tmp=pd.concat([cs[['Series','WC_vol_rDA']],cEEm_eva['DEFlutoB']],axis=1)
+tmp2={'Desorption_Complete':tmp.query("Variant<='G'"),
+      'Desorption_Series1':tmp.query("Variant<='G'").query("Series=='1'"),
+      'Desorption_Series2':tmp.query("Variant<='G'").query("Series=='2'"),
+      'Adsorption_Complete':tmp.query("Variant>='G'"),
+      'Adsorption_Series1':tmp.query("Variant>='G'").query("Series=='1'"),
+      'Adsorption_Series2':tmp.query("Variant>='G'").query("Series=='2'")}
+tmp3=pd.DataFrame([], columns=['a','b','c'], dtype='float64')
+for i in tmp2.keys():
+    if 'Desorption' in i:
+        tmp3.loc[i]=pd.Series(Regfitret(pdo=tmp2[i],
+                    x='WC_vol_rDA', y='DEFlutoB',
+                    name='exponential_x0', guess = dict(a=0, b=0.01, c=-1),
+                    xl=r'D_{\Phi_{vol},fresh}',yl=r'D_{E,1,des}', 
+                    t_form='{a:.3e},{b:.3e},{c:.3f}'))['PD']
+    if 'Adsorption' in i:
+        tmp3.loc[i]=pd.Series(Regfitret(pdo=tmp2[i],
+                    x='WC_vol_rDA', y='DEFlutoB',
+                    name='exponential', guess = dict(a=0.01, b=0.01, c=1),
+                    xl=r'D_{\Phi_{vol},fresh}',yl=r'D_{E,1,des}', 
+                    t_form='{a:.3e},{b:.3e},{c:.3f}'))['PD']
+tmp3.index=tmp3.index.str.split('_',expand=True)
+tmp3.index.names=['DesAds','Selection']
+Evac.MG_strlog(Evac.str_indent(tmp3.to_string(),6),log_mg,1, printopt=False)
+tmp2=relDev(tmp3.loc(axis=0)[:,['Series1','Series2']],
+            tmp3.loc(axis=0)[:,'Complete'].droplevel(1,axis=0))
+Evac.MG_strlog("\n\n    - relative deviation of parameters:",
+               log_mg,1, printopt=False)
+Evac.MG_strlog(Evac.str_indent(tmp3.to_string(),6),log_mg,1, printopt=False)
+
+
 #%%% Plots
+fig, ax1 = plt.subplots()
+tmp=dft.loc(axis=1)[dft.columns.str.contains(r'^E_inc_F_.*_meanwoso$')].copy(deep=True)
+tmp.columns=tmp.columns.to_series().apply(lambda x: x.split('_')[-2])
+tmp.columns.name='Methods'
+tmp2=pd.melt(tmp.loc(axis=0)[:,['B','G']].reset_index(), 
+           id_vars='Variant', value_vars=tmp.columns)
+ax = sns.barplot(data=tmp2, 
+                 x='Methods',y='value', hue='Variant', ax=ax1, 
+                 seed=0, errwidth=1, capsize=0.2)
+ax1.set_title('%sYoungs moduli by determination variant (only load and variants B and G)'%name_Head)
+ax1.set_xlabel('Determination method / -')
+ax1.set_ylabel(r'$E$ / MPa')
+ax1.tick_params(axis='x', labelrotation=90)
+ax1.set_ylim([0,4500])
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=out_full+'-Box-YM-allMethods',**plt_Fig_dict)
 
 # cs.boxplot(column='DMWtoG',by='Variant')
 fig, ax1 = plt.subplots()
@@ -1464,6 +1805,36 @@ ax.legend(h,l, ncol=4,title='Specimen-No.',fontsize=6.0)
 fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=out_full+'-SL-DMWtoG-Var',**plt_Fig_dict)
 
+tmp=dft_comb.reset_index().sort_values(['Numsch','Variant'])
+fig, ax1 = plt.subplots()
+ax = sns.scatterplot(y='WC_vol',x='Variant',hue='Numsch',
+                     data=tmp,ax=ax1)
+ax = sns.lineplot(y='WC_vol',x='Variant',hue='Numsch',
+                  data=tmp,ax=ax1, legend=False)
+ax1.set_title('%sWater content of the different manipulation variants'%name_Head)
+ax1.set_xlabel('Variant / -')
+ax1.set_ylabel(r'$\Phi_{vol}$ / -')
+h,l = ax.axes.get_legend_handles_labels()
+ax.axes.legend_.remove()
+ax.legend(h,l, ncol=4,title='Specimen-No.',fontsize=6.0)
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=out_full+'-SL-WC_vol-Var',**plt_Fig_dict)
+
+tmp=dft_comb.reset_index().sort_values(['Numsch','Variant'])
+fig, ax1 = plt.subplots()
+ax = sns.scatterplot(y='WC_vol_rDA',x='Variant',hue='Numsch',
+                     data=tmp,ax=ax1)
+ax = sns.lineplot(y='WC_vol_rDA',x='Variant',hue='Numsch',
+                  data=tmp,ax=ax1, legend=False)
+ax1.set_title('%sRelative deviation of water content based on original one to manipulation variants'%name_Head)
+ax1.set_xlabel('Variant / -')
+ax1.set_ylabel(r'$D_{\Phi_{vol,org}}$ / -')
+h,l = ax.axes.get_legend_handles_labels()
+ax.axes.legend_.remove()
+ax.legend(h,l, ncol=4,title='Specimen-No.',fontsize=6.0)
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=out_full+'-SL-WC_vol_rDA-Var',**plt_Fig_dict)
+
 
 fig, ax1 = plt.subplots()
 ax = sns.scatterplot(y='DEFlutoB',x='Variant',hue='Numsch',data=t2,ax=ax1)
@@ -1553,8 +1924,190 @@ Evac.plt_handle_suffix(fig,path=out_full+'-SL-WC_vol-DEFlutoG',**plt_Fig_dict)
 # ax1.set_ylabel('Deviation / -')
 # Evac.plt_handle_suffix(fig,path=out_full+'-Box-comb_DMW-DEFlu',**plt_Fig_dict)
 
+#%%% SupMat-Plots
+figsize_sup=(16.0/2.54, 22.0/2.54)
 
+fig, ax = plt.subplots(ncols=1,nrows=3,
+                        figsize=figsize_sup, constrained_layout=True)
+ax[0] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(), 
+                 x='Variant', y='WC_vol_rDA', hue='Series', ax=ax[0],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"10","alpha":0.75})
+ax[0].set_title('Relative deviation of volumetric water content based on fresh')
+ax[0].set_xlabel('Variant / -')
+ax[0].set_ylabel(r'$D_{\Phi_{vol},fresh}$ / -')
+ax[1] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(), 
+                 x='Variant', y='DEFlutoB', hue='Series', ax=ax[1],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"10","alpha":0.75})
+ax[1].set_title('Relative deviation of elastic modulus based on water storaged')
+ax[1].set_xlabel('Variant / -')
+ax[1].set_ylabel(r'$D_{E,saturated}$ / -')
 
+tmp2=pd.concat([cs[['Series','WC_vol_rDA']],cEEm_eva['DEFlutoB']],axis=1)
+tmp21=tmp2.query("Series=='1'")
+tmp22=tmp2.query("Series=='2'")
+sns.scatterplot(data=tmp21.query("Variant<='G'"),
+                x='WC_vol_rDA', y='DEFlutoB',
+                ax=ax[2], label='Series 1 - Desorption', 
+                **dict(color=sns.color_palette("tab10")[0],
+                       marker="o"))
+sns.scatterplot(data=tmp21.query("Variant>='G'"),
+                x='WC_vol_rDA', y='DEFlutoB',
+                ax=ax[2], label='Series 1 - Adsorption',
+                **dict(color=sns.color_palette("tab10")[0],
+                       marker="P"))
+sns.scatterplot(data=tmp22.query("Variant<='G'"),
+                x='WC_vol_rDA', y='DEFlutoB',
+                ax=ax[2], label='Series 2 - Desorption', 
+                **dict(color=sns.color_palette("tab10")[1],
+                       marker="o"))
+sns.scatterplot(data=tmp22.query("Variant>='G'"),
+                x='WC_vol_rDA', y='DEFlutoB',
+                ax=ax[2], label='Series 2 - Adsorption',
+                **dict(color=sns.color_palette("tab10")[1],
+                       marker="P"))
+tmp=Regfitret(pdo=tmp21.query("Variant<='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+              name='exponential_x0', guess = dict(a=0, b=0.01, c=-1),
+              xl=r'D_{\Phi_{vol},fresh}',yl=r'D_{E,1,des}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg_fo(pdo=tmp2.query("Variant<='G'"),
+              x='WC_vol_rDA', fit=tmp, ax=ax[2], label_f=True,
+              lkws=dict(color=sns.color_palette("tab10")[0],
+                        linestyle='--'))
+tmp=Regfitret(pdo=tmp21.query("Variant>='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+              name='exponential', guess = dict(a=0.01, b=0.01, c=1),
+              xl=r'D_{\Phi_{vol},fresh}',yl=r'D_{E,1,ads}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg_fo(pdo=tmp2.query("Variant>='G'"),
+              x='WC_vol_rDA', fit=tmp, ax=ax[2], label_f=True,
+              lkws=dict(color=sns.color_palette("tab10")[0],
+                        linestyle=':'))
+tmp=Regfitret(pdo=tmp22.query("Variant<='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+              name='exponential_x0', guess = dict(a=0, b=0.01, c=-1),
+              xl=r'D_{\Phi_{vol},fresh}',yl=r'D_{E,2,des}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg_fo(pdo=tmp2.query("Variant<='G'"),
+              x='WC_vol_rDA', fit=tmp, ax=ax[2], label_f=True,
+              lkws=dict(color=sns.color_palette("tab10")[1],
+                        linestyle='--'))
+tmp=Regfitret(pdo=tmp22.query("Variant>='G'"),
+              x='WC_vol_rDA', y='DEFlutoB',
+              name='exponential', guess = dict(a=0.01, b=0.01, c=1),
+              xl=r'D_{\Phi_{vol},fresh}',yl=r'D_{E,2,ads}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg_fo(pdo=tmp2.query("Variant>='G'"),
+              x='WC_vol_rDA', fit=tmp, ax=ax[2], label_f=True,
+              lkws=dict(color=sns.color_palette("tab10")[1],
+                        linestyle=':'))
+tmp1,tmp2=ax[2].get_legend_handles_labels()
+tmp3=[4,5,6,7,0,1,2,3]
+ax[2].legend([tmp1[i] for i in tmp3], [tmp2[i] for i in tmp3],
+             ncol=2, fontsize=6)
+ax[2].set_xlabel(r'$D_{\Phi_{vol},fresh}$ / -')
+ax[2].set_ylabel(r'$D_{E,saturated}$ / -')
+ax[2].set_title('Relation between the relative deviations of elastic modulus and water content')
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=out_full+'-SM-Series_dep',**plt_Fig_dict)
+
+fig, ax = plt.subplots(ncols=1,nrows=3,
+                        figsize=figsize_sup, constrained_layout=True)
+ax[0] = sns.boxplot(data=dft_comb.query("Variant!='G'").reset_index(), 
+                 x='Variant', y='WC_vol', hue='Donor', ax=ax[0],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"4","alpha":0.75})
+ax[0].set_title('Volumetric water content')
+ax[0].set_xlabel('Variant / -')
+ax[0].set_ylabel(r'$\Phi_{vol}$ / -')
+ax[0].set_yscale("log")
+ax[0].set_yticks([0.1,1.0])
+ax[0].grid(True, which='both', axis='y')
+ax[1] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(), 
+                 x='Variant', y='WC_vol_rDA', hue='Donor', ax=ax[1],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"4","alpha":0.75})
+ax[1].set_title('Relative deviation of volumetric water content based on fresh')
+ax[1].set_xlabel('Variant / -')
+ax[1].set_ylabel(r'$D_{\Phi_{vol},fresh}$ / -')
+ax[2] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(), 
+                 x='Variant', y='DEFlutoB', hue='Donor', ax=ax[2],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"4","alpha":0.75})
+ax[2].set_title('Relative deviation of elastic modulus based on water storaged')
+ax[2].set_xlabel('Variant / -')
+ax[2].set_ylabel(r'$D_{E,saturated}$ / -')
+for i in range(ax.size):
+    ax[i].legend(loc="best",ncol=2)
+    Evac.tick_legend_renamer(ax=ax[i],
+                             renamer=doda.Naming.to_dict(),
+                             title='Donor')
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=out_full+'-SM-Donor_dep',**plt_Fig_dict)
+
+fig, ax = plt.subplots(ncols=1,nrows=3,
+                        figsize=figsize_sup, constrained_layout=True)
+ax[0] = sns.boxplot(data=dft_comb.query("Variant!='G'").reset_index(), 
+                 x='Variant', y='WC_vol', hue='Side_LR', ax=ax[0],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"10","alpha":0.75})
+ax[0].set_title('Volumetric water content')
+ax[0].set_xlabel('Variant / -')
+ax[0].set_ylabel(r'$\Phi_{vol}$ / -')
+ax[0].set_yscale("log")
+ax[0].set_yticks([0.1,1.0])
+ax[0].grid(True, which='both', axis='y')
+ax[1] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(), 
+                 x='Variant', y='WC_vol_rDA', hue='Side_LR', ax=ax[1],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"10","alpha":0.75})
+ax[1].set_title('Relative deviation of volumetric water content based on fresh')
+ax[1].set_xlabel('Variant / -')
+ax[1].set_ylabel(r'$D_{\Phi_{vol},fresh}$ / -')
+ax[2] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(), 
+                 x='Variant', y='DEFlutoB', hue='Side_LR', ax=ax[2],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"10","alpha":0.75})
+ax[2].set_title('Relative deviation of elastic modulus based on water storaged')
+ax[2].set_xlabel('Variant / -')
+ax[2].set_ylabel(r'$D_{E,saturated}$ / -')
+for i in range(ax.size):
+    Evac.tick_legend_renamer(ax=ax[i],
+                             renamer={'L':'Left','R':'Right'},
+                             title='Body side')
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=out_full+'-SM-Side_LR_dep',**plt_Fig_dict)
+
+fig, ax = plt.subplots(ncols=1,nrows=3,
+                        figsize=figsize_sup, constrained_layout=True)
+ax[0] = sns.boxplot(data=dft_comb.query("Variant!='G'").reset_index(), 
+                 x='Variant', y='WC_vol', hue='Side_pd', ax=ax[0],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"10","alpha":0.75})
+ax[0].set_title('Volumetric water content')
+ax[0].set_xlabel('Variant / -')
+ax[0].set_ylabel(r'$\Phi_{vol}$ / -')
+ax[0].set_yscale("log")
+ax[0].set_yticks([0.1,1.0])
+ax[0].grid(True, which='both', axis='y')
+ax[1] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(), 
+                 x='Variant', y='WC_vol_rDA', hue='Side_pd', ax=ax[1],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"10","alpha":0.75})
+ax[1].set_title('Relative deviation of volumetric water content based on fresh')
+ax[1].set_xlabel('Variant / -')
+ax[1].set_ylabel(r'$D_{\Phi_{vol},fresh}$ / -')
+ax[2] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(), 
+                 x='Variant', y='DEFlutoB', hue='Side_pd', ax=ax[2],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white", 
+                                            "markeredgecolor":"black", "markersize":"10","alpha":0.75})
+ax[2].set_title('Relative deviation of elastic modulus based on water storaged')
+ax[2].set_xlabel('Variant / -')
+ax[2].set_ylabel(r'$D_{E,saturated}$ / -')
+for i in range(ax.size):
+    Evac.tick_legend_renamer(ax=ax[i],
+                             renamer={'proximal':'proximal','distal':'distal'},
+                             title='Harvesting location')
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=out_full+'-SM-Side_pd_dep',**plt_Fig_dict)
 
 #%%% Influence
 tmp = dft[['RHenv','Humidity_store','DMWtoA','DMWtoG',
@@ -1656,25 +2209,32 @@ tmp=dft_comb.loc(axis=0)[:,'A'][['thickness_1','thickness_2','thickness_3']].mea
 tmp.name='t_mean'
 tmp2=dft_comb.loc(axis=0)[:,'A']['VolTot'].droplevel(1)
 tmp=pd.concat([tmp,tmp2],axis=1)
-tmp2=dft_comb.loc(axis=0)[:,['A','G']][['Mass']].unstack()
+tmp2=dft_comb.loc(axis=0)[:,['A','G']][['Density_app']].unstack()
 tmp=pd.concat([tmp,tmp2],axis=1)
 tmp2=dft_comb.loc(axis=0)[:,'A'][['WC_vol']].unstack()
 tmp=pd.concat([tmp,tmp2],axis=1)
 tmp2=dft_comb.loc(axis=0)[:,['B','C','L']][['WC_vol_rDA']].unstack()
 tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,'B'][['lu_F_mean']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
 tmp2=dft_comb.loc(axis=0)[:,['C','G','L']][['DEFlutoB']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,'B'][['Hyst_APn']].unstack()
 tmp=pd.concat([tmp,tmp2],axis=1)
 tmp2=dft_comb.loc(axis=0)[:,['C','G','L']][['DHAPntoB']].unstack()
 tmp=pd.concat([tmp,tmp2],axis=1)
 tmp_ren={'t_mean':r'$\overline{t}$','VolTot':r'$V_{total}$',
-         ('Mass','A'): r'$m_{fresh}$',('Mass','G'): r'$m_{dry}$',
+         ('Density_app','A'): r'$\rho_{app,fresh}$',
+         ('Density_app','G'): r'$\rho_{app,dry}$',
          ('WC_vol','A'): r'$\Phi_{vol,fresh}$',
          ('WC_vol_rDA','B'):r'$D_{\Phi_{vol},B-fresh}$',
          ('WC_vol_rDA','C'):r'$D_{\Phi_{vol},C-fresh}$',
          ('WC_vol_rDA','L'):r'$D_{\Phi_{vol},L-fresh}$',
+         ('lu_F_mean','B'):r'$E_{sat}$',
          ('DEFlutoB','C'):r'$D_{E,C-sat}$',
          ('DEFlutoB','G'):r'$D_{E,G-sat}$',
          ('DEFlutoB','L'):r'$D_{E,L-sat}$',
+         ('Hyst_APn','B'):r'$H_{n,sat}$',
          ('DHAPntoB','C'):r'$D_{H_{n},C-sat}$',
          ('DHAPntoB','G'):r'$D_{H_{n},G-sat}$',
          ('DHAPntoB','L'):r'$D_{H_{n},L-sat}$'}
@@ -1682,10 +2242,12 @@ fig, ax = plt.subplots(nrows=2, ncols=2,
                        gridspec_kw={'width_ratios': [29, 1],
                                     'height_ratios': [1,1.4]},
                        figsize = (6.3,3.54))
-tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',('Mass','A'),('Mass','G'),('WC_vol','A')],
-                                [('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','C'),('WC_vol_rDA','L')]]
+tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',('Density_app','A'),('Density_app','G'),
+                                 ('WC_vol','A')],
+                                [('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','C'),
+                                 ('WC_vol_rDA','L')]]
 g=sns.heatmap(tmp3.rename(index=tmp_ren,columns=tmp_ren).round(2), 
-              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+              center=0, vmin=-0.7,vmax=0.7, annot=True, annot_kws={"size":8, 'rotation':0},
               xticklabels=1, ax=ax[0,0],cbar_ax=ax[0,1])
 ax[0,0].set_title("Influences on water manipulation")
 ax[0,0].tick_params(axis='x', labelrotation=0, labelsize=8)
@@ -1693,12 +2255,13 @@ ax[0,0].tick_params(axis='y', labelrotation=0, labelsize=8)
 ax[0,1].tick_params(axis='y', labelsize=8)
 ax[0,0].set_xlabel('Selected parameters')
 ax[0,0].set_ylabel('Selected influences')
-tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',('Mass','A'),('Mass','G'),
+tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',
+                                 ('Density_app','A'),('Density_app','G'),
                                  ('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','L')],
-                                [('DEFlutoB','C'),('DEFlutoB','G'),('DEFlutoB','L'),
-                                 ('DHAPntoB','C'),('DHAPntoB','G'),('DHAPntoB','L')]]
+                                [('lu_F_mean','B'),('DEFlutoB','C'),('DEFlutoB','G'),('DEFlutoB','L'),
+                                 ('Hyst_APn','B'),('DHAPntoB','C'),('DHAPntoB','G'),('DHAPntoB','L')]]
 g=sns.heatmap(tmp3.rename(index=tmp_ren,columns=tmp_ren).round(2), 
-              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+              center=0, vmin=-0.7,vmax=0.7, annot=True, annot_kws={"size":8, 'rotation':0},
               xticklabels=1, ax=ax[1,0],cbar_ax=ax[1,1])
 ax[1,0].set_title("Influences on mechanical parameters")
 ax[1,0].tick_params(axis='x', labelrotation=0, labelsize=8)
@@ -1708,6 +2271,60 @@ ax[1,0].set_xlabel('Selected parameters')
 ax[1,0].set_ylabel('Selected influences')
 fig.suptitle(None)
 Evac.plt_handle_suffix(fig,path=out_full+'-Corr-Sel',**plt_Fig_dict)
+
+# Correlation to Donordata
+tmp=dft_comb.loc(axis=0)[:,'A'][['thickness_1','thickness_2','thickness_3']].mean(axis=1).droplevel(1)
+tmp.name='t_mean'
+tmp2=dft_comb.loc(axis=0)[:,['A','G']][['Mass','VolTot']]
+tmp2=(tmp2['Mass']/tmp2['VolTot']).unstack()
+tmp2.columns=tmp2.columns.to_series().replace({'A':'Density_fresh','G':'Density_dry'})
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,'A'][['WC_vol']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,['B','C','L']][['WC_vol_rDA']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,['B']][['lu_F_mean']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,['C','G','L']][['DEFlutoB']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,['B']][['Hyst_APn']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp2=dft_comb.loc(axis=0)[:,['C','G','L']][['DHAPntoB']].unstack()
+tmp=pd.concat([tmp,tmp2],axis=1)
+tmp3=dft_doda_comb.loc[idx[:,'G'],['Postmortem_LT','Storage_Time','Age','BMI','Sex']].droplevel(1).copy(deep=True)
+tmp3['Sex'].replace({'w':1,'m':-1}, inplace=True)
+tmp_corr=pd.concat([tmp,tmp3],axis=1).corr(method=mcorr)
+tmp_ren={'t_mean':r'$\overline{h}$','VolTot':r'$V_{total}$',
+         'Density_fresh': r'$\rho_{app,fresh}$','Density_dry': r'$\rho_{app,dry}$',
+         ('WC_vol','A'): r'$\Phi_{vol,fresh}$',
+         ('WC_vol_rDA','B'):r'$D_{\Phi_{vol},B-fresh}$',
+         ('WC_vol_rDA','C'):r'$D_{\Phi_{vol},C-fresh}$',
+         ('WC_vol_rDA','L'):r'$D_{\Phi_{vol},L-fresh}$',
+         ('lu_F_mean','B'):r'$E_{sat}$',
+         ('DEFlutoB','C'):r'$D_{E,C-sat}$',
+         ('DEFlutoB','G'):r'$D_{E,G-sat}$',
+         ('DEFlutoB','L'):r'$D_{E,L-sat}$',
+         ('Hyst_APn','B'):r'$H_{n,sat}$',
+         ('DHAPntoB','C'):r'$D_{H_{n},C-sat}$',
+         ('DHAPntoB','G'):r'$D_{H_{n},G-sat}$',
+         ('DHAPntoB','L'):r'$D_{H_{n},L-sat}$',
+         'Postmortem_LT':r'$t_{PML}$',
+         'Storage_Time':r'$t_{store}$',
+         'Age':r'$Age$','BMI':r'$BMI$','Sex':r'$Sex$'}
+fig, ax = plt.subplots(nrows=1, ncols=2, 
+                       gridspec_kw={'width_ratios': [29, 1]},
+                       constrained_layout=True)
+#ax[0].set_title('%s\nInfluence of donor data'%name_Head)
+g=sns.heatmap(tmp_corr.loc[tmp.columns,tmp3.columns].rename(index=tmp_ren,columns=tmp_ren).round(2), 
+              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+              xticklabels=1, ax=ax[0],cbar_ax=ax[1])
+ax[0].tick_params(axis='x', labelrotation=0, labelsize=8)
+ax[0].tick_params(axis='y', labelrotation=0, labelsize=8)
+ax[1].tick_params(axis='y', labelsize=8)
+ax[0].set_xlabel('Selected donor related influences')
+ax[0].set_ylabel('Selected parameters')
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=out_full+'-Corr-Doda',**plt_Fig_dict)
 
 #%%% Regression
 #%%%% Berechnung
@@ -2230,119 +2847,6 @@ plt_RegD(pdo=t2, x='DMWtoG', y='DEFlutoG',
          path=out_full+'-Regd-DMWtoG-DEFlutoG', plt_Fig_dict=plt_Fig_dict)
 
 #%%% Exponential Regression
-import lmfit
-def func_exp(x, a, b, c):
-    """Return values from a general exponential function."""
-    return a + b * np.exp(c * x)
-
-def func_exp_str(xl, yl, 
-                 a, b, c, 
-                 t_form='{a:.3e},{b:.3e},{c:.3e}'):
-    """Return string from a general exponential function."""
-    txtc = t_form.format(**{'a':a,'b':b,'c':c},).split(',')
-    # txt = r'{y} = {0} + {1} $e$^{{2}{x}}'.format(*txtc,**{'y':yl,'x':xl},)
-    txtd = '{0}\,{1}'.format(txtc[2],xl,)
-    # txt = r'{y} = {0} + {1} $e^{2}{3}{4}$'.format(txtc[0],txtc[1],
-    #                                             '{',txtd,'}',**{'y':yl},)
-    if a==0:
-        txt = r'${y}\,=\,{0}\,e^{1}{2}{3}$'.format(txtc[1],
-                                                    '{',txtd,'}',**{'y':yl},)
-    elif a==(-b):
-        txt = r'${y}\,=\,{0}\,(e^{1}{2}{3}-1)$'.format(txtc[1],
-                                                '{',txtd,'}',**{'y':yl},)
-    else:
-        txt = r'${y}\,=\,{0}\,+\,{1}\,e^{2}{3}{4}$'.format(txtc[0],txtc[1],
-                                                    '{',txtd,'}',**{'y':yl},)
-    # txt = r'{y} = {0} + {1} $e$^{2}{3}{4}'.format(txtc[0],txtc[1],
-    #                                             '(',txtd,')',**{'y':yl},)
-    return txt
-
-
-def func_lin(x, a, b):
-    """Return values from a general linear function."""
-    return a + b * x
-
-def func_lin_str(xl, yl, 
-                 a, b,
-                 t_form='{a:.3e},{b:.3e}'):
-    """Return string from a general linear function."""
-    txtc = t_form.format(**{'a':a,'b':b},).split(',')
-    if a==0:
-        txt = r'${y}\,=\,{0}\,{x}$'.format(txtc[1],
-                                           **{'y':yl,'x':xl},)
-    else:
-        txt = r'${y}\,=\,{0}\,+\,{1}\,{x}$'.format(txtc[0],txtc[1],
-                                                   **{'y':yl,'x':xl},)
-    return txt
-
-def plt_Regc(pdo, x, y, xl,yl, 
-             fit,
-             title, path, plt_Fig_dict):
-    fig, ax1 = plt.subplots()
-    ax1.grid(True)
-    ax1.set_title(title)
-    sns.scatterplot(x=x, y=y, data=pdo, ax=ax1, label='data')
-    xtmp = np.linspace(pdo[x].min(), pdo[x].max(), 101)
-    ytmp = fit.model.eval(x=xtmp, **fit.result.params.valuesdict())
-    sns.lineplot(x=xtmp, y=ytmp, ax=ax1, label='fit')
-    ax1.set_xlabel(xl+' / -')
-    ax1.set_ylabel(yl+' / -')
-    ax1.legend()
-    fig.suptitle('')
-    Evac.plt_handle_suffix(fig,path=path,**plt_Fig_dict)
-    
-def plt_ax_Reg(pdo, x, y,  
-               fit={}, ax=None, label_d='Data', label_f=False,
-               xlabel=None, ylabel=None, title=None,
-               skws={}, lkws={}):
-    if ax is None: ax = plt.gca()
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    sns.scatterplot(x=x, y=y, data=pdo, ax=ax, label=label_d, **skws)
-    xtmp = np.linspace(pdo[x].min(), pdo[x].max(), 101)
-    ytmp = fit['Model'].eval(x=xtmp, **fit['PD'])
-    if label_f:
-        ltxt=fit['Exp_txt']+' ($R²$={:.3f})'.format(fit['Rquad'])
-    else:
-        ltxt='Fit-%s'%fit['Name']
-    sns.lineplot(x=xtmp, y=ytmp, ax=ax, label=ltxt, **lkws)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.legend()
-    return ax
-
-def Regfitret(pdo, x,y, name='exponential', guess = dict(a=-0.01, b=0.1, c=-1),
-              xl=r'$X$', yl=r'$Y$', t_form='{a:.3e},{b:.3e},{c:.3e}', max_nfev=1000):
-    if name in ['linear','linear_nc']:
-        func=func_lin
-        func_str=func_lin_str
-    elif name in ['exponential','exponential_nc','exponential_x0']:
-        func=func_exp
-        func_str=func_exp_str
-    else:
-        raise NotImplementedError('Type %s not implemented!'%name)
-    model=lmfit.Model(func)
-    params=model.make_params()
-    if name in ['linear_nc','exponential_nc']:
-        params.add('a', value=0, vary=False)
-    elif name in ['linear_x0']:
-        params.add('a', value=guess['a'], vary=False)
-    elif name in ['exponential_x0']:
-        y0=guess.pop('a')
-        params.add('a', value=None, expr="{:.8e}-b".format(y0), vary=False)
-    # fit = model.fit(pdo[y], x=pdo[x], nan_policy='omit', **guess)
-    fit = model.fit(pdo[y], x=pdo[x], params=params, nan_policy='omit', **guess)
-    Rquad  = 1 - fit.residual.var() / np.nanvar(pdo[y])      
-    fit.rsqur=Rquad
-    rtxt=lmfit.fit_report(fit.result)
-    rtxt=rtxt.replace("\n[[Variables]]",
-                      "\n    R-square           = %1.8f\n[[Variables]]"%Rquad)
-    etxt=func_str(xl=xl, yl=yl, t_form=t_form, **fit.result.params.valuesdict())
-    out = {'Name': name, 'Model': model, 'Result': fit, 
-           'PD': fit.result.params.valuesdict(),
-           'Exp_txt': etxt, 'Rep_txt': rtxt, 'Rquad': Rquad}
-    return out
 
 tmp=Regfitret(pdo=t2[t2.Variant<='G'], x='DMWtoA', y='DEFlutoB',
           # name='exponential', guess = dict(a=-0.01, b=0.1, c=-1),
@@ -2387,60 +2891,78 @@ Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 # title='%s\nRegression of Youngs Modulus (fixed range) deviation versus mass deviation to original'%name_Head,
 # path=out_full+'-Rege-DMWtoA-DEFlutoB', plt_Fig_dict=plt_Fig_dict)
 
-tmp=Regfitret(pdo=cs.query("Variant<='G'"), x='RHenv', y='DMWtoG',
-          name='exponential', guess = dict(a=-0.01, b=0.1, c=-1),
-          xl=r'\Phi_{env}',yl=r'D_{m,dry}', t_form='{a:.3e},{b:.3e},{c:.3f}')
-fig, ax1 = plt.subplots()
-plt_ax_Reg(pdo=cs.query("Variant<='G'"), x='RHenv', y='DMWtoG',
-            fit=tmp, ax=ax1, label_f=True,
-            xlabel=r'$\Phi_{env}$', ylabel=r'$D_{m,dry}$', title='bla')
-fig.suptitle('')
-Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+# tmp=Regfitret(pdo=cs.query("Variant<='G'"), x='RHenv', y='DMWtoG',
+#           name='exponential', guess = dict(a=-0.01, b=0.1, c=-1),
+#           xl=r'\Phi_{env}',yl=r'D_{m,dry}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+# fig, ax1 = plt.subplots()
+# plt_ax_Reg(pdo=cs.query("Variant<='G'"), x='RHenv', y='DMWtoG',
+#             fit=tmp, ax=ax1, label_f=True,
+#             xlabel=r'$\Phi_{env}$', ylabel=r'$D_{m,dry}$', title='bla')
+# fig.suptitle('')
+# Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
-tmp=Regfitret(pdo=cs.query("Variant<='G'"), x='RHenv', y='DMWtoG',
-          name='exponential_x0', guess = dict(a=0, b=0.1, c=-1),
-          xl=r'\Phi_{env}',yl=r'D_{m,dry}', t_form='{a:.3e},{b:.3e},{c:.3f}')
-fig, ax1 = plt.subplots()
-plt_ax_Reg(pdo=cs.query("Variant<='G'"), x='RHenv', y='DMWtoG',
-            fit=tmp, ax=ax1, label_f=True,
-            xlabel=r'$\Phi_{env}$', ylabel=r'$D_{m,dry}$', title='bla')
-fig.suptitle('')
-Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+# tmp=Regfitret(pdo=cs.query("Variant<='G'"), x='RHenv', y='DMWtoG',
+#           name='exponential_x0', guess = dict(a=0, b=0.1, c=-1),
+#           xl=r'\Phi_{env}',yl=r'D_{m,dry}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+# fig, ax1 = plt.subplots()
+# plt_ax_Reg(pdo=cs.query("Variant<='G'"), x='RHenv', y='DMWtoG',
+#             fit=tmp, ax=ax1, label_f=True,
+#             xlabel=r'$\Phi_{env}$', ylabel=r'$D_{m,dry}$', title='bla')
+# fig.suptitle('')
+# Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
-tmp=Regfitret(pdo=dft.query("Variant<='G'"), x='Humidity_store', y='DMWtoG',
-          name='exponential_x0', guess = dict(a=0, b=0.1, c=0.03),
-          xl=r'\Phi_{env}',yl=r'D_{m,dry}', t_form='{a:.3e},{b:.3e},{c:.3f}')
-fig, ax1 = plt.subplots()
-plt_ax_Reg(pdo=dft.query("Variant<='G'"), x='Humidity_store', y='DMWtoG',
-            fit=tmp, ax=ax1, label_f=True,
-            xlabel=r'$\Phi_{env}$', ylabel=r'$D_{m,dry}$', title='bla')
-fig.suptitle('')
-Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
-tmp=Regfitret(pdo=dft.query("Variant>='G'"), x='Humidity_store', y='DMWtoG',
-          name='exponential_x0', guess = dict(a=0, b=0.001, c=0.03),
-          xl=r'\Phi_{env}',yl=r'D_{m,dry}', t_form='{a:.3e},{b:.3e},{c:.3f}')
-fig, ax1 = plt.subplots()
-plt_ax_Reg(pdo=dft.query("Variant>='G'"), x='Humidity_store', y='DMWtoG',
-            fit=tmp, ax=ax1, label_f=True,
-            xlabel=r'$\Phi_{env}$', ylabel=r'$D_{m,dry}$', title='bla')
-fig.suptitle('')
-Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+# tmp=Regfitret(pdo=dft.query("Variant<='G'"), x='Humidity_store', y='DMWtoG',
+#           name='exponential_x0', guess = dict(a=0, b=0.1, c=0.03),
+#           xl=r'\Phi_{env}',yl=r'D_{m,dry}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+# fig, ax1 = plt.subplots()
+# plt_ax_Reg(pdo=dft.query("Variant<='G'"), x='Humidity_store', y='DMWtoG',
+#             fit=tmp, ax=ax1, label_f=True,
+#             xlabel=r'$\Phi_{env}$', ylabel=r'$D_{m,dry}$', title='bla')
+# fig.suptitle('')
+# Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+# tmp=Regfitret(pdo=dft.query("Variant>='G'"), x='Humidity_store', y='DMWtoG',
+#           name='exponential_x0', guess = dict(a=0, b=0.001, c=0.03),
+#           xl=r'\Phi_{env}',yl=r'D_{m,dry}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+# fig, ax1 = plt.subplots()
+# plt_ax_Reg(pdo=dft.query("Variant>='G'"), x='Humidity_store', y='DMWtoG',
+#             fit=tmp, ax=ax1, label_f=True,
+#             xlabel=r'$\Phi_{env}$', ylabel=r'$D_{m,dry}$', title='bla')
+# fig.suptitle('')
+# Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
 fig, ax1 = plt.subplots()
-tmp=Regfitret(pdo=dft.query("Variant<='G'"), x='Humidity_store', y='WC_vol',
-          name='exponential_x0', guess = dict(a=0, b=0.1, c=0.03),
+# tmp=Regfitret(pdo=dft.query("Variant<='G'"), x='Humidity_store', y='WC_vol',
+#           name='exponential_x0', guess = dict(a=0, b=0.1, c=0.03),
+#           xl=r'\Phi_{env}',yl=r'\Phi_{vol,des}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+# plt_ax_Reg(pdo=dft.query("Variant<='G'"), x='Humidity_store', y='WC_vol',
+#             fit=tmp, ax=ax1, label_f=True, label_d='Data Desorption',
+#             xlabel=r'$\Phi_{env}$', ylabel=r'$\Phi_{vol,des}$', title='bla',
+#             skws=dict(color=sns.color_palette("tab10")[3]),
+#             lkws=dict(color=sns.color_palette("tab10")[1]))
+# tmp=Regfitret(pdo=dft.query("Variant>='G'"), x='Humidity_store', y='WC_vol',
+#           name='exponential_x0', guess = dict(a=0, b=0.1, c=0.03),
+#           xl=r'\Phi_{env}',yl=r'\Phi_{vol,ads}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+# plt_ax_Reg(pdo=dft.query("Variant>='G'"), x='Humidity_store', y='WC_vol',
+#             fit=tmp, ax=ax1, label_f=True, label_d='Data Adsorption',
+#             xlabel=r'$\Phi_{env}$ / %', ylabel=r'$\Phi_{vol}$ / -', 
+#             title='Exponential regression of water content vs. relative storage humidity',
+#             skws=dict(color=sns.color_palette("tab10")[2]),
+#             lkws=dict(color=sns.color_palette("tab10")[0]))
+fig, ax1 = plt.subplots()
+tmp=Regfitret(pdo=dft.query("Variant<='G'"), x='RHstore', y='WC_vol',
+          name='exponential_x0', guess = dict(a=0, b=0.1, c=10),
           xl=r'\Phi_{env}',yl=r'\Phi_{vol,des}', t_form='{a:.3e},{b:.3e},{c:.3f}')
-plt_ax_Reg(pdo=dft.query("Variant<='G'"), x='Humidity_store', y='WC_vol',
+plt_ax_Reg(pdo=dft.query("Variant<='G'"), x='RHstore', y='WC_vol',
             fit=tmp, ax=ax1, label_f=True, label_d='Data Desorption',
             xlabel=r'$\Phi_{env}$', ylabel=r'$\Phi_{vol,des}$', title='bla',
             skws=dict(color=sns.color_palette("tab10")[3]),
             lkws=dict(color=sns.color_palette("tab10")[1]))
-tmp=Regfitret(pdo=dft.query("Variant>='G'"), x='Humidity_store', y='WC_vol',
-          name='exponential_x0', guess = dict(a=0, b=0.1, c=0.03),
+tmp=Regfitret(pdo=dft.query("Variant>='G'"), x='RHstore', y='WC_vol',
+          name='exponential_x0', guess = dict(a=0, b=0.1, c=2),
           xl=r'\Phi_{env}',yl=r'\Phi_{vol,ads}', t_form='{a:.3e},{b:.3e},{c:.3f}')
-plt_ax_Reg(pdo=dft.query("Variant>='G'"), x='Humidity_store', y='WC_vol',
+plt_ax_Reg(pdo=dft.query("Variant>='G'"), x='RHstore', y='WC_vol',
             fit=tmp, ax=ax1, label_f=True, label_d='Data Adsorption',
-            xlabel=r'$\Phi_{env}$ / %', ylabel=r'$\Phi_{vol}$ / -', 
+            xlabel=r'$\Phi_{env}$ / -', ylabel=r'$\Phi_{vol}$ / -', 
             title='Exponential regression of water content vs. relative storage humidity',
             skws=dict(color=sns.color_palette("tab10")[2]),
             lkws=dict(color=sns.color_palette("tab10")[0]))
@@ -2448,30 +2970,30 @@ fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
 
-fig, ax1 = plt.subplots()
-tmp=Regfitret(pdo=dft.query("Variant<='G' and Variant!='B'"),
-          x='Humidity_store', y='WC_vol',
-          name='exponential', guess = dict(a=0, b=0.1, c=0.03),
-          xl=r'\Phi_{env}',yl=r'\Phi_{vol,des}', t_form='{a:.3e},{b:.3e},{c:.3f}')
-plt_ax_Reg(pdo=dft.query("Variant<='G' and Variant!='B'"), 
-            x='Humidity_store', y='WC_vol',
-            fit=tmp, ax=ax1, label_f=True, label_d='Data Desorption',
-            xlabel=r'$\Phi_{env}$', ylabel=r'$\Phi_{vol,des}$', title='bla',
-            skws=dict(color=sns.color_palette("tab10")[3]),
-            lkws=dict(color=sns.color_palette("tab10")[1]))
-tmp=Regfitret(pdo=dft.query("Variant>='G' and Variant!='L'"),
-              x='Humidity_store', y='WC_vol',
-          name='exponential', guess = dict(a=0, b=0.1, c=0.03),
-          xl=r'\Phi_{env}',yl=r'\Phi_{vol,ads}', t_form='{a:.3e},{b:.3e},{c:.3f}')
-plt_ax_Reg(pdo=dft.query("Variant>='G' and Variant!='L'"), 
-            x='Humidity_store', y='WC_vol',
-            fit=tmp, ax=ax1, label_f=True, label_d='Data Adsorption',
-            xlabel=r'$\Phi_{env}$ / %', ylabel=r'$\Phi_{vol}$ / -', 
-            title='Exponential regression of water content vs. relative storage humidity',
-            skws=dict(color=sns.color_palette("tab10")[2]),
-            lkws=dict(color=sns.color_palette("tab10")[0]))
-fig.suptitle('')
-Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+# fig, ax1 = plt.subplots()
+# tmp=Regfitret(pdo=dft.query("Variant<='G' and Variant!='B'"),
+#           x='Humidity_store', y='WC_vol',
+#           name='exponential', guess = dict(a=0, b=0.1, c=0.03),
+#           xl=r'\Phi_{env}',yl=r'\Phi_{vol,des}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+# plt_ax_Reg(pdo=dft.query("Variant<='G' and Variant!='B'"), 
+#             x='Humidity_store', y='WC_vol',
+#             fit=tmp, ax=ax1, label_f=True, label_d='Data Desorption',
+#             xlabel=r'$\Phi_{env}$', ylabel=r'$\Phi_{vol,des}$', title='bla',
+#             skws=dict(color=sns.color_palette("tab10")[3]),
+#             lkws=dict(color=sns.color_palette("tab10")[1]))
+# tmp=Regfitret(pdo=dft.query("Variant>='G' and Variant!='L'"),
+#               x='Humidity_store', y='WC_vol',
+#           name='exponential', guess = dict(a=0, b=0.1, c=0.03),
+#           xl=r'\Phi_{env}',yl=r'\Phi_{vol,ads}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+# plt_ax_Reg(pdo=dft.query("Variant>='G' and Variant!='L'"), 
+#             x='Humidity_store', y='WC_vol',
+#             fit=tmp, ax=ax1, label_f=True, label_d='Data Adsorption',
+#             xlabel=r'$\Phi_{env}$ / %', ylabel=r'$\Phi_{vol}$ / -', 
+#             title='Exponential regression of water content vs. relative storage humidity',
+#             skws=dict(color=sns.color_palette("tab10")[2]),
+#             lkws=dict(color=sns.color_palette("tab10")[0]))
+# fig.suptitle('')
+# Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
 
 # angestrebte Luftfeuchte
@@ -2758,7 +3280,7 @@ tmp=Regfitret(pdo=tmp21.query("Variant<='G'"),
 plt_ax_Reg(pdo=tmp21.query("Variant<='G'"),
               x='WC_vol_rDA', y='DEFlutoB',
             fit=tmp, ax=ax1, label_f=True, label_d='Data Series 1',
-            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat,1}$', 
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat}$', 
             title='bla',
             skws=dict(color=sns.color_palette("tab10")[0]),
             lkws=dict(color=sns.color_palette("tab10")[2]))
@@ -2769,7 +3291,7 @@ tmp=Regfitret(pdo=tmp22.query("Variant<='G'"),
 plt_ax_Reg(pdo=tmp22.query("Variant<='G'"),
               x='WC_vol_rDA', y='DEFlutoB',
             fit=tmp, ax=ax1, label_f=True, label_d='Data Series 2',
-            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat,2}$', 
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat}$', 
             title='Relation between relative deviation of Youngs Modulus to saturated\nand relative deviation of water content to fresh (Desorption, separated by series)',
             skws=dict(color=sns.color_palette("tab10")[4]),
             lkws=dict(color=sns.color_palette("tab10")[5]))
@@ -2797,7 +3319,7 @@ tmp=Regfitret(pdo=tmp21.query("Variant>='G'"),
 plt_ax_Reg(pdo=tmp21.query("Variant>='G'"),
               x='WC_vol_rDA', y='DEFlutoB',
             fit=tmp, ax=ax1, label_f=True, label_d='Data Series 1',
-            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat,1}$', 
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat}$', 
             title='bla',
             skws=dict(color=sns.color_palette("tab10")[0]),
             lkws=dict(color=sns.color_palette("tab10")[2]))
@@ -2808,8 +3330,8 @@ tmp=Regfitret(pdo=tmp22.query("Variant>='G'"),
 plt_ax_Reg(pdo=tmp22.query("Variant>='G'"),
               x='WC_vol_rDA', y='DEFlutoB',
             fit=tmp, ax=ax1, label_f=True, label_d='Data Series 2',
-            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat,2}$', 
-            title='Relation between relative deviation of Youngs Modulus to saturated\nand relative deviation of water content to fresh (Adsorptionf, separated by series)',
+            xlabel=r'$D_{\Phi_{vol},org}$', ylabel=r'$D_{E,sat}$', 
+            title='Relation between relative deviation of Youngs Modulus to saturated\nand relative deviation of water content to fresh (Adsorption, separated by series)',
             skws=dict(color=sns.color_palette("tab10")[4]),
             lkws=dict(color=sns.color_palette("tab10")[5]))
 fig.suptitle('')
