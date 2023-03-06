@@ -681,6 +681,14 @@ def VIP_rebuild(ser):
             tmp3[j]=tmp2.loc[i]
     return tmp3
 
+def interp_twocols(pdo, indcol, valcol, searchind=0.0, 
+                   iS=None, iE=None, intmeth='spline', order=2):
+    pdt=Evac.pd_limit(pdo, iS=iS, iE=iE).copy(deep=True)
+    pdt=pd.Series(pdt[valcol].values, index=pdt[indcol].values)
+    pdt.loc[searchind]=np.nan
+    pdt=pdt.sort_index().interpolate(intmeth, order=order, limit_direction='both')
+    return pdt.loc[searchind]
+
 # data_read = pd.HDFStore(combpaths.loc[data,'in']+'_all.h5','r')
 data_read = pd.HDFStore(combpaths.loc[data,'in']+'.h5','r')
 dfEt=data_read['Add_/E_inc_df']
@@ -742,6 +750,8 @@ for i in dfEt.index:
                                         y='Stress',x='Strain_opt_d_M')
     tmp['Wdu_u_opt_P']  = Evac.pd_trapz(tmpM.loc[indU:indPu].iloc[::-1],
                                         y='Stress',x='Strain_opt_d_M')
+    tmp['epl_opt'] = interp_twocols(pdo=tmpM, indcol='Stress', valcol='Strain_opt_d_M',
+                               iS=indU, iE=None, intmeth='spline', order=2)
     cHt=cHt.append(tmp)
 
 cEt.columns = cEt.columns.str.split('_', expand=True)
@@ -762,6 +772,7 @@ cHt['Hyst_A']=cHt['Wdu_l_opt']-cHt['Wdu_u_opt']
 cHt['Hyst_AP']=cHt['Wdu_l_opt_P']-cHt['Wdu_u_opt_P']
 cHt['Hyst_An']=cHt['Hyst_A']/dft['fu']/dft['eu_opt']
 cHt['Hyst_APn']=cHt['Hyst_AP']/dft['fu']/dft['eu_opt']
+cHt['epl_opt_n']=cHt['epl_opt']/dft['eu_opt']
 stafc_dest=dft['statistics'].copy(deep=True)
 stafc_dest.loc[:,'G']=stafc_dest.loc[:,'H'].values
 # cH_eva=cHt.loc[dft['statistics']].sort_index()
@@ -863,7 +874,16 @@ Evac.MG_strlog(Evac.str_indent(dft[['Temperature_test','Humidity_test']].agg(agg
                log_mg, printopt=False)
 Evac.MG_strlog("\n\n   - Storage conditions:",
                log_mg, printopt=False)
-Evac.MG_strlog("\n\n    - Difference actual-envisaged",
+Evac.MG_strlog("\n    -Envisaged to measured (grouped by series)",
+               log_mg, printopt=False)
+tmp2=dft.groupby(['Series','Variant'])[['RHstore','RHenv']].max()
+tmp2=tmp2.unstack(level=0).loc['C':'K']
+tmp=tmp2['RHstore']-tmp2['RHenv']
+tmp.columns=pd.MultiIndex.from_product([['Difference'],tmp.columns])
+tmp2=pd.concat([tmp2,tmp],axis=1)
+Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),6),
+               log_mg, printopt=False)
+Evac.MG_strlog("\n    - Difference actual-envisaged",
                log_mg, printopt=False)
 # tmp=dft[['Humidity_store','RHenv']]
 # tmp=tmp.eval("Humidity_store-RHenv*100").groupby('Variant').agg(agg_funcs)
@@ -871,7 +891,7 @@ tmp=dft[['RHstore','RHenv']]
 tmp2=tmp.eval("RHstore-RHenv").groupby('Variant').agg(agg_funcs)
 Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),6),
                log_mg, printopt=False)
-Evac.MG_strlog("\n\n    - Relative deviation actual-envisaged",
+Evac.MG_strlog("\n    - Relative deviation actual-envisaged",
                log_mg, printopt=False)
 # tmp2=relDev(tmp['Humidity_store'],tmp['RHenv']*100).groupby('Variant').agg(agg_funcs)
 tmp2=relDev(tmp['RHstore'],tmp['RHenv']).groupby('Variant').agg(agg_funcs)
@@ -1255,6 +1275,21 @@ tmp2=stats.wilcoxon(cEEm_eva.loc[idx[:,'G'],'DEFlutoB'])
 Evac.MG_strlog(Evac.str_indent("DEtoB G equal B: %s"%str(tmp2),6), 
                log_mg,1, printopt=False)
 
+Evac.MG_strlog("\n\n  %s YM deviation (to dry) vs. variant:"%mpop,
+               log_mg, 1, printopt=False)
+txt,_,T = Evac.group_ANOVA_MComp(df=t2, groupby='Variant', 
+                                 ano_Var='DEFlutoG',
+                                 group_str='Variant', ano_str='Dev. YM to B',
+                                 mpop=mpop, alpha=alpha,  group_ren={}, **MComp_kws)
+Evac.MG_strlog(Evac.str_indent(txt),log_mg,1,printopt=False)
+d,txt2 = Evac.MComp_interpreter(T)
+Evac.MG_strlog("\n  -> Multicomparison relationship interpretation (groups that share similar letter have an equal mean):",
+                log_mg,1,printopt=False)
+Evac.MG_strlog(Evac.str_indent(d,6), log_mg,1,printopt=False)
+tmp2=stats.wilcoxon(cEEm_eva.loc[idx[:,'L'],'DEFlutoG'])
+Evac.MG_strlog(Evac.str_indent("DEtoG L equal G: %s"%str(tmp2),6), 
+               log_mg,1, printopt=False)
+
 
 
 Evac.MG_strlog("\n\n  %s mean YM vs. variant:"%mpop,
@@ -1298,10 +1333,12 @@ Evac.MG_strlog("\n\n  %s Conclusion:"%mpop,
                log_mg, 1, printopt=False)
 tmp3=group_ANOVA_MComp_multi(df=dft_comb,
                 group_main='Variant',group_sub=[],
-               ano_Var=['WC_vol','WC_vol_rDA','lu_F_mean','DEFlutoB','Hyst_APn','DHAPntoB'], 
+               ano_Var=['WC_vol','WC_vol_rDA',
+                        'lu_F_mean','DEFlutoB',
+                        'Hyst_APn','DHAPntoB'], 
                mpop=mpop, alpha=alpha, **MCompdf_kws)
 Evac.MG_strlog(Evac.str_indent(tmp3.loc(axis=1)['DF1':'H0'].to_string()),
-               log_mg,1, logopt=False)
+               log_mg,1, printopt=False)
 
 
 #%%%% Varianzanalysen Spender
@@ -1499,42 +1536,50 @@ tmp=pd.concat([tmp,tmp2],axis=0)
 Evac.MG_strlog(Evac.str_indent(tmp.sort_index().to_string(),3),
                log_mg,1, printopt=False)
 
-
+Evac.MG_strlog("\n   - DEFlutoB - Variant C and D: ", log_mg, 1, printopt=False)
+tmp=dft_comb.query("Series=='1'")['DEFlutoB']
+tmp2=stats.mannwhitneyu(tmp.loc(axis=0)[:,'C'],tmp.loc(axis=0)[:,'D'])
+Evac.MG_strlog(Evac.str_indent('- Series 1: '+str(tmp2),6),
+               log_mg,1, printopt=False)
+tmp=dft_comb.query("Series=='2'")['DEFlutoB']
+tmp2=stats.mannwhitneyu(tmp.loc(axis=0)[:,'C'],tmp.loc(axis=0)[:,'D'])
+Evac.MG_strlog(Evac.str_indent('- Series 2: '+str(tmp2),6),
+               log_mg,1, printopt=False)
 
 # det_met_CD_rep='SM-RRT'
 det_met_CD_rep='SD'
 Evac.MG_strlog("\n\n  - Critical Differences (Method:%s):"%det_met_CD_rep,
                log_mg,1, printopt=False)
-Evac.MG_strlog("\n\n    - Water content:",
-               log_mg,1, printopt=False)
-for i in ['A','B','C','D','E','F','H','I','J','K','L']:
-    tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
-                        var='WC_vol', det_met=det_met_CD_rep, outtype='txt')
-    Evac.MG_strlog(Evac.str_indent(tmp,6),
-                   log_mg,1, printopt=False)
-Evac.MG_strlog("\n\n    - Relative deviation of water content to fresh:",
-               log_mg,1, printopt=False)
-for i in ['B','C','D','E','F','H','I','J','K','L']:
-    tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
-                        var='WC_vol_rDA', det_met=det_met_CD_rep,outtype='txt')
-    Evac.MG_strlog(Evac.str_indent(tmp,6),
-                   log_mg,1, printopt=False)
-Evac.MG_strlog("\n\n    - Relative deviation of YM to saturated:",
-               log_mg,1, printopt=False)
-# tmp='- G: '+CD_rep(dft_comb.loc(axis=0)[:,'G'], groupby='Series', 
-#                     var='DEFlutoB', det_met=det_met_CD_rep, outtype='txt')
-for i in ['C','D','E','F','H','I','J','K','L']:
-    tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
-                        var='DEFlutoB', det_met=det_met_CD_rep,outtype='txt')
-    Evac.MG_strlog(Evac.str_indent(tmp,6),
-                   log_mg,1, printopt=False)
-Evac.MG_strlog("\n\n    - Relative deviation of normed hysteresis area to saturated:",
-               log_mg,1, printopt=False)
-for i in ['C','D','E','F','H','I','J','K','L']:
-    tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
-                        var='DHAPntoB', det_met=det_met_CD_rep,outtype='txt')
-    Evac.MG_strlog(Evac.str_indent(tmp,6),
-                   log_mg,1, printopt=False)
+# Evac.MG_strlog("\n\n    - Water content:",
+#                log_mg,1, printopt=False)
+# for i in ['A','B','C','D','E','F','H','I','J','K','L']:
+#     tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
+#                         var='WC_vol', det_met=det_met_CD_rep, outtype='txt')
+#     Evac.MG_strlog(Evac.str_indent(tmp,6),
+#                    log_mg,1, printopt=False)
+# Evac.MG_strlog("\n\n    - Relative deviation of water content to fresh:",
+#                log_mg,1, printopt=False)
+# for i in ['B','C','D','E','F','H','I','J','K','L']:
+#     tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
+#                         var='WC_vol_rDA', det_met=det_met_CD_rep,outtype='txt')
+#     Evac.MG_strlog(Evac.str_indent(tmp,6),
+#                    log_mg,1, printopt=False)
+# Evac.MG_strlog("\n\n    - Relative deviation of YM to saturated:",
+#                log_mg,1, printopt=False)
+# # tmp='- G: '+CD_rep(dft_comb.loc(axis=0)[:,'G'], groupby='Series', 
+# #                     var='DEFlutoB', det_met=det_met_CD_rep, outtype='txt')
+# for i in ['C','D','E','F','H','I','J','K','L']:
+#     tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
+#                         var='DEFlutoB', det_met=det_met_CD_rep,outtype='txt')
+#     Evac.MG_strlog(Evac.str_indent(tmp,6),
+#                    log_mg,1, printopt=False)
+# Evac.MG_strlog("\n\n    - Relative deviation of normed hysteresis area to saturated:",
+#                log_mg,1, printopt=False)
+# for i in ['C','D','E','F','H','I','J','K','L']:
+#     tmp='- %s: '%i+CD_rep(dft_comb.loc(axis=0)[:,i], groupby='Series', 
+#                         var='DHAPntoB', det_met=det_met_CD_rep,outtype='txt')
+#     Evac.MG_strlog(Evac.str_indent(tmp,6),
+#                    log_mg,1, printopt=False)
 
 tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Series', anat='CD',
                 stdict={'WC_vol':['A','B','C','D','E','F','H','I','J','K','L'],
@@ -1544,10 +1589,12 @@ tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Series', anat='CD',
                         'Hyst_APn':['B','C','D','E','F','G','H','I','J','K','L'],
                         'DHAPntoB':['C','D','E','F','H','I','J','K','L']},
                 met=det_met_CD_rep)
+Evac.MG_strlog(Evac.str_indent(tmp3.to_string(),6),
+               log_mg,1, printopt=False)
 
 Evac.MG_strlog("\n\n  - Descriptive (Mean-values):",
                log_mg,1, printopt=False)
-tmp=dft_comb.reset_index().groupby(['Variant','Series'])[['WC_vol','WC_vol_rDA','DEFlutoB']].mean().unstack()
+tmp=dft_comb.reset_index().groupby(['Variant','Series'])[['RHstore','WC_vol','WC_vol_rDA','DEFlutoB']].mean().unstack()
 Evac.MG_strlog(Evac.str_indent(tmp.to_string(),4),log_mg,1, printopt=False)
 
 Evac.MG_strlog("\n\n  - Regression (exponential):",
@@ -1923,6 +1970,37 @@ Evac.plt_handle_suffix(fig,path=out_full+'-SL-WC_vol-DEFlutoG',**plt_Fig_dict)
 # ax1.set_xlabel('Variant / -')
 # ax1.set_ylabel('Deviation / -')
 # Evac.plt_handle_suffix(fig,path=out_full+'-Box-comb_DMW-DEFlu',**plt_Fig_dict)
+
+
+fig, ax1 = plt.subplots()
+ax1.set_title('Exponential regression of water content vs. relative storage humidity')
+ax1.set_xlabel(r'$\Phi_{env}$ / -')
+ax1.set_ylabel(r'$\Phi_{vol}$ / -')
+sns.scatterplot(data=dft,
+                y='WC_vol',x='RHstore',
+                style='Series',hue='Variant',ax=ax1)
+tmp=ax1.legend(ncol=5,bbox_to_anchor=(0.01, 0.77),
+           loc='lower left')
+tmp._legend_box.align = "left"
+ax2=ax1.twinx()
+tmp=Regfitret(pdo=dft.query("Variant<='G'"), x='RHstore', y='WC_vol',
+          name='exponential_x0', guess = dict(a=0, b=0.1, c=10),
+          xl=r'\Phi_{env}',yl=r'\Phi_{vol,des}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg_fo(pdo=dft.query("Variant<='G'"), x='RHstore',
+            fit=tmp, ax=ax2, label_f=True,
+            lkws=dict(color=sns.color_palette("tab10")[1]))
+tmp=Regfitret(pdo=dft.query("Variant>='G'"), x='RHstore', y='WC_vol',
+          name='exponential_x0', guess = dict(a=0, b=0.1, c=2),
+          xl=r'\Phi_{env}',yl=r'\Phi_{vol,ads}', t_form='{a:.3e},{b:.3e},{c:.3f}')
+plt_ax_Reg_fo(pdo=dft.query("Variant>='G'"), x='RHstore',
+              fit=tmp, ax=ax2, label_f=True,
+              lkws=dict(color=sns.color_palette("tab10")[0]))
+ax2.set_ylim(ax1.get_ylim())
+ax2.tick_params(right = False , labelright = False)
+tmp=ax2.legend(title='         Exponential fit', bbox_to_anchor=(0.01, 0.52),
+           loc='lower left')
+tmp._legend_box.align = "left"
+Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
 #%%% SupMat-Plots
 figsize_sup=(16.0/2.54, 22.0/2.54)
@@ -2930,7 +3008,7 @@ Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 # fig.suptitle('')
 # Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
-fig, ax1 = plt.subplots()
+# fig, ax1 = plt.subplots()
 # tmp=Regfitret(pdo=dft.query("Variant<='G'"), x='Humidity_store', y='WC_vol',
 #           name='exponential_x0', guess = dict(a=0, b=0.1, c=0.03),
 #           xl=r'\Phi_{env}',yl=r'\Phi_{vol,des}', t_form='{a:.3e},{b:.3e},{c:.3f}')

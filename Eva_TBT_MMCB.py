@@ -3740,12 +3740,12 @@ def TBT_series(paths, no_stats_fc, var_suffix):
 
 def main():
        
-    # option = 'single'
+    option = 'single'
     # option = 'series'
     # option = 'pack-series'
     # option = 'complete'
     # option = 'pack-complete'
-    option = 'pack-complete-all'
+    # option = 'pack-complete-all'
     
     # no_stats_fc = ['1.11','1.12','1.21','1.22','1.31','2.21','3.11','3.21']
     # no_stats_fc = ['1.11','1.12','1.21','1.22','1.31','2.21','3.11']
@@ -3793,9 +3793,9 @@ def main():
     
     
     if option == 'single':
-        ser='S2'
-        des='MMS212'
-        mfile_add = 'G' #Suffix of variants of measurements (p.E. diffferent moistures)
+        ser='S1'
+        des='MMS112'
+        mfile_add = 'I' #Suffix of variants of measurements (p.E. diffferent moistures)
 
         prot_dtyp={'OPT_File_Meas': str, 'OPT_File_DIC': str}
         prot=pd.read_excel(combpaths.loc[ser,'prot'],
