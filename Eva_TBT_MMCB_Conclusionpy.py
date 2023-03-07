@@ -689,6 +689,111 @@ def interp_twocols(pdo, indcol, valcol, searchind=0.0,
     pdt=pdt.sort_index().interpolate(intmeth, order=order, limit_direction='both')
     return pdt.loc[searchind]
 
+def Hysteresis_params(pdo, strain_col, stress_col, 
+                      iS=None, iE=None, iC='Stress_Strain_VL_max',
+                      option_u_E='Stress_eq', search_val=0.0,
+                      interpolate_kws=dict(intmeth='spline', order=2),
+                      testplot=False, plt_kws={}, outtype='Series'):
+    if not ((iS is None) and (iE is None)):
+        pdt = pdo[[strain_col, stress_col]].indlim(iS=iS,iE=iE).copy(deep=True)
+    else:
+        pdt = pdo[[strain_col, stress_col]].copy(deep=True)
+        
+    if isinstance(iC,str):
+        if iC == 'Stress_max':
+            iC = pdt[stress_col].idxmax()
+        elif iC == 'Strain_max':
+            iC = pdt[strain_col].idxmax()
+        elif iC == 'Stress_Strain_VL_max':
+            iC = Evac.pd_vec_length(pdt[[strain_col,stress_col]],
+                                    norm=True, out='Index')
+            
+    pdt_l=pdt.indlim(iS=iS,iE=iC)
+    pdt_u=pdt.indlim(iS=iC,iE=iE)
+    
+    if option_u_E == 'Stress_eq':
+        eq_col=stress_col
+        ot_col=strain_col
+    elif option_u_E == 'Strain_eq':
+        eq_col=strain_col
+        ot_col=stress_col
+        
+    if '_eq' in option_u_E:
+        try:
+            indEu=Evac.Find_first_sc(pdt[eq_col], iS=iC, iE=iE, 
+                                val=search_val, 
+                                option='after')
+        except:
+            indEu=pdt.index[-1]
+        pl_int=interp_twocols(pdo=pdt, indcol=eq_col, valcol=ot_col,
+                              searchind=search_val,
+                              iS=iC, iE=indEu, **interpolate_kws)
+        pl_ser=pd.Series({eq_col:search_val, ot_col:pl_int},
+                         name=pdt_u.index[-1]+1)
+        try:
+            indEu=Evac.Find_first_sc(pdt[eq_col], iS=iC, iE=iE, 
+                                val=search_val, 
+                                option='before')
+        except:
+            indEu=pdt.index[-1]
+        pdt_u=pdt.indlim(iS=iC,iE=indEu)
+        pdt_u=pdt_u.append(pl_ser)
+    else:
+        indEu=pdt.index[-1]
+        pl_int=interp_twocols(pdo=pdt, indcol=eq_col, valcol=ot_col,
+                              searchind=search_val,
+                              iS=iC, iE=indEu, **interpolate_kws)
+        pl_ser=pd.Series({eq_col:search_val, ot_col:pl_int},
+                         name=pdt_u.index[-1]+1)
+    
+    minx=min(pdt.loc[iS,strain_col], pl_ser[strain_col])
+    miny=min(pdt.loc[iS,stress_col], pl_ser[stress_col])
+
+    pdt_l[stress_col+'_W']=pdt_l[stress_col]-miny
+    pdt_u[stress_col+'_W']=pdt_u[stress_col]-miny
+    out={}
+    out['e_eq'] = pl_ser[strain_col]
+    out['s_eq'] = pl_ser[stress_col]
+    out['e_pl'] = pl_ser[strain_col]-pdt.loc[iS,strain_col]
+    out['s_pl'] = pdt.loc[iS,stress_col]-pl_ser[stress_col]
+    out['W_l'] = Evac.pd_trapz(pdt_l, y=stress_col+'_W',x=strain_col)
+    out['W_u'] = Evac.pd_trapz(pdt_u, y=stress_col+'_W',x=strain_col)
+    
+    out['HA'] = out['W_l']+out['W_u']
+    # e_delta = abs(pdt[strain_col].loc[iC]-out['e_pl'])
+    # s_delta = abs(pdt[stress_col].loc[iC]-out['s_pl'])
+    e_delta = abs(pdt[strain_col].loc[iC]-minx)
+    s_delta = abs(pdt[stress_col].loc[iC]-miny)
+    out['HAn'] = out['HA']/e_delta/s_delta
+    out['e_pln'] = out['e_pl']/e_delta
+    out['s_pln'] = out['s_pl']/s_delta
+    
+    if testplot:
+        pdt_u=Evac.pd_exclnan(pdo=pdt_u, axis=1)
+        pdt_l=Evac.pd_exclnan(pdo=pdt_l, axis=1)
+        plt.title("Stress-Strain Curve with Hysteresis\n%s"%(plt_kws['title'] if 'title' in plt_kws.keys() else ''))
+        plt.plot(pdo[strain_col],pdo[stress_col],'g-')
+        plt.fill_between(pdt_l[strain_col],pdt_l[stress_col], y2=miny,
+                         **dict(color='r', hatch='|', alpha= 0.2))
+        plt.plot(pdt_l[strain_col],pdt_l[stress_col],'r:')
+        plt.fill_between(pdt_u[strain_col],pdt_u[stress_col], y2=miny,
+                         **dict(color='b', hatch='-', alpha= 0.2))
+        plt.plot(pdt_u[strain_col],pdt_u[stress_col],'b:')
+        plt.plot(pl_ser[strain_col],pl_ser[stress_col], 'x')
+        plt.plot(pdt[strain_col].loc[iS],pdt[stress_col].loc[iS], 'o')
+        plt.plot(pdt[strain_col].loc[iE],pdt[stress_col].loc[iE], 's')
+        plt.plot(pdt[strain_col].loc[iC],pdt[stress_col].loc[iC], '+')
+        plt.xlabel('Strain')
+        plt.ylabel('Stress')
+        plt.show()
+        
+    if outtype=='Series':
+        out=pd.Series(out)
+    elif outtype=='Tuple':
+        out.values
+    return out
+
+
 # data_read = pd.HDFStore(combpaths.loc[data,'in']+'_all.h5','r')
 data_read = pd.HDFStore(combpaths.loc[data,'in']+'.h5','r')
 dfEt=data_read['Add_/E_inc_df']
@@ -750,8 +855,24 @@ for i in dfEt.index:
                                         y='Stress',x='Strain_opt_d_M')
     tmp['Wdu_u_opt_P']  = Evac.pd_trapz(tmpM.loc[indU:indPu].iloc[::-1],
                                         y='Stress',x='Strain_opt_d_M')
-    tmp['epl_opt'] = interp_twocols(pdo=tmpM, indcol='Stress', valcol='Strain_opt_d_M',
-                               iS=indU, iE=None, intmeth='spline', order=2)
+    # tmp['epl_opt'] = interp_twocols(pdo=tmpM, indcol='Stress', valcol='Strain_opt_d_M',
+    #                                 searchind=tmpM.loc[tmpV.loc['S','VIP_d'],'Stress'],
+    #                            iS=indU, iE=None, intmeth='spline', order=2)
+    try:
+        tmp2=Hysteresis_params(tmpM, strain_col='Strain_opt_d_M', stress_col='Stress', 
+                      iS=tmpV.loc['S','VIP_d'], iE=tmpV.loc['E','VIP_d'], 
+                      # iC='Stress_max',
+                      iC='Stress_Strain_VL_max',
+                      option_u_E='Stress_eq', 
+                      search_val=tmpM.loc[tmpV.loc['S','VIP_d'],'Stress'],
+                      # interpolate_kws=dict(intmeth='spline', order=3),
+                      interpolate_kws=dict(intmeth='spline', order=2),
+                      testplot=True,plt_kws={'title':i})
+    except:
+        print("%s:\n  No hysteresis determined!"%i)
+        tmp2=pd.Series([np.nan,np.nan,np.nan,np.nan],index=['HA','HAn','e_pl','e_pln'])
+    tmp=tmp.append(tmp2.loc[['HA','HAn','e_pl','e_pln']])
+    tmp.name=i
     cHt=cHt.append(tmp)
 
 cEt.columns = cEt.columns.str.split('_', expand=True)
@@ -772,7 +893,7 @@ cHt['Hyst_A']=cHt['Wdu_l_opt']-cHt['Wdu_u_opt']
 cHt['Hyst_AP']=cHt['Wdu_l_opt_P']-cHt['Wdu_u_opt_P']
 cHt['Hyst_An']=cHt['Hyst_A']/dft['fu']/dft['eu_opt']
 cHt['Hyst_APn']=cHt['Hyst_AP']/dft['fu']/dft['eu_opt']
-cHt['epl_opt_n']=cHt['epl_opt']/dft['eu_opt']
+# cHt['epl_opt_n']=cHt['epl_opt']/dft['eu_opt']
 stafc_dest=dft['statistics'].copy(deep=True)
 stafc_dest.loc[:,'G']=stafc_dest.loc[:,'H'].values
 # cH_eva=cHt.loc[dft['statistics']].sort_index()

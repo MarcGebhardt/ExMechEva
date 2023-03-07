@@ -351,6 +351,39 @@ def Find_closestv(pds1, pds2, val1, val2, iS=None, iE=None, option='quad'):
     i=pdt.idxmin()
     return i
 
+def Find_first_sc(pds, val, iS=None, iE=None, 
+                  direction='normal', 
+                  option='after'):
+    """Returns the index of the first value of a Series with change in sign to a value"""
+    if not ((iS is None) and (iE is None)):
+        pdt = pds.indlim(iS=iS,iE=iE).copy(deep=True)
+    else:
+        pdt=pds.copy(deep=True)
+    if direction=='reverse':
+        pdt=pdt.iloc[::-1]
+        
+    tmp=sign_n_change(pdt-val)[1]
+    if option in ['before','b','bf']:
+        i=tmp[tmp].iloc[1:].index[0]
+        i=pd_valid_index(i, tmp, opt='b')
+    elif option in ['after','a','af']:
+        i=tmp[tmp].iloc[1:].index[0] #first index always==True
+    return i
+
+def pd_vec_length(pdo, norm=False, norm_kws={}, out='Series'):
+    """Calculate (normalized) vector length and return ether whole series or index"""
+    if norm:
+        pds=normalize(pdo, **norm_kws)
+    else:
+        pds=pdo
+    pds=((pds**2).sum(axis=1))**0.5
+    if out=='Series':
+        out=pds
+    else:
+        out=pds.idxmax()
+    return out
+    
+
 def pd_agg(pd_o, agg_funcs=['mean','median','std','max','min'], numeric_only=False):
     """Aggregate pandas object with defined functions."""
     if (type(pd_o) is pd.core.series.Series):
@@ -2745,6 +2778,8 @@ def pd_trapz(pdo, y=None, x=None, axis=0, nan_policy='omit'):
             pdo=pd_exclnan(pdo=pdo, axis=pd_axischange(axis))
         elif nan_policy=='raise' and pdo.isna().any(None):
             raise ValueError("NaN in objectiv!")
+        elif nan_policy=='interpolate':
+            pdo=pdo.interpolate(axis=axis)
         out=np.trapz(y=pdo.loc(axis=pd_axischange(axis))[y],
                      x=pdo.loc(axis=pd_axischange(axis))[x])
     elif pd_isSer(pdo):
@@ -2752,6 +2787,8 @@ def pd_trapz(pdo, y=None, x=None, axis=0, nan_policy='omit'):
             pdo=pd_exclnan(pdo=pdo)
         elif nan_policy=='raise' and pdo.isna().any(None):
             raise ValueError("NaN in objectiv!")
+        elif nan_policy=='interpolate':
+            pdo=pdo.interpolate()
         out=np.trapz(y=pdo)
     else:
         NotImplementedError("Type %s not implemented!"%type(pdo))
