@@ -3431,7 +3431,7 @@ def plt_handle_suffix(fig, path='foo', tight=True, show=True,
     """
     if tight: fig.tight_layout()  # otherwise the right y-label is slightly clipped
     if show:  plt.show()
-    if save:
+    if save and not (path is None):
         for st in s_types:
             # plt.savefig(path+'.'+st)
             fig.savefig(path+'.'+st)

@@ -35,9 +35,9 @@ plt.rcParams['axes.grid']= True
 plt_Fig_dict={'tight':True, 'show':True, 
               'save':True, 's_types':["pdf","png"], 
               'clear':True, 'close':True}
-plt_Fig_dict={'tight':True, 'show':True, 
-              'save':False, 's_types':["pdf","png"], 
-              'clear':True, 'close':True}
+# plt_Fig_dict={'tight':True, 'show':True, 
+#               'save':False, 's_types':["pdf","png"], 
+#               'clear':True, 'close':True}
 #%% Functions
 def relDev(pdo, pdr):
     out = (pdo - pdr)/pdr
@@ -867,7 +867,7 @@ for i in dfEt.index:
                       search_val=tmpM.loc[tmpV.loc['S','VIP_d'],'Stress'],
                       # interpolate_kws=dict(intmeth='spline', order=3),
                       interpolate_kws=dict(intmeth='spline', order=2),
-                      testplot=True,plt_kws={'title':i})
+                      testplot=False,plt_kws={'title':i})
     except:
         print("%s:\n  No hysteresis determined!"%i)
         tmp2=pd.Series([np.nan,np.nan,np.nan,np.nan],index=['HA','HAn','e_pl','e_pln'])
@@ -965,7 +965,11 @@ Evac.MG_strlog(Evac.str_indent(tmp.to_string(),5),
 
 Evac.MG_strlog("\n\n   - Max-/Minimum Deviation:",
                log_mg, printopt=False)
-tmp=cs.loc(axis=1)[['DMWtoG','DEFtoB','DEFtoG','DERtoB','DERtoG']]
+# tmp=cs.loc(axis=1)[['DMWtoG','DEFtoB','DEFtoG','DERtoB','DERtoG']]
+tmp=dft_comb.loc(axis=1)[['DMWtoG','WC_vol','WC_vol_rDA',
+                          'DEFtoB','DEFtoG','DERtoB','DERtoG',
+                          'DEFlutoB','DEFlutoG','DERlutoB','DERlutoG',
+                          'lu_F_ratio','DHAPntoB','DHAPntoG']]
 Evac.MG_strlog(Evac.str_indent(tmp.agg(['max','idxmax']).T.to_string(),5),
                log_mg, printopt=False)
 Evac.MG_strlog(Evac.str_indent(tmp.agg(['min','idxmin']).T.to_string(),5),
@@ -2121,7 +2125,7 @@ ax2.tick_params(right = False , labelright = False)
 tmp=ax2.legend(title='         Exponential fit', bbox_to_anchor=(0.01, 0.52),
            loc='lower left')
 tmp._legend_box.align = "left"
-Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+Evac.plt_handle_suffix(fig,path=out_full+'-Reg_Exp-Phi_Phi-VS',**plt_Fig_dict)
 
 #%%% SupMat-Plots
 figsize_sup=(16.0/2.54, 22.0/2.54)
@@ -3166,7 +3170,7 @@ plt_ax_Reg(pdo=dft.query("Variant>='G'"), x='RHstore', y='WC_vol',
             skws=dict(color=sns.color_palette("tab10")[2]),
             lkws=dict(color=sns.color_palette("tab10")[0]))
 fig.suptitle('')
-Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+Evac.plt_handle_suffix(fig,path=out_full+'-Reg_Exp-Phi_Phi',**plt_Fig_dict)
 
 
 # fig, ax1 = plt.subplots()
@@ -3273,7 +3277,7 @@ plt_ax_Reg(pdo=tmp2.query("Variant>='G'"),
             skws=dict(color=sns.color_palette("tab10")[2]),
             lkws=dict(color=sns.color_palette("tab10")[0]))
 fig.suptitle('')
-Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+Evac.plt_handle_suffix(fig,path=out_full+'-Reg_Exp-DPhiA_DEFlutoB',**plt_Fig_dict)
 
 fig, ax1 = plt.subplots()
 tmp2=pd.concat([cs['WC_vol'],cEEm_eva['DEFlutoB']],axis=1)
@@ -3496,6 +3500,7 @@ plt_ax_Reg(pdo=tmp22.query("Variant<='G'"),
             lkws=dict(color=sns.color_palette("tab10")[5]))
 fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+
 fig, ax1 = plt.subplots()
 tmp2=pd.concat([cs[['Series','WC_vol_rDA']],cEEm_eva['DEFlutoB']],axis=1)
 tmp21=tmp2.query("Series=='1'")
