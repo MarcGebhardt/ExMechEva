@@ -353,7 +353,7 @@ def Find_closestv(pds1, pds2, val1, val2, iS=None, iE=None, option='quad'):
 
 def Find_first_sc(pds, val, iS=None, iE=None, 
                   direction='normal', 
-                  option='after'):
+                  option='after', exclude_1st=True):
     """Returns the index of the first value of a Series with change in sign to a value"""
     if not ((iS is None) and (iE is None)):
         pdt = pds.indlim(iS=iS,iE=iE).copy(deep=True)
@@ -363,11 +363,17 @@ def Find_first_sc(pds, val, iS=None, iE=None,
         pdt=pdt.iloc[::-1]
         
     tmp=sign_n_change(pdt-val)[1]
+    if exclude_1st:
+        tmp=tmp.iloc[1:] #first index always==True?!
     if option in ['before','b','bf']:
-        i=tmp[tmp].iloc[1:].index[0]
-        i=pd_valid_index(i, tmp, opt='b')
+        i=tmp[tmp].index[0]
+        # if direction=='reverse':
+        #     i=pd_valid_index(i+1, tmp, opt='b')
+        # else:
+        #     i=pd_valid_index(i-1, tmp, opt='b')
+        i=pd_valid_index(i-1, tmp, opt='b')
     elif option in ['after','a','af']:
-        i=tmp[tmp].iloc[1:].index[0] #first index always==True
+        i=tmp[tmp].index[0] 
     return i
 
 def pd_vec_length(pdo, norm=False, norm_kws={}, out='Series'):

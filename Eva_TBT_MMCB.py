@@ -37,6 +37,7 @@ Changelog:
                 Abfrage bei Startpunkt, ob DIC NaN (dann Start bei nächstem nicht NaN)
     - 22-07-21: OPT_DIC_Points_meas_prefix / *_device_* bei einlesen konsequent hinzugefügt
     - 22-08-19: plt_handle_suffix mit plt_Fig_dict eingeführt
+    - 23-03-08: Start und Ende Messung vereinfacht (evtl. nur sinnvoll bei preload-elastic)
                 
 """
 
@@ -327,7 +328,8 @@ def TBT_single(prot_ser, paths, mfile_add=''):
           ("   DIC-minimal points (special / specimen) = %d / %d" %(_opts['OPT_DIC_Tester'][-2],_opts['OPT_DIC_Tester'][-1])),
           ("   DIC-names of special points (l,r,head), = %s, %s, %s" %(*_opts['OPT_DIC_Points_TBT_device'],)),
           ("   DIC-names of meas. points for fork (l,m,r), = %s, %s, %s" %(*_opts['OPT_DIC_Points_meas_fork'],)),
-          ("   DIC-maximal SD = %.3f mm and maximal displacement between steps %.1f mm" %(_opts['OPT_DIC_Tester'][0],_opts['OPT_DIC_Tester'][1])))
+          ("   DIC-maximal SD = %.3f mm and maximal displacement between steps %.1f mm" %(_opts['OPT_DIC_Tester'][0],_opts['OPT_DIC_Tester'][1])),
+          ("   DIC-Fit-Options: %s"%Evac.str_indent("\n".join("{!r}: {!r},".format(k, v) for k, v in _opts['OPT_DIC_Fitting']['Bending_MCFit_opts'].items()),5)))
     Evac.MG_strlog('\n'.join(ftxt),log_mg,output_lvl,printopt=False)
     #%% 2 Geometry
     Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
@@ -811,148 +813,159 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     else:
         dic_to_mess_End=messu.loc[messu.Time<=_opts['OPT_End']].index[-1]
         
-    # _opts['OPT_SE_Det']={'smooth_bool':True, 'smooth_type':'SMA',
-    #                     'smooth_opts':{'window_length':3},
-    #                     # 'smooth_snip':False,'opt_shift':True,
-    #                     'ex_bool':True, 'ex_kwargs':{'polydeg':1},
-    #                     'shift_value':-1,
-    #                     'sc_kwargs':{'norm':None, 'normadd':0.5,
-    #                                  'th':0.05, 'th_option':'abs', 'th_set_val':0},
-    #                     'peak_norm':'absmax',
-    #                     'peak_kwargs':{'prominence':0.09, 'height':0.09},
-    #                     # 'cc_snip':0,'cc_threshold':0.1,'cc_norm':'abs_max_ref',
-    #                     'cc_snip':0,'cc_threshold':0.1,'cc_norm':None,
-    #                     'cc_refine':False,'ccr_threshold':0.75,'ccr_norm':'abs_mid'}
-    # cps_fs, cip_fs, dfp_fs, df_fs = Evac.MCurve_Characterizer(x=messu.Time.loc[:messu.Force.idxmax()], 
-    #                                 y=messu.Force.loc[:messu.Force.idxmax()],
-    #                                 **_opts['OPT_SE_Det'],
-    #                                 nan_policy='interpolate')
-    # cps_fe, cip_fe, dfp_fe, df_fe = Evac.MCurve_Characterizer(x=messu.Time.loc[messu.Force.idxmax():], 
-    #                                 y=messu.Force.loc[messu.Force.idxmax():],
-    #                                 **_opts['OPT_SE_Det'],
-    #                                 nan_policy='interpolate')
-    # if True:
-    #     Evac.MCurve_Char_Plotter(cps_fs, cip_fs, dfp_fs, df_fs,
-    #                              head='Conventional force vs. time (start)',
-    #                              xlabel='Time / s', ylabel_l='Force / N', 
-    #                              ylabel_r='Normalized / -',
-    #                              ccd={'DQ1':'b','DQ2':'g','DQ3':'y'},
-    #                              ccd_sc={'DQ1_sc':'b','DQ2_sc':'g','DQ3_sc':'y'},
-    #                              disp_opt_DQ='Normalized_th', 
-    #                              do_kwargs=_opts['OPT_SE_Det']['sc_kwargs'],
-    #                              limDQ=True, limDQvals=[-1.1,1.1])
-    #     Evac.MCurve_Char_Plotter(cps_fe, cip_fe, dfp_fe, df_fe,
-    #                              head='Conventional force vs. time (start)',
-    #                              xlabel='Time / s', ylabel_l='Force / N', 
-    #                              ylabel_r='Normalized / -',
-    #                              ccd={'DQ1':'b','DQ2':'g','DQ3':'y'},
-    #                              ccd_sc={'DQ1_sc':'b','DQ2_sc':'g','DQ3_sc':'y'},
-    #                              disp_opt_DQ='Normalized_th', 
-    #                              do_kwargs=_opts['OPT_SE_Det']['sc_kwargs'],
-    #                              limDQ=True, limDQvals=[-1.1,1.1])        
-    # tmp = Evac.pd_valid_index(cps_fs.loc[cps_fs.Type=='Rise'].index[0],
-    #                           cps_fs.IntP_x.dropna(),'n')
-    # tmp = cps_fs.loc[tmp,'IntP_x']
-    # messu_iS_tmp = Evac.Find_closest(messu.Time,tmp)  
-    # tmp = Evac.pd_valid_index(cps_fe.loc[cps_fe.Type=='Fall'].index[-1],
-    #                           cps_fe.IntP_x.dropna(),'a')
-    # tmp = cps_fe.loc[tmp,'IntP_x']
-    # messu_iE_tmp = Evac.Find_closest(messu.Time,tmp)
+    # # _opts['OPT_SE_Det']={'smooth_bool':True, 'smooth_type':'SMA',
+    # #                     'smooth_opts':{'window_length':3},
+    # #                     # 'smooth_snip':False,'opt_shift':True,
+    # #                     'ex_bool':True, 'ex_kwargs':{'polydeg':1},
+    # #                     'shift_value':-1,
+    # #                     'sc_kwargs':{'norm':None, 'normadd':0.5,
+    # #                                  'th':0.05, 'th_option':'abs', 'th_set_val':0},
+    # #                     'peak_norm':'absmax',
+    # #                     'peak_kwargs':{'prominence':0.09, 'height':0.09},
+    # #                     # 'cc_snip':0,'cc_threshold':0.1,'cc_norm':'abs_max_ref',
+    # #                     'cc_snip':0,'cc_threshold':0.1,'cc_norm':None,
+    # #                     'cc_refine':False,'ccr_threshold':0.75,'ccr_norm':'abs_mid'}
+    # # cps_fs, cip_fs, dfp_fs, df_fs = Evac.MCurve_Characterizer(x=messu.Time.loc[:messu.Force.idxmax()], 
+    # #                                 y=messu.Force.loc[:messu.Force.idxmax()],
+    # #                                 **_opts['OPT_SE_Det'],
+    # #                                 nan_policy='interpolate')
+    # # cps_fe, cip_fe, dfp_fe, df_fe = Evac.MCurve_Characterizer(x=messu.Time.loc[messu.Force.idxmax():], 
+    # #                                 y=messu.Force.loc[messu.Force.idxmax():],
+    # #                                 **_opts['OPT_SE_Det'],
+    # #                                 nan_policy='interpolate')
+    # # if True:
+    # #     Evac.MCurve_Char_Plotter(cps_fs, cip_fs, dfp_fs, df_fs,
+    # #                              head='Conventional force vs. time (start)',
+    # #                              xlabel='Time / s', ylabel_l='Force / N', 
+    # #                              ylabel_r='Normalized / -',
+    # #                              ccd={'DQ1':'b','DQ2':'g','DQ3':'y'},
+    # #                              ccd_sc={'DQ1_sc':'b','DQ2_sc':'g','DQ3_sc':'y'},
+    # #                              disp_opt_DQ='Normalized_th', 
+    # #                              do_kwargs=_opts['OPT_SE_Det']['sc_kwargs'],
+    # #                              limDQ=True, limDQvals=[-1.1,1.1])
+    # #     Evac.MCurve_Char_Plotter(cps_fe, cip_fe, dfp_fe, df_fe,
+    # #                              head='Conventional force vs. time (start)',
+    # #                              xlabel='Time / s', ylabel_l='Force / N', 
+    # #                              ylabel_r='Normalized / -',
+    # #                              ccd={'DQ1':'b','DQ2':'g','DQ3':'y'},
+    # #                              ccd_sc={'DQ1_sc':'b','DQ2_sc':'g','DQ3_sc':'y'},
+    # #                              disp_opt_DQ='Normalized_th', 
+    # #                              do_kwargs=_opts['OPT_SE_Det']['sc_kwargs'],
+    # #                              limDQ=True, limDQvals=[-1.1,1.1])        
+    # # tmp = Evac.pd_valid_index(cps_fs.loc[cps_fs.Type=='Rise'].index[0],
+    # #                           cps_fs.IntP_x.dropna(),'n')
+    # # tmp = cps_fs.loc[tmp,'IntP_x']
+    # # messu_iS_tmp = Evac.Find_closest(messu.Time,tmp)  
+    # # tmp = Evac.pd_valid_index(cps_fe.loc[cps_fe.Type=='Fall'].index[-1],
+    # #                           cps_fe.IntP_x.dropna(),'a')
+    # # tmp = cps_fe.loc[tmp,'IntP_x']
+    # # messu_iE_tmp = Evac.Find_closest(messu.Time,tmp)
     
-    try:
-        _opts['OPT_SE_Det']={'smooth_bool':True, 'smooth_type':'SMA',
-                            # 'smooth_opts':{'window_length':3},
-                            'smooth_opts':{'window_length':5},
-                            'ex_bool':True, 'ex_kwargs':{'polydeg':1},
-                            'shift_value':-1,
-                            'sc_kwargs':{'norm':None, 'normadd':0.5,
-                                         'th':0.05, 'th_option':'abs', 'th_set_val':0},
-                            'peak_norm':None,
-                            'peak_kwargs':{'prominence':0.05, 'height':0.05},
-                            # 'cc_snip':0,'cc_threshold':0.1,'cc_norm':None,
-                            'cc_snip':0,'cc_threshold':0.15,'cc_norm':None,
-                            'cc_refine':False,'ccr_threshold':0.75,'ccr_norm':'abs_mid'}
-        cps_f, cip_f, dfp_f, df_f = Evac.MCurve_Characterizer(x=messu.Time, 
-                                        y=messu.Force,
-                                        **_opts['OPT_SE_Det'],
-                                        nan_policy='interpolate')
-        if True:
-            Evac.MCurve_Char_Plotter(cps_f, cip_f, dfp_f, df_f,
-                                     head='Conventional force vs. time',
-                                     xlabel='Time / s', ylabel_l='Force / N', 
-                                     ylabel_r='Normalized / -',
-                                     ccd={'DQ1':'b','DQ2':'g','DQ3':'y'},
-                                     ccd_sc={'DQ1_sc':'b','DQ2_sc':'g','DQ3_sc':'y'},
-                                     disp_opt_DQ='Normalized_th', 
-                                     do_kwargs=_opts['OPT_SE_Det']['sc_kwargs'],
-                                     limDQ=True, limDQvals=[-1.1,1.1])
-        Evac.MG_strlog("\n   New evaluation (start and end):",
-                       log_mg,output_lvl,printopt=True)
-        try:
-            tmp = Evac.pd_valid_index(cps_f.loc[cps_f.Type=='Rise'].index[0],
-                                      cps_f.IntP_x.dropna(),'n')
-            # tmp = cps_f.loc[tmp,'IntP_x']
-            # messu_iS_tmp = Evac.Find_closest(messu.Time,tmp)
-            messu_iS_tmp = Evac.Find_closestv(messu.Time,messu.Force,
-                                              cps_f.loc[tmp,'IntP_x'],
-                                              cps_f.loc[tmp,'IntP_y'])
-            Evac.MG_strlog("\n   - Start - %6.3f s (Step %4d, %7.5f%% maxF)"
-                           %(messu.Time[messu_iS_tmp],messu_iS_tmp,
-                             100*messu.Force[messu_iS_tmp]/abs(messu.Force).max()),
-                           log_mg,output_lvl,printopt=True)
-        except Exception as e:
-            Evac.MG_strlog("\n   - Start - not determinable: %s"%(e),
-                   log_mg,output_lvl,printopt=True)
-            # messu_iS_tmp = messu.index[0]
-            messu_iS_tmp = dic_to_mess_Start
-        try:
-            tmp = Evac.pd_valid_index(cps_f.loc[cps_f.Type=='Fall'].index[-1],
-                                      cps_f.IntP_x.dropna(),'a')
-            # tmp = cps_f.loc[tmp,'IntP_x']
-            # messu_iE_tmp = Evac.Find_closest(messu.Time,tmp)
-            messu_iE_tmp = Evac.Find_closestv(messu.Time,messu.Force,
-                                              cps_f.loc[tmp,'IntP_x'],
-                                              cps_f.loc[tmp,'IntP_y'])
-            Evac.MG_strlog("\n   - End   - %6.3f s (Step %4d, %7.5f%% maxF)"
-                           %(messu.Time[messu_iE_tmp],messu_iE_tmp,
-                             100*messu.Force[messu_iE_tmp]/abs(messu.Force).max()),
-                           log_mg,output_lvl,printopt=True)
-        except Exception as e:
-            Evac.MG_strlog("\n   - End   - not determinable: %s"%(e),
-                   log_mg,output_lvl,printopt=True)
-            messu_iE_tmp = dic_to_mess_End
-    except Exception as e:
-            Evac.MG_strlog("\n   - Start and End not determinable: %s"%(e),
-                   log_mg,output_lvl,printopt=True)
-            # messu_iS_tmp = messu.index[0]
-            messu_iS_tmp = dic_to_mess_Start
-            messu_iE_tmp = dic_to_mess_End
+    # try:
+    #     _opts['OPT_SE_Det']={'smooth_bool':True, 'smooth_type':'SMA',
+    #                         # 'smooth_opts':{'window_length':3},
+    #                         'smooth_opts':{'window_length':5},
+    #                         'ex_bool':True, 'ex_kwargs':{'polydeg':1},
+    #                         'shift_value':-1,
+    #                         'sc_kwargs':{'norm':None, 'normadd':0.5,
+    #                                      'th':0.05, 'th_option':'abs', 'th_set_val':0},
+    #                         'peak_norm':None,
+    #                         'peak_kwargs':{'prominence':0.05, 'height':0.05},
+    #                         # 'cc_snip':0,'cc_threshold':0.1,'cc_norm':None,
+    #                         'cc_snip':0,'cc_threshold':0.15,'cc_norm':None,
+    #                         'cc_refine':False,'ccr_threshold':0.75,'ccr_norm':'abs_mid'}
+    #     cps_f, cip_f, dfp_f, df_f = Evac.MCurve_Characterizer(x=messu.Time, 
+    #                                     y=messu.Force,
+    #                                     **_opts['OPT_SE_Det'],
+    #                                     nan_policy='interpolate')
+    #     if True:
+    #         Evac.MCurve_Char_Plotter(cps_f, cip_f, dfp_f, df_f,
+    #                                  head='Conventional force vs. time',
+    #                                  xlabel='Time / s', ylabel_l='Force / N', 
+    #                                  ylabel_r='Normalized / -',
+    #                                  ccd={'DQ1':'b','DQ2':'g','DQ3':'y'},
+    #                                  ccd_sc={'DQ1_sc':'b','DQ2_sc':'g','DQ3_sc':'y'},
+    #                                  disp_opt_DQ='Normalized_th', 
+    #                                  do_kwargs=_opts['OPT_SE_Det']['sc_kwargs'],
+    #                                  limDQ=True, limDQvals=[-1.1,1.1])
+    #     Evac.MG_strlog("\n   New evaluation (start and end):",
+    #                    log_mg,output_lvl,printopt=True)
+    #     try:
+    #         tmp = Evac.pd_valid_index(cps_f.loc[cps_f.Type=='Rise'].index[0],
+    #                                   cps_f.IntP_x.dropna(),'n')
+    #         # tmp = cps_f.loc[tmp,'IntP_x']
+    #         # messu_iS_tmp = Evac.Find_closest(messu.Time,tmp)
+    #         messu_iS_tmp = Evac.Find_closestv(messu.Time,messu.Force,
+    #                                           cps_f.loc[tmp,'IntP_x'],
+    #                                           cps_f.loc[tmp,'IntP_y'])
+    #         Evac.MG_strlog("\n   - Start - %6.3f s (Step %4d, %7.5f%% maxF)"
+    #                        %(messu.Time[messu_iS_tmp],messu_iS_tmp,
+    #                          100*messu.Force[messu_iS_tmp]/abs(messu.Force).max()),
+    #                        log_mg,output_lvl,printopt=True)
+    #     except Exception as e:
+    #         Evac.MG_strlog("\n   - Start - not determinable: %s"%(e),
+    #                log_mg,output_lvl,printopt=True)
+    #         # messu_iS_tmp = messu.index[0]
+    #         messu_iS_tmp = dic_to_mess_Start
+    #     try:
+    #         tmp = Evac.pd_valid_index(cps_f.loc[cps_f.Type=='Fall'].index[-1],
+    #                                   cps_f.IntP_x.dropna(),'a')
+    #         # tmp = cps_f.loc[tmp,'IntP_x']
+    #         # messu_iE_tmp = Evac.Find_closest(messu.Time,tmp)
+    #         messu_iE_tmp = Evac.Find_closestv(messu.Time,messu.Force,
+    #                                           cps_f.loc[tmp,'IntP_x'],
+    #                                           cps_f.loc[tmp,'IntP_y'])
+    #         Evac.MG_strlog("\n   - End   - %6.3f s (Step %4d, %7.5f%% maxF)"
+    #                        %(messu.Time[messu_iE_tmp],messu_iE_tmp,
+    #                          100*messu.Force[messu_iE_tmp]/abs(messu.Force).max()),
+    #                        log_mg,output_lvl,printopt=True)
+    #     except Exception as e:
+    #         Evac.MG_strlog("\n   - End   - not determinable: %s"%(e),
+    #                log_mg,output_lvl,printopt=True)
+    #         messu_iE_tmp = dic_to_mess_End
+    # except Exception as e:
+    #         Evac.MG_strlog("\n   - Start and End not determinable: %s"%(e),
+    #                log_mg,output_lvl,printopt=True)
+    #         # messu_iS_tmp = messu.index[0]
+    #         messu_iS_tmp = dic_to_mess_Start
+    #         messu_iE_tmp = dic_to_mess_End
         
             
-
+    # 08.03.2023: muss bestehen bleiben (genutzut in 6.3 Determine POI)
     mun_tmp=messu.loc[:min(dic_to_mess_End,messu.Force.idxmax()),'Force']
     messu['driF'],messu['dcuF'],messu['driF_schg']=Evac.rise_curve(messu.loc[:dic_to_mess_End]['Force'],True,2)
     
-    if np.isnan(_opts['OPT_Start']): # neu 25.07.22
-        for i in messu.index: # Startpunkt über Vorzeichenwechsel im Anstieg
-            if messu.loc[i,'driF_schg']:
-                if not messu.loc[i+1:i+max(int(_opts['OPT_Determination_Distance']/2),1),'driF_schg'].any():
-                    messu_iS=i
-                    break
+    # if np.isnan(_opts['OPT_Start']): # neu 25.07.22
+    #     for i in messu.index: # Startpunkt über Vorzeichenwechsel im Anstieg
+    #         if messu.loc[i,'driF_schg']:
+    #             if not messu.loc[i+1:i+max(int(_opts['OPT_Determination_Distance']/2),1),'driF_schg'].any():
+    #                 messu_iS=i
+    #                 break
         
-        messu_iS,_=Evac.find_SandE(messu.loc[messu_iS:+messu_iS+_opts['OPT_Determination_Distance'],
-                                              'driF'],abs(messu['driF']).quantile(0.5),"pgm_other",0.1)
-    else:
-        messu_iS = Evac.Find_closest(pds=messu.Time, val=_opts['OPT_Start']) # neu 25.07.22
+    #     messu_iS,_=Evac.find_SandE(messu.loc[messu_iS:+messu_iS+_opts['OPT_Determination_Distance'],
+    #                                           'driF'],abs(messu['driF']).quantile(0.5),"pgm_other",0.1)
+    # else:
+    #     messu_iS = Evac.Find_closest(pds=messu.Time, val=_opts['OPT_Start']) # neu 25.07.22
 
-    # _,messu_iE=Evac.find_SandE(messu['driF'],0,"qua_self",0.5) # not changed 251022 (B5-sr09)
-    try: # search after maximum Force
-        _,messu_iE=Evac.find_SandE(messu['driF'].loc[messu.Force.idxmax():],
-                                    messu['driF'],"qua_other",0.5)
-    except IndexError:
-        messu_iE=dic_to_mess_End
+    # # _,messu_iE=Evac.find_SandE(messu['driF'],0,"qua_self",0.5) # not changed 251022 (B5-sr09)
+    # try: # search after maximum Force
+    #     _,messu_iE=Evac.find_SandE(messu['driF'].loc[messu.Force.idxmax():],
+    #                                 messu['driF'],"qua_other",0.5)
+    # except IndexError:
+    #     messu_iE=dic_to_mess_End
+    
+    # messu_iE=min(messu_iE,dic_to_mess_End)
         
-    messu_iE=min(messu_iE,dic_to_mess_End)
+    #08.03.2023 Geändert (vereinfacht): Start und Ende rein über Weg (Beginn und eq Entlastung)
+    if np.isnan(_opts['OPT_Start']):
+       messu_iS = Evac.Find_closest(messu.Time, t1[1]-toff) # auf erste ansteigsänderung aus time-offset
+    else:
+        messu_iS = dic_to_mess_Start
+    if np.isnan(_opts['OPT_End']):
+        messu_iE = messu.loc[messu.Way>=messu.Way.loc[messu_iS]].index[-1]
+        messu_iE = Evac.pd_valid_index(messu_iE+1, messu.index, opt='n')
+    else:
+        messu_iE = dic_to_mess_End
     
     Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
     if _opts['OPT_DIC']:
@@ -977,12 +990,13 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     ax1.axvline(x=messu.Time.loc[messu_iE], color='gray', linestyle='-')
     if np.invert(np.isnan(_opts['OPT_End'])):
         ax1.axvline(x=_opts['OPT_End'], color='gray', linestyle='-.')
-    ax1.axvline(x=messu.Time.loc[messu_iS_tmp], color='brown', linestyle='-')
-    ax1.axvline(x=messu.Time.loc[messu_iE_tmp], color='brown', linestyle='-')
+    # ax1.axvline(x=messu.Time.loc[messu_iS_tmp], color='brown', linestyle='-')
+    # ax1.axvline(x=messu.Time.loc[messu_iE_tmp], color='brown', linestyle='-')
     ax1.plot(mess.Time, -mess.F_PM, 'm-', label='Force-PM')
     ax1.plot(mess.Time, -mess.F_WZ, 'r-', label='Force-WZ') 
-    tmp={'S':messu.Time.loc[messu_iS],'E':messu.Time.loc[messu_iE],
-         'Sn':messu.Time.loc[messu_iS_tmp],'En':messu.Time.loc[messu_iE_tmp]}
+    # tmp={'S':messu.Time.loc[messu_iS],'E':messu.Time.loc[messu_iE],
+    #      'Sn':messu.Time.loc[messu_iS_tmp],'En':messu.Time.loc[messu_iE_tmp]}
+    tmp={'S':messu.Time.loc[messu_iS],'E':messu.Time.loc[messu_iE]}
     j=1
     for s in tmp.keys():
         ax1.text(x=tmp[s]-0.3*j, y=min(ax1.get_ylim())+0.02, 
@@ -3043,30 +3057,21 @@ def TBT_single(prot_ser, paths, mfile_add=''):
 
     E_lsq=pd.concat([E_lsq_A,E_lsq_B],axis=1)
 
-    # E_Methods = pd.concat([E_A,E_B,E_C,E_D,E_E,E_F,E_G],axis=1)
     E_Methods_df = pd.concat([E_A_df,E_B_df,E_C_df,E_D_df,E_E_df,E_F_df,E_G_df],axis=1)
-    # E_agg_funcs = ['mean',Evac.meanwoso,'median','std','max','min']
     E_agg_funcs = ['mean',Evac.meanwoso,'median','std',Evac.stdwoso,'max','min']
     
     cols_con=E_Methods_df.columns.str.contains('0')
-    # E_inc_F_comp_con = Evac.pd_agg(E_Methods_df.loc[sf_eva_con,cols_con])
-    # E_inc_F_comp_opt = Evac.pd_agg(E_Methods_df.loc[sf_eva_dic,np.invert(cols_con)])
     E_inc_F_comp_con = E_Methods_df.loc[sf_eva_con,cols_con].agg(E_agg_funcs)
     E_inc_F_comp_opt = E_Methods_df.loc[sf_eva_dic,np.invert(cols_con)].agg(E_agg_funcs)
     E_inc_F_comp = pd.concat([E_inc_F_comp_con,E_inc_F_comp_opt],axis=1)
     E_inc_F_comp.loc['stdn']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['mean'].abs()
-    # E_inc_F_comp.loc['stdnwoso']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['meanwoso'].abs()
     E_inc_F_comp.loc['stdnwoso']=E_inc_F_comp.loc['stdwoso']/E_inc_F_comp.loc['meanwoso'].abs()
-    # E_inc_F_comp = Evac.pd_agg(E_Methods_df.loc[sf_eva_dic])
 
     cols_con=E_Methods_df.columns.str.contains('0')
-    # E_inc_R_comp_con = Evac.pd_agg(E_Methods_df.loc[sr_eva_con,cols_con])
-    # E_inc_R_comp_opt = Evac.pd_agg(E_Methods_df.loc[sr_eva_dic,np.invert(cols_con)])
     E_inc_R_comp_con = E_Methods_df.loc[sr_eva_con,cols_con].agg(E_agg_funcs)
     E_inc_R_comp_opt = E_Methods_df.loc[sr_eva_dic,np.invert(cols_con)].agg(E_agg_funcs)
     E_inc_R_comp = pd.concat([E_inc_R_comp_con,E_inc_R_comp_opt],axis=1)
     E_inc_R_comp.loc['stdn']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['mean'].abs()
-    # E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['meanwoso'].abs()
     E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['stdwoso']/E_inc_R_comp.loc['meanwoso'].abs()
     
     Evac.MG_strlog("\n\n  Method comaparison:",log_mg,output_lvl,printopt=True)
@@ -3155,6 +3160,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                             'S':check_S, 'SwD': w_D_to_S,
                             'AtoD_g':check_AtoD_g, 'AtoD_x': check_AtoD_x,
                             'A':check_A, 'AwD': w_D_to_A},dtype='O')
+    
     # --------------------------------------------------------------------------
     #%%% 6.5 Determine yield point
     Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
@@ -3226,6 +3232,15 @@ def TBT_single(prot_ser, paths, mfile_add=''):
             VIP_dicu['Y']=daF_signchange_F.loc[daF_signchange_F==True].index[0]-2
             Evac.MG_strlog("\n    Fy on first point between F+ and Fu with rise of 0, instead intersection 0.2% pl. strain! (No intersection found!)",log_mg,output_lvl)
         VIP_dicu=VIP_dicu.sort_values()
+    
+    # --------------------------------------------------------------------------
+    #%%% 6.6 Determine hysteresis properties
+    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    Evac.MG_strlog("\n ### -6.6 Determine hysteresis properties ###",log_mg,output_lvl,printopt=False)
+    timings.loc[6.6]=time.perf_counter()
+    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+                                       timings.iloc[-1]-timings.iloc[0]),
+                   log_mg,output_lvl,printopt=False)
     
     # ============================================================================
     #%% 7 Outputs
@@ -3745,7 +3760,7 @@ def main():
     # option = 'pack-series'
     # option = 'complete'
     # option = 'pack-complete'
-    # option = 'pack-complete-all'
+    option = 'pack-complete-all'
     
     # no_stats_fc = ['1.11','1.12','1.21','1.22','1.31','2.21','3.11','3.21']
     # no_stats_fc = ['1.11','1.12','1.21','1.22','1.31','2.21','3.11']
@@ -3793,9 +3808,9 @@ def main():
     
     
     if option == 'single':
-        ser='S1'
-        des='MMS112'
-        mfile_add = 'I' #Suffix of variants of measurements (p.E. diffferent moistures)
+        ser='S2'
+        des='MMS207'
+        mfile_add = 'F' #Suffix of variants of measurements (p.E. diffferent moistures)
 
         prot_dtyp={'OPT_File_Meas': str, 'OPT_File_DIC': str}
         prot=pd.read_excel(combpaths.loc[ser,'prot'],

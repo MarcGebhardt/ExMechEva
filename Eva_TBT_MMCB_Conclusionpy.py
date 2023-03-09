@@ -1754,7 +1754,7 @@ tmp2=relDev(tmp3.loc(axis=0)[:,['Series1','Series2']],
             tmp3.loc(axis=0)[:,'Complete'].droplevel(1,axis=0))
 Evac.MG_strlog("\n\n    - relative deviation of parameters:",
                log_mg,1, printopt=False)
-Evac.MG_strlog(Evac.str_indent(tmp3.to_string(),6),log_mg,1, printopt=False)
+Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),6),log_mg,1, printopt=False)
 
 
 #%%% Plots
