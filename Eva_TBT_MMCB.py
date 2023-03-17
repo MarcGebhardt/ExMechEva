@@ -3644,18 +3644,18 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     
     out_tab=pd.DataFrame([out_tab])
 
+    VIP_messu=VIP_messu.sort_values()
     vnew=pd.Series(VIP_messu.drop_duplicates().index.values,
                    index=VIP_messu.drop_duplicates(),dtype='O')
-    VIP_messu=VIP_messu.sort_values()
     for i in VIP_messu.index:
         if VIP_messu.duplicated().loc[i]:
             vnew.loc[VIP_messu.loc[i]]=vnew.loc[VIP_messu.loc[i]]+','+i
     messu['VIP_m']=vnew
     messu.VIP_m.fillna('', inplace=True)
     
+    VIP_dicu=VIP_dicu.sort_values()
     vnew=pd.Series(VIP_dicu.drop_duplicates().index.values,
                    index=VIP_dicu.drop_duplicates(),dtype='O')
-    VIP_dicu=VIP_dicu.sort_values()
     for i in VIP_dicu.index:
         if VIP_dicu.duplicated().loc[i]:
             vnew.loc[VIP_dicu.loc[i]]=vnew.loc[VIP_dicu.loc[i]]+','+i
@@ -3691,6 +3691,8 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     HDFst['Points_S_diff'] = P_xcoord_ydiff_meas_S
     HDFst['Points_M_diff'] = P_xcoord_ydiff_meas_M
     
+    # VIP_messu.name='VIP_m' # otherwise 0 in HDF
+    # VIP_dicu.name ='VIP_d' # otherwise 1 in HDF
     HDFst['VIP'] = pd.concat([VIP_messu,VIP_dicu],axis=1)
     
     HDFst['DQcon'] = DQcon
@@ -3808,9 +3810,9 @@ def main():
     
     
     if option == 'single':
-        ser='S2'
-        des='MMS207'
-        mfile_add = 'F' #Suffix of variants of measurements (p.E. diffferent moistures)
+        ser='S1'
+        des='MMS103'
+        mfile_add = 'L' #Suffix of variants of measurements (p.E. diffferent moistures)
 
         prot_dtyp={'OPT_File_Meas': str, 'OPT_File_DIC': str}
         prot=pd.read_excel(combpaths.loc[ser,'prot'],

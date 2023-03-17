@@ -353,12 +353,14 @@ def Find_closestv(pds1, pds2, val1, val2, iS=None, iE=None, option='quad'):
 
 def Find_first_sc(pds, val, iS=None, iE=None, 
                   direction='normal', 
-                  option='after', exclude_1st=True):
+                  option='after', exclude_1st=True,
+                  nan_policy='omit'):
     """Returns the index of the first value of a Series with change in sign to a value"""
     if not ((iS is None) and (iE is None)):
         pdt = pds.indlim(iS=iS,iE=iE).copy(deep=True)
     else:
         pdt=pds.copy(deep=True)
+    pdt=pd_nan_handler(pdt, nan_policy=nan_policy)
     if direction=='reverse':
         pdt=pdt.iloc[::-1]
         
@@ -445,6 +447,53 @@ def pd_exclnan(pdo,axis=1):
     else:
         NotImplementedError("Type %s not implemented!"%type(pdo))
     return pdo.loc[~exm]
+
+def pd_nan_handler(pdo, ind=None, axis=0, nan_policy='omit'):
+    """
+    Handles NaN in pandas object according to NaN-policy.
+
+    Parameters
+    ----------
+    pdo : pandas.Series or pandas.DataFrame
+        Input Value.
+    ind : (same as corresponding axis), optional
+        Index limitation on not scanned axis. The default is None.
+    axis : [0,1]/["index","columns"], optional
+        Scanned axis. The default is 0.
+    nan_policy : string, optional
+        Policy to handle NaN. Implemented: omit, raise, interpolate. 
+        The default is 'omit'.
+
+    Raises
+    ------
+    ValueError
+        Raise error if nan_policy is raise and NaN's detected.
+
+    Returns
+    -------
+    pds : pandas.Series or pandas.DataFrame
+        Output value with NaN handled acc. NaN-policy.
+
+    """
+    pds=pdo.copy(deep=True)
+    if pd_isDF(pds):
+        if not ind is None: pds=pds.loc(axis=pd_axischange(axis))[ind]
+        if nan_policy=='omit':
+            pds=pd_exclnan(pdo=pds, axis=pd_axischange(axis))
+        elif nan_policy=='raise' and pds.isna().any(None):
+            raise ValueError("NaN in objectiv and NaN-policy = %s!"%nan_policy)
+        elif nan_policy=='interpolate':
+            pds=pds.interpolate(axis=axis)
+    elif pd_isSer(pds):
+        if nan_policy=='omit':
+            pds=pd_exclnan(pdo=pds)
+        elif nan_policy=='raise' and pds.isna().any(None):
+            raise ValueError("NaN in objectiv and NaN-policy = %s!"%nan_policy)
+        elif nan_policy=='interpolate':
+            pds=pds.interpolate()
+    else:
+        NotImplementedError("Type %s not implemented!"%type(pds))
+    return pds
 
 #%%% List Operations
 def list_cell_compiler(ser,sep=',', replace_whitespaces=True, replace_nans=True):
