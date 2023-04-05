@@ -416,6 +416,43 @@ def Regfitret(pdo, x,y, name='exponential', guess = dict(a=-0.01, b=0.1, c=-1),
            'Exp_txt': etxt, 'Rep_txt': rtxt, 'Rquad': Rquad}
     return out
 
+def corr_ext(df, method='spearman', 
+             sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'},
+             corr_round=2):
+    # quelle: https://stackoverflow.com/questions/52741236/how-to-calculate-p-values-for-pairwise-correlation-of-columns-in-pandas
+    if method in ['pearson','Pearson','P']:
+        df_c = df.corr(method='pearson')
+        pval = df.corr(method=lambda x, y: stats.pearsonr(x, y)[1])
+    elif  method in ['spearman', 'Spearman','S']:
+        df_c = df.corr(method='spearman')
+        pval = df.corr(method=lambda x, y: stats.spearmanr(x, y)[1])
+    elif method in ['kendall', 'kendalltau', 'Kendall', 'Kendalltau', 'K']:
+        df_c = df.corr(method='kendall')
+        pval = df.corr(method=lambda x, y: stats.kendalltau(x, y)[1])
+    else:
+        raise NotImplementedError('Correlation method %s not implemented!'%method)
+        
+    df_c=df_c.round(corr_round)
+    if isinstance(sig_level, list):
+        #sig_level=[0.001,0.01,0.05]: set the p values, *** for less than 0.001, ** for less than 0.01, * for less than 0.05
+        p = pval.applymap(lambda x: ''.join(['*' for t in sig_level if x<=t]))
+    else:
+        def p_extender(x, sld):
+            if x > np.max(list(sld.keys())):
+                return ''
+            else:
+                for i in np.sort(list(sld.keys())):
+                    if x <= i:
+                        return sld[i]
+        p = pval.applymap(lambda x: p_extender(x, sld=sig_level))
+    #dfc_2 below will give you the dataframe with correlation coefficients and p values
+    # df_c2 = df_c.astype(str) + p
+    tmpf='{'+':.'+'%d'%(corr_round) +'f}'
+    df_c2 = df_c.applymap(lambda x: tmpf.format(x)) + p
+    # #convert to array for the heatmap
+    # df_c3 = df_c2.to_numpy()
+    return df_c, df_c2
+
 # =============================================================================
 #%% Einlesen und auswählen
 # data="S1"
@@ -1689,17 +1726,11 @@ Evac.MG_strlog(Evac.str_indent(tmp.to_string()),
 Evac.MG_strlog("\n\n  Hypothesistests to side (left/right) (Mann-Whitney-U/Wilcoxon):",
                log_mg, 1, printopt=False)
 tmp2=Multi_conc(df=dft_comb.unstack(),group_main='Side_LR', anat='HT',
-               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
-                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
-                       # 'Hyst_APn':['B'],'DHAPntoB':['C','G','L']}, 
-                       'HAn':['B'],'DHAntoB':['C','G','L']}, 
+               stdict=stdict, 
                met='mannwhitneyu', alpha=alpha, 
                rel=False, rel_keys=['Donor','Side_pd'], kws={})
 tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Side_LR', anat='HT',
-               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
-                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
-                       # 'Hyst_APn':['B'],'DHAPntoB':['C','G','L']}, 
-                       'HAn':['B'],'DHAntoB':['C','G','L']}, 
+               stdict=stdict, 
                met='wilcoxon', alpha=alpha, 
                rel=True, rel_keys=['Donor','Side_pd'], kws={})
 tmp=pd.concat([tmp2, tmp3], axis=1, keys=['mannwhitneyu', 'wilcoxon'])
@@ -1757,13 +1788,13 @@ Evac.MG_strlog("\n\n "+"="*100, log_mg, 1, printopt=False)
 #                log_mg,1, printopt=False)
 
 Evac.MG_strlog("\n\n  Hypothesistests to series (Repeatability; 1/2) (Mann-Whitney-U):",
-               log_mg, 1, logopt=False)
+               log_mg, 1, printopt=False)
 tmp=Multi_conc(df=dft_comb.unstack(),group_main='Series', anat='HT',
                stdict=stdict, 
                met='mannwhitneyu', alpha=alpha, 
                rel=False, rel_keys=[], kws={})
 Evac.MG_strlog(Evac.str_indent(tmp.to_string()),
-               log_mg,1, logopt=False)
+               log_mg,1, printopt=False)
 
 Evac.MG_strlog("\n   - DEFlutoB - Variant C and D: ", log_mg, 1, printopt=False)
 tmp=dft_comb.query("Series=='1'")['DEFlutoB']
@@ -2343,27 +2374,47 @@ fig, ax = plt.subplots(nrows=3, ncols=2,
 fig.suptitle('%s\nInfluence water manipulation'%name_Head,
              fontweight="bold")
 ax[0,0].set_title("Complete")
-tmp_corr = tmp.corr(method=mcorr)
-g=sns.heatmap(tmp_corr.round(2), 
-              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+# tmp_corr = tmp.corr(method=mcorr)
+# g=sns.heatmap(tmp_corr.round(2), 
+#               center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[0,0],cbar_ax=ax[0,1])
+tmp2_S, tmp2_p= corr_ext(tmp, method=mcorr, 
+                         sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'}, 
+                         corr_round=2)
+g=sns.heatmap(tmp2_S, annot = tmp2_p, fmt='',
+              center=0, vmin=-1,vmax=1, annot_kws={"size":8, 'rotation':0},
               xticklabels=1, ax=ax[0,0],cbar_ax=ax[0,1])
 Evac.tick_label_renamer(ax=g, renamer=VIPar_plt_renamer, axis='both')
 ax[0,0].tick_params(axis='x', labelrotation=0, labelsize=8)
 ax[0,0].tick_params(axis='y', labelrotation=0, labelsize=8)
 ax[0,1].tick_params(axis='y', labelsize=8)
 ax[1,0].set_title("Desorption")
-tmp_corr =  tmp.loc(axis=0)[:,['B','C','D','E','F','G']].corr(method=mcorr)
-g=sns.heatmap(tmp_corr.round(2), 
-              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+# tmp_corr =  tmp.loc(axis=0)[:,['B','C','D','E','F','G']].corr(method=mcorr)
+# g=sns.heatmap(tmp_corr.round(2), 
+#               center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[1,0],cbar_ax=ax[1,1])
+tmp2_S, tmp2_p= corr_ext(tmp.loc(axis=0)[:,['B','C','D','E','F','G']],
+                         method=mcorr,
+                         sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'}, 
+                         corr_round=2)
+g=sns.heatmap(tmp2_S, annot = tmp2_p, fmt='',
+              center=0,vmin=-1,vmax=1, annot_kws={"size":8, 'rotation':0},
               xticklabels=1, ax=ax[1,0],cbar_ax=ax[1,1])
 Evac.tick_label_renamer(ax=g, renamer=VIPar_plt_renamer, axis='both')
 ax[1,0].tick_params(axis='x', labelrotation=0, labelsize=8)
 ax[1,0].tick_params(axis='y', labelrotation=0, labelsize=8)
 ax[1,1].tick_params(axis='y', labelsize=8)
 ax[2,0].set_title("Adsorption")
-tmp_corr =  tmp.loc(axis=0)[:,['G','H','I','J','K','L']].corr(method=mcorr)
-g=sns.heatmap(tmp_corr.round(2), 
-              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+# tmp_corr =  tmp.loc(axis=0)[:,['G','H','I','J','K','L']].corr(method=mcorr)
+# g=sns.heatmap(tmp_corr.round(2), 
+#               center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[2,0],cbar_ax=ax[2,1])
+tmp2_S, tmp2_p= corr_ext(tmp.loc(axis=0)[:,['G','H','I','J','K','L']],
+                         method=mcorr,
+                         sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'}, 
+                         corr_round=2)
+g=sns.heatmap(tmp2_S, annot = tmp2_p, fmt='',
+              center=0,vmin=-1,vmax=1, annot_kws={"size":8, 'rotation':0},
               xticklabels=1, ax=ax[2,0],cbar_ax=ax[2,1])
 Evac.tick_label_renamer(ax=g, renamer=VIPar_plt_renamer, axis='both')
 ax[2,0].tick_params(axis='x', labelrotation=0, labelsize=8)
@@ -2372,62 +2423,123 @@ ax[2,1].tick_params(axis='y', labelsize=8)
 Evac.plt_handle_suffix(fig,path=out_full+'-Corr-WMan',**plt_Fig_dict)
 
 
+# tmp = pd.concat([cs.loc(axis=1)[['DMWtoA','DMWtoG','WC_vol','WC_vol_rDA']],
+#                  cEEm_eva.loc(axis=1)[['lu_F_mean','lu_F_ratio',
+#                                        'DEFlutoB','DEFlutoG']],
+#                  # cH_eva.loc(axis=1)[['Hyst_APn','DHAPntoB','DHAPntoG']]],
+#                  cH_eva.loc(axis=1)[['HAn','DHAntoB','DHAntoG']]],
+#                 axis=1)
+# tmp_corr =  tmp.corr(method=mcorr)
+# fig, ax = plt.subplots(nrows=1, ncols=2, 
+#                        gridspec_kw={'width_ratios': [29, 1]},
+#                        constrained_layout=True)
+# fig.suptitle('%s\nInfluence of material data - Complete'%name_Head,
+#              fontweight="bold")
+# g=sns.heatmap(tmp_corr.round(2), 
+#               center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[0],cbar_ax=ax[1])
+# Evac.tick_label_renamer(ax=g, renamer=VIPar_plt_renamer, axis='both')
+# ax[0].tick_params(axis='x', labelrotation=0, labelsize=8)
+# ax[0].tick_params(axis='y', labelrotation=0, labelsize=8)
+# ax[1].tick_params(axis='y', labelsize=8)
+# ax[0].set_xlabel('Influences')
+# ax[0].set_ylabel('Influences')
+# plt.show()
+
+# tmp_corr =  tmp.loc(axis=0)[:,['B','C','D','E','F','G']].corr(method=mcorr)
+# fig, ax = plt.subplots(nrows=1, ncols=2, 
+#                        gridspec_kw={'width_ratios': [29, 1]},
+#                        constrained_layout=True)
+# fig.suptitle('%s\nInfluence of material data - Desorption'%name_Head,
+#              fontweight="bold")
+# g=sns.heatmap(tmp_corr.round(2), 
+#               center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[0],cbar_ax=ax[1])
+# Evac.tick_label_renamer(ax=g, renamer=VIPar_plt_renamer, axis='both')
+# ax[0].tick_params(axis='x', labelrotation=0, labelsize=8)
+# ax[0].tick_params(axis='y', labelrotation=0, labelsize=8)
+# ax[1].tick_params(axis='y', labelsize=8)
+# ax[0].set_xlabel('Influences')
+# ax[0].set_ylabel('Influences')
+# plt.show()
+
+# tmp_corr =  tmp.loc(axis=0)[:,['G','H','I','J','K','L']].corr(method=mcorr)
+# fig, ax = plt.subplots(nrows=1, ncols=2, 
+#                        gridspec_kw={'width_ratios': [29, 1]},
+#                        constrained_layout=True)
+# fig.suptitle('%s\nInfluence of material data - Absorption'%name_Head,
+#              fontweight="bold")
+# g=sns.heatmap(tmp_corr.round(2), 
+#               center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[0],cbar_ax=ax[1])
+# Evac.tick_label_renamer(ax=g, renamer=VIPar_plt_renamer, axis='both')
+# ax[0].tick_params(axis='x', labelrotation=0, labelsize=8)
+# ax[0].tick_params(axis='y', labelrotation=0, labelsize=8)
+# ax[1].tick_params(axis='y', labelsize=8)
+# ax[0].set_xlabel('Influences')
+# ax[0].set_ylabel('Influences')
+# plt.show()
+
 tmp = pd.concat([cs.loc(axis=1)[['DMWtoA','DMWtoG','WC_vol','WC_vol_rDA']],
                  cEEm_eva.loc(axis=1)[['lu_F_mean','lu_F_ratio',
                                        'DEFlutoB','DEFlutoG']],
                  # cH_eva.loc(axis=1)[['Hyst_APn','DHAPntoB','DHAPntoG']]],
                  cH_eva.loc(axis=1)[['HAn','DHAntoB','DHAntoG']]],
                 axis=1)
-tmp_corr =  tmp.corr(method=mcorr)
-fig, ax = plt.subplots(nrows=1, ncols=2, 
-                       gridspec_kw={'width_ratios': [29, 1]},
-                       constrained_layout=True)
-fig.suptitle('%s\nInfluence of material data - Complete'%name_Head,
+fig, ax = plt.subplots(nrows=3, ncols=2, 
+                       gridspec_kw={'width_ratios': [29, 1],
+                                    'height_ratios': [1,1,1]},
+                       figsize = (6.3,3*3.54))
+fig.suptitle('%s\nInfluence mechanical parameters'%name_Head,
              fontweight="bold")
-g=sns.heatmap(tmp_corr.round(2), 
-              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
-              xticklabels=1, ax=ax[0],cbar_ax=ax[1])
+ax[0,0].set_title("Complete")
+# tmp_corr = tmp.corr(method=mcorr)
+# g=sns.heatmap(tmp_corr.round(2), 
+#               center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[0,0],cbar_ax=ax[0,1])
+tmp2_S, tmp2_p= corr_ext(tmp, method=mcorr,
+                         sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'}, 
+                         corr_round=2)
+g=sns.heatmap(tmp2_S, annot = tmp2_p, fmt='',
+              center=0, vmin=-1,vmax=1, annot_kws={"size":8, 'rotation':0},
+              xticklabels=1, ax=ax[0,0],cbar_ax=ax[0,1])
 Evac.tick_label_renamer(ax=g, renamer=VIPar_plt_renamer, axis='both')
-ax[0].tick_params(axis='x', labelrotation=0, labelsize=8)
-ax[0].tick_params(axis='y', labelrotation=0, labelsize=8)
-ax[1].tick_params(axis='y', labelsize=8)
-ax[0].set_xlabel('Influences')
-ax[0].set_ylabel('Influences')
-plt.show()
-
-tmp_corr =  tmp.loc(axis=0)[:,['B','C','D','E','F','G']].corr(method=mcorr)
-fig, ax = plt.subplots(nrows=1, ncols=2, 
-                       gridspec_kw={'width_ratios': [29, 1]},
-                       constrained_layout=True)
-fig.suptitle('%s\nInfluence of material data - Desorption'%name_Head,
-             fontweight="bold")
-g=sns.heatmap(tmp_corr.round(2), 
-              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
-              xticklabels=1, ax=ax[0],cbar_ax=ax[1])
+ax[0,0].tick_params(axis='x', labelrotation=0, labelsize=8)
+ax[0,0].tick_params(axis='y', labelrotation=0, labelsize=8)
+ax[0,1].tick_params(axis='y', labelsize=8)
+ax[1,0].set_title("Desorption")
+# tmp_corr =  tmp.loc(axis=0)[:,['B','C','D','E','F','G']].corr(method=mcorr)
+# g=sns.heatmap(tmp_corr.round(2), 
+#               center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[1,0],cbar_ax=ax[1,1])
+tmp2_S, tmp2_p= corr_ext(tmp.loc(axis=0)[:,['B','C','D','E','F','G']],
+                         method=mcorr,
+                         sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'}, 
+                         corr_round=2)
+g=sns.heatmap(tmp2_S, annot = tmp2_p, fmt='',
+              center=0,vmin=-1,vmax=1, annot_kws={"size":8, 'rotation':0},
+              xticklabels=1, ax=ax[1,0],cbar_ax=ax[1,1])
 Evac.tick_label_renamer(ax=g, renamer=VIPar_plt_renamer, axis='both')
-ax[0].tick_params(axis='x', labelrotation=0, labelsize=8)
-ax[0].tick_params(axis='y', labelrotation=0, labelsize=8)
-ax[1].tick_params(axis='y', labelsize=8)
-ax[0].set_xlabel('Influences')
-ax[0].set_ylabel('Influences')
-plt.show()
-
-tmp_corr =  tmp.loc(axis=0)[:,['G','H','I','J','K','L']].corr(method=mcorr)
-fig, ax = plt.subplots(nrows=1, ncols=2, 
-                       gridspec_kw={'width_ratios': [29, 1]},
-                       constrained_layout=True)
-fig.suptitle('%s\nInfluence of material data - Absorption'%name_Head,
-             fontweight="bold")
-g=sns.heatmap(tmp_corr.round(2), 
-              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
-              xticklabels=1, ax=ax[0],cbar_ax=ax[1])
+ax[1,0].tick_params(axis='x', labelrotation=0, labelsize=8)
+ax[1,0].tick_params(axis='y', labelrotation=0, labelsize=8)
+ax[1,1].tick_params(axis='y', labelsize=8)
+ax[2,0].set_title("Adsorption")
+# tmp_corr =  tmp.loc(axis=0)[:,['G','H','I','J','K','L']].corr(method=mcorr)
+# g=sns.heatmap(tmp_corr.round(2), 
+#               center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[2,0],cbar_ax=ax[2,1])
+tmp2_S, tmp2_p= corr_ext(tmp.loc(axis=0)[:,['G','H','I','J','K','L']],
+                         method=mcorr,
+                         sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'}, 
+                         corr_round=2)
+g=sns.heatmap(tmp2_S, annot = tmp2_p, fmt='',
+              center=0,vmin=-1,vmax=1, annot_kws={"size":8, 'rotation':0},
+              xticklabels=1, ax=ax[2,0],cbar_ax=ax[2,1])
 Evac.tick_label_renamer(ax=g, renamer=VIPar_plt_renamer, axis='both')
-ax[0].tick_params(axis='x', labelrotation=0, labelsize=8)
-ax[0].tick_params(axis='y', labelrotation=0, labelsize=8)
-ax[1].tick_params(axis='y', labelsize=8)
-ax[0].set_xlabel('Influences')
-ax[0].set_ylabel('Influences')
-plt.show()
+ax[2,0].tick_params(axis='x', labelrotation=0, labelsize=8)
+ax[2,0].tick_params(axis='y', labelrotation=0, labelsize=8)
+ax[2,1].tick_params(axis='y', labelsize=8)
+Evac.plt_handle_suffix(fig,path=out_full+'-Corr-MMan',**plt_Fig_dict)
 
 
 tmp=dft_comb.loc(axis=0)[:,'A'][['thickness_1','thickness_2','thickness_3']].mean(axis=1).droplevel(1)
@@ -2527,7 +2639,8 @@ tmp2=dft_comb.loc(axis=0)[:,['C','G','L']][['DHAntoB']].unstack()
 tmp=pd.concat([tmp,tmp2],axis=1)
 tmp3=dft_doda_comb.loc[idx[:,'G'],['Postmortem_LT','Storage_Time','Age','BMI','Sex']].droplevel(1).copy(deep=True)
 tmp3['Sex'].replace({'w':1,'m':-1}, inplace=True)
-tmp_corr=pd.concat([tmp,tmp3],axis=1).corr(method=mcorr)
+# tmp_corr=pd.concat([tmp,tmp3],axis=1).corr(method=mcorr)
+tmp2=pd.concat([tmp,tmp3],axis=1)
 tmp_ren={'t_mean':r'$\overline{h}$','VolTot':r'$V_{total}$',
          'Density_fresh': r'$\rho_{app,fresh}$','Density_dry': r'$\rho_{app,dry}$',
          ('WC_vol','A'): r'$\Phi_{vol,fresh}$',
@@ -2553,8 +2666,16 @@ fig, ax = plt.subplots(nrows=1, ncols=2,
                        gridspec_kw={'width_ratios': [29, 1]},
                        constrained_layout=True)
 #ax[0].set_title('%s\nInfluence of donor data'%name_Head)
-g=sns.heatmap(tmp_corr.loc[tmp.columns,tmp3.columns].rename(index=tmp_ren,columns=tmp_ren).round(2), 
-              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#g=sns.heatmap(tmp_corr.loc[tmp.columns,tmp3.columns].rename(index=tmp_ren,columns=tmp_ren).round(2), 
+#              center=0, annot=True, annot_kws={"size":8, 'rotation':0},
+#              xticklabels=1, ax=ax[0],cbar_ax=ax[1])
+tmp2_S, tmp2_p= corr_ext(tmp2,
+                         method=mcorr,
+                         sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'}, 
+                         corr_round=2)
+g=sns.heatmap(tmp2_S.loc[tmp.columns,tmp3.columns].rename(index=tmp_ren,columns=tmp_ren),
+              annot = tmp2_p.loc[tmp.columns,tmp3.columns], fmt='',
+              center=0, annot_kws={"size":8, 'rotation':0},
               xticklabels=1, ax=ax[0],cbar_ax=ax[1])
 ax[0].tick_params(axis='x', labelrotation=0, labelsize=8)
 ax[0].tick_params(axis='y', labelrotation=0, labelsize=8)
@@ -3757,28 +3878,45 @@ tmp_ren={'t_mean':r'$\overline{h}$','VolTot':r'$V_{total}$',
          ('DHAntoB','C'):r'$D_{H_{n},C-sat}$',
          ('DHAntoB','G'):r'$D_{H_{n},G-sat}$',
          ('DHAntoB','L'):r'$D_{H_{n},L-sat}$'}
+tmp2_S, tmp2_p= corr_ext(tmp, method=mcorr,
+                         sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'}, 
+                         corr_round=2)
 fig, ax = plt.subplots(nrows=2, ncols=2, 
                        gridspec_kw={'width_ratios':  [60,  1],
                                     'height_ratios': [ 1,1.5]},
                        figsize = (6.3,3.54))
-tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',('Density_app','A'),('Density_app','G'),
-                                 ('WC_vol','A')],
-                                [('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','C'),
-                                 ('WC_vol_rDA','L')]]
-g=sns.heatmap(tmp3.rename(index=tmp_ren,columns=tmp_ren).round(2), 
-              center=0, vmin=-0.7,vmax=0.7, annot=True, annot_kws={"size":8, 'rotation':0},
+# tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',('Density_app','A'),('Density_app','G'),
+#                                  ('WC_vol','A')],
+#                                 [('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','C'),
+#                                  ('WC_vol_rDA','L')]]
+# g=sns.heatmap(tmp3.rename(index=tmp_ren,columns=tmp_ren).round(2), 
+#               center=0, vmin=-0.7,vmax=0.7, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[0,0],cbar_ax=ax[0,1], cbar_kws={"ticks":[-0.7,0.0,0.7]})
+tmp_locs=(['t_mean','VolTot',('Density_app','A'),('Density_app','G'),('WC_vol','A')],
+         [('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','C'),('WC_vol_rDA','L')])
+g=sns.heatmap(tmp2_S.loc[tmp_locs].rename(index=tmp_ren,columns=tmp_ren), 
+              annot = tmp2_p.loc[tmp_locs], fmt='',
+              center=0, vmin=-0.7,vmax=0.7, annot_kws={"size":8, 'rotation':0},
               xticklabels=1, ax=ax[0,0],cbar_ax=ax[0,1], cbar_kws={"ticks":[-0.7,0.0,0.7]})
 ax[0,0].set_title("Influences on water manipulation")
 ax[0,0].tick_params(axis='x', labelrotation=0, labelsize=8)
 ax[0,0].tick_params(axis='y', labelrotation=0, labelsize=8)
 ax[0,1].tick_params(axis='y', labelsize=8, length=2)
-tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',
-                                 ('Density_app','A'),('Density_app','G'),
-                                 ('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','L')],
-                                [('lu_F_mean','B'),('lu_F_mean','G'),('DEFlutoB','C'),('DEFlutoB','G'),('DEFlutoB','L'),
-                                 ('HAn','B'),('HAn','G'),('DHAntoB','C'),('DHAntoB','G'),('DHAntoB','L')]]
-g=sns.heatmap(tmp3.rename(index=tmp_ren,columns=tmp_ren).round(2), 
-              center=0, vmin=-0.7,vmax=0.7, annot=True, annot_kws={"size":8, 'rotation':0},
+# tmp3=tmp.corr(method=mcorr).loc[['t_mean','VolTot',
+#                                  ('Density_app','A'),('Density_app','G'),
+#                                  ('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','L')],
+#                                 [('lu_F_mean','B'),('lu_F_mean','G'),('DEFlutoB','C'),('DEFlutoB','G'),('DEFlutoB','L'),
+#                                  ('HAn','B'),('HAn','G'),('DHAntoB','C'),('DHAntoB','G'),('DHAntoB','L')]]
+# g=sns.heatmap(tmp3.rename(index=tmp_ren,columns=tmp_ren).round(2), 
+#               center=0, vmin=-0.7,vmax=0.7, annot=True, annot_kws={"size":8, 'rotation':0},
+#               xticklabels=1, ax=ax[1,0],cbar_ax=ax[1,1], cbar_kws={"ticks":[-0.7,0.0,0.7]})
+tmp_locs=(['t_mean','VolTot',('Density_app','A'),('Density_app','G'),
+          ('WC_vol','A'),('WC_vol_rDA','B'),('WC_vol_rDA','L')],
+          [('lu_F_mean','B'),('lu_F_mean','G'),('DEFlutoB','C'),('DEFlutoB','G'),('DEFlutoB','L'),
+           ('HAn','B'),('HAn','G'),('DHAntoB','C'),('DHAntoB','G'),('DHAntoB','L')])
+g=sns.heatmap(tmp2_S.loc[tmp_locs].rename(index=tmp_ren,columns=tmp_ren), 
+              annot = tmp2_p.loc[tmp_locs], fmt='',
+              center=0, vmin=-0.7,vmax=0.7, annot_kws={"size":8, 'rotation':0},
               xticklabels=1, ax=ax[1,0],cbar_ax=ax[1,1], cbar_kws={"ticks":[-0.7,0.0,0.7]})
 ax[1,0].set_title("Influences on mechanical parameters")
 ax[1,0].tick_params(axis='x', labelrotation=0, labelsize=8)
