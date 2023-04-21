@@ -416,6 +416,41 @@ def Regfitret(pdo, x,y, name='exponential', guess = dict(a=-0.01, b=0.1, c=-1),
            'Exp_txt': etxt, 'Rep_txt': rtxt, 'Rquad': Rquad}
     return out
 
+def plt_ax_Reg_wf(pdo, x, y,  
+                  fit_type='exponential', 
+                  fit_guess = dict(a=-0.01, b=0.1, c=-1), fit_nfev=1000,
+                  fit_xl=r'$X$', fit_yl=r'$Y$', fit_form='{a:.3e},{b:.3e},{c:.3e}', 
+                  ax=None, xlabel=None, ylabel=None, title=None,
+                  plot_data=True, label_d='Data', skws={},
+                  plot_fit=True, label_f=False, lkws={},
+                  outtype="axis"):
+    if ax is None: ax = plt.gca()
+    if not title is None: ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if plot_data: 
+        sns.scatterplot(x=x, y=y, data=pdo, ax=ax, label=label_d, **skws)
+    if plot_fit:
+        fit = Regfitret(pdo=pdo, x=x, y=y, 
+                        name=fit_type, guess=fit_guess, max_nfev=fit_nfev,
+                        xl=fit_xl, yl=fit_yl, t_form=fit_form)
+        xtmp = np.linspace(pdo[x].min(), pdo[x].max(), 101)
+        ytmp = fit['Model'].eval(x=xtmp, **fit['PD'])
+        if label_f==True:
+            ltxt=fit['Exp_txt']+' ($R²$={:.3f})'.format(fit['Rquad'])
+        elif isinstance(label_f, str):
+            ltxt=label_f
+        else:
+            ltxt='Fit-%s'%fit['Name']
+        sns.lineplot(x=xtmp, y=ytmp, ax=ax, label=ltxt, **lkws)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.legend()
+    if outtype=="axis":
+        return ax
+    if outtype=="full":
+        return ax, fit
+
 def corr_ext(df, method='spearman', 
              sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'},
              corr_round=2):
@@ -641,10 +676,10 @@ dft['RHenv'] = dft.index.droplevel(0) # SettingWithCopyWarning
 dft['RHenv'] = dft['RHenv'] .map(Variants_env_relH)
 dft['RHstore'] =dft['Humidity_store']/100
 
-tmp=dft.loc(axis=0)[:,'A'][['thickness_1','thickness_2','thickness_3']].mean(axis=1)
+tmp=dft.loc(axis=1)[['thickness_1','thickness_2','thickness_3']].mean(axis=1)
 tmp.name='thickness_mean'
 dft=pd.concat([dft,tmp],axis=1)
-tmp=dft.loc(axis=0)[:,'A'][['width_1','width_2','width_3']].mean(axis=1)
+tmp=dft.loc(axis=1)[['width_1','width_2','width_3']].mean(axis=1)
 tmp.name='width_mean'
 dft=pd.concat([dft,tmp],axis=1)
 
@@ -668,7 +703,9 @@ dft['DMWtoA']=(dft.Mass-tmp)/tmp
 #                               'width_1','width_2','width_3','Length']].copy(deep=True)
 # dft_A.columns=dft_A.columns.str.replace('Mass_org','Mass')
 dft_A=dft.loc(axis=0)[:,'G'].loc(axis=1)['Designation':'geo_MoI_mid'].copy(deep=True)
-tmp=dft.loc(axis=0)[:,'G'].loc(axis=1)[idx['Side_LR','Side_pd','Series','Numsch']].copy(deep=True)
+# tmp=dft.loc(axis=0)[:,'G'].loc(axis=1)[idx['Side_LR','Side_pd','Series','Numsch']].copy(deep=True)
+tmp=dft.loc(axis=0)[:,'G'].loc(axis=1)[idx['thickness_mean','width_mean',
+                                           'Side_LR','Side_pd','Series','Numsch']].copy(deep=True)
 dft_A=pd.concat([dft_A,tmp],axis=1)
 dft_A['Mass']=dft_A['Mass_org']
 dft_A.index.set_levels(dft_A.index.get_level_values(1).str.replace('G','A'), 
@@ -683,7 +720,7 @@ tmp2=tmp['Mass'].loc(axis=0)[:,'G'].droplevel(1)
 tmp['MassW']=tmp['Mass']-tmp2
 tmp['VolW']=tmp['MassW']/(0.997/1000) # Dichte Wasser in g/cm³
 tmp['WC_gra']=tmp['MassW']/tmp['Mass']
-tmp['VolDry']=tmp['Mass']*0 + tmp2/(1.362/1000) # Reindichte Gewebe in g/mm³ aus Vortest He-Pyk !Ersetzen durch Ergebnisse!
+# tmp['VolDry']=tmp['Mass']*0 + tmp2/(1.362/1000) # Reindichte Gewebe in g/mm³ aus Vortest He-Pyk !Ersetzen durch Ergebnisse!
 # tmp['WC_vol']=tmp['VolW']/(tmp['VolDry']+tmp['VolW'])
 tmp2=(dft[['width_1','width_2','width_3']].mean(axis=1)*dft[['thickness_1','thickness_2','thickness_3']].mean(axis=1)*dft['Length']).loc(axis=0)[:,'G'].droplevel(1)
 tmp['VolTot']=tmp['Mass']*0 + tmp2 # Volumen aus Geometrie
@@ -800,7 +837,7 @@ def Hysteresis_params(pdo, strain_col, stress_col,
                       iS=None, iE=None, iC='Stress_Strain_VL_max',
                       option_u_E='Stress_eq', search_val=0.0,
                       interpolate_kws=dict(intmeth='spline', int_kws={'order':2}),
-                      testplot=False, plt_kws={}, outtype='Series'):
+                      testplot=False, plt_kws={}, ax=None, outtype='Series'):
     if not ((iS is None) and (iE is None)):
         pdt = pdo[[strain_col, stress_col]].indlim(iS=iS,iE=iE).copy(deep=True)
     else:
@@ -875,7 +912,7 @@ def Hysteresis_params(pdo, strain_col, stress_col,
     out['e_pln'] = out['e_pl']/e_delta
     out['s_pln'] = out['s_pl']/s_delta
     
-    if testplot:
+    if testplot==True:
         pdt_u=Evac.pd_exclnan(pdo=pdt_u, axis=1)
         pdt_l=Evac.pd_exclnan(pdo=pdt_l, axis=1)
         plt.title("Stress-Strain Curve with Hysteresis\n%s"%(plt_kws['title'] if 'title' in plt_kws.keys() else ''))
@@ -893,11 +930,37 @@ def Hysteresis_params(pdo, strain_col, stress_col,
         plt.xlabel('Strain')
         plt.ylabel('Stress')
         plt.show()
-        
+    elif testplot=="axis":
+        # ax = plt_kws['ax'] if 'ax' in plt_kws.keys() else plt.gca()
+        if ax is None: ax = plt.gca()
+        if 'title' in plt_kws.keys(): ax.set_title(plt_kws['title'])
+        if 'xlabel' in plt_kws.keys(): ax.set_xlabel(plt_kws['xlabel'])
+        if 'ylabel' in plt_kws.keys(): ax.set_ylabel(plt_kws['ylabel'])
+        # ax.plot(pdo[strain_col],pdo[stress_col],'g-')
+        # ax.fill_between(pdt_l[strain_col],pdt_l[stress_col], y2=miny,
+        #                  **dict(color='r', hatch='|', alpha= 0.2))
+        # ax.plot(pdt_l[strain_col],pdt_l[stress_col],'r:')
+        # ax.fill_between(pdt_u[strain_col],pdt_u[stress_col], y2=miny,
+        #                  **dict(color='b', hatch='-', alpha= 0.2))
+        # ax.plot(pdt_u[strain_col],pdt_u[stress_col],'b:')
+        # ax.plot(pl_ser[strain_col],pl_ser[stress_col], 'x')
+        # ax.plot(pdt[strain_col].loc[iS],pdt[stress_col].loc[iS], 'o')
+        # ax.plot(pdt[strain_col].loc[iE],pdt[stress_col].loc[iE], 's')
+        # ax.plot(pdt[strain_col].loc[iC],pdt[stress_col].loc[iC], '+')
+        ax.plot(pdt_l[strain_col],pdt_l[stress_col],'r-', label='Loading')
+        ax.plot(pdt_u[strain_col],pdt_u[stress_col],'b-', label='Relaxation')
+        ax.fill_between(pdt_l[strain_col],pdt_l[stress_col], y2=miny,
+                        **dict(color='r', hatch='|', alpha= 0.2), 
+                        label='Work under loading')
+        ax.fill_between(pdt_u[strain_col],pdt_u[stress_col], y2=miny,
+                        **dict(color='b', hatch='-', alpha= 0.2),
+                        label='Work under relaxation')
     if outtype=='Series':
         out=pd.Series(out)
     elif outtype=='Tuple':
-        out.values
+        out=out.values
+    elif outtype=='axis':
+        out=ax
     return out
 
 
@@ -4089,6 +4152,39 @@ ax[3].legend(h,l, loc='center', ncol=8,title='Specimen number',fontsize=6.0)
 fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=out_full+'-SM-EM_SL',**plt_Fig_dict)
 
+
+fig, ax = plt.subplots(ncols=1,nrows=4,
+                        gridspec_kw={'height_ratios': [1, 1, 1, 0.001]},
+                        figsize=figsize_sup, constrained_layout=True)
+#tmp = dfVIP.loc[dfVIP.index.str.contains("MMS102")].index
+tmp = pd.Series(['saturated','dry','saturated-rehydration'],
+                index='0000-0001-8378-3108_LEIULANA_39-21_LuPeCo_MMS102'+pd.Series(['B','G','L']))
+j1=0
+j2=0
+for i in tmp.index:
+    tmpV=dfVIP.loc[i]
+    tmpM=dfMt.loc[i]
+    tmp2=Hysteresis_params(tmpM, strain_col='Strain_opt_d_M', stress_col='Stress', 
+                  iS=tmpV.loc['S',1], iE=tmpV.loc['E',1], 
+                  iC='Stress_Strain_VL_max',
+                  option_u_E='Strain_eq', 
+                  search_val=tmpM.loc[tmpV.loc['S',1],'Strain_opt_d_M'],
+                  interpolate_kws=dict(intmeth='mean_around_closest',
+                                       int_kws={'order':3}),
+                  testplot="axis",outtype="axis",ax=ax[j1],#ax=ax[j1,j2],
+                  plt_kws={'title':"Procedure step "+i[-1]+" (%s)"%tmp[i], 
+                           'xlabel':r'$\epsilon$ / -','ylabel':r'$\sigma$ / MPa'})
+    h,l = ax[j1].axes.get_legend_handles_labels()
+    j2+=1
+    if j2>0:
+        j1+=1
+        j2=0
+ax[j1].grid(False)
+ax[j1].axis('off')
+ax[j1].legend(h,l, loc='center', ncol=4,fontsize=8.0)
+Evac.plt_handle_suffix(fig,path=out_full+'-SM-HN_Examples',**plt_Fig_dict)
+
+
 tmp=t2.copy(deep=True)
 tmp=tmp.sort_values(['Numsch','Variant'])
 fig, ax = plt.subplots(ncols=1,nrows=4,
@@ -4222,6 +4318,105 @@ ax[2,0].tick_params(axis='y', labelrotation=0, labelsize=8)
 ax[2,1].tick_params(axis='y', labelsize=8)
 Evac.plt_handle_suffix(fig,path=out_full+'-SM-Corr-MM',**plt_Fig_dict)
 
+
+#---Regrettions
+fig, ax = plt.subplots(ncols=1,nrows=4,
+                        gridspec_kw={'height_ratios': [1, 1, 1, 1]},
+                        figsize=figsize_sup, constrained_layout=True)
+tmp2=dft_comb_rel
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='RHstore', y='DEFlutoB',
+              ax=ax[0], title=None, xlabel=r'$\Phi_{env}$', ylabel=r'$D_{E,sat}$',
+              fit_type='linear', fit_guess = dict(a=0, b=0.01),fit_form='{a:.3e},{b:.3e}',
+              fit_xl=r'\Phi_{env}',fit_yl=r'D_{E,sat,des}',
+              plot_data=True, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[0]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='WC_vol_rDA', y='DEFlutoB',
+              ax=ax[1], title=None, xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,sat}$',
+              fit_type='linear', fit_guess = dict(a=0, b=0.01),fit_form='{a:.3e},{b:.3e}',
+              fit_xl=r'D_{\Phi,fresh}',fit_yl=r'D_{E,sat,des}',
+              plot_data=True, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[0]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='WC_vol_rDA', y='DEFlutoB',
+              ax=ax[1], title=None, xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,sat}$',
+              fit_type='exponential_x0', fit_guess = dict(a=0, b=0.01, c=-1),fit_form='{a:.3e},{b:.3e},{c:.3f}',
+              fit_xl=r'D_{\Phi,fresh}',fit_yl=r'D_{E,sat,des}',
+              plot_data=False, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[1]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='WC_gra_rDA', y='DEFlutoB',
+              ax=ax[2], title=None, xlabel=r'$D_{w,fresh}$', ylabel=r'$D_{E,sat}$',
+              fit_type='linear', fit_guess = dict(a=0, b=0.01),fit_form='{a:.3e},{b:.3e}',
+              fit_xl=r'D_{w,fresh}',fit_yl=r'D_{E,sat,des}',
+              plot_data=True, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[0]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='WC_gra_rDA', y='DEFlutoB',
+              ax=ax[2], title=None, xlabel=r'$D_{w,fresh}$', ylabel=r'$D_{E,sat}$',
+              fit_type='exponential_x0', fit_guess = dict(a=0, b=0.01, c=-1),fit_form='{a:.3e},{b:.3e},{c:.3f}',
+              fit_xl=r'D_{w,fresh}',fit_yl=r'D_{E,sat,des}',
+              plot_data=False, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[1]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='DMWtoG', y='DEFlutoB',
+              ax=ax[3], title=None, xlabel=r'$w_{s}$', ylabel=r'$D_{E,sat}$',
+              fit_type='linear', fit_guess = dict(a=0, b=0.01),fit_form='{a:.3e},{b:.3e}',
+              fit_xl=r'w_{s}',fit_yl=r'D_{E,sat,des}',
+              plot_data=True, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[0]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='DMWtoG', y='DEFlutoB',
+              ax=ax[3], title=None, xlabel=r'$w_{s}$', ylabel=r'$D_{E,sat}$',
+              fit_type='exponential', fit_guess = dict(a=0, b=0.01, c=-1),fit_form='{a:.3e},{b:.3e},{c:.3f}',
+              fit_xl=r'w_{s}',fit_yl=r'D_{E,sat,des}',
+              plot_data=False, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[1]),outtype="full")
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=out_full+'-SM-Reg-DEsat',**plt_Fig_dict)
+
+fig, ax = plt.subplots(ncols=1,nrows=4,
+                        gridspec_kw={'height_ratios': [1, 1, 1, 1]},
+                        figsize=figsize_sup, constrained_layout=True)
+tmp2=dft_comb_rel
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='RHstore', y='DEFlutoG',
+              ax=ax[0], title=None, xlabel=r'$\Phi_{env}$', ylabel=r'$D_{E,dry}$',
+              fit_type='linear', fit_guess = dict(a=0, b=0.01),fit_form='{a:.3e},{b:.3e}',
+              fit_xl=r'\Phi_{env}',fit_yl=r'D_{E,dry,des}',
+              plot_data=True, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[0]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='WC_vol_rDA', y='DEFlutoG',
+              ax=ax[1], title=None, xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,dry}$',
+              fit_type='linear', fit_guess = dict(a=0, b=0.01),fit_form='{a:.3e},{b:.3e}',
+              fit_xl=r'D_{\Phi,fresh}',fit_yl=r'D_{E,dry,des}',
+              plot_data=True, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[0]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='WC_vol_rDA', y='DEFlutoG',
+              ax=ax[1], title=None, xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,dry}$',
+              fit_type='exponential', fit_guess = dict(a=-0.5, b=0.01, c=0.1),fit_form='{a:.3e},{b:.3e},{c:.3f}',
+              fit_xl=r'D_{\Phi,fresh}',fit_yl=r'D_{E,dry,des}',
+              plot_data=False, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[1]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='WC_gra_rDA', y='DEFlutoG',
+              ax=ax[2], title=None, xlabel=r'$D_{w,fresh}$', ylabel=r'$D_{E,dry}$',
+              fit_type='linear', fit_guess = dict(a=0, b=0.01),fit_form='{a:.3e},{b:.3e}',
+              fit_xl=r'D_{w,fresh}',fit_yl=r'D_{E,dry,des}',
+              plot_data=True, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[0]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='WC_gra_rDA', y='DEFlutoG',
+              ax=ax[2], title=None, xlabel=r'$D_{w,fresh}$', ylabel=r'$D_{E,dry}$',
+              fit_type='exponential', fit_guess = dict(a=-0.5, b=0.01, c=0.1),fit_form='{a:.3e},{b:.3e},{c:.3f}',
+              fit_xl=r'D_{w,fresh}',fit_yl=r'D_{E,dry,des}',
+              plot_data=False, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[1]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='DMWtoG', y='DEFlutoG',
+              ax=ax[3], title=None, xlabel=r'$w_{s}$', ylabel=r'$D_{E,dry}$',
+              fit_type='linear', fit_guess = dict(a=0, b=0.01),fit_form='{a:.3e},{b:.3e}',
+              fit_xl=r'w_{s}',fit_yl=r'D_{E,dry,des}',
+              plot_data=True, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[0]),outtype="full")
+_,tmp=plt_ax_Reg_wf(pdo=tmp2.query("Variant<='G'"), x='DMWtoG', y='DEFlutoG',
+              ax=ax[3], title=None, xlabel=r'$w_{s}$', ylabel=r'$D_{E,dry}$',
+              fit_type='exponential', fit_guess = dict(a=0, b=0.01, c=-1),fit_form='{a:.3e},{b:.3e},{c:.3f}',
+              fit_xl=r'w_{s}',fit_yl=r'D_{E,dry,des}',
+              plot_data=False, label_d='Data Desorption', skws=dict(color=sns.color_palette("tab10")[3]),
+              plot_fit=True, label_f=True, lkws=dict(color=sns.color_palette("tab10")[1]),outtype="full")
+fig.suptitle('')
+Evac.plt_handle_suffix(fig,path=out_full+'-SM-Reg-DEdry',**plt_Fig_dict)
 
 #---Dependencies
 fig, ax = plt.subplots(ncols=1,nrows=3,

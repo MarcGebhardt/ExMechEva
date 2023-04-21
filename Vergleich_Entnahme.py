@@ -54,6 +54,9 @@ def boolean_df(item_lists, unique_items):
     return pd.DataFrame(bool_dict)
 
 
+plt_Fig_dict={'tight':False, 'show':True, 
+              'save':True, 's_types':["pdf","png"], 
+              'clear':True, 'close':True}
 
 # =============================================================================
 #%% 1 Inputs
@@ -1066,15 +1069,24 @@ ax['right'].axis('off')
 ax['space'].grid(False)
 ax['space'].axis('off')
 ax['space'].set_title('Description')
-fig.suptitle('Evaluation of exluding assessment code combinations',fontweight="bold")
-plt.savefig(path_out+'Paper-Fig07-ALL-Assessment_codes-wt.png')
-plt.savefig(path_out+'Paper-Fig07-ALL-Assessment_codes-wt.pdf')
-plt.show()
-plt.close(fig)
+# fig.suptitle('Evaluation of exluding assessment code combinations',fontweight="bold")
+# plt.savefig(path_out+'Paper-Fig07-ALL-Assessment_codes-wt.png')
+# plt.savefig(path_out+'Paper-Fig07-ALL-Assessment_codes-wt.pdf')
+# plt.show()
+# plt.close(fig)
+fig.suptitle(None)
+# Evac.plt_handle_suffix(fig,path=path_out+'Fig7',**plt_Fig_dict)
+Evac.plt_handle_suffix(fig,path=path_out+'Fig7',**{'tight':False, 'show':True, 
+                                                  'save':True, 's_types':["pdf","png","eps"], 
+                                                  'clear':True, 'close':True})
 
 #%%%% Geometrical quality control
 lss = [':', '--', '-.','-']
-fig, ax = plt.subplots(ncols=2,nrows=2,figsize=(16/2.54, 12/2.54))
+fig, ax = plt.subplots(ncols=2,nrows=2,
+                       gridspec_kw={'width_ratios':  [1,1],
+                                    'height_ratios': [1,1]},
+                       figsize=(16/2.54, 12/2.54),
+                       constrained_layout=True)
 axt = sns.histplot(Wtest['dcube_V']*100,
                    stat='count', bins=20, ax=ax[0,0], kde=True)
 ax[0,0].set_title('Trabecular bone (N=%d)\nCubicity'%ist_sum_TB)
@@ -1137,13 +1149,14 @@ xl=ax[1,1].get_xticklabels()[1]
 xl.set_color("green")
 xl.set_fontweight("bold")
 
-fig.suptitle('Examplary results of the specimens geometrical quality control',fontweight="bold")
-fig.tight_layout()  # otherwise the right y-label is slightly clipped
-plt.savefig(path_out+'Paper-Fig08-Results-Geo.png')
-plt.savefig(path_out+'Paper-Fig08-Results-Geo.pdf')
-plt.show()
-plt.close(fig)
-
+# fig.suptitle('Examplary results of the specimens geometrical quality control',fontweight="bold")
+# fig.tight_layout()  # otherwise the right y-label is slightly clipped
+# plt.savefig(path_out+'Paper-Fig08-Results-Geo.png')
+# plt.savefig(path_out+'Paper-Fig08-Results-Geo.pdf')
+# plt.show()
+# plt.close(fig)
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=path_out+'Fig8',**plt_Fig_dict)
 #%%%% Cortical Bone observation
 gs_kw = dict(width_ratios=[0.715, 1.0, 0.285], height_ratios=[1, 2])
 fig, ax = plt.subplot_mosaic([['upper', 'upper', 'upper'],
@@ -1203,11 +1216,13 @@ ax['Donor'].set_xlabel('Cadaver')
 ax['Donor'].set_ylabel('Thickness in mm')
 # ax['lower right'].tick_params(axis='y',which='both',left=False,labelleft=False)
 
-fig.suptitle('Observations on the mean thickness of the cortical bone specimens (N=%d)'%ist_sum_CB,fontweight="bold")
-plt.savefig(path_out+'Paper-Fig09-CB-Thick.png')
-plt.savefig(path_out+'Paper-Fig09-CB-Thick.pdf')
-plt.show()
-plt.close(fig)
+# fig.suptitle('Observations on the mean thickness of the cortical bone specimens (N=%d)'%ist_sum_CB,fontweight="bold")
+# plt.savefig(path_out+'Paper-Fig09-CB-Thick.png')
+# plt.savefig(path_out+'Paper-Fig09-CB-Thick.pdf')
+# plt.show()
+# plt.close(fig)
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=path_out+'Fig9',**plt_Fig_dict)
 
 #%%% 4 Excel-out für Paper
 Cols_C_out=['Designation','Type','Donor','Region','Origin',
