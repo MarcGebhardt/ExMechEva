@@ -1133,6 +1133,11 @@ rel_col_mec=['statistics','fu','eu_opt',
              'lu_F_mean','DEFlutoB','DEFlutoG','lu_F_ratio',
              # 'Hyst_AP','Hyst_APn','DHAPntoB','DHAPntoG']
              'HA','HAn','DHAntoB','DHAntoG']
+rel_col_dod=['Designation','Donor','Naming','Origin',
+             'Sex','Body_Weight','Body_Height','BMI',
+             'Age','Postmortem_LT','Storage_Time',
+             'ICDCodes','Special_Anamnesis','Note_Anamnesis',
+             'Fixation','Note_Fixation']
 dft_comb_rel = dft_comb[rel_col_com+rel_col_geo+rel_col_add+rel_col_mec]
 dft_comb_rel.loc[~dft_comb_rel.statistics, ['fu','eu_opt']] = np.nan # SettingWithCopyWarning
 
@@ -1151,6 +1156,8 @@ tmp=pd_agg_custom(dft_comb_rel[rel_col_mec].unstack())
 tmp=tmp.drop(columns='statistics').dropna(axis=1)
 tmp=tmp.rename(VIPar_plt_renamer,axis=1)
 tmp.T.to_excel(writer, sheet_name='Mechanical_Descriptive')
+tmp=dft_doda_comb.loc(axis=0)[:,'A'][rel_col_dod].droplevel(1)
+tmp.to_excel(writer, sheet_name='Donor_Data')
 writer.close()
 
 
