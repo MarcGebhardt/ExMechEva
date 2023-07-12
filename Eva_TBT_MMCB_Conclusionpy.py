@@ -47,7 +47,8 @@ def relDev(pdo, pdr):
 def pd_agg_custom(pdo, agg_funcs=['mean',Evac.meanwoso,'median',
                                    'std',Evac.coefficient_of_variation, 
                                    Evac.stdwoso, Evac.coefficient_of_variation_woso,
-                                   'max','min',Evac.confidence_interval], 
+                                   'min','max',Evac.confidence_interval], 
+                                   # 'max','min',Evac.confidence_interval], 
                   numeric_only=False, 
                   af_ren={'coefficient_of_variation_woso':'CVwoso',
                           'coefficient_of_variation':'CV'},
@@ -538,6 +539,8 @@ VIPar_plt_renamer = {'fy':'$f_{y}$','fu':'$f_{u}$','fb':'$f_{b}$',
                      # 'Hyst_APn': r'$H_{n}$','DHAPntoB': r'$D_{H_{n},sat}$','DHAPntoG': r'$D_{H_{n},dry}$'}
                      'HA': r'$H$','HAn': r'$H_{n}$',
                      'DHAntoB': r'$D_{H_{n},sat}$','DHAntoG': r'$D_{H_{n},dry}$'}
+                     # 'Body_Weight':r'$m_{D-body}$','Body_Height':r'$h_{D-body}$',
+                     # 'Postmortem_LT':r'$t_{D-pm}$','Storage_Time':r'$t_{D-store}$'}
 
 Variants_env_relH={'B':1.20, 'C':1.00, 'D':0.90, 'E':0.75, 'F':0.60,
                    'G':0.00, 'H':0.60, 'I':0.75, 'J':0.90, 'K':1.00, 'L':1.20}
@@ -1122,6 +1125,7 @@ dft_comb=pd.concat([dft_comb,cEEm_eva,cH_eva],axis=1)
 dft_doda_comb=pd.merge(left=dft_comb,right=doda,
                        left_on='Donor',right_index=True)
 dft_doda_comb['Storage_Time']=(dft_doda_comb['Date_SpPrep']-dft_doda_comb['Date_Death']).dt.days
+# dft_doda_comb['Storage_Time']=(dft_doda_comb['Date_SpPrep']-dft_doda_comb['Date_Admission']).dt.days
 
 #%% Data-Export
 rel_col_com=['Designation','Series','Donor','Origin','Side_LR','Side_pd']
