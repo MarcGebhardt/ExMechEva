@@ -489,6 +489,29 @@ def corr_ext(df, method='spearman',
     # df_c3 = df_c2.to_numpy()
     return df_c, df_c2
 
+def plt_UW_corr(df, val, val_repl, ax, ax_row, cmap, norm):
+    tmp=df[val].unstack()
+    tmp_corr=tmp.corr(method=lambda x,y: stats.mannwhitneyu(x,y)[1]).round(3)
+    g=sns.heatmap(tmp_corr, cmap=cmap, norm=norm,
+              annot=False, annot_kws={"size":8, 'rotation':0},
+              xticklabels=1, yticklabels=1,
+              ax=ax[ax_row,0], cbar=False)
+    ax[ax_row,0].tick_params(axis='x', labelrotation=0, labelsize=8)
+    ax[ax_row,0].tick_params(axis='y', labelrotation=0, labelsize=8)
+    ax[ax_row,0].set_ylabel(val_repl, fontsize = 10)
+    ax[ax_row,0].set_xlabel(None)
+    tmp_corr=tmp.corr(method=lambda x,y: stats.wilcoxon(x,y)[1]).round(3)
+    g=sns.heatmap(tmp_corr, cmap=cmap, norm=norm,
+                  annot=False, annot_kws={"size":8, 'rotation':0},
+                  xticklabels=1, yticklabels=1,
+                  ax=ax[ax_row,1], 
+                  cbar=True, cbar_ax=ax[ax_row,2])
+    ax[ax_row,1].tick_params(axis='x', labelrotation=0, labelsize=8)
+    ax[ax_row,1].tick_params(axis='y', labelrotation=0, labelsize=8)
+    ax[ax_row,1].set_ylabel(None)
+    ax[ax_row,1].set_xlabel(None)
+    ax[ax_row,2].tick_params(axis='y', labelsize=8)
+
 # =============================================================================
 #%% Einlesen und auswählen
 # data="S1"
@@ -1686,14 +1709,22 @@ Evac.MG_strlog("\n\n  %s Conclusion:"%mpop,
                log_mg, 1, printopt=False)
 tmp3=group_ANOVA_MComp_multi(df=dft_comb,
                 group_main='Variant',group_sub=[],
-               ano_Var=['WC_vol','WC_vol_rDA',
-                        'lu_F_mean','DEFlutoB',
-                        # 'Hyst_APn','DHAPntoB'], 
-                        'HAn','DHAntoB'], 
+               # ano_Var=['WC_vol','WC_vol_rDA',
+               #          'lu_F_mean','DEFlutoB',
+               #          # 'Hyst_APn','DHAPntoB'], 
+               #          'HAn','DHAntoB'],               
+               ano_Var=['WC_vol','WC_gra','DMWtoG',
+                        'WC_vol_rDA','WC_gra_rDA',
+                        'fu','eu_opt',
+                        'lu_F_mean','DEFlutoB', 'DEFlutoG','lu_F_ratio',
+                        'HAn','DHAntoB','DHAntoG'], 
                mpop=mpop, alpha=alpha, **MCompdf_kws)
-Evac.MG_strlog(Evac.str_indent(tmp3.loc(axis=1)['DF1':'H0'].to_string()),
+# Evac.MG_strlog(Evac.str_indent(tmp3.loc(axis=1)['DF1':'H0'].to_string()),
+#                log_mg,1, printopt=False)
+Evac.MG_strlog(Evac.str_indent(tmp3.loc(axis=1)['DF1':'H0'].apply({'DF1':'{:d}'.format, 'DF2':'{:d}'.format, 
+                                                                   'Stat':'{:.1f}'.format, 'p':'{:.3e}'.format, 
+                                                                   'H0':'{}'.format}).to_string()),
                log_mg,1, printopt=False)
-
 
 #%%%% Varianzanalysen Spender
 
@@ -2384,7 +2415,7 @@ Evac.plt_handle_suffix(fig,path=out_full+'-SL-WC_vol-DEFlutoG',**plt_Fig_dict)
 # Stat tests
 import matplotlib.colors as mcolors
 # uneven_levels = [0, 0.01, 0.05, 0.10, 0.20, 1]
-uneven_levels = [0, 0.01, 0.05, 0.10, 0.20, 1.0001] # 1 shown or not
+uneven_levels = [0, 0.001, 0.01, 0.05, 0.10, 0.20, 1.0001] # 1 shown or not
 cmap_rb=mcolors.LinearSegmentedColormap.from_list('rg',["r", "g"], N=256)
 colors = cmap_rb(np.linspace(0, 1, len(uneven_levels) - 1))
 cmap, norm = mcolors.from_levels_and_colors(uneven_levels, colors)
@@ -2414,7 +2445,7 @@ tmp_corr=tmp_corr.replace(1,np.nan)
 fig, ax = plt.subplots(nrows=1, ncols=2, 
                        gridspec_kw={'width_ratios': [29, 1]},
                        constrained_layout=True)
-ax[0].set_title('%s\nMann-Whitney-U-Test of volumetric water content'%name_Head,
+ax[0].set_title('%s\nWilcoxon test of elastic modulus deviation to saturated'%name_Head,
              fontweight="bold")
 g=sns.heatmap(tmp_corr.round(3), cmap=cmap, norm=norm,
               vmin=0.05, vmax=1.0, annot=True, annot_kws={"size":8, 'rotation':0},
@@ -4236,11 +4267,64 @@ ax[3].legend(h,l, loc='center', ncol=8,title='Specimen number',fontsize=6.0)
 fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=out_full+'-SM-HN_SL',**plt_Fig_dict)
 
+#---Hyphothesis tests
+fig, ax = plt.subplots(ncols=3,nrows=5,
+                       gridspec_kw={'height_ratios': [1.1, 1, 1, 1, 1],
+                                    'width_ratios':  [2, 2, 0.1]},
+                       figsize=figsize_sup)
+plt_UW_corr(df=dft_comb, val='WC_vol', val_repl=r'$\Phi$',#'Volumetric water content',
+            ax=ax, ax_row=0, cmap=cmap, norm=norm)
+ax[0,0].set_title('Mann-Whitney U test')
+ax[0,1].set_title('Wilcoxon signed-rank test')
+
+plt_UW_corr(df=dft_comb, val='WC_gra', val_repl=r'$w$',#Gravimetric water content',
+            ax=ax, ax_row=1, cmap=cmap, norm=norm)
+
+plt_UW_corr(df=dft_comb, val='DMWtoG', val_repl=r'$w_{s}$',#'Gravimetric water content based on dry mass',
+            ax=ax, ax_row=2, cmap=cmap, norm=norm)
+
+plt_UW_corr(df=dft_comb, val='WC_vol_rDA', val_repl=r'$D_{\Phi,fresh}$',
+            ax=ax, ax_row=3, cmap=cmap, norm=norm)
+
+plt_UW_corr(df=dft_comb, val='WC_gra_rDA', val_repl=r'$D_{w,fresh}$',
+            ax=ax, ax_row=4, cmap=cmap, norm=norm)
+
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=out_full+'-SM-MM_UWT1',**plt_Fig_dict)
+
+fig, ax = plt.subplots(ncols=3,nrows=5,
+                       gridspec_kw={'height_ratios': [1.1, 1, 1, 1, 1],
+                                    'width_ratios':  [2, 2, 0.1]},
+                       figsize=figsize_sup)
+plt_UW_corr(df=dft_comb.loc(axis=0)[:,['B','C','D','E','F','G','H','I','J','K','L']],
+            val='lu_F_mean', val_repl=r'$E$',
+            ax=ax, ax_row=0, cmap=cmap, norm=norm)
+ax[0,0].set_title('Mann-Whitney U test')
+ax[0,1].set_title('Wilcoxon signed-rank test')
+
+plt_UW_corr(df=dft_comb.loc(axis=0)[:,['B','C','D','E','F','G','H','I','J','K','L']],
+            val='DEFlutoB', val_repl=r'$D_{E,sat}$',
+            ax=ax, ax_row=1, cmap=cmap, norm=norm)
+
+plt_UW_corr(df=dft_comb.loc(axis=0)[:,['B','C','D','E','F','G','H','I','J','K','L']],
+            val='DEFlutoG', val_repl=r'$D_{E,dry}$',
+            ax=ax, ax_row=2, cmap=cmap, norm=norm)
+
+plt_UW_corr(df=dft_comb.loc(axis=0)[:,['B','C','D','E','F','G','H','I','J','K','L']],
+            val='DHAntoB', val_repl=r'$D_{H_{n},sat}}$',
+            ax=ax, ax_row=3, cmap=cmap, norm=norm)
+
+plt_UW_corr(df=dft_comb.loc(axis=0)[:,['B','C','D','E','F','G','H','I','J','K','L']],
+            val='DHAntoG', val_repl=r'$D_{H_{n},dry}}$',
+            ax=ax, ax_row=4, cmap=cmap, norm=norm)
+
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=out_full+'-SM-MM_UWT2',**plt_Fig_dict)
 
 #---Correlations
 tmp = dft[['RHenv','RHstore',
            'WC_vol','WC_vol_toA','WC_vol_rDA',
-           'WC_gra','WC_gra_rDA','DMWtoG']]
+           'WC_gra','WC_gra_toA','WC_gra_rDA','DMWtoG']]
 fig, ax = plt.subplots(nrows=3, ncols=2, 
                        gridspec_kw={'width_ratios': [29, 1],
                                     'height_ratios': [1,1,1]},
