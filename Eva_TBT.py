@@ -2936,7 +2936,7 @@ def main():
     # option = 'series'
     option = 'complete'
     option = 'pack-complete'
-    option = 'pack-complete-all'
+    # option = 'pack-complete-all'
     
     # no_stats_fc = ['1.11','1.12','1.21','1.22','1.31','2.21','3.11','3.21']
     # no_stats_fc = ['1.11','1.12','1.21','1.22','1.31','2.21','3.11']
@@ -3012,8 +3012,8 @@ def main():
                        var_suffix = var_suffix)
             
     elif option == 'pack-complete':        
-        # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/211206/TBT/B3-B7_TBT-Summary"
-        out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/211217/B3-B7_TBT-Summary"
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230915/TBT/B3-B7_TBT-Summary"
+        # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/211217/B3-B7_TBT-Summary"
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,

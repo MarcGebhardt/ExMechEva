@@ -32,10 +32,11 @@ plt.rcParams['markers.fillstyle']= 'none'
 
 # =============================================================================
 #%% Einlesen und auswählen
-Version="211203"
+# Version="230914-retest-211028"
+Version="230915"
 ptype="TBT"
-ptype="ACT"
-ptype="ATT"
+# ptype="ACT"
+# ptype="ATT"
 
 # no_stats_fc = ['1.11','1.12','1.21','1.22','1.31','2.21','3.11','3.21','3.31']
 no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
@@ -915,9 +916,11 @@ plt.show()
 
 #%%%% Lineare Regression
 
-doda_t = doda
-doda_t.columns = doda_t.columns.str.replace('Naming','Donor')
-cs_doda=cs.join(doda_t.set_index('Donor'),on='Donor',how='inner',rsuffix='Don_')
+# doda_t = doda
+# doda_t.columns = doda_t.columns.str.replace('Naming','Donor')
+# cs_doda=cs.join(doda_t.set_index('Donor'),on='Donor',how='inner',rsuffix='Don_')
+
+cs_doda = cs.join(doda,on='Donor',how='inner',rsuffix='Don_')
 
 txt="\n "+"="*100
 txt+=("\n Linear regression:")
