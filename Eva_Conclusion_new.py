@@ -33,10 +33,10 @@ plt.rcParams['markers.fillstyle']= 'none'
 # =============================================================================
 #%% Einlesen und auswählen
 # Version="230914-retest-211028"
-Version="230915"
+Version="230919"
 ptype="TBT"
-# ptype="ACT"
-# ptype="ATT"
+ptype="ACT"
+ptype="ATT"
 
 # no_stats_fc = ['1.11','1.12','1.21','1.22','1.31','2.21','3.11','3.21','3.31']
 no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',

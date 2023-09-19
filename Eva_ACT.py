@@ -1378,7 +1378,7 @@ def ACT_series(paths, no_stats_fc, var_suffix):
 
 def main():
        
-    option = 'single'
+    # option = 'single'
     # option = 'series'
     # option = 'complete'
     option = 'pack-complete'
@@ -1448,7 +1448,7 @@ def main():
                        no_stats_fc = no_stats_fc,
                        var_suffix = var_suffix)
     elif option == 'pack-complete':        
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/211028/ACT/B3-B7_ACT-Summary"
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ACT/B3-B7_ACT-Summary"
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,

@@ -2932,9 +2932,9 @@ def TBT_series(paths, no_stats_fc, var_suffix):
 
 def main():
        
-    option = 'single'
+    # option = 'single'
     # option = 'series'
-    option = 'complete'
+    # option = 'complete'
     option = 'pack-complete'
     # option = 'pack-complete-all'
     
@@ -3012,7 +3012,7 @@ def main():
                        var_suffix = var_suffix)
             
     elif option == 'pack-complete':        
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230915/TBT/B3-B7_TBT-Summary"
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/TBT/B3-B7_TBT-Summary"
         # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/211217/B3-B7_TBT-Summary"
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
@@ -3023,7 +3023,7 @@ def main():
         
     elif option == 'pack-complete-all':        
         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/211206/TBT/B3-B7_TBT-Summary"
-        out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/220905/B3-B7_TBT-Summary_new2"
+        # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/220905/B3-B7_TBT-Summary_new2"
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         Evac.pack_hdf_mul(in_paths=packpaths, out_path = out_path,
