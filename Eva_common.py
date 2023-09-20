@@ -392,26 +392,6 @@ def pd_vec_length(pdo, norm=False, norm_kws={}, out='Series'):
     return out
     
 
-def pd_agg(pd_o, agg_funcs=['mean','median','std','max','min'], numeric_only=False):
-    """Aggregate pandas object with defined functions."""
-    if (type(pd_o) is pd.core.series.Series):
-        out = pd_o.agg(agg_funcs)
-    elif (type(pd_o) is pd.core.frame.DataFrame):
-        if numeric_only:
-            cols = pd_o.select_dtypes(include=['int','float']).columns
-        else:
-            cols = pd_o.columns
-        out = pd_o[cols].agg(agg_funcs)
-    elif (type(pd_o) is pd.core.groupby.generic.DataFrameGroupBy):
-        if numeric_only:
-            cols = pd_o.first().select_dtypes(include=['int','float']).columns
-        else:
-            cols = pd_o.columns
-        out = pd_o.agg(agg_funcs)[cols]
-    else:
-        raise NotImplementedError("Type %s not implemented!"%type(pd_o))
-    return out
-
 def pd_outsort(data, outsort='ascending'):
     if outsort in ['A','a','ascending',True,'r','rising','rise']:
         dout = data.sort_values(ascending=True)
@@ -3072,8 +3052,8 @@ def coefficient_of_variation_woso(data, option='IQR', span=1.5,
     return dout
 
 def confidence_interval(data, confidence=0.95, method="Seaborn_Bootstrap",
-                        func = "mean", n_boot = 1000, axis = None,
-                        units = None, seed = 0):
+                        func = np.nanmean, n_boot = 1000, axis = None,
+                        units = None, seed = 0, outtype="List"):
     """
     Calculates the confidence interval of given data.
 
@@ -3090,7 +3070,7 @@ def confidence_interval(data, confidence=0.95, method="Seaborn_Bootstrap",
             - Wald: Wald-Confidence-Interval
         The default is "Seaborn_Bootstrap".
     func : string or callable, optional
-        DESCRIPTION. The default is "mean".
+        DESCRIPTION. The default is "nanmean".
     n_boot : int, optional
         Number of iterations. The default is 1000.
     axis : int, optional
@@ -3099,6 +3079,8 @@ def confidence_interval(data, confidence=0.95, method="Seaborn_Bootstrap",
         Sampling units (see seaborn.algorithms). The default is None.
     seed : Generator | SeedSequence | RandomState | int | None, optional
         Seed for rondom number generator. The default is 0.
+    outtype : str, optional
+        Switch for output (List, Dict, Min, Max). The default is List.
 
     Raises
     ------
@@ -3107,12 +3089,30 @@ def confidence_interval(data, confidence=0.95, method="Seaborn_Bootstrap",
 
     Returns
     -------
-    CI : array
+    CI : list or or dict or value
         Confidence interval values [lower, higher].
 
     """
+    def CIoutsel(inp, outtype):
+        if outtype=="List":
+            out = inp
+        elif outtype=="Dict":
+            out = {'CImin':inp[0],'CImax':inp[1]}
+        elif outtype=="Min":
+            out = inp[0]
+        elif outtype=="Max":
+            out = inp[1]        
+        return out    
+    # if numeric_only:
+    #     if not pd.api.types.is_numeric_dtype(data):
+    #         try:
+    #             data=data.apply(pd.to_numeric, errors='raise')
+    #         except:
+    #             return CIoutsel([np.nan, np.nan], outtype)
+    # if skipna:
+    #     data=pd_exclnan(data,axis=axis)
     if method == "Wald":
-        if confidence == 0.95 and func == "mean":
+        if confidence == 0.95 and func in [np.nanmean,"mean"]:
             m = data.mean().values[0]
             f = 1.96 # only implemented for 95%-confidence 
             v = np.sqrt(data.std()/data.count()).values[0]
@@ -3131,7 +3131,47 @@ def confidence_interval(data, confidence=0.95, method="Seaborn_Bootstrap",
     else:
         CI = [np.nan, np.nan]
         raise NotImplementedError("Method %s not implemented!"%method)
-    return CI
+    return CIoutsel(CI, outtype)
+def CImin(data, confidence=0.95, method="Seaborn_Bootstrap",
+          func = np.nanmean, n_boot = 1000, axis = None,
+          units = None, seed = 0):
+    """Return only minimum of confidence interval. (Use same seed and n_boot!)"""
+    out = confidence_interval(data=data,confidence=confidence,method=method,
+                              func=func, n_boot=n_boot, axis=axis,
+                              units=units, seed=seed,
+                              outtype="Min")
+    return out
+    
+def CImax(data, confidence=0.95, method="Seaborn_Bootstrap",
+          func = np.nanmean, n_boot = 1000, axis = None,
+          units = None, seed = 0):
+    """Return only maximum of confidence interval. (Use same seed and n_boot!)"""
+    out = confidence_interval(data=data,confidence=confidence,method=method,
+                              func=func, n_boot=n_boot, axis=axis,
+                              units=units, seed=seed,
+                              outtype="Max")
+    return out
+
+def pd_agg(pd_o, agg_funcs=['mean','median','std','max','min'], numeric_only=False):
+    """Aggregate pandas object with defined functions."""
+    if (type(pd_o) is pd.core.series.Series):
+        out = pd_o.agg(agg_funcs)
+    elif (type(pd_o) is pd.core.frame.DataFrame):
+        if numeric_only:
+            cols = pd_o.select_dtypes(include=['int','float']).columns
+        else:
+            cols = pd_o.columns
+        out = pd_o[cols].agg(agg_funcs)
+    elif (type(pd_o) is pd.core.groupby.generic.DataFrameGroupBy):
+        if numeric_only:
+            cols = pd_o.first().select_dtypes(include=['int','float']).columns
+        else:
+            # cols = pd_o.columns
+            cols = pd_o.first().columns
+        out = pd_o.agg(agg_funcs)[cols]
+    else:
+        raise NotImplementedError("Type %s not implemented!"%type(pd_o))
+    return out
 
 def agg_add_ci(pdo, agg_funcs=['mean','std','min','max']):
     """Adds confidence interval to pandas aggregate function"""
@@ -3140,6 +3180,55 @@ def agg_add_ci(pdo, agg_funcs=['mean','std','min','max']):
     a1.index=['ci_min','ci_max']
     a=pd.concat([a,a1])
     return a
+
+def pd_agg_custom(pdo, agg_funcs=['mean',meanwoso,'median',
+                                  'std',coefficient_of_variation, 
+                                  stdwoso, coefficient_of_variation_woso,
+                                  'min','max',confidence_interval],
+                  numeric_only=False, 
+                  af_ren={'coefficient_of_variation_woso':'CVwoso',
+                          'coefficient_of_variation':'CV'},
+                  af_unp={'confidence_interval': ['CImin','CImax']}):
+    """Aggregate pandas object with defined functions, including unpacked multi-value functions. 
+    
+
+    Parameters
+    ----------
+    pdo : pd.DataFrame or pd.Series
+        Pandas object (DataFrame or Series).
+    agg_funcs : list of functions, optional
+        List of aggregatable functions (pandas aggregate accepted). 
+        The default is ['mean',meanwoso,'median',
+                        'std',coefficient_of_variation,stdwoso,
+                        coefficient_of_variation_woso,
+                        'min','max',confidence_interval].
+    numeric_only : bool, optional
+        Switch for consideration of numerical values only (int and float). The default is False.
+    af_ren : dict, optional
+        Dictionary for renaming of aggregate function names.
+        The default is {'coefficient_of_variation_woso':'CVwoso',
+                        'coefficient_of_variation':'CV'}.
+    af_unp : dict, optional
+        Dictionary for unpacking of aggregate function. 
+        The default is {'confidence_interval': ['CImin','CImax']}.
+
+    Returns
+    -------
+    pd.DataFrame or pd.Series
+        Aggregation values depending on given functions.
+
+    """
+    def unpack_aggval(o, n, rn):
+        tmp=o.loc[n].apply(lambda x: pd.Series([*x], index=rn))
+        i = o.index.get_indexer_for([n])[0]
+        s=pd.concat([o.iloc[:i],tmp.T,o.iloc[i+1:]],axis=0)
+        return s
+    pda = pd_agg(pd_o=pdo, agg_funcs=agg_funcs, numeric_only=numeric_only)
+    for i in af_unp.keys():
+        pda = unpack_aggval(pda, i, af_unp[i])
+    if len(af_ren.keys())>0:
+        pda = pda.rename(af_ren)
+    return pda
 
 def group_Anova(df, groupby, ano_Var, group_str=None, ano_str=None, alpha=0.05):
     ano_data=pd.Series([],dtype='O')
@@ -3452,6 +3541,320 @@ def MComp_interpreter(T_Result):
     
     dict2 = dict(sorted(dictionary.items())) # the final output
     return dict2, txt
+
+def group_ANOVA_MComp_multi(df, group_main='Series', group_sub=['A'],
+                            ano_Var=['WC_vol'],
+                            mpop = "ANOVA", alpha=0.05, group_ren={},
+                            do_mcomp_a=0, mcomp='TukeyHSD', mpadj='bonf', Ffwalpha=1,
+                            mkws={},
+                            Transpose=True):
+    """
+    Performs an one way ANOVA and multi comparision test for given variable,
+    in respect to given groups and sub-groups.
+    Returns an output string with summary and optional additional test outputs.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe with groups and values as columns for statistical test.
+    group_main : str
+        Main group for statistical test.
+    group_sub : list of str
+        Sub-groups for statistical test (p.e. variants).
+    ano_Var : list of str
+        Names of variables for statistical test.
+    group_str : str, optional
+        String for output implementation of group names. The default is None.
+    mpop : str, optional
+        Method for population test.
+        Implemented are ANOVA and Kruskal-Wallis H-test.
+        The default is ANOVA.
+    alpha : float, optional
+        Test criterion to reject zero hypothesis (all means are equal). The default is 0.05.
+    group_ren : dict, optional
+        Renaming of groups in df. The default is {}.
+    do_mcomp_a : int, optional
+        Performance level of tukey test 
+        (0 - never, 1 - only if p of ANOVA lower alpha, 2 - allways).
+        The default is 1.
+    mcomp : str, optional
+        Method for multi comparison.
+        Implemented are TukeyHSD, ttest_ind, ttest_rel, mannwhitneyu.
+        The default is TukeyHSD.
+    mpadj : str, optional
+        Method for testing and adjustment of pvalues.
+        For further information see: statsmodels.stats.multitest.multipletests
+        The default is bonf.
+    Ffwalpha : float, optional
+        Factor for family-wise error in comparision to alpha.
+        The default is 2.
+    mkws : dict, optional
+        Keyword arguments for used multi comparision test.
+        p.e.: {'equal_var': False, 'nan_policy': 'omit'}
+        The default is {}.
+    Transpose : bool, optional
+        Switch for transposing result. The default is False.
+    
+    Returns
+    -------
+    df_out : pd.DataFrame
+        DataFrame output with variance analyses and additional results.
+    """
+    df_out=pd.DataFrame([],dtype='O')
+    for av in ano_Var:
+        if len(group_sub) == 0:
+            tmp=group_ANOVA_MComp(df=df, groupby=group_main, 
+                                       ano_Var=av,
+                                       group_str=group_main,
+                                       ano_str=av,
+                                       mpop=mpop, alpha=alpha,
+                                       do_mcomp_a=do_mcomp_a, 
+                                       mcomp=mcomp, 
+                                       mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
+                                       add_out = 'Series')
+            # name='_'.join([group_main,av,sg])
+            name=av
+            df_out[name]=tmp
+        else:
+            for sg in group_sub:
+                tmp=group_ANOVA_MComp(df=df, groupby=(group_main,sg), 
+                                           ano_Var=(av,sg),
+                                           group_str=group_main,
+                                           ano_str='_'.join([av,sg]),
+                                           mpop=mpop, alpha=alpha,
+                                           do_mcomp_a=do_mcomp_a, 
+                                           mcomp=mcomp, 
+                                           mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
+                                           add_out = 'Series')
+                # name='_'.join([group_main,av,sg])
+                name='_'.join([av,sg])
+                df_out[name]=tmp
+    if Transpose:
+        df_out=df_out.T
+    return df_out
+
+def Hypo_test(df, groupby, ano_Var,
+              group_str=None, ano_str=None,
+              alpha=0.05, group_ren={},
+              mcomp='TukeyHSD', mkws={},
+              rel=False, rel_keys=[],
+              add_T_ind=3, add_out = False):
+    if ano_str is None:
+        ano_str = ano_Var
+    if group_str is None:
+        group_str = groupby
+    dft = df.copy(deep=True)
+    if rel and rel_keys!=[]:
+        dft.index = pd.MultiIndex.from_frame(dft.loc(axis=1)[rel_keys+[groupby]])
+    else:
+        dft.index = pd.MultiIndex.from_arrays([dft.index,
+                                               dft.loc(axis=1)[groupby]])
+    dft = dft[ano_Var]
+    dft = dft.unstack(level=-1)
+    if rel: dft=dft.dropna(axis=0)
+    
+    dfgr=dft.columns.values
+    if not len(dfgr)==2:
+        raise ValueError('More than two groups (%s)!'%dfgr)
+    a = dft[dfgr[0]].dropna()
+    b = dft[dfgr[1]].dropna()
+    ano_df2=a.count()+b.count()-2 #Freiheitsgrad = Testpersonen pro Gruppe - 1
+    
+    if mcomp=='TukeyHSD':
+        stats_test  = wraps(partial(stats.tukey_hsd, **mkws))(stats.tukey_hsd)
+    elif mcomp=='ttest_ind':
+        stats_test  = wraps(partial(stats.ttest_ind, **mkws))(stats.ttest_ind)
+    elif mcomp=='ttest_rel':
+        stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
+    elif mcomp=='mannwhitneyu':
+        stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
+    elif mcomp=='wilcoxon':
+        stats_test  = wraps(partial(stats.wilcoxon, **mkws))(stats.wilcoxon)
+    else:
+        raise NotImplementedError('Method %s for multi comparison not implemented!'%mcomp)
+    t = stats_test(a,b)
+    F = t.statistic
+    p = t.pvalue
+    if p < alpha:
+        rtxt = 'H0 rejected!'
+        H0=False
+    else:
+        rtxt = 'Fail to reject H0!'
+        H0=True
+    txt=("- F(%d) = %.3e, p = %.3e, for %s to %s (%s)"%(ano_df2,
+                                                          F,p,
+                                                          ano_str,group_str,
+                                                          rtxt)) # Gruppen sind signifikant verschieden bei p<0.05
+    if add_out is True:
+        return txt, t
+    elif add_out=='Series':
+        return pd.Series({'DF2':ano_df2, 'Stat':F, 'p':p, 'H0':H0})
+    elif add_out=='Test':
+        return dft, pd.Series({'DF2':ano_df2, 'Stat':F, 'p':p, 'H0':H0}), txt
+    else:
+        return txt
+
+def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
+                    ano_Var=['WC_vol'],
+                    mcomp='mannwhitneyu', alpha=0.05, mkws={},
+                    rel=False, rel_keys=[],
+                    Transpose=True):
+    df_out=pd.DataFrame([],dtype='O')
+    # for sg in group_sub:
+    #     for av in ano_Var:
+    for av in ano_Var:
+        for sg in group_sub:
+            tmp=Hypo_test(df=df, groupby=(group_main,sg), 
+                          ano_Var=(av,sg), alpha=alpha,
+                          mcomp=mcomp, mkws=mkws,
+                          # rel=rel, rel_keys=rel_keys, add_out = 'Series')
+                          rel=rel, rel_keys=[(x,sg) for x in rel_keys], 
+                          add_out = 'Series')
+            # name='_'.join([group_main,av,sg])
+            name='_'.join([av,sg])
+            df_out[name]=tmp
+    if Transpose:
+        df_out=df_out.T
+    return df_out
+
+def CD_rep(pdo, groupby='Series', var='DEFlutoB', 
+           det_met='SM-RRT', outtype='txt', tnform='{:.3e}'):
+    """ Calculate critical differences and compare to given.
+    """
+    # grsagg=pdo.groupby(groupby)[var].agg(['mean','std','count'])
+    grsagg=pdo[[groupby,var]].groupby(groupby).agg(['mean','std','count'])
+    if isinstance(var,tuple):
+        grsagg=grsagg.droplevel([0,1],axis=1)
+    grs_sumhrn=grsagg['count'].apply(lambda x: 1/(2*x)).sum()
+    grs_MD=grsagg['mean'].max()-grsagg['mean'].min()
+    
+    CDF= 1.96 * 2**0.5 # 2.8 only implemented for 95%-probability level (only two groups?)
+    if det_met=='SM-RRT': #https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf
+        allagg=pdo[var].agg(['mean','std','count'])
+        CD=CDF*allagg['std']*np.sqrt(grs_sumhrn)
+    elif det_met=='CV-DC': #https://flexikon.doccheck.com/de/Kritische_Differenz
+        allagg=pdo[var].agg(['max',coefficient_of_variation])
+        CD=abs(allagg['coefficient_of_variation']*CDF*allagg['max'])
+    elif det_met=='CV': #https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887
+        allagg=pdo[var].agg([coefficient_of_variation])
+        CD=abs(allagg['coefficient_of_variation'])*CDF
+    elif det_met=='SD': #https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1
+        allagg=pdo[var].agg(['std'])
+        CD=abs(allagg['std'])*CDF
+    else:
+        raise NotImplementedError("Method %s not implemented!"%det_met)
+        
+    eta = grs_MD/CD
+    # MD_l_CD=True if abs(grs_MD) < CD else False
+    MD_l_CD=False
+    t_grs_MD=tnform.format(grs_MD)
+    t_CD    =tnform.format(CD)
+    txt="{} >  {} -> Repeatability not verified! (eta={})".format(t_grs_MD,t_CD,eta,)
+    if abs(grs_MD) <= CD:
+        MD_l_CD=True
+        txt="{} <= {} -> Repeatability verified! (eta={})".format(t_grs_MD,t_CD,eta,)
+    
+    if outtype=='Ser_all':
+        out= pd.Series({'df_groups_agg':grsagg,'df_all_agg':allagg,
+                        'groups_MD':grs_MD, 'CD':CD, 'eta':eta, 'MDlCD':MD_l_CD})
+    elif outtype=='Tuple_all':
+        out=grsagg,allagg,grs_MD,CD,eta,MD_l_CD
+    elif outtype=='txt':
+        out= txt
+    elif outtype=='Series':
+        out= pd.Series({'MD':grs_MD,'CD':CD, 'eta':eta, 'H0': MD_l_CD})
+    return out
+
+
+def CD_test_multi(df, group_main='Series', group_sub=['A'],
+                    ano_Var=['WC_vol'],
+                    det_met='SM-RRT',
+                    Transpose=True):
+    df_out=pd.DataFrame([],dtype='O')
+    # for sg in group_sub:
+    #     for av in ano_Var:
+    for av in ano_Var:
+        for sg in group_sub:
+            tmp=CD_rep(pdo=df, groupby=(group_main,sg), 
+                          var=(av,sg), det_met=det_met,
+                          outtype = 'Series')
+            # name='_'.join([group_main,av,sg])
+            name='_'.join([av,sg])
+            df_out[name]=tmp
+    if Transpose:
+        df_out=df_out.T
+    return df_out
+
+
+def Multi_conc(df, group_main='Donor', anat='VA', 
+               met='Kruskal', alpha=0.05,
+               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
+                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
+                       'Hyst_An':['B'],'DHAntoB':['C','G','L']},
+               rel=False, rel_keys=[], kws={}):
+    """
+    Multiple conclusion of statistical tests (variance analysis, hyphotesis test or critical differences)
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe.
+    group_main : str, optional
+        Main group name. The default is 'Donor'.
+    anat : str, optional
+        Type of test.
+        Implemented are:
+            - VA: variance analysis
+            - HT: hyphotesis test
+            - CD: critical differences
+        The default is 'VA'.
+    met : str, optional
+        Methode of test. The default is 'Kruskal'.
+    alpha : float, optional
+        Test criterion to reject zero hypothesis.
+        The default is 0.05.
+    stdict : dict, optional
+        Dictionary of value and list of variants to evaluate.
+        The default is {'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
+                        'lu_F_mean':['B'],'DEFlutoB':['C','G','L'], 
+                        'Hyst_An':['B'],'DHAntoB':['C','G','L']}.
+    rel : bool, optional
+        Switch for relation of samples (True= related). The default is False.
+    rel_keys : list, optional
+        Variabel/column names for determining relation. The default is [].
+    kws : dict, optional
+        Dictionarie of additional Keyword arguments for selected test. 
+        The default is {}.
+
+    Returns
+    -------
+    out : pd.DataFrame
+        Dataframe of results.
+
+    """
+    out=pd.DataFrame([],dtype='O')
+    for i in stdict.keys():
+        if anat=='VA':
+            out2=group_ANOVA_MComp_multi(df=df, 
+                                 group_main=group_main, 
+                                 group_sub=stdict[i],
+                                 ano_Var=[i],
+                                 mpop=met, alpha=alpha, **kws)
+        elif anat=='HT':
+            out2=Hypo_test_multi(df=df, 
+                                 group_main=group_main, 
+                                 group_sub=stdict[i],
+                                 ano_Var=[i], mcomp=met, alpha=alpha,
+                                 rel=rel, rel_keys=rel_keys, **kws)
+        elif anat=='CD':
+            out2=CD_test_multi(df=df, 
+                                 group_main=group_main, 
+                                 group_sub=stdict[i],
+                                 ano_Var=[i], det_met=met, **kws)
+        out=pd.concat([out,out2])
+    out.index=pd.MultiIndex.from_product([[group_main],out.index])
+    return out
+
 
 #%% Plotting
 def plt_handle_suffix(fig, path='foo', tight=True, show=True, 
