@@ -16,6 +16,8 @@ from scipy import stats
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plt_tick
+from matplotlib.cbook import get_sample_data
+from matplotlib.offsetbox import (OffsetImage, AnnotationBbox)
 import seaborn as sns
 import warnings
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
@@ -24,27 +26,39 @@ warnings.simplefilter(action='ignore', category=UserWarning)
 
 import Eva_common as Evac
 
-plt.rcParams['figure.figsize'] = [6.3,3.54]
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['font.size']= 8.0
-#pd.set_option('display.expand_frame_repr', False)
-plt.rcParams['lines.linewidth']= 1.0
-plt.rcParams['lines.markersize']= 4.0
-plt.rcParams['markers.fillstyle']= 'none'
-plt.rcParams['axes.grid']= True
+# plt.rcParams['figure.figsize'] = [6.3,3.54]
+# plt.rcParams['figure.dpi'] = 300
+# plt.rcParams['font.size']= 8.0
+# #pd.set_option('display.expand_frame_repr', False)
+# plt.rcParams['lines.linewidth']= 1.0
+# plt.rcParams['lines.markersize']= 4.0
+# plt.rcParams['markers.fillstyle']= 'none'
+# plt.rcParams['axes.grid']= True
 
+sns.set_theme(context="paper",style="whitegrid",
+              font="segoe ui",palette="tab10",
+              # font="minion pro",palette="tab10",
+              rc={'figure.dpi': 300.0,'figure.figsize': [16/2.54, 8/2.54],
+                  'font.size':9, 'ytick.alignment': 'center',
+                  'axes.titlesize':9, 'axes.titleweight': 'bold',
+                  'axes.labelsize':9,
+                  'xtick.labelsize': 9,'ytick.labelsize': 9,
+                  'legend.title_fontsize': 9,'legend.fontsize': 9,
+                  'lines.linewidth': 1.0,'markers.fillstyle': 'none'})
 
 plt_Fig_dict={'tight':True, 'show':True, 
               'save':True, 's_types':["pdf","png"], 
               'clear':True, 'close':True}
+MG_logopt={'logfp':None,'output_lvl':1,'logopt':True,'printopt':False}
+# MG_logopt={'logfp':None,'output_lvl':1,'logopt':False,'printopt':True}
 #%% Functions
 
 #%% Einlesen und auswählen
 #%%% Main
 Version="230920"
 ptype="TBT"
-ptype="ACT"
-ptype="ATT"
+# ptype="ACT"
+# ptype="ATT"
 
 no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
                'B01.1','B01.2','B01.3', 'B02.3',
@@ -90,9 +104,9 @@ if ptype=="TBT":
     VIParams_gen=["Designation","Origin","Donor"]
     VIParams_geo=["thickness_mean","width_mean",
                   "Area_CS","Volume","geo_MoI_mid","Density_app"]
-    VIParams_mat=["fy","ey_opt","Uy_opt","Wy_opt",
-                  "fu","eu_opt","Uu_opt","Wu_opt",
-                  "fb","eb_opt","Ub_opt","Wb_opt",
+    VIParams_mat=["fy","ey_opt","Uy_opt",
+                  "fu","eu_opt","Uu_opt",
+                  "fb","eb_opt","Ub_opt",
                   YM_con_str,YM_opt_str]
     VIParams_rename = {'geo_MoI_mid':'MoI_mid',
                        YM_con_str:'E_con',YM_opt_str:'E_opt'}
@@ -107,9 +121,9 @@ elif ptype=="ACT":
     VIParams_gen=["Designation","Origin","Donor","Direction_test"]
     VIParams_geo=["Length_test",
                   "Area_CS","Volume","Density_app"]
-    VIParams_mat=["fy","ey_con","Uy_con","Wy_con",
-                  "fu","eu_con","Uu_con","Wu_con",
-                  "fb","eb_con","Ub_con","Wb_con",
+    VIParams_mat=["fy","ey_con","Uy_con",
+                  "fu","eu_con","Uu_con",
+                  "fb","eb_con","Ub_con",
                   YM_con_str]
     VIParams_rename = {YM_con_str:'E_con'}
 elif ptype=="ATT":
@@ -122,11 +136,14 @@ elif ptype=="ATT":
     D_con_str='D_{}_{}_{}'.format(*YM_con[:-1])
     VIParams_gen=["Designation","Origin","Donor"]
     VIParams_geo=["Area_CS","Volume","Density_app"]
-    VIParams_mat=["fy","ey_con","Uy_con","Wy_con",
-                  "fu","eu_con","Uu_con","Wu_con",
-                  "fb","eb_con","Ub_con","Wb_con",
+    VIParams_mat=["fy","ey_con","Uy_con",
+                  "fu","eu_con","Uu_con",
+                  "fb","eb_con","Ub_con",
                   YM_con_str,
-                  "Fy","sy_con","Fu","su_con","Fb","sb_con",D_con_str]
+                  "Fy","sy_con","Wy_con",
+                  "Fu","su_con","Wu_con",
+                  "Fb","sb_con","Wb_con",
+                  D_con_str]
     VIParams_rename = {D_con_str:'D_con',
                        YM_con_str:'E_con'}
     
@@ -173,16 +190,16 @@ h5_data = 'Test_Data'
 VIParams = copy.deepcopy(VIParams_geo)
 VIParams.extend(VIParams_mat)
 
-log_mg=open(out_full+'.log','w')
-Evac.MG_strlog(name_out, log_mg, printopt=False)
-Evac.MG_strlog("\n   Paths:", log_mg, printopt=False)
-Evac.MG_strlog("\n   - in:", log_mg, printopt=False)
-Evac.MG_strlog("\n         {}".format(os.path.abspath(path+name_in+'.h5')), log_mg, printopt=False)
-Evac.MG_strlog("\n   - out:", log_mg, printopt=False)
-Evac.MG_strlog("\n         {}".format(out_full), log_mg, printopt=False)
-Evac.MG_strlog("\n   - donor:", log_mg, printopt=False)
-Evac.MG_strlog("\n         {}".format(path_doda), log_mg, printopt=False)
-# Evac.MG_strlog("\n   Donors:"+Evac.str_indent('\n{}'.format(pd.Series(Donor_dict).to_string()),5), log_mg, printopt=False)
+MG_logopt['logfp']=open(out_full+'.log','w')
+Evac.MG_strlog(name_out, **MG_logopt)
+Evac.MG_strlog("\n   Paths:", **MG_logopt)
+Evac.MG_strlog("\n   - in:", **MG_logopt)
+Evac.MG_strlog("\n         {}".format(os.path.abspath(path+name_in+'.h5')), **MG_logopt)
+Evac.MG_strlog("\n   - out:", **MG_logopt)
+Evac.MG_strlog("\n         {}".format(out_full), **MG_logopt)
+Evac.MG_strlog("\n   - donor:", **MG_logopt)
+Evac.MG_strlog("\n         {}".format(path_doda), **MG_logopt)
+# Evac.MG_strlog("\n   Donors:"+Evac.str_indent('\n{}'.format(pd.Series(Donor_dict).to_string()),5), **MG_logopt)
 
 #%%% Read
 data_read = pd.HDFStore(path+name_in+'.h5','r')
@@ -230,9 +247,9 @@ cs_short_mat = cs[VIParams_mat]
 cs_short = pd.concat([cs_short_gen,cs_short_geo,cs_short_mat],axis=1)
 cols_short = cs_short.columns
 cs_short.rename(columns=VIParams_rename,inplace=True)
-VIParams_short=[VIParams_rename.get(item,item)  for item in VIParams]
+css_ncols = cs_short.select_dtypes(include=['int','float']).columns
+# VIParams_short=[VIParams_rename.get(item,item)  for item in VIParams]
 
-pd.DataFrame().mean()
 #%%%Eva
 agg_funcs=['count','mean',Evac.meanwoso,'median',
            'std', Evac.stdwoso,
@@ -254,15 +271,124 @@ dfa.to_excel(writer, sheet_name='Data')
 # if ptype=="ATT": tmp=tmp.append(c_short_Type_eva,sort=False)
 cs_short_eva.to_excel(writer, sheet_name='Summary')
 if ptype=="ATT":
-    c_short_Type_eva.loc['Fascia'].unstack().to_excel(writer, sheet_name='Summary-Fascia')
-    c_short_Type_eva.loc['Ligament'].unstack().to_excel(writer, sheet_name='Summary-Ligament')
+    c_short_Type_eva.loc['Fascia'].to_excel(writer, sheet_name='Summary-Fascia')
+    c_short_Type_eva.loc['Ligament'].to_excel(writer, sheet_name='Summary-Ligament')
 h_short_eva.to_excel(writer, sheet_name='Location')
 
 writer.close()
 
 
+#%% Stat. tests
+Evac.MG_strlog("\n\n "+"="*100, **MG_logopt)
+Evac.MG_strlog("\n Statistical tests ", **MG_logopt)
+#%%% Set
+alpha=0.05
+stat_ttype_parametric=False # Testtype
+
+if stat_ttype_parametric:
+    mpop="ANOVA"
+    # Tukey HSD test:
+    MComp_kws={'do_mcomp_a':2, 'mcomp':'TukeyHSD', 'mpadj':'', 
+                'Ffwalpha':1, 'mkws':{}, 'add_T_ind':3, 'add_out':True}
+    mcorr="pearson"
+else:
+    mpop="Kruskal-Wallis H-test"
+    # Mann-Whitney U test: (two independent)
+    MComp_kws={'do_mcomp_a':2, 'mcomp':'mannwhitneyu', 'mpadj':'holm', 
+                'Ffwalpha':1, 'mkws':{}, 'add_T_ind':3, 'add_out':True}
+    mcorr="spearman"
+    MCompdf_kws={'do_mcomp_a':1, 'mcomp':'mannwhitneyu', 'mpadj':'holm', 
+                 'Ffwalpha':1, 'mkws':{}}
+
+#%%% Distribution
+Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
+Evac.MG_strlog("\n Distribution tests ", **MG_logopt)
+tmp = Evac.Dist_test_multi(cs_short.loc(axis=1)[css_ncols], alpha=alpha)
+Evac.MG_strlog(Evac.str_indent(tmp.to_string()), **MG_logopt)
+
+#%%% Variance analyses
+Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
+Evac.MG_strlog("\n %s-Donor: (Groups are significantly different for p < %.3f)"%(mpop,alpha),**MG_logopt)
+tmp=Evac.Multi_conc(df=cs_short,group_main='Donor', anat='VAwoSg',
+               stdict=css_ncols.to_series().to_dict(), 
+               met=mpop, alpha=alpha, kws=MCompdf_kws)
+Evac.MG_strlog(Evac.str_indent(tmp.loc(axis=1)['DF1':'H0'].to_string()),**MG_logopt)
+Evac.MG_strlog("\n  -> Multicomparision (%s)):"%MComp_kws['mcomp'],**MG_logopt)
+for i in tmp.loc[tmp.H0 == False].index:
+    txt="{}:\n{}".format(i,tmp.loc[i,'MCP'],)
+    Evac.MG_strlog(Evac.str_indent(txt,5),**MG_logopt)
+Evac.MG_strlog("\n\n   -> Multicomparison relationship interpretation:",**MG_logopt)
+tmp2=tmp.loc[tmp.H0 == False]['MCP'].apply(Evac.MComp_interpreter)
+tmp2=tmp2.droplevel(0).apply(pd.Series)[0].apply(pd.Series).T
+Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),5),**MG_logopt)
 
 
-
+#%% Plots
+#%%% Paper
+if ptype == "TBT":
+    gs_kw = dict(width_ratios=[0.715, 1.0, 0.285], height_ratios=[1.5, 1])
+    fig, ax = plt.subplot_mosaic([['Donor','Location','Pelvis'],
+                                  ['Reg','Reg','Reg']],
+                                  gridspec_kw=gs_kw,
+                                  # empty_sentinel='lower mid',
+                                  figsize=(16/2.54, 12/2.54),
+                                  constrained_layout=True)
+    # axt = sns.histplot(cs.loc(axis=1)[YM_opt_str],
+    #                    stat='count', bins=20, ax=ax['upper'], kde=True)
+    # ax['upper'].set_title('Distribution')
+    # ax['upper'].set_xlabel('E in MPa')
+    # ax['upper'].set_ylabel('Count')
+    
+    with get_sample_data("D:/Gebhardt/Veröffentlichungen/2023-08-03_ Präp/IMG/05-Results/Loc-Kort_wb.png") as file:
+        arr_img = plt.imread(file)
+    imagebox = OffsetImage(arr_img, zoom=0.105)
+    imagebox.image.axes = ax['Pelvis']
+    ab = AnnotationBbox(imagebox, (0,0),
+                        xybox=(0.43, 0.5),
+                        xycoords='axes fraction',frameon=False)
+    ax['Pelvis'].add_artist(ab)
+    ax['Pelvis'].grid(False)
+    ax['Pelvis'].axis('off')
+    
+    df=pd.melt(cs, id_vars=['Origin_sshort'], value_vars=[YM_opt_str])
+    axt = sns.boxplot(x="Origin_sshort", y="value", data=df, ax=ax['Location'], 
+                      showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
+                                                 "markeredgecolor":"black", "markersize":"12",
+                                                 "alpha":0.75})
+    axt = sns.swarmplot(x="Origin_sshort", y="value",
+                        data=df, ax=ax['Location'], dodge=True, edgecolor="black",
+                        linewidth=.5, alpha=.5, size=2)
+    ax['Location'].set_title('By harvesting region')
+    ax['Location'].set_xlabel('Region')
+    ax['Location'].set_ylabel('')
+    ax['Location'].tick_params(axis='y',which='both',left=False,labelleft=False)
+    
+    df=pd.melt(cs, id_vars=['Donor'], value_vars=[YM_opt_str])
+    df.Donor.replace(doda.Naming,inplace=True)
+    axt = sns.boxplot(x="Donor", y="value", data=df, ax=ax['Donor'], 
+                      showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
+                                                 "markeredgecolor":"black", "markersize":"12",
+                                                 "alpha":0.75})
+    axt = sns.swarmplot(x="Donor", y="value",
+                        data=df, ax=ax['Donor'], dodge=True, edgecolor="black",
+                        linewidth=.5, alpha=.5, size=2)
+    ax['Donor'].set_title('By cadaver')
+    ax['Donor'].set_xlabel('Cadaver')
+    ax['Donor'].set_ylabel('Elastic modulus in MPa')
+    ax['Location'].sharey(ax['Donor'])
+    
+    axt = sns.regplot(x="Density_app", y=YM_opt_str, data=cs,
+                      ax=ax['Reg'], color = sns.color_palette()[0], scatter_kws={'s':2})
+    axtmp = ax['Reg'].twiny()
+    axt = sns.regplot(x="fu", y=YM_opt_str, data=cs,
+                      ax=axtmp, color = sns.color_palette()[1], scatter_kws={'s':2})
+    # ax['Reg'].set_title('Linear Regression')
+    ax['Reg'].set_xlabel('Apparent density in g/cm²',color=sns.color_palette()[0])
+    ax['Reg'].set_ylabel('Elastic modulus in MPa')
+    ax['Reg'].tick_params(axis='x', colors=sns.color_palette()[0])
+    axtmp.set_xlabel('Ultimate strength in MPa',color=sns.color_palette()[1])
+    axtmp.tick_params(axis='x', colors=sns.color_palette()[1])
+    fig.suptitle(None)
+    Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 #%% Close Log
-log_mg.close()
+MG_logopt['logfp'].close()

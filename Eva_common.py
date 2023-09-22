@@ -3230,6 +3230,86 @@ def pd_agg_custom(pdo, agg_funcs=['mean',meanwoso,'median',
         pda = pda.rename(af_ren)
     return pda
 
+def Dist_test(pds, alpha=0.05, mcomp='Shapiro', mkws={},
+              skipna=True, add_out = False):
+    """
+    Distribution test of data to Hypothesis sample looks Gaussian.
+
+    Parameters
+    ----------
+    pds : pd.Series
+        Series of data.
+    alpha : float, optional
+        Test criterion to reject zero hypothesis (normal distribution).
+        The default is 0.05.
+    mcomp : str, optional
+        Test method. The default is 'Shapiro'.
+    mkws : dict, optional
+        Keyword arguments for used test. The default is {}.
+    skipna : bool, optional
+        Switch for skipping NaNs in data. The default is True.
+    add_out : bool or str, optional
+        Switch for output. The default is False.
+
+    Raises
+    ------
+    NotImplementedError
+        Method not implemented.
+
+    Returns
+    -------
+    str, Dict, Series, [Series, Series, str]
+        Output of test results, depending on add_out.
+
+    """
+    if mcomp in ['Shapiro','S','shapiro']:
+        stats_test  = wraps(partial(stats.shapiro, **mkws))(stats.shapiro)
+    elif mcomp in ['Normaltest','normaltest','K2','Ksquare',
+                   'DAgostino','dagostino','D’Agostino’s K^2']:
+        stats_test  = wraps(partial(stats.normaltest, **mkws))(stats.normaltest)
+    else:
+        raise NotImplementedError('Method %s for distribution test not implemented!'%mcomp)
+    if skipna:
+        data = pds.dropna()
+    else:
+        data = pds
+    ano_n = data.count()
+    t = stats_test(data)
+    F = t.statistic
+    p = t.pvalue
+    if p < alpha:
+        rtxt = 'H0 rejected!'
+        H0=False
+    else:
+        rtxt = 'Fail to reject H0!'
+        H0=True
+    txt=("- F(%d) = %.3e, p = %.3e (%s)"%(ano_n,F,p,rtxt)) # Gruppen sind normalverteielt p<0.05
+    odict={'N':ano_n, 'Stat':F, 'p':p, 'H0':H0}
+    if add_out is True:
+       return txt, t
+    elif add_out=='Dict':
+       return odict
+    elif add_out=='Series':
+       return pd.Series(odict)
+    elif add_out=='Test':
+       return data, pd.Series(odict), txt
+    else:
+       return txt
+   
+def Dist_test_multi(pdo, axis=0,
+                    alpha=0.05, mcomps=['Shapiro','DAgostino'], mkws={},
+                    skipna=True, add_out = 'DF'):
+    """Performs multiple distribution tests."""
+    df_out = pd.DataFrame([],dtype='O')
+    for mcomp in mcomps:
+        tmp=pdo.apply(Dist_test, alpha=alpha, mcomp=mcomp, mkws=mkws, 
+                      skipna=skipna, add_out='Dict')
+        tmp=tmp.apply(pd.Series)
+        tmp.columns = pd.MultiIndex.from_product([[mcomp],tmp.columns])
+        df_out=pd.concat([df_out,tmp],axis=1)
+    return df_out
+
+
 def group_Anova(df, groupby, ano_Var, group_str=None, ano_str=None, alpha=0.05):
     ano_data=pd.Series([],dtype='O')
     j=0
@@ -3805,6 +3885,7 @@ def Multi_conc(df, group_main='Donor', anat='VA',
         Type of test.
         Implemented are:
             - VA: variance analysis
+            - VAwoSg: variance analysis without subgrouping
             - HT: hyphotesis test
             - CD: critical differences
         The default is 'VA'.
@@ -3838,6 +3919,12 @@ def Multi_conc(df, group_main='Donor', anat='VA',
             out2=group_ANOVA_MComp_multi(df=df, 
                                  group_main=group_main, 
                                  group_sub=stdict[i],
+                                 ano_Var=[i],
+                                 mpop=met, alpha=alpha, **kws)
+        if anat=='VAwoSg':
+            out2=group_ANOVA_MComp_multi(df=df, 
+                                 group_main=group_main, 
+                                 group_sub=[],
                                  ano_Var=[i],
                                  mpop=met, alpha=alpha, **kws)
         elif anat=='HT':
