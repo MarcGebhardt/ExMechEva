@@ -3942,6 +3942,69 @@ def Multi_conc(df, group_main='Donor', anat='VA',
     out.index=pd.MultiIndex.from_product([[group_main],out.index])
     return out
 
+def Corr_ext(df, method='spearman', 
+             sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'},
+             corr_round=2):
+    """
+    Performs correlation according to method and significance levels.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input data.
+    method : string, optional
+        Correlation method, implemented are:
+            - Pearson: ['pearson','Pearson','P']
+            - Spearman: ['spearman', 'Spearman','S']
+            - Kendalltau: ['kendall', 'kendalltau', 'Kendall', 'Kendalltau', 'K']
+        The default is 'spearman'.
+    sig_level : list or dict, optional
+        Significance level for anotation, if list: ascending number of *´s, 
+        if dict: dictionary values.
+        The default is {0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'}.
+    corr_round : int or None, optional
+        Number of digits for rounding of annotation of correlation. 
+        The default is 2.
+
+    Raises
+    ------
+    NotImplementedError
+        Method fpr correlation not implemented.
+
+    Returns
+    -------
+    pd.DataFrame, pd.DataFrame
+        Output dataframes (Correlation, Annotation strings with significance levels).
+
+    """
+    # quelle: https://stackoverflow.com/questions/52741236/how-to-calculate-p-values-for-pairwise-correlation-of-columns-in-pandas
+    if method in ['pearson','Pearson','P']:
+        df_c = df.corr(method='pearson')
+        pval = df.corr(method=lambda x, y: stats.pearsonr(x, y)[1])
+    elif  method in ['spearman', 'Spearman','S']:
+        df_c = df.corr(method='spearman')
+        pval = df.corr(method=lambda x, y: stats.spearmanr(x, y)[1])
+    elif method in ['kendall', 'kendalltau', 'Kendall', 'Kendalltau', 'K']:
+        df_c = df.corr(method='kendall')
+        pval = df.corr(method=lambda x, y: stats.kendalltau(x, y)[1])
+    else:
+        raise NotImplementedError('Correlation method %s not implemented!'%method)
+    if isinstance(corr_round,int):
+        df_c=df_c.round(corr_round)
+    if isinstance(sig_level, list):
+        p = pval.applymap(lambda x: ''.join(['*' for t in sig_level if x<=t]))
+    else:
+        def p_extender(x, sld):
+            if x > np.max(list(sld.keys())):
+                return ''
+            else:
+                for i in np.sort(list(sld.keys())):
+                    if x <= i:
+                        return sld[i]
+        p = pval.applymap(lambda x: p_extender(x, sld=sig_level))
+    tmpf='{'+':.'+'%d'%(corr_round) +'f}'
+    df_c2 = df_c.applymap(lambda x: tmpf.format(x)) + p
+    return df_c, df_c2
 
 #%% Plotting
 def plt_handle_suffix(fig, path='foo', tight=True, show=True, 

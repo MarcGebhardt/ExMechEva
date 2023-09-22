@@ -104,10 +104,10 @@ if ptype=="TBT":
     VIParams_gen=["Designation","Origin","Donor"]
     VIParams_geo=["thickness_mean","width_mean",
                   "Area_CS","Volume","geo_MoI_mid","Density_app"]
-    VIParams_mat=["fy","ey_opt","Uy_opt",
+    VIParams_mat=[YM_con_str,YM_opt_str,
+                  "fy","ey_opt","Uy_opt",
                   "fu","eu_opt","Uu_opt",
-                  "fb","eb_opt","Ub_opt",
-                  YM_con_str,YM_opt_str]
+                  "fb","eb_opt","Ub_opt"]
     VIParams_rename = {'geo_MoI_mid':'MoI_mid',
                        YM_con_str:'E_con',YM_opt_str:'E_opt'}
 elif ptype=="ACT":
@@ -121,10 +121,10 @@ elif ptype=="ACT":
     VIParams_gen=["Designation","Origin","Donor","Direction_test"]
     VIParams_geo=["Length_test",
                   "Area_CS","Volume","Density_app"]
-    VIParams_mat=["fy","ey_con","Uy_con",
+    VIParams_mat=[YM_con_str,
+                  "fy","ey_con","Uy_con",
                   "fu","eu_con","Uu_con",
-                  "fb","eb_con","Ub_con",
-                  YM_con_str]
+                  "fb","eb_con","Ub_con"]
     VIParams_rename = {YM_con_str:'E_con'}
 elif ptype=="ATT":
     path = "D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/"+Version+"/ATT/"
@@ -136,14 +136,14 @@ elif ptype=="ATT":
     D_con_str='D_{}_{}_{}'.format(*YM_con[:-1])
     VIParams_gen=["Designation","Origin","Donor"]
     VIParams_geo=["Area_CS","Volume","Density_app"]
-    VIParams_mat=["fy","ey_con","Uy_con",
+    VIParams_mat=[YM_con_str,
+                  "fy","ey_con","Uy_con",
                   "fu","eu_con","Uu_con",
                   "fb","eb_con","Ub_con",
-                  YM_con_str,
+                  D_con_str,
                   "Fy","sy_con","Wy_con",
                   "Fu","su_con","Wu_con",
-                  "Fb","sb_con","Wb_con",
-                  D_con_str]
+                  "Fb","sb_con","Wb_con"]
     VIParams_rename = {D_con_str:'D_con',
                        YM_con_str:'E_con'}
     
@@ -262,6 +262,27 @@ if ptype=="ATT":
     c_short_Type_eva = Evac.pd_agg(tmp,agg_funcs,True).stack()
 tmp=pd.concat([cs_short,cs['Origin_short']],axis=1).groupby('Origin_short')
 h_short_eva = Evac.pd_agg(tmp,agg_funcs,True).stack()
+#%%% Assessment Codes
+Evac.MG_strlog("\n "+"="*100,**MG_logopt)
+Evac.MG_strlog("\n Assessment Codes Analysies:",**MG_logopt)
+# complete Codes
+fc_b_df, fc_unique = Evac.Failure_code_bool_df(dfa.Failure_code, 
+                                      sep=',',level=2, strength=[1,2,3],
+                                      drop_duplicates=True, sort_values=True,
+                                      exclude =['nan'],
+                                      replace_whitespaces=True, as_int=True)
+fc_b_df_all_sum = fc_b_df.sum().sort_values(ascending=False)
+fc_b_df_fail_sum = fc_b_df[dfa.statistics==False].sum().sort_values(ascending=False)
+fc_b_df_nofail_sum = fc_b_df[dfa.statistics==True].sum().sort_values(ascending=False)
+
+txt='Assessment codes frequency:'
+Evac.MG_strlog(Evac.str_indent(txt),**MG_logopt)
+txt='- all:\n   %s'%fc_b_df_all_sum[fc_b_df_all_sum!=0].to_dict()
+Evac.MG_strlog(Evac.str_indent(txt,5),**MG_logopt)
+txt='- fail:\n   %s'%fc_b_df_fail_sum[fc_b_df_fail_sum!=0].to_dict()
+Evac.MG_strlog(Evac.str_indent(txt,5),**MG_logopt)
+txt='- no fail:\n   %s'%fc_b_df_nofail_sum[fc_b_df_nofail_sum!=0].to_dict()
+Evac.MG_strlog(Evac.str_indent(txt,5),**MG_logopt)
 
 #%% Data-Export
 writer = pd.ExcelWriter(out_full+'.xlsx', engine = 'xlsxwriter')
@@ -308,6 +329,22 @@ Evac.MG_strlog(Evac.str_indent(tmp.to_string()), **MG_logopt)
 
 #%%% Variance analyses
 Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
+Evac.MG_strlog("\n %s-Harvesting location: (Groups are significantly different for p < %.3f)"%(mpop,alpha),**MG_logopt)
+tmp=pd.concat([cs_short,cs['Origin_short']],axis=1)
+tmp=Evac.Multi_conc(df=tmp,group_main='Origin_short', anat='VAwoSg',
+               stdict=css_ncols.to_series().to_dict(), 
+               met=mpop, alpha=alpha, kws=MCompdf_kws)
+Evac.MG_strlog(Evac.str_indent(tmp.loc(axis=1)['DF1':'H0'].to_string()),**MG_logopt)
+Evac.MG_strlog("\n  -> Multicomparision (%s)):"%MComp_kws['mcomp'],**MG_logopt)
+for i in tmp.loc[tmp.H0 == False].index:
+    txt="{}:\n{}".format(i,tmp.loc[i,'MCP'],)
+    Evac.MG_strlog(Evac.str_indent(txt,5),**MG_logopt)
+Evac.MG_strlog("\n\n   -> Multicomparison relationship interpretation:",**MG_logopt)
+tmp2=tmp.loc[tmp.H0 == False]['MCP'].apply(Evac.MComp_interpreter)
+tmp2=tmp2.droplevel(0).apply(pd.Series)[0].apply(pd.Series).T
+Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),5),**MG_logopt)
+
+Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
 Evac.MG_strlog("\n %s-Donor: (Groups are significantly different for p < %.3f)"%(mpop,alpha),**MG_logopt)
 tmp=Evac.Multi_conc(df=cs_short,group_main='Donor', anat='VAwoSg',
                stdict=css_ncols.to_series().to_dict(), 
@@ -323,6 +360,9 @@ tmp2=tmp2.droplevel(0).apply(pd.Series)[0].apply(pd.Series).T
 Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),5),**MG_logopt)
 
 
+#%%% Correlations
+cs_short_corr = cs_short.corr(method=mcorr)
+
 #%% Plots
 #%%% Paper
 if ptype == "TBT":
@@ -333,12 +373,6 @@ if ptype == "TBT":
                                   # empty_sentinel='lower mid',
                                   figsize=(16/2.54, 12/2.54),
                                   constrained_layout=True)
-    # axt = sns.histplot(cs.loc(axis=1)[YM_opt_str],
-    #                    stat='count', bins=20, ax=ax['upper'], kde=True)
-    # ax['upper'].set_title('Distribution')
-    # ax['upper'].set_xlabel('E in MPa')
-    # ax['upper'].set_ylabel('Count')
-    
     with get_sample_data("D:/Gebhardt/Veröffentlichungen/2023-08-03_ Präp/IMG/05-Results/Loc-Kort_wb.png") as file:
         arr_img = plt.imread(file)
     imagebox = OffsetImage(arr_img, zoom=0.105)
@@ -389,6 +423,64 @@ if ptype == "TBT":
     axtmp.set_xlabel('Ultimate strength in MPa',color=sns.color_palette()[1])
     axtmp.tick_params(axis='x', colors=sns.color_palette()[1])
     fig.suptitle(None)
-    Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+    Evac.plt_handle_suffix(fig,path=path+"Fig04",**plt_Fig_dict)
+    
+#%%% SupMat
+figsize_sup=(16.0/2.54, 22.0/2.54)
+#%%%% Assesment codes
+fc_b_df_mat = np.dot(fc_b_df.T, fc_b_df)
+fc_b_df_freq = pd.DataFrame(fc_b_df_mat, columns = fc_unique, index = fc_unique)
+ind = [(True if x in no_stats_fc else False) for x in fc_unique]
+fc_b_df_hm = fc_b_df_freq.loc[ind]
+
+gs_kw = dict(width_ratios=[1.0,0.05], height_ratios=[.15, 1],
+                 wspace=0.1, hspace=0.1)
+fig, ax = plt.subplot_mosaic([['excl', 'exclcb'],
+                              ['all' , 'allcb' ]],
+                              gridspec_kw=gs_kw,
+                              figsize=figsize_sup,
+                              constrained_layout=True)
+ax['excl'].set_title('Excluding assessment code combination frequency')
+sns.heatmap(fc_b_df_hm.loc(axis=1)[np.invert((fc_b_df_hm==0).all())],
+            annot_kws={"size":8, 'rotation':0}, cmap = "Reds", 
+            annot=True, ax=ax['excl'],cbar_ax=ax['exclcb'])
+# ax['excl'].set_xlabel('Assessment code')
+# ax['excl'].set_ylabel('Excluding assessment code')
+ax['excl'].tick_params(axis='x', labelrotation=90, labelsize=8)
+ax['excl'].tick_params(axis='y', labelrotation=0, labelsize=8)
+ax['exclcb'].tick_params(axis='y', labelsize=8)
+ax['exclcb'].yaxis.set_major_formatter(plt_tick.FormatStrFormatter('%d'))
+ax['excl'].tick_params(left=True, bottom=True)
+ax['all'].set_title('Assessment code combination frequency')
+sns.heatmap(fc_b_df_freq, xticklabels=1, 
+            cmap = "Reds", annot=False, ax=ax['all'],cbar_ax=ax['allcb'])
+# ax['all'].set_xlabel('Assessment code')
+# ax['all'].set_ylabel('Assessment code')
+ax['all'].tick_params(axis='x', labelrotation=90, labelsize=8)
+ax['all'].tick_params(axis='y', labelrotation=0, labelsize=8)
+ax['allcb'].tick_params(axis='y', labelsize=8)
+ax['all'].tick_params(left=True, bottom=True)
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=path+"SM-AC",**plt_Fig_dict)
+#%%%% Correlation
+cs_short_corr1, cs_short_corr2 = Evac.Corr_ext(cs_short[css_ncols], method=mcorr, 
+              sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'},
+              corr_round=2)
+gs_kw = dict(width_ratios=[1.0,0.05], height_ratios=[1],
+                 wspace=0.1)
+fig, ax = plt.subplot_mosaic([['d', 'b']],
+                              gridspec_kw=gs_kw,
+                              figsize=figsize_sup,
+                              constrained_layout=True)
+axt=sns.heatmap(cs_short_corr1, annot = cs_short_corr2, fmt='',
+              center=0, vmin=-1,vmax=1, annot_kws={"size":8, 'rotation':90},
+              xticklabels=1, ax=ax['d'],cbar_ax=ax['b'])
+Evac.tick_label_renamer(ax=axt, renamer=VIPar_plt_renamer, axis='both')
+ax['d'].tick_params(left=True, bottom=True)
+ax['b'].yaxis.set_major_formatter(plt_tick.FormatStrFormatter('%0.1f'))
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=path+"SM-MC",**plt_Fig_dict)
+
+
 #%% Close Log
 MG_logopt['logfp'].close()
