@@ -2718,11 +2718,11 @@ def stress_linfit(strain_ser, YM, YM_abs, strain_offset=0.002):
     stress_fit_ser=(strain_ser - strain_offset) * YM + YM_abs
     return stress_fit_ser
 
-def stress_linfit_plt(strain_ser, inds, YM, YM_abs, strain_offset=0):
+def stress_linfit_plt(strain_ser, inds, YM, YM_abs, strain_offset=0, ext=0.1):
     """Linearised stress fit for plotting corresponding Youngs Modulus and strain"""
     strain_vals = strain_ser.loc[inds].values
-    strain_vals = np.array([max(0,strain_vals[0]-0.1*(strain_vals[-1]-strain_vals[0])),
-                          min(strain_ser.max(),strain_vals[-1]+0.1*(strain_vals[-1]-strain_vals[0]))])
+    strain_vals = np.array([max(0,strain_vals[0]-ext*(strain_vals[-1]-strain_vals[0])),
+                          min(strain_ser.max(),strain_vals[-1]+ext*(strain_vals[-1]-strain_vals[0]))])
     stress_vals = stress_linfit(strain_vals, YM, YM_abs, strain_offset)
     return strain_vals, stress_vals
 
