@@ -22,6 +22,8 @@ Changelog:
     - 21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)
     - 21-10-21: Ende Auswertung erst nach maximaler Kraft
     - 21-10-29: plastic strain shift -1 (zugehörig nun zu abgelaufenem Zyklus)
+    - 23-10-13: - Ändern finale Spannungs-Dehnungskurve (6.6) mit Ermittlung
+                - Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.5%)
 """
 
 #%% 0 Imports
@@ -192,6 +194,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
            
     dic_used_Strain="Strain_"+_opts['OPT_YM_Determination_refinement'][3]
     tmp_in = _opts['OPT_YM_Determination_refinement'][3].split('_')[-1]
+    dic_used_Disp="Disp_opt_"+tmp_in
     
     if _opts['OPT_YM_Determination_refinement'][3].split('_')[-2] == 'con':
         tmp_md = '0'
@@ -1003,34 +1006,64 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
-    strain_offset = 0.002
-    #     mit 0.2% Dehnversatz E(F+-F-) finden
-    Evac.MG_strlog("\n  Determination of yield strain-conventional:",log_mg,output_lvl)
-    VIP_messu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_messu,
-                                      n_strain='Strain', n_stress='Stress',
-                                      # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], 
-                                      # n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], 
-                                       n_loBo=['F4'], n_upBo=['U'], n_loBo_int=['F4'], 
-                                      YM     = E_lsq_A['E_lsq_R_A0Al']['E'],
-                                      YM_abs = E_lsq_A['E_lsq_R_A0Al']['E_abs'],
-                                      strain_offset=strain_offset,
-                                      rise_det=[True,4], n_yield='Y')
-    Evac.MG_strlog(Evac.str_indent(txt,3),
-                    log_mg,output_lvl)
+    # strain_offset = 0.002
+    # #     mit 0.2% Dehnversatz E(F+-F-) finden
+    # Evac.MG_strlog("\n  Determination of yield strain-conventional:",log_mg,output_lvl)
+    # VIP_messu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_messu,
+    #                                   n_strain='Strain', n_stress='Stress',
+    #                                   # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], 
+    #                                   # n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], 
+    #                                    n_loBo=['F4'], n_upBo=['U'], n_loBo_int=['F4'], 
+    #                                   YM     = E_lsq_A['E_lsq_R_A0Al']['E'],
+    #                                   YM_abs = E_lsq_A['E_lsq_R_A0Al']['E_abs'],
+    #                                   strain_offset=strain_offset,
+    #                                   rise_det=[True,4], n_yield='Y')
+    # Evac.MG_strlog(Evac.str_indent(txt,3),
+    #                 log_mg,output_lvl)
 
     
-    if _opts['OPT_DIC']:    
-        Evac.MG_strlog("\n  Determination of yield strain-optical:",log_mg,output_lvl)
-        VIP_dicu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_dicu,
-                                        n_strain=dic_used_Strain, n_stress='Stress',
-                                        # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], 
-                                        n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], 
-                                        YM     = E_lsq_A[loc_Yd_tmp]['E'],
-                                        YM_abs = E_lsq_A[loc_Yd_tmp]['E_abs'],
-                                        strain_offset=strain_offset,
-                                        rise_det=[True,4], n_yield='Y')
-        Evac.MG_strlog(Evac.str_indent(txt,3),
-                       log_mg,output_lvl)
+    # if _opts['OPT_DIC']:    
+    #     Evac.MG_strlog("\n  Determination of yield strain-optical:",log_mg,output_lvl)
+    #     VIP_dicu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_dicu,
+    #                                     n_strain=dic_used_Strain, n_stress='Stress',
+    #                                     # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], 
+    #                                     n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], 
+    #                                     YM     = E_lsq_A[loc_Yd_tmp]['E'],
+    #                                     YM_abs = E_lsq_A[loc_Yd_tmp]['E_abs'],
+    #                                     strain_offset=strain_offset,
+    #                                     rise_det=[True,4], n_yield='Y')
+    #     Evac.MG_strlog(Evac.str_indent(txt,3),
+    #                    log_mg,output_lvl)
+    
+    strain_osd = {'Y0':0.0,'Y':0.2/100,'Y1':0.5/100} #acc. Zhang et al. 2021, DOI: 10.1007/s10439-020-02719-2
+    for i in strain_osd.keys():
+        if strain_osd[i]==0:
+            VIP_messu[i] = VIP_messu['F4']
+            if _opts['OPT_DIC']: VIP_dicu[i] = VIP_dicu['F4']
+        else:
+            VIP_messu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_messu,
+                                              n_strain='Strain', n_stress='Stress',
+                                              n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F4'],
+                                              # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], # <13.10.2023 
+                                              # n_loBo=['F4'], n_upBo=['U'], n_loBo_int=['F4'], 
+                                              YM     = E_lsq_A['E_lsq_R_A0Al']['E'],
+                                              YM_abs = E_lsq_A['E_lsq_R_A0Al']['E_abs'],
+                                              strain_offset=strain_osd[i],
+                                              rise_det=[True,4], n_yield=i)
+            Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
+                
+            if _opts['OPT_DIC']:    
+                Evac.MG_strlog("\n  Determination of yield strain-optical:",log_mg,output_lvl)
+                VIP_dicu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_dicu,
+                                                n_strain=dic_used_Strain, n_stress='Stress',
+                                                n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F4'],
+                                                # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], # <13.10.2023 
+                                                YM     = E_lsq_A[loc_Yd_tmp]['E'],
+                                                YM_abs = E_lsq_A[loc_Yd_tmp]['E_abs'],
+                                                strain_offset=strain_osd[i],
+                                                rise_det=[True,4], n_yield=i)
+                Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
+
 
     
     # =============================================================================
@@ -1039,10 +1072,19 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         FP_end='B'
     else:
         FP_end='U'
-    FP_sta=VIP_messu[['F1','F3']].idxmin()
-    # messu_FP=messu.loc[VIP_messu['F1']:VIP_messu[FP_end]].copy(deep=True)
-    messu_FP=messu.loc[VIP_messu[FP_sta]:VIP_messu[FP_end]].copy(deep=True)
-    messu_FP.Strain=messu_FP.Strain-(-E_lsq_A['E_lsq_R_A0Al']['E_abs']/E_lsq_A['E_lsq_R_A0Al']['E'])
+    # FP_sta=VIP_messu[['F1','F3']].idxmin()
+    # # messu_FP=messu.loc[VIP_messu['F1']:VIP_messu[FP_end]].copy(deep=True)
+    # messu_FP=messu.loc[VIP_messu[FP_sta]:VIP_messu[FP_end]].copy(deep=True)
+    # messu_FP.Strain=messu_FP.Strain-(-E_lsq_A['E_lsq_R_A0Al']['E_abs']/E_lsq_A['E_lsq_R_A0Al']['E'])
+
+    FP_sta='F3'
+    messu_FP,linstraincos=Evac.DetFinSSC(mdf=messu, YM=E_lsq_A['E_lsq_R_A0Al'], 
+                                 iS=VIP_messu['F3'], iLE=None,
+                                 StressN='Stress', StrainN='Strain', 
+                                 addzero=True, izero=VIP_messu['S'])
+    Evac.MG_strlog("\n   Strain offset about %.5f"%(linstraincos),log_mg,output_lvl,printopt=False)
+    messu_FP['Force']=messu_FP['Stress']*Area # recalc Force (should match messu)
+    messu_FP['Way']=messu_FP['Strain']*Length # recalc Way 
     # ============================================================================
     #%% 7 Outputs
     Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
@@ -1066,20 +1108,43 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     out_tab['ey_con']     = messu_FP.loc[VIP_messu['Y'],'Strain']
     if _opts['OPT_DIC']:
         out_tab['ey_opt'] = messu_FP.loc[VIP_dicu['Y'],dic_used_Strain]
-    out_tab['Wy_con']     = np.trapz(messu_FP.loc[:VIP_messu['Y'],'Force'],
-                                     x=messu_FP.loc[:VIP_messu['Y'],'Way'])
+    out_tab['Uy_con']     = np.trapz(messu_FP.loc[:VIP_messu['Y'],'Stress'],
+                                     x=messu_FP.loc[:VIP_messu['Y'],'Strain'])
     if _opts['OPT_DIC']:
-        out_tab['Wy_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['Y'],'Force'],
-                                     x=messu_FP.loc[:VIP_dicu['Y'],dic_used_Disp])
+        out_tab['Uy_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['Y'],'Stress'],
+                                     x=messu_FP.loc[:VIP_dicu['Y'],dic_used_Strain])
+    
+    out_tab['fy0']         = messu_FP.loc[VIP_messu['Y0'],'Stress']
+    out_tab['ey0_con']     = messu_FP.loc[VIP_messu['Y0'],'Strain']
+    if _opts['OPT_DIC']:
+        out_tab['ey0_opt'] = messu_FP.loc[VIP_dicu['Y0'],dic_used_Strain]
+    out_tab['Uy0_con']     = np.trapz(messu_FP.loc[:VIP_messu['Y0'],'Stress'],
+                                     x=messu_FP.loc[:VIP_messu['Y0'],'Strain'])
+    if _opts['OPT_DIC']:
+        out_tab['Uy0_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['Y0'],'Stress'],
+                                     x=messu_FP.loc[:VIP_dicu['Y0'],dic_used_Strain])
+        
+    out_tab['fy1']         = messu_FP.loc[VIP_messu['Y1'],'Stress']
+    out_tab['ey1_con']     = messu_FP.loc[VIP_messu['Y1'],'Strain']
+    if _opts['OPT_DIC']:
+        out_tab['ey1_opt'] = messu_FP.loc[VIP_dicu['Y1'],dic_used_Strain]
+    out_tab['Uy1_con']     = np.trapz(messu_FP.loc[:VIP_messu['Y1'],'Stress'],
+                                     x=messu_FP.loc[:VIP_messu['Y1'],'Strain'])
+    if _opts['OPT_DIC']:
+        out_tab['Uy1_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['Y1'],'Stress'],
+                                     x=messu_FP.loc[:VIP_dicu['Y1'],dic_used_Strain])
+        
+        
     out_tab['fu']         = messu_FP.loc[VIP_messu['U'],'Stress']
     out_tab['eu_con']     = messu_FP.loc[VIP_messu['U'],'Strain']
     if _opts['OPT_DIC']:
         out_tab['eu_opt'] = messu_FP.loc[VIP_dicu['U'],dic_used_Strain]
-    out_tab['Wu_con']     = np.trapz(messu_FP.loc[:VIP_messu['U'],'Force'],
-                                     x=messu_FP.loc[:VIP_messu['U'],'Way'])
+    out_tab['Uu_con']     = np.trapz(messu_FP.loc[:VIP_messu['U'],'Stress'],
+                                     x=messu_FP.loc[:VIP_messu['U'],'Strain'])
     if _opts['OPT_DIC']:
-        out_tab['Wu_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['U'],'Force'],
-                                     x=messu_FP.loc[:VIP_dicu['U'],dic_used_Disp])
+        out_tab['Uu_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['U'],'Stress'],
+                                     x=messu_FP.loc[:VIP_dicu['U'],dic_used_Strain])
+        
     if 'B' in VIP_messu.index:
         out_tab['fb']         = messu_FP.loc[VIP_messu['B'],'Stress']
         out_tab['eb_con']     = messu_FP.loc[VIP_messu['B'],'Strain']
@@ -1092,28 +1157,55 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         else:
             out_tab['eb_opt']     = np.nan
     if 'B' in VIP_messu.index:
-        out_tab['Wb_con']     = np.trapz(messu_FP.loc[:VIP_messu['B'],'Force'],
-                                         x=messu_FP.loc[:VIP_messu['B'],'Way'])
+        out_tab['Ub_con']     = np.trapz(messu_FP.loc[:VIP_messu['B'],'Stress'],
+                                         x=messu_FP.loc[:VIP_messu['B'],'Strain'])
     else:
-        out_tab['Wb_con']     = np.nan
+        out_tab['Ub_con']     = np.nan
     if _opts['OPT_DIC']:
         if 'B' in VIP_dicu.index:
-            out_tab['Wb_opt']     = np.trapz(messu_FP.loc[:VIP_dicu['B'],'Force'],
-                                             x=messu_FP.loc[:VIP_dicu['B'],dic_used_Disp])
+            out_tab['Ub_opt']     = np.trapz(messu_FP.loc[:VIP_dicu['B'],'Stress'],
+                                             x=messu_FP.loc[:VIP_dicu['B'],dic_used_Strain])
         else:
-            out_tab['Wb_opt']     = np.nan
+            out_tab['Ub_opt']     = np.nan
         
     
     out_tab['Fy']         = messu_FP.loc[VIP_messu['Y'],'Force']
     out_tab['sy_con']     = messu_FP.loc[VIP_messu['Y'],'Way']
+    out_tab['Wy_con']     = np.trapz(messu_FP.loc[:VIP_messu['Y'],'Force'],
+                                     x=messu_FP.loc[:VIP_messu['Y'],'Way'])
+    if _opts['OPT_DIC']:
+        out_tab['Wy_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['Y'],'Force'],
+                                     x=messu_FP.loc[:VIP_dicu['Y'],dic_used_Disp])
+    out_tab['Wy0_con']     = np.trapz(messu_FP.loc[:VIP_messu['Y0'],'Force'],
+                                     x=messu_FP.loc[:VIP_messu['Y0'],'Way'])
+    if _opts['OPT_DIC']:
+        out_tab['Wy0_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['Y0'],'Force'],
+                                     x=messu_FP.loc[:VIP_dicu['Y0'],dic_used_Disp])
+    out_tab['Wy1_con']     = np.trapz(messu_FP.loc[:VIP_messu['Y1'],'Force'],
+                                     x=messu_FP.loc[:VIP_messu['Y1'],'Way'])
+    if _opts['OPT_DIC']:
+        out_tab['Wy1_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['Y1'],'Force'],
+                                     x=messu_FP.loc[:VIP_dicu['Y1'],dic_used_Disp])
     out_tab['Fu']         = messu_FP.loc[VIP_messu['U'],'Force']
     out_tab['su_con']     = messu_FP.loc[VIP_messu['U'],'Way']
+    out_tab['Wu_con']     = np.trapz(messu_FP.loc[:VIP_messu['U'],'Force'],
+                                     x=messu_FP.loc[:VIP_messu['U'],'Way'])
+    if _opts['OPT_DIC']:
+        out_tab['Wu_opt'] = np.trapz(messu_FP.loc[:VIP_dicu['U'],'Force'],
+                                     x=messu_FP.loc[:VIP_dicu['U'],dic_used_Disp])
     if 'B' in VIP_messu.index:
         out_tab['Fb']         = messu_FP.loc[VIP_messu['B'],'Force']
         out_tab['sb_con']     = messu_FP.loc[VIP_messu['B'],'Way']
     else:
         out_tab['Fb']         = np.nan
         out_tab['sb_con']     = np.nan
+    if 'B' in VIP_messu.index:
+        out_tab['Wb_con']     = np.trapz(messu_FP.loc[:VIP_messu['B'],'Force'],
+                                         x=messu_FP.loc[:VIP_messu['B'],'Way'])
+    else:
+        out_tab['Wb_con']     = np.nan
+        
+    out_tab['leos_con']   = linstraincos
         
     if _opts['OPT_pre_load_cycles'] > 0:
         ind = VIP_messu[VIP_messu.index.str.endswith('+')]
@@ -1244,9 +1336,16 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     ax1.grid()
     ax1.plot(messu_FP['Strain'], messu_FP['Stress'], 'r--', label='meas. curve')
     # ax1.plot([0,1.1*messu_FP.Stress.loc[VIP_messu['U']]/E['F1']], [0,1.1*messu_FP.Stress.loc[VIP_messu['U']]], 'b:', label='lin. E')
-    a,b = Evac.stress_linfit_plt(messu_FP['Strain'], VIP_messu[['F3','F4']],
-                                 E_lsq_A['E_lsq_R_A0Al']['E'],0)
-    ax1.plot(a, b, 'g-',label='$E_{con}$')
+    # a,b = Evac.stress_linfit_plt(messu_FP['Strain'], VIP_messu[['F3','F4']],
+    #                              E_lsq_A['E_lsq_R_A0Al']['E'],0)
+    # ax1.plot(a, b, 'g-',label='$E_{con}$')
+    tmp=['g-','y-','m-']
+    j=0
+    for i in strain_osd.keys():
+        a = Evac.strain_linfit(messu_FP['Stress'], YM=E_lsq_A['E_lsq_R_A0Al']['E'],
+                               YM_abs=0, strain_offset=strain_osd[i])
+        ax1.plot(a, messu_FP['Stress'], tmp[j],label='$E_{con-%s}$'%i)   
+        j += 1
     a, b=messu_FP.Strain[VIP_messu[FP_sta:FP_end]],messu_FP.Stress[VIP_messu[FP_sta:FP_end]]
     j=np.int64(-1)
     ax1.plot(a, b, 'bx')
@@ -1402,8 +1501,8 @@ def main():
        
     # option = 'single'
     # option = 'series'
-    # option = 'complete'
-    option = 'pack-complete'
+    option = 'complete'
+    # option = 'pack-complete'
     
     # no_stats_fc = ['1.11','1.12','1.21','1.22','1.31','2.21','3.11']
     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
@@ -1436,7 +1535,8 @@ def main():
     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
     protpaths.loc[:,'path_eva1']    = "Auswertung/"
-    protpaths.loc[:,'path_eva2']    = "Test_py/"
+    # protpaths.loc[:,'path_eva2']    = "Test_py/"
+    protpaths.loc[:,'path_eva2']    = "ExMechEva/"
     
     # t=protpaths[['path_main','path_eva1','name_prot']].stack()
     # t.groupby(level=0).apply(lambda x: '{0}{1}{2}'.format(*x))
@@ -1449,8 +1549,8 @@ def main():
     
     
     if option == 'single':
-        ser='B4'
-        des='sr09'
+        ser='B7'
+        des='sl05'
         mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
         
         prot=pd.read_excel(combpaths.loc[ser,'prot'],
@@ -1461,7 +1561,7 @@ def main():
                      mfile_add = mfile_add)
         
     elif option == 'series':
-        ser='B4'
+        ser='B7'
         ATT_series(paths = combpaths.loc[ser],
                    no_stats_fc = no_stats_fc,
                    var_suffix = var_suffix)
@@ -1472,7 +1572,8 @@ def main():
                        no_stats_fc = no_stats_fc,
                        var_suffix = var_suffix)
     elif option == 'pack-complete':        
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ATT/B3-B7_ATT-Summary"
+        # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ATT/B3-B7_ATT-Summary"
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/XXX/ATT/B3-B7_ATT-Summary"
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,

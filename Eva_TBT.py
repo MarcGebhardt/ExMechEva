@@ -23,6 +23,8 @@ Changelog:
     - 21-12-03: Methodenumbenennung (C:E, D:G, E:F, F:C, G:D)
     - 21-12-17: Variantenanpassung Methoden (C2Al, C2Sl, C2Cl; E4A*; F4Ag**M G3Ag, G3Mg, G3Cg)
     - 21-12-17: Korrektur stdnwoso über hinzufügen stdwoso
+    - 23-10-13: - Hinzufügen finale Spannungs-Dehnungskurve (6.6) mit Ermittlung
+                - Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.007%), siehe DOI: 10.1007/s10439-020-02719-2 
 """
 
 #%% 0 Imports
@@ -2975,7 +2977,8 @@ def main():
     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
     protpaths.loc[:,'path_eva1']    = "Auswertung/"
-    protpaths.loc[:,'path_eva2']    = "Test_py/"
+    # protpaths.loc[:,'path_eva2']    = "Test_py/"
+    protpaths.loc[:,'path_eva2']    = "ExMechEva/"
     
     # t=protpaths[['path_main','path_eva1','name_prot']].stack()
     # t.groupby(level=0).apply(lambda x: '{0}{1}{2}'.format(*x))
@@ -3012,7 +3015,8 @@ def main():
                        var_suffix = var_suffix)
             
     elif option == 'pack-complete':        
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/TBT/B3-B7_TBT-Summary"
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/XXX/TBT/B3-B7_TBT-Summary"
+        # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/TBT/B3-B7_TBT-Summary"
         # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/211217/B3-B7_TBT-Summary"
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
@@ -3022,6 +3026,7 @@ def main():
                       opt_pd_out = False, opt_hdf_save = True)
         
     elif option == 'pack-complete-all':        
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/XXX/TBT/B3-B7_TBT-Summary-all"
         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/211206/TBT/B3-B7_TBT-Summary"
         # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/220905/B3-B7_TBT-Summary_new2"
         packpaths = combpaths[['prot','out']]

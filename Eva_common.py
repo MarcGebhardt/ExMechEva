@@ -2726,13 +2726,18 @@ def stress_linfit_plt(strain_ser, inds, YM, YM_abs, strain_offset=0, ext=0.1):
     stress_vals = stress_linfit(strain_vals, YM, YM_abs, strain_offset)
     return strain_vals, stress_vals
 
+def strain_linfit(stress_ser, YM, YM_abs, strain_offset=0.002):
+    """Linearised strain fit corresponding Youngs Modulus and stress"""
+    strain_fit_ser=(stress_ser - YM_abs) / YM + strain_offset
+    return strain_fit_ser
+
 def Yield_redet(m_df, VIP, n_strain, n_stress,
                 n_loBo, n_upBo, n_loBo_int, 
                 YM, YM_abs, strain_offset=0.002, 
                 rise_det=[True,4], n_yield='Y'):
     """
     Redetermine yield point to different conditions 
-    (intersection with linearised strain offset, zero rising, fixed endpoint).
+    (intersection with linearised strain offset (ones after), zero rising, fixed endpoint).
 
     Parameters
     ----------
@@ -2772,14 +2777,20 @@ def Yield_redet(m_df, VIP, n_strain, n_stress,
     """
     #     mit 0.2% Dehnversatz E(F+-F-) finden
     m_lim = m_df.loc[min(VIP[n_loBo]):max(VIP[n_upBo])]
-    stress_fit = stress_linfit(m_lim[n_strain],
+    # stress_fit = stress_linfit(m_lim[n_strain],
+    #                            YM, YM_abs, strain_offset)
+    # i = m_lim[n_stress]-stress_fit
+    # i_sign, i_sich = sign_n_change(i)
+    strain_fit = strain_linfit(m_lim[n_stress],
                                YM, YM_abs, strain_offset)
-    i = m_lim[n_stress]-stress_fit
+    i = m_lim[n_strain]-strain_fit
     i_sign, i_sich = sign_n_change(i)
+    i_sich.iloc[0]=False # First signchange always true
     i_sich = i_sich.loc[min(VIP[n_loBo_int]):] # Y erst ab F- suchen
     
     _,_,r_sich = rise_curve(m_df[n_stress],*rise_det)
-    r_sich = r_sich.loc[min(VIP[n_loBo])+2:max(VIP[n_upBo])+2]
+    # r_sich = r_sich.loc[min(VIP[n_loBo])+2:max(VIP[n_upBo])+2]
+    r_sich = r_sich.loc[min(VIP[n_loBo_int])+2:max(VIP[n_upBo])+2]
     
     VIP_new = VIP
     txt =""
@@ -2804,6 +2815,62 @@ def Yield_redet(m_df, VIP, n_strain, n_stress,
             txt+="Fy set to %s (max of %s), instead intersection %.2f %% pl. strain or rise of 0! (No intersection found!)"%(tmp,n_upBo,(strain_offset*100))
     VIP_new = VIP_new.sort_values()
     return VIP_new, txt
+
+def DetFinSSC(mdf, YM, iS, iLE=None, 
+              StressN='Stress', StrainN='Strain', 
+              addzero=True, izero=None):
+    """
+    Determine final stress-strain curve (moved to strain offset from elastic modulus).
+
+    Parameters
+    ----------
+    mdf : pd.DataFrame
+        Original stress-strain curve data.
+    YM : dict or pd.Series or float
+        Elastic modulus (float) or 
+        elastic modulus (key=E) and intersection on strain=0 (key=Eabs).
+    iS : index of mdf
+        Start of linear behavior (all values befor will dropped).
+    iLE : TYPE, optional
+        End of linear behavior (if None, strain offset will determined only with iS). 
+        The default is None.
+    StressN : string, optional
+        Column name for stress variable. The default is 'Stress'.
+    StrainN : TYPE, optional
+        Column name for strain variable. The default is 'Strain'.
+    addzero : bool, optional
+        Switch to adding Zero value (index,StressN,StrainN=0).
+        The default is True.
+    izero: index of mdf, optional
+        Index for zero value line (p.e. to match old start index)
+
+    Returns
+    -------
+    out : pd.DataFrame
+        Moved stress-strain curve data.
+    so : float
+        Strain offset.
+
+    """
+    out=mdf.loc[iS:,[StressN,StrainN]].copy(deep=True)
+    if isinstance(YM,dict) or pd_isSer(YM):
+        so=-YM['E_abs']/YM['E']
+    elif isinstance(YM,float):
+        if iLE is None:
+            lindet=out.iloc[0][[StressN,StrainN]]
+        else:
+            lindet=out.loc[[iS,iLE],[StressN,StrainN]].mean(axis=0)
+        so=lindet[StrainN]-lindet[StressN]/YM
+    out[StrainN]=out[StrainN]-so
+    if addzero:
+        if izero is None:
+            i=0
+        else:
+            i=izero
+        tmp=pd.DataFrame([],columns=out.columns, index=[i])
+        tmp[[StressN,StrainN]]=0
+        out=pd.concat([tmp,out],axis=0)
+    return out, so
 
 #%%% Misc
 def pd_trapz(pdo, y=None, x=None, axis=0, nan_policy='omit'):
