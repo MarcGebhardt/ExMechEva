@@ -2116,6 +2116,9 @@ def Inter_Lines(r1,c1, r2,c2, out='x'):
         Output values.
 
     """
+    # if r1 == r2:
+    #     raise ValueError("Lines are parallel (no intersection)!")
+    #     return None
     x = (c2-c1)/(r1-r2)
     if out == 'x':
         return x
@@ -2125,8 +2128,12 @@ def Inter_Lines(r1,c1, r2,c2, out='x'):
             return x, y
         elif out == 'xy':
             return x, y
-
-
+    
+def Line_from2P(P1, P2):
+    """Determine line from two points (1st argument is x)"""
+    slope = (P2[1] - P1[1]) / (P2[0] - P1[0])
+    constant = P1[1] - slope * P1[0]
+    return slope, constant
     
 def MCurve_Characterizer(x, y,
                          ex_bool = True, ex_kwargs={'polydeg':1},
@@ -2694,6 +2701,53 @@ def YM_eva_com_sel(stress_ser,
                                                      strain_ser, **kws)
         return YM, YM_abs, YM_Rquad, YM_fit
 
+def Refit_YM_vals(m_df, YM, VIP, n_strain='Strain', n_stress='Stress',
+              n_loBo=['F3'], n_upBo=['F4'], option='range', outopt='Series'):
+    """
+    Refits line values for given rising (i.e. absolute value and R² vor given elastic modulus)
+
+    Parameters
+    ----------
+    m_df : pd.DataFrame
+        Measured data.
+    YM : float
+        Youngs Modulus (fixed rising of line).
+    VIP : pd.Series
+        Important points corresponding to measured data.
+    n_strain : string
+        Name of used strain (have to be in measured data).
+    n_stress : string
+        Name of used stress (have to be in measured data).
+    n_loBo : [string]
+        List of lower borders for determination (have to be in VIP). The default is ['F3'].
+    n_upBo : [string]
+        List of upper borders for determination (have to be in VIP). The default is ['F4'].
+    option : string, optional
+        Determination range. The default is 'range'.
+    outopt : string, optional
+        Switch for outupt (Series or list). The default is 'Series'.
+
+    Returns
+    -------
+    out : list or pd.Series
+        Line values and firt parameters for fixed rising.
+
+    """
+    m_lim = m_df.loc[min(VIP[n_loBo]):max(VIP[n_upBo])]
+    if option == 'range':
+        fitm = lmfit.models.LinearModel()
+        fitpar = fitm.make_params()
+        fitpar.add('slope', value=YM, vary = False)
+        fit=fitm.fit(m_lim[n_stress], x=m_lim[n_strain], 
+                     params=fitpar,method='leastsq', nan_policy='omit')
+        E       = fit.params.valuesdict()['slope']
+        Eabs    = fit.params.valuesdict()['intercept']
+        Rquad    = 1 - fit.residual.var() / np.nanvar(m_lim['Stress'])
+    out=E, Eabs, Rquad, fit
+    if outopt=='Series':
+        out= pd.Series(out, index=['E','E_abs','Rquad','Fit_result'])
+    return out
+
 def Rquad(y_true, y_predicted, nan_policy='omit'):
     if nan_policy == 'omit':
         sse = np.nansum((y_true - y_predicted)**2)
@@ -2794,27 +2848,175 @@ def Yield_redet(m_df, VIP, n_strain, n_stress,
     
     VIP_new = VIP
     txt =""
-    if (i_sich.any()==True)and(r_sich.any()==True):
+    if i_sign.loc[min(VIP[n_loBo_int])] >= 0:
+        VIP_new[n_yield] = min(VIP[n_loBo_int])
+        txt+="Fy set on 1st point of lower border of intersection (lower than %.3f %% pl. strain)!"%(strain_offset*100)
+    # if (i_sich.any()==True)and(r_sich.any()==True):
+    elif (i_sich.any()==True)and(r_sich.any()==True):
         if(i_sich.loc[i_sich].index[0])<=(r_sich.loc[r_sich==True].index[0]):
             VIP_new[n_yield] = i_sich.loc[i_sich].index[0]
-            txt+="Fy set on intersection with %.2f %% pl. strain!"%(strain_offset*100)
+            txt+="Fy set on intersection with %.3f %% pl. strain!"%(strain_offset*100)
         else:
             VIP_new[n_yield]=r_sich.loc[r_sich==True].index[0]-2 #-2 wegen Anstiegsberechnung
-            txt+="Fy on first point between F+ and Fu with rise of 0, instead intersection %f %% pl. strain! (earlier)"%(strain_offset*100)
+            txt+="Fy on first point between F+ and Fu with rise of 0, instead intersection %.3f %% pl. strain! (earlier)"%(strain_offset*100)
     elif (i_sich.any()==True)and(r_sich.all()==False):
         VIP_new[n_yield]=i_sich.loc[i_sich].index[0]
-        txt+="Fy set on intersection with %.2f %% pl. strain!"%(strain_offset*100)
+        txt+="Fy set on intersection with %.3f %% pl. strain!"%(strain_offset*100)
     else:
         if r_sich.any():
             VIP_new[n_yield]=r_sich.loc[r_sich==True].index[0]-2
-            txt+="Fy on first point between F+ and Fu with rise of 0, instead intersection %.2f %% pl. strain! (No intersection found!)"%(strain_offset*100)
+            txt+="Fy on first point between F+ and Fu with rise of 0, instead intersection %.3f %% pl. strain! (No intersection found!)"%(strain_offset*100)
         else:
-            # txt+="\nFy kept on old value, instead intersection 0.2% pl. strain! (No intersection found!)"
             tmp = VIP[VIP==max(VIP[n_upBo])].index[0]
             VIP_new[n_yield] = VIP[tmp]
-            txt+="Fy set to %s (max of %s), instead intersection %.2f %% pl. strain or rise of 0! (No intersection found!)"%(tmp,n_upBo,(strain_offset*100))
+            txt+="Fy set to %s (max of %s), instead intersection %.3f %% pl. strain or rise of 0! (No intersection found!)"%(tmp,n_upBo,(strain_offset*100))
     VIP_new = VIP_new.sort_values()
     return VIP_new, txt
+    
+def Find_intg2p(gsl, gin, pdo, i1=None, i2=None, 
+                    x='Strain', y='Stress', so=0, n_yield='Y'):
+    """Determine intersection of line and point (usefull to find yield point)"""
+    pdn = pd_limit(pdo, i1, i2)[[x,y]]
+    psl, pin = Line_from2P(pdn.iloc[0].values,pdn.iloc[-1].values)
+    gso=pd.DataFrame([0,1], columns=[y])
+    gso[x]=gso[y].apply(lambda x: strain_linfit(x, gsl, gin, so))
+    gso=gso[[x,y]]
+    gslso, ginso = Line_from2P(gso.iloc[0].values,gso.iloc[-1].values)
+    inter = Inter_Lines(r1=gslso, c1=ginso, r2=psl, c2=pin, out='xy')
+    i = pdn.iloc[0].name + (pdn.iloc[-1].name-pdn.iloc[0].name)*(inter[1]-pdn.iloc[0][y])/(pdn.iloc[-1][y]-pdn.iloc[0][y])
+    inter = pd.Series([i,*inter], index=['ind_ex',x,y], name=n_yield)
+    return inter
+
+def Yield_redet2(m_df, VIP, n_strain, n_stress,
+                n_loBo, n_upBo, n_loBo_int,
+                YM, YM_abs, strain_offset=0.002,
+                use_rd =True, rise_det=[True,4],
+                n_yield='Y', ywhere='n'):
+    """
+    Redetermine yield point to different conditions 
+    (intersection with linearised strain offset (ones after), zero rising, fixed endpoint).
+
+    Parameters
+    ----------
+    m_df : pd.DataFrame
+        Measured data.
+    VIP : pd.Series
+        Important points corresponding to measured data.
+    n_strain : string
+        Name of used strain (have to be in measured data).
+    n_stress : string
+        Name of used stress (have to be in measured data).
+    n_loBo : [string]
+        List of lower borders for determination (have to be in VIP).
+    n_upBo : [string]
+        List of upper borders for determination (have to be in VIP).
+    n_loBo_int : [string]
+        List of lower borders for interseption (have to be in VIP).
+    YM : float
+        Youngs Modulus.
+    YM_abs : float
+        Absolut value of Youngs Modulus.
+    strain_offset : float, optional
+        Strain offset (eq. plastic strain). The default is -0.002.
+    use_rd : bool, optional
+        Switch for using change in stress rising. The default is True.
+    rise_det : [bool, int], optional
+        Determination options for stress rising ([smoothing, smoothing factor]).
+        The default is [True,4].
+    n_yield : string, optional
+        Name of yield point (have to be in VIP). The default is 'Y'.
+    ywhere : string, optional
+        Which point should be choosen (n-next, a-after, b-before). The default is 'n'.
+
+    Returns
+    -------
+    VIP_new : pd.Series
+        Important points corresponding to measured data.
+    txt : string
+        Documantation string.
+
+    """
+    # Intersection with linearization and strain offset
+    m_lim = m_df.loc[min(VIP[n_loBo]):max(VIP[n_upBo])]
+    strain_fit = strain_linfit(m_lim[n_stress],
+                               YM, YM_abs, strain_offset)
+    i = m_lim[n_strain]-strain_fit
+    i_sign, i_sich = sign_n_change(i)
+    i_sich.iloc[0]=False # First signchange always true
+
+    # find change in rise of stress
+    if use_rd:
+        _,_,r_sich = rise_curve(m_df[n_stress],*rise_det)
+        r_sich = r_sich.loc[min(VIP[n_loBo_int])+2:max(VIP[n_upBo])+2]
+        if r_sich.any()==True:
+            i_r_sich_1st=r_sich.loc[r_sich==True].index[0]-2 # -2  due to determination
+        else:
+            i_r_sich_1st=max(VIP[n_upBo]) # no signchange, last point
+    else:
+        i_r_sich_1st=max(VIP[n_upBo]) # no signchange, last point
+
+    # Intersection only from determination limit and to maximum/last sign change
+    i_sign = i_sign.loc[min(VIP[n_loBo_int]):i_r_sich_1st]
+    i_sich = i_sich.loc[min(VIP[n_loBo_int]):i_r_sich_1st]
+
+    VIP_new = VIP
+    plst_txt="%.3f %% plastic strain"%(strain_offset*100)
+    txt ="%s "%(n_yield)
+    if i_sich.any():
+        iy=i_sich.loc[i_sich].index[-1] # Signchange allways after 'a'
+        yexser=Find_intg2p(gsl=YM, gin=YM_abs, pdo=m_lim, 
+                           i1=pd_valid_index(iy, i, opt='b'), i2=iy, 
+                           x=n_strain, y=n_stress, so=strain_offset,n_yield=n_yield)
+        if ywhere=='b':
+            iy=pd_valid_index(iy, i, opt='b')
+        elif ywhere=='n':
+            iy=Find_closest(i.loc[[pd_valid_index(iy, i, opt='b'),iy]],0)
+        txt+="set on intersection with %s (option=%s)"%(plst_txt,ywhere)
+    else:
+        if (i_sign <= 0).all():
+            iy=i_r_sich_1st
+            if i_r_sich_1st==max(VIP[n_upBo]):
+                tmp = VIP[VIP==max(VIP[n_upBo])].index[0]
+                txt+="set to %s (max of %s), instead intersection %s or rise of 0! (No intersection found!)"%(tmp,n_upBo,plst_txt)
+            else:
+                txt+="on first point between F+ and Fu with rise of 0, instead intersection %s! (No intersection found!)"%(plst_txt)
+        else:
+            iy=min(VIP[n_loBo_int])
+            tmp = VIP[VIP==min(VIP[n_loBo_int])].index[0]
+            txt+="set to %s (min of %s), instead intersection %s or rise of 0! (No intersection found!)"%(tmp,n_loBo_int,plst_txt)
+        yexser = pd.Series([iy,*m_lim.loc[iy][[n_strain,n_stress]].values], 
+                           index=['ind_ex',n_strain,n_stress], name=n_yield)
+    VIP_new[n_yield] = iy
+    VIP_new = VIP_new.sort_values()
+    return VIP_new, txt, yexser
+
+def Yield_redet2_Multi(m_df, VIP, YM, YM_abs,
+                   strain_osd={'YK':0.0,'Y0':0.0,'Y':0.2/100,'Y1':0.007/100}, 
+                   strain_osdf={'YK':'F4'},
+                   n_strain='Strain', n_stress='Stress',
+                   n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
+                   use_rd =True, rise_det=[True,2], 
+                   ywhere='n'):
+    txt=''
+    y_exact=pd.DataFrame(pd.Series(strain_osd), columns=['strain_os'])
+    for i in strain_osd.keys():
+        if i in strain_osdf.keys():
+            VIP[i] = VIP[strain_osdf[i]]
+            txt+="\n %s set on %s (fixed)"%(i, strain_osdf[i])
+            tmp=VIP[i],VIP[i],*m_df.loc[VIP[i],[n_strain,n_stress]].values
+            y_exact.loc[i, ['ind','ind_ex',n_strain,n_stress]] = tmp
+        else:
+            tmp = Yield_redet2(m_df=m_df, VIP=VIP,
+                                n_strain=n_strain, n_stress=n_stress,
+                                n_loBo=n_loBo, n_upBo=n_upBo, n_loBo_int=n_loBo_int,
+                                YM     = YM, YM_abs = YM_abs,
+                                strain_offset=strain_osd[i],
+                                use_rd =use_rd, rise_det=rise_det, 
+                                n_yield=i, ywhere=ywhere)
+            VIP = tmp[0]
+            txt += '\n '+ tmp[1]
+            y_exact.loc[i, ['ind','ind_ex',n_strain,n_stress]] = VIP[i],*tmp[2].values
+    return VIP, y_exact, txt
 
 def DetFinSSC(mdf, YM, iS, iLE=None, 
               StressN='Stress', StrainN='Strain', 
@@ -2895,7 +3097,63 @@ def pd_trapz(pdo, y=None, x=None, axis=0, nan_policy='omit'):
     else:
         NotImplementedError("Type %s not implemented!"%type(pdo))
     return out
+	
+def Outvalgetter(mdf, V, VIP, exacts=None, 
+                 order=['f','e','U'], add_esuf='_con',
+                 n_strain='Strain', n_stress='Stress',
+                 use_exacts=True):
+    if exacts is None: use_exacts=False
+    out=pd.Series([], dtype='float64')
+    for i in order:
+        if i in ['f','F']:
+            name = i+V.lower()
+            if use_exacts and (V in exacts.index):
+                out[name]=exacts.loc[V,n_stress]
+            elif (V in VIP.index):
+                out[name]=mdf.loc[VIP[V],n_stress]
+            else:
+                out[name]=np.nan
+        elif i in ['e','s']:
+            name = i+V.lower()+add_esuf
+            if use_exacts and (V in exacts.index):
+                out[name]=exacts.loc[V,n_strain]
+            elif (V in VIP.index):
+                out[name]=mdf.loc[VIP[V],n_strain]
+            else:
+                out[name]=np.nan
+        elif i in ['U','W']:
+            name = i+V.lower()+add_esuf
+            if use_exacts and (V in exacts.index):
+                tmp = exacts.loc[V,[n_strain,n_stress]]
+                tmp.name = exacts.loc[V,'ind_ex']
+                tmp = mdf.append(tmp).sort_index()
+                out[name]=pd_trapz(tmp.loc[:exacts.loc[V,'ind_ex']],
+                                        y=n_stress, x=n_strain,
+                                        axis=0, nan_policy='omit')
+            elif (V in VIP.index):
+                out[name]=pd_trapz(mdf.loc[:VIP[V]],
+                                        y=n_stress, x=n_strain,
+                                        axis=0, nan_policy='omit')
+            else:
+                out[name]=np.nan
+    return out
 
+def Otvalgetter_Multi(mdf, Vs=['Y','YK','Y0','Y1','U','B'],
+                      datasep=['con','opt'], VIPs={'con':None,'opt':None}, 
+                      exacts={'con':None,'opt':None}, 
+                      orders={'con':['f','e','U'],'opt':['e','U']}, 
+                      add_esufs={'con':'_con','opt':'_opt'},
+                      n_strains={'con':'Strain','opt':'DStrain'}, 
+                      n_stresss={'con':'Stress','opt':'Stress'},
+                      use_exacts=True):
+    out = pd.Series([],dtype='float64')
+    for V in Vs:
+        for ds in datasep:
+            out=out.append(Outvalgetter(mdf=mdf, V=V, VIP=VIPs[ds], exacts=exacts[ds], 
+                                    order=orders[ds], add_esuf=add_esufs[ds],
+                                    n_strain=n_strains[ds], n_stress=n_stresss[ds],
+                                    use_exacts=use_exacts))
+    return out
 #%%%% Circle and radius/curvature from 3 points
 def TP_circle(p1, p2, p3):
     """
