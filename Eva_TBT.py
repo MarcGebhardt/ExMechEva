@@ -232,8 +232,8 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         raise ValueError('OPT_YM_Determination_refinement seams to be wrong')
     # loc_Yd_tmp = 'E_lsq_R_A%s%sl'%(tmp_md,tmp_in)
     loc_Yd_tmp = 'E_inc_R_D%s%sgwt'%(tmp_md,tmp_in)
-        
-    
+            
+    cout =''
     if output_lvl>=1: log_mg=open(out_full+'.log','w')
     ftxt=(("  Parameters of Evaluation:"),
           ("   Evaluation start time:     %s" %datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
@@ -1212,10 +1212,26 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         Evac.plt_handle_suffix(fig,path=out_full+"-YMRange_Imp",**plt_Fig_dict)
     
     
-    Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
-                   %(VIP_messu['F2']-VIP_messu['F1'],VIP_dicu['F2']-VIP_dicu['F1'],
-                     VIP_messu['F4']-VIP_messu['F3'],VIP_dicu['F4']-VIP_dicu['F3']),log_mg,output_lvl)
-    
+    # Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
+    #                %(VIP_messu['F2']-VIP_messu['F1'],VIP_dicu['F2']-VIP_dicu['F1'],
+    #                  VIP_messu['F4']-VIP_messu['F3'],VIP_dicu['F4']-VIP_dicu['F3']),log_mg,output_lvl)
+    if _opts['OPT_DIC']:
+        tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
+             'opt F1-F2':VIP_dicu['F2']-VIP_dicu['F1'],
+             'con F3-F4':VIP_messu['F4']-VIP_messu['F3'],
+             'opt F3-F4':VIP_dicu['F4']-VIP_dicu['F3']}
+        Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
+                       %(*tmp.values(),),log_mg,output_lvl)
+        for i in tmp.keys(): 
+            if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
+    else:
+        tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
+             'con F3-F4':VIP_messu['F4']-VIP_messu['F3']}
+        Evac.MG_strlog("\n   Datapoints (con) between F1-F2: %d and F3-F4: %d."
+                       %(*tmp.values(),),log_mg,output_lvl)
+        for i in tmp.keys(): 
+            if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
+            
     # =====================================================================================
     #%%% 6.4 Determine Youngs-Moduli
     Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
@@ -2776,10 +2792,10 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         a,b=messu_FP.loc[tmp,dic_used_Strain],messu_FP.Stress[tmp]
         j=np.int64(-1)
         ax1.plot(a, b, 'yx')
-        a,b = Evac.stress_linfit_plt(messu_FP[dic_used_Strain], VIP_messu[['F3','F4']],
+        a,b = Evac.stress_linfit_plt(messu_FP[dic_used_Strain], VIP_dicu[['F3','F4']],
                                      YM_pref_opt['E'],0)
         ax1.plot(a, b, 'b-',label='$E_{opt}$')
-    fig.legend()
+    ax1.legend()
     Evac.plt_handle_suffix(fig,path=out_full+"-sigeps_fin",**plt_Fig_dict)
     
     mun_tmp = messu.loc[:VIP_messu['U']]
@@ -2937,7 +2953,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     timings.loc[10.0]=time.perf_counter()
     if output_lvl>=1: log_mg.close()
     
-    return timings
+    return timings, cout
     
 #%% 9 Main
 def TBT_series(paths, no_stats_fc, var_suffix):
@@ -2974,12 +2990,11 @@ def TBT_series(paths, no_stats_fc, var_suffix):
             Evac.MG_strlog("\n %s"%prot.loc[eva].Designation+mfile_add,
                             log_mg,output_lvl,printopt=False)  
             try:
-                timings = TBT_single(prot_ser = prot.loc[eva],
+                cout = TBT_single(prot_ser = prot.loc[eva],
                                      paths = paths, mfile_add=mfile_add)
-                Evac.MG_strlog("\n   Eva_time: %.5f s"%(timings.iloc[-1]-timings.iloc[0]),
-                                log_mg,output_lvl,printopt=False)  
+                Evac.MG_strlog("\n   Eva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]),
+                                log_mg,output_lvl,printopt=False)
             except Exception:
-                # txt = '\n   Exception:\n    at line {} - {}:{}'.format(sys.exc_info()[-1].tb_lineno,type(e).__name__, e)
                 txt = '\n   Exception:'
                 txt+=Evac.str_indent('\n{}'.format(traceback.format_exc()),5)
                 Evac.MG_strlog(txt, log_mg,output_lvl,printopt=False)  
@@ -2991,7 +3006,7 @@ def main():
        
     option = 'single'
     # option = 'series'
-    # option = 'complete'
+    option = 'complete'
     # option = 'pack-complete'
     # option = 'pack-complete-all'
     
@@ -3030,7 +3045,6 @@ def main():
     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
     protpaths.loc[:,'path_eva1']    = "Auswertung/"
-    # protpaths.loc[:,'path_eva2']    = "Test_py/"
     protpaths.loc[:,'path_eva2']    = "ExMechEva/"
     
     # t=protpaths[['path_main','path_eva1','name_prot']].stack()
@@ -3051,9 +3065,10 @@ def main():
         prot=pd.read_excel(combpaths.loc[ser,'prot'],
                            header=11, skiprows=range(12,13),
                            index_col=0)
-        _=TBT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
-                     paths=combpaths.loc[ser],
-                     mfile_add = mfile_add)
+        cout=TBT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
+                        paths=combpaths.loc[ser],
+                        mfile_add = mfile_add)
+        print("\nEva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]))
         
     elif option == 'series':
         ser='B7'

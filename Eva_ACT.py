@@ -15,6 +15,7 @@ Changelog:
     - 21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)
     - 23-10-13: - Hinzufügen finale Spannungs-Dehnungskurve (6.6) mit Ermittlung
                 - Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.05%), siehe DOI: 10.1007/s10439-020-02719-2 
+    - 23-10-20: Bending connection replaced (Bend.YM_eva_method_A child of Evac.YM_eva_com_sel)
 """
 
 #%% 0 Imports
@@ -36,7 +37,7 @@ import time
 import warnings
 import json
 
-import Bending as Bend
+# import Bending as Bend
 import Eva_common as Evac
 
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
@@ -202,7 +203,7 @@ def ACT_single(prot_ser, paths, mfile_add=''):
         raise ValueError('OPT_YM_Determination_refinement seams to be wrong')
     loc_Yd_tmp = 'E_lsq_R_A%s%sl'%(tmp_md,tmp_in)
         
-    
+    cout =''
     if output_lvl>=1: log_mg=open(out_full+'.log','w')
     ftxt=(("  Parameters of Evaluation:"),
           ("   Evaluation start time:     %s" %datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
@@ -776,15 +777,22 @@ def ACT_single(prot_ser, paths, mfile_add=''):
         Evac.plt_handle_suffix(fig,path=out_full+"-YMRange_Imp",**plt_Fig_dict)
     
     if _opts['OPT_DIC']:
+        tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
+             'opt F1-F2':VIP_dicu['F2']-VIP_dicu['F1'],
+             'con F3-F4':VIP_messu['F4']-VIP_messu['F3'],
+             'opt F3-F4':VIP_dicu['F4']-VIP_dicu['F3']}
         Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
-                       %(VIP_messu['F2']-VIP_messu['F1'],VIP_dicu['F2']-VIP_dicu['F1'],
-                         VIP_messu['F4']-VIP_messu['F3'],VIP_dicu['F4']-VIP_dicu['F3']),log_mg,output_lvl)
-
+                       %(*tmp.values(),),log_mg,output_lvl)
+        for i in tmp.keys(): 
+            if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
     else:
-        Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d and F3-F4: %d."
-                       %(VIP_messu['F2']-VIP_messu['F1'],
-                         VIP_messu['F4']-VIP_messu['F3']),log_mg,output_lvl)
-
+        tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
+             'con F3-F4':VIP_messu['F4']-VIP_messu['F3']}
+        Evac.MG_strlog("\n   Datapoints (con) between F1-F2: %d and F3-F4: %d."
+                       %(*tmp.values(),),log_mg,output_lvl)
+        for i in tmp.keys(): 
+            if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
+            
     # =====================================================================================
     #%%% 6.4 Determine Youngs-Moduli
     Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
@@ -816,11 +824,16 @@ def ACT_single(prot_ser, paths, mfile_add=''):
     
     
     
-    A0Al_ser = Bend.YM_eva_method_A(stress_mid_ser=d_stress_mid,
-                                    strain_mid_ser=d_strain_mid,
-                                    comp=_opts['OPT_Compression'],
-                                    name='A0Al', 
-                                    det_opt='incremental')
+    # A0Al_ser = Bend.YM_eva_method_A(stress_mid_ser=d_stress_mid,
+    #                                 strain_mid_ser=d_strain_mid,
+    #                                 comp=_opts['OPT_Compression'],
+    #                                 name='A0Al', 
+    #                                 det_opt='incremental')
+    A0Al_ser = Evac.YM_eva_com_sel(stress_ser=d_stress_mid,
+                                   strain_ser=d_strain_mid,
+                                   comp=_opts['OPT_Compression'],
+                                   name='A0Al', 
+                                   det_opt='incremental')
     E_A_df = pd.concat([A0Al_ser],axis=1)
     # cols_con=E_A_df.columns.str.contains('0')
     # E_A_con = Evac.pd_agg(E_A_df.loc[sr_eva_con,cols_con])
@@ -860,36 +873,38 @@ def ACT_single(prot_ser, paths, mfile_add=''):
         Evac.plt_handle_suffix(fig,path=out_full+"-YM-Me_A",**plt_Fig_dict)
         
     #least-square fit
-    E_lsq_F_A0Al = Bend.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_F_A0Al', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_messu[Ind_YM_f[0]],
-                                       'ind_E':VIP_messu[Ind_YM_f[1]]})
+    # E_lsq_F_A0Al = Bend.YM_eva_method_A(stress_mid_ser=messu.Stress,
+    #                                 strain_mid_ser=messu.Strain,
+    E_lsq_F_A0Al = Evac.YM_eva_com_sel(stress_ser=messu.Stress,
+                                       strain_ser=messu.Strain,
+                                       comp=_opts['OPT_Compression'],
+                                       name='E_lsq_F_A0Al', 
+                                       det_opt='leastsq',
+                                       **{'ind_S':VIP_messu[Ind_YM_f[0]],
+                                          'ind_E':VIP_messu[Ind_YM_f[1]]})
     E_lsq_F_A0Al = pd.Series(E_lsq_F_A0Al, index=['E','E_abs','Rquad','Fit_result'],
                             name='E_lsq_F_A0Al')
     
     
-    E_lsq_R_A0Al = Bend.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_R_A0Al', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_messu[Ind_YM_r[0]],
-                                       'ind_E':VIP_messu[Ind_YM_r[1]]})
+    E_lsq_R_A0Al = Evac.YM_eva_com_sel(stress_ser=messu.Stress,
+                                       strain_ser=messu.Strain,
+                                       comp=_opts['OPT_Compression'],
+                                       name='E_lsq_R_A0Al', 
+                                       det_opt='leastsq',
+                                       **{'ind_S':VIP_messu[Ind_YM_r[0]],
+                                          'ind_E':VIP_messu[Ind_YM_r[1]]})
     E_lsq_R_A0Al = pd.Series(E_lsq_R_A0Al, index=['E','E_abs','Rquad','Fit_result'],
                             name='E_lsq_R_A0Al')
     
     E_lsq_A = pd.concat([E_lsq_F_A0Al, E_lsq_R_A0Al],axis=1)
     if _opts['OPT_Determination_SecHard']:
-        E_lsq_S_A0Al = Bend.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                        strain_mid_ser=messu.Strain,
-                                        comp=_opts['OPT_Compression'],
-                                        name='E_lsq_S_A0Al', 
-                                        det_opt='leastsq',
-                                        **{'ind_S':VIP_messu[Ind_YM_s[0]],
-                                           'ind_E':VIP_messu[Ind_YM_s[1]]})
+        E_lsq_S_A0Al = Evac.YM_eva_com_sel(stress_ser=messu.Stress,
+                                       strain_ser=messu.Strain,
+                                       comp=_opts['OPT_Compression'],
+                                       name='E_lsq_S_A0Al', 
+                                       det_opt='leastsq',
+                                       **{'ind_S':VIP_messu[Ind_YM_s[0]],
+                                          'ind_E':VIP_messu[Ind_YM_s[1]]})
         E_lsq_S_A0Al = pd.Series(E_lsq_S_A0Al, index=['E','E_abs','Rquad','Fit_result'],
                             name='E_lsq_S_A0Al')
         E_lsq_A = pd.concat([E_lsq_F_A0Al, E_lsq_R_A0Al, E_lsq_S_A0Al],axis=1)
@@ -1046,7 +1061,9 @@ def ACT_single(prot_ser, paths, mfile_add=''):
         if _opts['OPT_Determination_SecHard']:
             yield_df_conS['Strain']=yield_df_conS['Strain']-linstrainos_con
             yield_df_conS['Force']=yield_df_conS['Stress']*Area
-            yield_df_conS['Way']=yield_df_conS['Strain']*Length            
+            yield_df_conS['Way']=yield_df_conS['Strain']*Length       
+        if linstrainos_con < 0:
+            cout += "Lin. strain offset = %f (%f of eps_u), "%(linstrainos_con, linstrainos_con/messu.loc[VIP_messu['U'],'Strain'])
     else:
         messu_FP =  messu
         linstrainos_con = 0
@@ -1440,7 +1457,7 @@ def ACT_single(prot_ser, paths, mfile_add=''):
     timings.loc[10.0]=time.perf_counter()
     if output_lvl>=1: log_mg.close()
     
-    return timings
+    return timings, cout
 
 #%% 9 Main
 def ACT_series(paths, no_stats_fc, var_suffix):
@@ -1478,12 +1495,11 @@ def ACT_series(paths, no_stats_fc, var_suffix):
             Evac.MG_strlog("\n %s"%prot.loc[eva].Designation+mfile_add,
                             log_mg,output_lvl,printopt=False)  
             try:
-                timings = ACT_single(prot_ser = prot.loc[eva],
+                cout = ACT_single(prot_ser = prot.loc[eva],
                                      paths = paths, mfile_add=mfile_add)
-                Evac.MG_strlog("\n   Eva_time: %.5f s"%(timings.iloc[-1]-timings.iloc[0]),
-                                log_mg,output_lvl,printopt=False)  
+                Evac.MG_strlog("\n   Eva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]),
+                                log_mg,output_lvl,printopt=False)
             except Exception:
-                # txt = '\n   Exception:\n    at line {} - {}:{}'.format(sys.exc_info()[-1].tb_lineno,type(e).__name__, e)
                 txt = '\n   Exception:'
                 txt+=Evac.str_indent('\n{}'.format(traceback.format_exc()),5)
                 Evac.MG_strlog(txt, log_mg,output_lvl,printopt=False)  
@@ -1495,7 +1511,7 @@ def main():
        
     option = 'single'
     # option = 'series'
-    # option = 'complete'
+    option = 'complete'
     # option = 'pack-complete'
     
     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
@@ -1526,7 +1542,6 @@ def main():
     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
     protpaths.loc[:,'path_eva1']    = "Auswertung/"
-    # protpaths.loc[:,'path_eva2']    = "Test_py/"
     protpaths.loc[:,'path_eva2']    = "ExMechEva/"
     
     # t=protpaths[['path_main','path_eva1','name_prot']].stack()

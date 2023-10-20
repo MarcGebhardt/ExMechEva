@@ -207,7 +207,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         raise ValueError('OPT_YM_Determination_refinement seams to be wrong')
     loc_Yd_tmp = 'E_lsq_R_A%s%sl'%(tmp_md,tmp_in)
         
-    
+    cout =''
     if output_lvl>=1: log_mg=open(out_full+'.log','w')
     ftxt=(("  Parameters of Evaluation:"),
           ("   Evaluation start time:     %s" %datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
@@ -791,14 +791,21 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         Evac.plt_handle_suffix(fig,path=out_full+"-YMRange_Imp",**plt_Fig_dict)
     
     if _opts['OPT_DIC']:
+        tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
+             'opt F1-F2':VIP_dicu['F2']-VIP_dicu['F1'],
+             'con F3-F4':VIP_messu['F4']-VIP_messu['F3'],
+             'opt F3-F4':VIP_dicu['F4']-VIP_dicu['F3']}
         Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
-                       %(VIP_messu['F2']-VIP_messu['F1'],VIP_dicu['F2']-VIP_dicu['F1'],
-                         VIP_messu['F4']-VIP_messu['F3'],VIP_dicu['F4']-VIP_dicu['F3']),log_mg,output_lvl)
-
+                       %(*tmp.values(),),log_mg,output_lvl)
+        for i in tmp.keys(): 
+            if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
     else:
-        Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d and F3-F4: %d."
-                       %(VIP_messu['F2']-VIP_messu['F1'],
-                         VIP_messu['F4']-VIP_messu['F3']),log_mg,output_lvl)
+        tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
+             'con F3-F4':VIP_messu['F4']-VIP_messu['F3']}
+        Evac.MG_strlog("\n   Datapoints (con) between F1-F2: %d and F3-F4: %d."
+                       %(*tmp.values(),),log_mg,output_lvl)
+        for i in tmp.keys(): 
+            if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
 
     # =====================================================================================
     #%%% 6.4 Determine Youngs-Moduli
@@ -1363,7 +1370,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         a,b=messu_FP.loc[tmp,dic_used_Strain],messu_FP.Stress[tmp]
         j=np.int64(-1)
         ax1.plot(a, b, 'yx')
-        a,b = Evac.stress_linfit_plt(messu_FP[dic_used_Strain], VIP_messu[['F3','F4']],
+        a,b = Evac.stress_linfit_plt(messu_FP[dic_used_Strain], VIP_dicu[['F3','F4']],
                                      YM_pref_opt['E'],0)
         ax1.plot(a, b, 'b-',label='$E_{opt}$')
     ftxt=('$f_{y}$ = %3.3f MPa ($\epsilon_{y}$ = %.3f %%)'%(out_tab['fy'],out_tab['ey_con']*100),
@@ -1458,7 +1465,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings.loc[10.0]=time.perf_counter()
     if output_lvl>=1: log_mg.close()
     
-    return timings
+    return timings,cout
 
 #%% 9 Main
 def ATT_series(paths, no_stats_fc, var_suffix):
@@ -1495,12 +1502,11 @@ def ATT_series(paths, no_stats_fc, var_suffix):
             Evac.MG_strlog("\n %s"%prot.loc[eva].Designation+mfile_add,
                             log_mg,output_lvl,printopt=False)  
             try:
-                timings = ATT_single(prot_ser = prot.loc[eva],
-                                     paths = paths, mfile_add=mfile_add)
-                Evac.MG_strlog("\n   Eva_time: %.5f s"%(timings.iloc[-1]-timings.iloc[0]),
-                                log_mg,output_lvl,printopt=False)  
+                cout = ATT_single(prot_ser = prot.loc[eva],
+                                  paths = paths, mfile_add=mfile_add)
+                Evac.MG_strlog("\n   Eva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]),
+                                log_mg,output_lvl,printopt=False)
             except Exception:
-                # txt = '\n   Exception:\n    at line {} - {}:{}'.format(sys.exc_info()[-1].tb_lineno,type(e).__name__, e)
                 txt = '\n   Exception:'
                 txt+=Evac.str_indent('\n{}'.format(traceback.format_exc()),5)
                 Evac.MG_strlog(txt, log_mg,output_lvl,printopt=False)  
@@ -1510,7 +1516,7 @@ def ATT_series(paths, no_stats_fc, var_suffix):
 
 def main():
        
-    # option = 'single'
+    option = 'single'
     # option = 'series'
     option = 'complete'
     # option = 'pack-complete'
@@ -1545,7 +1551,6 @@ def main():
     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
     protpaths.loc[:,'path_eva1']    = "Auswertung/"
-    # protpaths.loc[:,'path_eva2']    = "Test_py/"
     protpaths.loc[:,'path_eva2']    = "ExMechEva/"
     
     # t=protpaths[['path_main','path_eva1','name_prot']].stack()
@@ -1559,8 +1564,8 @@ def main():
     
     
     if option == 'single':
-        ser='B7'
-        des='sl05'
+        ser='B3'
+        des='sr03a'
         mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
         
         prot=pd.read_excel(combpaths.loc[ser,'prot'],
@@ -1571,7 +1576,7 @@ def main():
                      mfile_add = mfile_add)
         
     elif option == 'series':
-        ser='B7'
+        ser='B3'
         ATT_series(paths = combpaths.loc[ser],
                    no_stats_fc = no_stats_fc,
                    var_suffix = var_suffix)
