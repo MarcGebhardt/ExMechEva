@@ -2765,9 +2765,9 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     ax1.set_title('%s - Stress vs. strain curve, final part, with labels'%plt_name)
     ax1.set_xlabel('Strain [-]')
     ax1.set_ylabel('Stress [MPa]')
-    ax1.plot(messu_FP['Strain'], messu_FP['Stress'], 'r--', label='meas. curve')
+    ax1.plot(messu_FP['Strain'], messu_FP['Stress'], 'r--', label='con')
     if _opts['OPT_DIC']:
-        ax1.plot(messu_FP.loc[:VIP_messu['B']][dic_used_Strain], messu_FP.loc[:VIP_messu['B']]['Stress'], 'm--',label='opt')
+        ax1.plot(messu_FP[dic_used_Strain], messu_FP['Stress'], 'm--',label='opt')
     a,b = Evac.stress_linfit_plt(messu_FP['Strain'], VIP_messu[['F3','F4']],
                                  YM_pref_con['E'],0)
     ax1.plot(a, b, 'g-',label='$E_{con}$')
@@ -2792,6 +2792,12 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         a,b=messu_FP.loc[tmp,dic_used_Strain],messu_FP.Stress[tmp]
         j=np.int64(-1)
         ax1.plot(a, b, 'yx')
+        for x in tmp.index:
+            j+=1
+            if j%2: c=(6,-6)
+            else:   c=(-6,6)
+            ax1.annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), xycoords='data', 
+                         xytext=c, ha="center", va="center", textcoords='offset points')
         a,b = Evac.stress_linfit_plt(messu_FP[dic_used_Strain], VIP_dicu[['F3','F4']],
                                      YM_pref_opt['E'],0)
         ax1.plot(a, b, 'b-',label='$E_{opt}$')
@@ -3004,10 +3010,10 @@ def TBT_series(paths, no_stats_fc, var_suffix):
 
 def main():
        
-    option = 'single'
+    # option = 'single'
     # option = 'series'
-    option = 'complete'
-    # option = 'pack-complete'
+    # option = 'complete'
+    option = 'pack-complete'
     # option = 'pack-complete-all'
     
     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
@@ -3058,8 +3064,8 @@ def main():
     
     
     if option == 'single':
-        ser='B7'
-        des='cl11a'
+        ser='B5'
+        des='cm31a'
         mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
         
         prot=pd.read_excel(combpaths.loc[ser,'prot'],
@@ -3071,7 +3077,7 @@ def main():
         print("\nEva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]))
         
     elif option == 'series':
-        ser='B7'
+        ser='B6'
         TBT_series(paths = combpaths.loc[ser],
                    no_stats_fc = no_stats_fc,
                    var_suffix = var_suffix)
@@ -3083,7 +3089,7 @@ def main():
                        var_suffix = var_suffix)
             
     elif option == 'pack-complete':        
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/XXX/TBT/B3-B7_TBT-Summary"
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/TBT/B3-B7_TBT-Summary"
         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/TBT/B3-B7_TBT-Summary"
         # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/211217/B3-B7_TBT-Summary"
         packpaths = combpaths[['prot','out']]
@@ -3094,7 +3100,7 @@ def main():
                       opt_pd_out = False, opt_hdf_save = True)
         
     elif option == 'pack-complete-all':        
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/XXX/TBT/B3-B7_TBT-Summary-all"
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/TBT/B3-B7_TBT-Summary-all"
         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/211206/TBT/B3-B7_TBT-Summary"
         # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/220905/B3-B7_TBT-Summary_new2"
         packpaths = combpaths[['prot','out']]

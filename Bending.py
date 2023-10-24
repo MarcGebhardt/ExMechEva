@@ -183,6 +183,7 @@ def Point_df_transform(Pmeas, Pspec, Pmeas_Sdev, Pspec_Sdev,
         fig.legend(loc='upper left', bbox_to_anchor=(0.12, 0.88))
         fig.tight_layout()  # otherwise the right y-label is slightly clipped
         plt.show()
+        fig.clf()
         plt.close(fig)
         
     return (Points_T, Points_L_T)
@@ -295,7 +296,7 @@ def Points_diff(df, diff_coord='y', first_val=0,
 def Points_eval_func(func, fit_params, pointdf, steps,
                      in_coord='x', out_coord='y', points=None,
                      deepcopy=True, option=None):
-            
+    """Evaluates a dataframe or series by a function."""
     if type(fit_params) is not pd.core.series.Series:
         raise ValueError('Fit Parameters are not pandas series!')
     
@@ -341,12 +342,15 @@ def Point_df_combine(df1, df2, coords_set='y',
 
 #%%% General Functions
 def triangle_func_d0(x, xmin,xmax, f_0):
+    """Standard triangle function with maximum in middle between min. and max. x coordinate."""
     eq=f_0*(1-2*abs(x)/(xmax-xmin))
     return eq
 def triangle_func_d1(x, xmin,xmax, f_0):
+    """First derivate of standard triangle function."""
     eq=f_0*(-2*np.sign(x)/(xmax-xmin))
     return eq
 def triangle_func_d2(x, xmin,xmax, f_0):
+    """Second derivate of standard triangle function (equal 0)."""
     eq=0
     return eq
 
@@ -444,49 +448,74 @@ def FSE_4sin_wlin_d0(x, xmin,xmax,FP, b1,b2,b3,b4,c,d, f_V_0=None):
     eq=b1*np.sin(FP*(x-xmin))+b2*np.sin(2*FP*(x-xmin))+b3*np.sin(3*FP*(x-xmin))+b4*np.sin(4*FP*(x-xmin))+c*(x-xmin)+d
     return eq
 def FSE_4sin_wlin_d1(x, xmin,xmax,FP, b1,b2,b3,b4,c,d=None, f_V_0=None):
+    """First derivate of fourier series expansion with four sine elements and 
+    additional linear and constant element. For more information see FSE_4sin_wlin_d0."""
     eq=FP*(b1*np.cos(FP*(x-xmin))+2*b2*np.cos(2*FP*(x-xmin))+3*b3*np.cos(3*FP*(x-xmin))+4*b4*np.cos(4*FP*(x-xmin)))+c
     return eq
 def FSE_4sin_wlin_d2(x, xmin,xmax,FP, b1,b2,b3,b4,c=None,d=None, f_V_0=None):
+    """Second derivate of fourier series expansion with four sine elements and 
+    additional linear and constant element. For more information see FSE_4sin_wlin_d0."""
     eq=(-FP**2)*(b1*np.sin(FP*(x-xmin))+4*b2*np.sin(2*FP*(x-xmin))+9*b3*np.sin(3*FP*(x-xmin))+16*b4*np.sin(4*FP*(x-xmin)))
     return eq
 
 def FSE_4sin_lin_func_d0(x, c,d, 
                          xmin=None,xmax=None,FP=None, b1=None,b2=None,b3=None,b4=None,
                          f_V_0=None):
+    """Linear part of fourier series expansion with four sine elements and 
+    additional linear and constant element. For more information see FSE_4sin_wlin_d0."""
     eq=c*(x-xmin)+d
     return eq
 def FSE_4sin_lin_func_d1(x, c,d=None, 
                          xmin=None,xmax=None,FP=None, b1=None,b2=None,b3=None,b4=None,
                          f_V_0=None):
+    """First deriavate of linear part of fourier series expansion with four sine elements and 
+    additional linear and constant element. For more information see FSE_4sin_wlin_d0."""
     eq=c
     return eq
 def FSE_4sin_lin_func_d2(x, c=None,d=None, 
                          xmin=None,xmax=None,FP=None, b1=None,b2=None,b3=None,b4=None,
                          f_V_0=None):
+    """Second deriavate of linear part of fourier series expansion with four sine elements and 
+    additional linear and constant element. For more information see FSE_4sin_wlin_d0. (Equal 0)"""
     eq=0
     return eq
 
 
 def FSE_4sin_d0(x, xmin,xmax,FP, b1,b2,b3,b4,c=None,d=None, f_V_0=None):
+    """Fourier series expansion with four sine elements without additional linear 
+    and constant element. For more information see FSE_4sin_wlin_d0."""
     eq=b1*np.sin(FP*(x-xmin))+b2*np.sin(2*FP*(x-xmin))+b3*np.sin(3*FP*(x-xmin))+b4*np.sin(4*FP*(x-xmin))
     return eq
 def FSE_4sin_d1(x, xmin,xmax,FP, b1,b2,b3,b4,c=None,d=None, f_V_0=None):
+    """First deriavate of Fourier series expansion with four sine elements 
+    without additional linear and constant element. For more information see FSE_4sin_wlin_d0."""
     eq=(FP)*(b1*np.cos(FP*(x-xmin))+2*b2*np.cos(2*FP*(x-xmin))+3*b3*np.cos(3*FP*(x-xmin))+4*b4*np.cos(4*FP*(x-xmin)))
     return eq       
 def FSE_4sin_d2(x, xmin,xmax,FP, b1,b2,b3,b4,c=None,d=None, f_V_0=None):
+    """Second deriavate of Fourier series expansion with four sine elements 
+    without additional linear and constant element. For more information see FSE_4sin_wlin_d0."""
     eq=(-FP**2)*(b1*np.sin(FP*(x-xmin))+4*b2*np.sin(2*FP*(x-xmin))+9*b3*np.sin(3*FP*(x-xmin))+16*b4*np.sin(4*FP*(x-xmin)))
     return eq
 
 def FSE_SF_func_d0(x, xmin,xmax, f_V_0,
                    FP=None, b1=None,b2=None,b3=None,b4=None,c=None,d=None, opt=None):
+    """Shear deformation part of ourier series expansion with four sine elements 
+    and additional linear and constant element. Children of triangle_func_d0.
+    For more information see FSE_4sin_wlin_d0."""
     eq=triangle_func_d0(x=x, xmin=xmin,xmax=xmax, f_0=f_V_0)
     return eq
 def FSE_SF_func_d1(x, xmin,xmax, f_V_0,
                    FP=None, b1=None,b2=None,b3=None,b4=None,c=None,d=None, opt=None):
+    """First derivate of shear deformation part of ourier series expansion with
+    four sine elements and additional linear and constant element. 
+    Children of triangle_func_d1. For more information see FSE_4sin_wlin_d0."""
     eq=triangle_func_d1(x=x, xmin=xmin,xmax=xmax, f_0=f_V_0)
     return eq
 def FSE_SF_func_d2(x, xmin,xmax, f_V_0,
                    FP=None, b1=None,b2=None,b3=None,b4=None,c=None,d=None, opt=None):
+    """Second derivate of shear deformation part of ourier series expansion with
+    four sine elements and additional linear and constant element. 
+    Children of triangle_func_d1. For more information see FSE_4sin_wlin_d0."""
     eq=triangle_func_d2(x=x, xmin=xmin,xmax=xmax, f_0=f_V_0)
     return eq
 
@@ -737,16 +766,16 @@ class Bend_func_legion(object):
     
     def __init__(self, name=None, description=None, **kws):
         """
-        
+        Inital properties setter.
 
         Parameters
         ----------
         name : string, optional
-            Name of . The default is None.
+            Name of bend func legion. The default is None.
         description : TYPE, optional
-            DESCRIPTION. The default is None.
-        **kws : TYPE
-            DESCRIPTION.
+            Description of bend func legion. The default is None.
+        **kws : dict
+            Dictionary of keyword arguments.
 
         Returns
         -------
@@ -1034,12 +1063,14 @@ def lmfit_param_adder(par_df):
     return params
             
 def lmfit_free_val_setter(Bend_func_sub, param_val={}, default_val=-1.0):
+    """Preset free values/parameters for lmfit."""
     pts=pd.Series(Bend_func_sub.param_types)
     pval_guess={i: (param_val[i] if i in param_val.keys() else default_val)
                 for i in pts.loc[pts=='free'].index}
     return pval_guess
 
 def lmfit_param_key_checker(Bend_func_sub, param_dict):
+    """Check parameters of lmfit with Bend_func_sub."""
     param_dict=copy.deepcopy(param_dict)
     t=[]
     for i in param_dict.keys():
@@ -1346,10 +1377,10 @@ def Perform_Fit(BFL, Fit_func_key, P_df,
             - 'auto-dispser': Series of displacements (index have to match with s_range/P_df).
             - 'auto-Pcoorddisp': Points dataframe and specified point name and coordinate ([Points as Dataframe, point name as string, coordinate as string],index have to match with s_range/P_df)            
         The default is None.
-    pb_b : TYPE, optional
-        DESCRIPTION. The default is True.
-    **pwargs : TYPE
-        DESCRIPTION.
+    pb_b : bool, optional
+        Switch for showing progressbar. The default is True.
+    **pwargs : dict or pandas.Series
+        Parameter keyword arguments for function.
 
     Raises
     ------
@@ -1358,8 +1389,8 @@ def Perform_Fit(BFL, Fit_func_key, P_df,
 
     Returns
     -------
-    Fit_res_df : TYPE
-        DESCRIPTION.
+    Fit_res_df : pandas.DatFrame
+        Data of fit results.
 
     """
     
@@ -1523,6 +1554,7 @@ def straindf_from_curve(x, func_curve, params_curve, func_thick, evopt=1/2):
     return df_strain
 
 def Moment_perF_func(x, xmin,xmax, Test_type='TPB'):
+    """Returns a by force scaleable moment function."""
     if Test_type == 'TPB':
         MpF_0=(xmax-xmin)/4
         eq=triangle_func_d0(x=x, xmin=xmin,xmax=xmax, f_0=MpF_0)
@@ -1531,6 +1563,7 @@ def Moment_perF_func(x, xmin,xmax, Test_type='TPB'):
     return eq
     
 def stress_perF(x, func_MoI, func_thick, xmin,xmax, evopt=1/2, Test_type='TPB'):
+    """Returns a by force scaleable bending stress function."""
     stress_pF_data = (lambda b: Moment_perF_func(b, xmin,xmax, Test_type)*func_thick(b)*evopt/func_MoI(b))(x)
     if isinstance(x,float):
         return stress_pF_data
@@ -1541,12 +1574,45 @@ def stress_perF(x, func_MoI, func_thick, xmin,xmax, evopt=1/2, Test_type='TPB'):
         return stress_pF
 
 def stress_df_from_lin(F, x, func_MoI, func_thick, xmin,xmax, evopt=1/2, Test_type='TPB'):
+    """Returns bending stress values according given x coordinates."""
     stress_pF = stress_perF(x, func_MoI, func_thick, xmin,xmax, evopt, Test_type)
     df_stress = pd.DataFrame(stress_pF.values * F.values[:, None],
                              index=F.index, columns=stress_pF.index)
     return df_stress
 
 def Weight_func(x, option='Triangle', c_func=None, **kwargs):
+    """
+    Returns a weighting function by given options and parameters.
+
+    Parameters
+    ----------
+    x : float
+        Coordinate in x direction.
+    option : string, optional
+        Choosen option. 
+        Possible are:
+            - 'Cut': Excluding values outside range of xmin to xmax (weight equal 0).
+            - 'Triangle': Weighing to triangle function with maximum in the middle between xmin and xmax.
+            - 'Triangle_cut': Mixture of 'Triangle' and 'Cut'.
+            - 'Custom': Weighing to custom function (p.e. displacement funtion). 
+            - 'Custom_cut': Mixture of 'Custom' and 'Cut'.
+        The default is 'Triangle'.
+    c_func : function, optional
+        Custom function for weighing (p.e. displacement funtion). The default is None.
+    **kwargs : dict
+        Keyword arguments for custom function (p.e. displacement funtion parameters).
+
+    Raises
+    ------
+    NotImplementedError
+        Option not implemented.
+
+    Returns
+    -------
+    eq : float
+        Weights.
+
+    """
     # if option == 'Triangle':
     #     f = 2/(kwargs['xmax']-kwargs['xmin'])
     #     f = 1
@@ -2445,29 +2511,16 @@ def YM_eva_method_D(P_df, Force_ser,
     if pb_b: pb.close()
     return YM_ser, YM_df
 
-# def YM_check_with_method_D(E, F, Length, I_func, w_vgl_df, pb_b=True, name='X'):
-#     step_range = Eva_common.pd_combine_index(E, w_vgl_df)
-#     if pb_b: pb = tqdm(step_range, desc ="check "+name+": ", unit=' steps', ncols=100)
-#     w_D_to_E = pd.DataFrame([],dtype='float64')
-#     for step in step_range:
-#         t = YM_eva_method_D_bend_df(Length=Length, I_func=I_func, 
-#                                      E=E.loc[step],
-#                                      F=F.loc[step])
-#         if len(w_D_to_E) ==  0:
-#             w_D_to_E=pd.DataFrame([],columns = t.index,dtype='float64')
-#         w_D_to_E.loc[step]=t.w
-#         if pb_b: pb.update()
-#     if pb_b: pb.close()
-
-#     check_E = (w_D_to_E-w_vgl_df)/w_vgl_df
-#     return check_E, w_D_to_E
-
 def YM_check_with_method_D(E, F, Length, I_func, w_vgl_df, pb_b=True, name='X'):
     step_range = Eva_common.pd_combine_index(E, w_vgl_df)
     m = YM_eva_method_D_bend_df(Length=w_vgl_df.columns.max()-w_vgl_df.columns.min(),
                                  I_func=I_func,
                                  n=len(w_vgl_df.columns)-1,
                                  E=1, F=1)
+    """
+    Compares the deformation of the analytical bending line, 
+    scaled by Young's Modulus determined by methods, with the measured bending line.
+    """
     D_gamma = F.loc[step_range]/E.loc[step_range]
     D_alpha = (m.index/Length-0.5)*m['Omega'].iloc[0]
     D_beta  = (m.index/Length+0.5)*m['Omega'].iloc[-1]
@@ -2484,9 +2537,11 @@ def YM_check_with_method_D(E, F, Length, I_func, w_vgl_df, pb_b=True, name='X'):
     return check_E, w_D_to_E
 
 def coord_df_mean(df, name='', fex=1,lex=1):
+    """Return mean values."""
     ser_m=pd.Series(df.iloc(axis=1)[fex:-lex].mean(axis=1), name=name)
     return ser_m
 def coord_df_depo(df, name='', pos=0.0):
+    """Return values on postion (Default x=0.0)"""
     ser_m=pd.Series(df[pos], name=name)
     return ser_m
 
@@ -2496,7 +2551,7 @@ def YM_check_many_with_method_D(E_dict, F, Length, I_func,
     """
     Compares the deformation of the analytical bending line, 
     scaled by Young's Modulus determined by methods, with the measured bending line.
-    Returns global mean, lokal (midspan) mean and complete (n-positions) deviation,
+    Returns global mean, local (midspan) mean and complete (n-positions) deviation,
     as well as the scaled analytical bending line, for each specified step.
 
     Parameters
@@ -2671,6 +2726,7 @@ class Plotter:
             fig.savefig(savefigname+'.pdf')
             fig.savefig(savefigname+'.png')
         plt.show()
+        fig.clf()
         plt.close(fig)
         
     def colplt_funcs_all(x, func_cohort, params, step_range=None,
@@ -2706,5 +2762,5 @@ class Plotter:
             fig.savefig(savefigname+'.pdf')
             fig.savefig(savefigname+'.png')
         plt.show()
+        fig.clf()
         plt.close(fig)
-

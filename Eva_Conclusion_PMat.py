@@ -159,10 +159,10 @@ def boxplt_dl(pdf, var, ytxt,
     
 #%% Einlesen und auswählen
 #%%% Main
-Version="230920"
+Version="231023"
 ptype="TBT"
-ptype="ACT"
-# ptype="ATT"
+# ptype="ACT"
+ptype="ATT"
 
 no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
                'B01.1','B01.2','B01.3', 'B02.3',
@@ -331,14 +331,14 @@ dfa.insert(3,'Origin_short',h)
 dfa.insert(4,'Origin_sshort',h2)
 del h, h2
 
-## Add Strain Energy Density
-tmp=dfa.loc(axis=1)[dfa.columns.str.startswith('W')].copy(deep=True)
-if ptype=="TBT":
-    tmp=tmp.div(dfa.thickness_2 * dfa.width_2 * dfa.Length_test,axis=0)*9
-else:
-    tmp=tmp.div(dfa.Area_CS * dfa.Length_test,axis=0)
-tmp.columns=tmp.columns.str.replace('W','U')
-dfa=pd.concat([dfa,tmp],axis=1)
+# ## Add Strain Energy Density
+# tmp=dfa.loc(axis=1)[dfa.columns.str.startswith('W')].copy(deep=True)
+# if ptype=="TBT":
+#     tmp=tmp.div(dfa.thickness_2 * dfa.width_2 * dfa.Length_test,axis=0)*9
+# else:
+#     tmp=tmp.div(dfa.Area_CS * dfa.Length_test,axis=0)
+# tmp.columns=tmp.columns.str.replace('W','U')
+# dfa=pd.concat([dfa,tmp],axis=1)
 
 doda['Date_Test']=pd.to_datetime(dfa.loc[dfa.statistics].groupby('Donor')['Date_test'].max())
 doda['Storagetime']=(doda['Date_Test']-doda['Date_Death']).dt.days
@@ -946,23 +946,57 @@ if ptype == 'TBT':
     subj='0000-0001-8378-3108_LEIULANA_60-17_LuPeCo_cl32b'
     epsu="Strain_opt_d_M"
     Viupu='VIP_d'
+    leps="leos_opt"
+    YMu=YM_opt_str
+    ind_E1='E'
+    ind_E2='E'
+    ind_E3='B'
+    Vsr={'F3':'L'}
+    Vs1=['S','L','YK','Y','U','B','E','SU','SE']
+    Vs2=['S','L','YK','Y1','Y2','Y','U','B','E']
+    Vs3=['L','Y','U','B']
 elif ptype == 'ACT':
     subj='0000-0001-8378-3108_LEIULANA_60-17_LuPeCo_tm21y'
     epsu="Strain"
     Viupu='VIP_m'
+    leps="leos_con"
+    YMu=YM_con_str
+    ind_E1='SE'
+    ind_E2='E'
+    ind_E3='B'
+    Vsr={'F3':'L'}
+    Vs1=['S','L','YK','Y','U','B','E','SU','SE']
+    Vs2=['S','L','YK','Y1','Y2','Y','U','B','E']
+    Vs3=['L','Y','U','B']
 elif ptype == 'ATT':
     subj='0000-0001-8378-3108_LEIULANA_60-17_LuPeCo_sr03a'
     epsu="Strain"
     Viupu='VIP_m'
+    leps="leos_con"
+    YMu=YM_con_str
+    ind_E1='E'
+    ind_E2='E'
+    ind_E3='B'
+    Vsr={'F3':'L'}
+    Vs1=['S','L','YK','Y','U','B','E','SU','SE']
+    Vs2=['S','L','YK','Y1','Y2','Y','U','B','E']
+    Vs3=['L','Y','U','B']
 tmp=dft[subj]
 tmp2=VIP_rebuild(tmp[Viupu])
+tmp2=tmp2.rename(Vsr)
 tmp3=dfa.loc[subj]
-tmp4=Evac.YM_sigeps_lin(tmp.Stress, tmp[epsu], 
-                        ind_S=tmp2['F3'], ind_E=tmp2['F4'])
+tmp4=tmp[[epsu,'Stress']].copy()
+tmp4[epsu]=tmp4[epsu]-tmp3.loc[leps]
+# tmpf,_=Evac.DetFinSSC(mdf=tmp, YM=tmp3.loc[YMu], 
+#                       iS=tmp2['L'], iLE=None,
+#                       StressN='Stress', StrainN=epsu, 
+#                       addzero=True, izero=0)
+tmpf = pd.concat([pd.DataFrame([[0,0]], index=[0], columns=[epsu,'Stress']),
+                 tmp4.loc[tmp2['L']:]])
 colp=sns.color_palette()
-tmpf=Stress_Strain_fin(tmp, tmp2, tmp4[0],tmp4[1],epsname=epsu)
 gs_kw = dict(width_ratios=[1.0], height_ratios=[1, 1, 1],
                  wspace=0.1, hspace=0.1)
+
 fig, ax = plt.subplot_mosaic([['fotot'],
                               ['sigeps'],
                               ['sigepsf']],
@@ -972,11 +1006,13 @@ fig, ax = plt.subplot_mosaic([['fotot'],
 ax['fotot'].set_title('Analyzed measured force')
 ax['fotot'].set_xlabel('Time in s')
 ax['fotot'].set_ylabel('Force in N', color=colp[0])
-ax['fotot'].plot(tmp.Time, tmp.Force, '-', color=colp[0], label='Measurement')
-a, b=tmp.Time[tmp2],tmp.Force[tmp2]
-j=np.int64(-1)
+tmp21=tmp2.loc[tmp2.index.to_series().apply(lambda x: x in Vs1)]
+ax['fotot'].plot(tmp.Time[:tmp21[ind_E1]], tmp.Force[:tmp21[ind_E1]], 
+                 '-', color=colp[0], label='Measurement')
+a, b=tmp.Time[tmp21[:ind_E1]],tmp.Force[tmp21[:ind_E1]]
 ax['fotot'].plot(a, b, 'x', color=colp[3], label='Points of interest')
-for x in tmp2.index:
+j=np.int64(-1)
+for x in tmp21.index:
     j+=1
     if j%2: c=(6,-6)
     else:   c=(-6,6)
@@ -998,18 +1034,17 @@ ax['fotot'].legend(ln,la,loc='lower right')
 ax['sigeps'].set_title('Stress-strain-curve with labels')
 ax['sigeps'].set_xlabel('Strain')
 ax['sigeps'].set_ylabel('Stress in MPa')
-ind_E='E'
-ax['sigeps'].plot(tmp.loc[:tmp2[ind_E]][epsu],
-                  tmp.loc[:tmp2[ind_E]]['Stress'], 
+tmp22=tmp2.loc[tmp2.index.to_series().apply(lambda x: x in Vs2)]
+ax['sigeps'].plot(tmp4.loc[:tmp22[ind_E2]][epsu],
+                  tmp4.loc[:tmp22[ind_E2]]['Stress'], 
                   '-', color=colp[0], label='Measurement')
-a,b = Evac.stress_linfit_plt(tmp[epsu], tmp2[['F3','F4']],
-                             tmp4[0], tmp4[1], strain_offset=0, ext=0.2)
-ax['sigeps'].plot(a, b, 'g-',label='Elastic modulus')
-VIP_mwoC=tmp2[np.invert(tmp2.index.str.contains('C'))]
-a, b=tmp[epsu][VIP_mwoC[:ind_E]],tmp.Stress[VIP_mwoC[:ind_E]]
+ax['sigeps'].plot([0,tmp4.loc[tmp22['YK']][epsu]], 
+                  [0,tmp4.loc[tmp22['YK']]['Stress']], 
+                  'g-',label='Elastic modulus')
+a, b=tmp4[epsu][tmp22],tmp4.Stress[tmp22]
 j=np.int64(-1)
 ax['sigeps'].plot(a, b, 'x', color=colp[3], label='Points of interest')
-for x in VIP_mwoC[:ind_E].index:
+for x in tmp22.index:
     j+=1
     if j%2: c=(6,-6)
     else:   c=(-6,6)
@@ -1020,30 +1055,29 @@ ax['sigeps'].legend()
 ax['sigepsf'].set_title('Stress-strain-curve (start linearized)')
 ax['sigepsf'].set_xlabel('Strain')
 ax['sigepsf'].set_ylabel('Stress in MPa')
-ind_E='B'
-ax['sigepsf'].plot(tmpf.loc[:tmp2[ind_E]][epsu],
-                   tmpf.loc[:tmp2[ind_E]]['Stress'], 
+tmp23=tmp2.loc[tmp2.index.to_series().apply(lambda x: x in Vs3)]
+ax['sigepsf'].plot(tmpf.loc[:tmp23[ind_E3]][epsu],
+                   tmpf.loc[:tmp23[ind_E3]]['Stress'], 
                    '-', color=colp[0],label='Measurement')
 ax['sigepsf'].plot(tmpf.iloc[:2][epsu],
                    tmpf.iloc[:2]['Stress'], 
                    '-', color=colp[2],label='Linearization')
-ax['sigepsf'].fill_between(tmpf.loc[:tmp2['Y']][epsu],
-                           tmpf.loc[:tmp2['Y']]['Stress'],
+ax['sigepsf'].fill_between(tmpf.loc[:tmp23['Y']][epsu],
+                           tmpf.loc[:tmp23['Y']]['Stress'],
                             **dict(color=colp[1], hatch='||', alpha= 0.2), 
                             label='$U_{y}$')
-ax['sigepsf'].fill_between(tmpf.loc[:tmp2['U']][epsu],
-                           tmpf.loc[:tmp2['U']]['Stress'],
+ax['sigepsf'].fill_between(tmpf.loc[:tmp23['U']][epsu],
+                           tmpf.loc[:tmp23['U']]['Stress'],
                             **dict(color=colp[1], hatch='//', alpha= 0.2), 
                             label='$U_{u}$')
-ax['sigepsf'].fill_between(tmpf.loc[:tmp2['B']][epsu],
-                           tmpf.loc[:tmp2['B']]['Stress'],
+ax['sigepsf'].fill_between(tmpf.loc[:tmp23['B']][epsu],
+                           tmpf.loc[:tmp23['B']]['Stress'],
                             **dict(color=colp[1], hatch='..', alpha= 0.2), 
                             label='$U_{b}$')
-VIP_mwoC=tmp2[tmp2.index.str.contains('F3|F4|Y|U|B')]
-a, b=tmpf[epsu][VIP_mwoC[:ind_E]],tmp.Stress[VIP_mwoC[:ind_E]]
+a, b=tmpf[epsu][tmp23[:ind_E3]],tmp.Stress[tmp23[:ind_E3]]
 j=np.int64(-1)
 ax['sigepsf'].plot(a, b, 'x', color=colp[3], label='Points of interest')
-for x in VIP_mwoC[:ind_E].index:
+for x in tmp23[:ind_E3].index:
     j+=1
     if j%2: c=(6,-6)
     else:   c=(-6,6)
@@ -1165,7 +1199,7 @@ ax['U'].sharex(ax['sig'])
 fig.suptitle(None)
 Evac.plt_handle_suffix(fig,path=path+"SM-OH",**plt_Fig_dict)
 
-#%%%% Add Eva
+#%%%% Add Eva Overview
 if ptype == "TBT":
     pltvartmp=YM_opt_str
     tmp=cs[['Donor','Origin_sshort']].agg(lambda x: x.drop_duplicates().count())
@@ -1257,6 +1291,87 @@ boxplt_dl(pdf=cs, var='Ub'+pltvarco, ytxt='Fracture strain energy in mJ/mm³',
           xltirep={}, xdtirep=doda.Naming)
 fig.suptitle(None)
 Evac.plt_handle_suffix(fig,path=path+"SM-OV3",**plt_Fig_dict)
+
+
+#%%%% Add Eva Yield
+if ptype == "TBT":
+    tmp=pd.DataFrame({'YK':['fyk','eyk_opt','Uyk_opt','KLA'],
+                      'Y0':['fy0','ey0_opt','Uy0_opt','0.0 % plso.'],
+                      'Y1':['fy1','ey1_opt','Uy1_opt','0.007 %% plso.'],
+                      'Y2':['fy2','ey2_opt','Uy2_opt','0.1 %% plso.'],
+                      'Y': ['fy', 'ey_opt', 'Uy_opt', '0.2 %% plso.'],
+                      'U': ['fu', 'eu_opt', 'Uu_opt', 'u']},
+                      # 'B': ['fb', 'eb_opt', 'Ub_opt', 'b']}, 
+                     index=['f','e','U','name'])  
+elif ptype == "ACT":
+    tmp=pd.DataFrame({'YK':['fyk','eyk_con','Uyk_con','KLA'],
+                      'Y0':['fy0','ey0_con','Uy0_con','0.0 % plso.'],
+                      'Y1':['fy1','ey1_con','Uy1_con','0.05 % plso.'],
+                      'Y2':['fy2','ey2_con','Uy2_con','0.1 % plso.'],
+                      'Y': ['fy', 'ey_con', 'Uy_con', '0.2 % plso.'],
+                      'U': ['fu', 'eu_con', 'Uu_con', 'u']},
+                      # 'B': ['fb', 'eb_con', 'Ub_con', 'b']}, 
+                     index=['f','e','U','name'])
+elif ptype == "ATT":
+    tmp=pd.DataFrame({'YK':['fyk','eyk_con','Uyk_con','KLA'],
+                      'Y0':['fy0','ey0_con','Uy0_con','0.0 % plso.'],
+                      'Y1':['fy1','ey1_con','Uy1_con','0.1 % plso.'],
+                      'Y': ['fy', 'ey_con', 'Uy_con', '0.2 % plso.'],
+                      'Y2':['fy2','ey2_con','Uy2_con','0.5 % plso.'],
+                      'U': ['fu', 'eu_con', 'Uu_con', 'u']},
+                      # 'B': ['fb', 'eb_con', 'Ub_con', 'b']},  
+                     index=['f','e','U','name'])
+    
+gs_kw = dict(width_ratios=[1], 
+             height_ratios=[1, 1, 1],
+             wspace=0.1, hspace=0.1)
+fig, ax = plt.subplot_mosaic([['f'],
+                              ['e'],
+                              ['U']],
+                              gridspec_kw=gs_kw,
+                              # empty_sentinel='lower mid',
+                              figsize=figsize_sup,
+                              constrained_layout=True)
+tmp2=cs[tmp.loc['f']].copy()
+tmp3=tmp2[tmp.loc['f','U']]
+tmp2.drop(tmp.loc['f','U'], axis=1, inplace=True)
+tmp4=(tmp2.sub(tmp3,axis=0)).div(tmp3,axis=0)
+axt = sns.boxplot(data=tmp4, ax=ax['f'],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
+                                            "markeredgecolor":"black",
+                                            "markersize":"20","alpha":0.75})
+# ax['f'].set_title('Strength')
+# ax['f'].set_xlabel('Types')
+ax['f'].set_ylabel('Deviation to ultimate strength')
+ax['f'].tick_params(axis='x',which='both',bottom=False,labelbottom=False)
+tmp2=cs[tmp.loc['e']].copy()
+tmp3=tmp2[tmp.loc['e','U']]
+tmp2.drop(tmp.loc['e','U'], axis=1, inplace=True)
+tmp4=(tmp2.sub(tmp3,axis=0)).div(tmp3,axis=0)
+axt = sns.boxplot(data=tmp4, ax=ax['e'],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
+                                            "markeredgecolor":"black",
+                                            "markersize":"20","alpha":0.75})
+# ax['e'].set_title('Strain')
+# ax['e'].set_xlabel('Types')
+ax['e'].set_ylabel('Deviation to strain at ultimate strength')
+ax['e'].tick_params(axis='x',which='both',bottom=False,labelbottom=False)
+ax['e'].sharex(ax['f'])
+tmp2=cs[tmp.loc['U']].copy()
+tmp3=tmp2[tmp.loc['U','U']]
+tmp2.drop(tmp.loc['U','U'], axis=1, inplace=True)
+tmp4=(tmp2.sub(tmp3,axis=0)).div(tmp3,axis=0)
+axt = sns.boxplot(data=tmp4, ax=ax['U'],
+                 showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
+                                            "markeredgecolor":"black",
+                                            "markersize":"20","alpha":0.75})
+# ax['U'].set_title('Strain energy density')
+ax['U'].set_xlabel('Types')
+ax['U'].set_ylabel('Deviation to ultimate strain energy density')
+ax['U'].sharex(ax['e'])
+ax['U'].set_xticklabels(tmp.loc['name',~(tmp.columns=='U')].to_list())
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=path+"SM-YD",**plt_Fig_dict)
 
 #%%%% Correlation
 cs_short_corr1, cs_short_corr2 = Evac.Corr_ext(cs_short[css_ncols], method=mcorr, 

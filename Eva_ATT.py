@@ -1516,10 +1516,10 @@ def ATT_series(paths, no_stats_fc, var_suffix):
 
 def main():
        
-    option = 'single'
+    # option = 'single'
     # option = 'series'
-    option = 'complete'
-    # option = 'pack-complete'
+    # option = 'complete'
+    option = 'pack-complete'
     
     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
                    'B01.1','B01.2','B01.3', 'B02.3',
@@ -1588,7 +1588,7 @@ def main():
                        var_suffix = var_suffix)
     elif option == 'pack-complete':        
         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ATT/B3-B7_ATT-Summary"
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/XXX/ATT/B3-B7_ATT-Summary"
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/ATT/B3-B7_ATT-Summary"
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,

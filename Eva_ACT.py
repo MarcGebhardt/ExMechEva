@@ -1025,7 +1025,7 @@ def ACT_single(prot_ser, paths, mfile_add=''):
     if _opts['OPT_Determination_SecHard']:
         Evac.MG_strlog("\n  Determination of yield strain-second hardening:",log_mg,output_lvl)
         strain_osdS = {'S'+key:value for (key,value) in strain_osd.items()}
-        strain_osdfS = {'S'+key:value for (key,value) in strain_osdf.items()}        
+        strain_osdfS = {'SYK':'S4'}        
         tmp=Evac.Yield_redet2_Multi(m_df=messu, VIP=VIP_messu,
                                     strain_osd=strain_osdS, 
                                     strain_osdf=strain_osdfS,
@@ -1509,7 +1509,7 @@ def ACT_series(paths, no_stats_fc, var_suffix):
 
 def main():
        
-    option = 'single'
+    # option = 'single'
     # option = 'series'
     option = 'complete'
     # option = 'pack-complete'
@@ -1578,8 +1578,8 @@ def main():
                        no_stats_fc = no_stats_fc,
                        var_suffix = var_suffix)
     elif option == 'pack-complete':        
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/ACT/B3-B7_ACT-Summary"
         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ACT/B3-B7_ACT-Summary"
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/XXX/ACT/B3-B7_ACT-Summary"
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,

@@ -4437,6 +4437,41 @@ def tick_label_inserter(ax, pos=0, ins='', axis='both'):
     else:
         raise NotImplementedError('Axis %s not implemented!'%axis)
         
+def plt_add_DaAnno(mdf, x_n, y_n, VIP, ax=None, xy_standard=(-6,6),
+                   xy_ded = {1:(1,1),2:(-1,1),3:(-1,-1),4:(1,-1)},
+                   pkwargs={'marker':'x', 'linestyle':'','color':'red', 
+                            'label':'Points of interest',},
+                   akwargs={'xycoords':'data', 'textcoords':'offset points',
+                            'ha':"center", 'va':"center"}):
+    def recalc_xy(n, xy_ded):
+        d,r = divmod(n,max(xy_ded.keys()))
+        d+=1
+        mult=np.multiply(xy_ded[r],d)
+        return mult
+    udf=mdf.loc[VIP,[x_n,y_n]]
+    udf['VIP']=VIP.index
+    udfg=udf.groupby([x_n,y_n])
+    t2=pd.DataFrame([])
+    for g in udfg:
+        tg=g[1]
+        tg['n']=range(1, 1 + len(tg))
+        t2=pd.concat([t2,tg])
+    t = t2['n'].apply(lambda x: np.multiply(recalc_xy(x, xy_ded),xy_standard))
+    t = t.apply(pd.Series)
+    udf[['xtext','ytext']]=t
+
+    if ax is None: ax = plt.gca()
+    ax.plot(udf[x_n], udf[y_n], **pkwargs)
+    #for x in udf.index:
+    #    ax.annotate('%s'%udf.loc[x,'VIP'], xy=(udf.loc[x,x_n],udf.loc[x,y_n]),
+    #                 xytext=(udf.loc[x,'xtext'],udf.loc[x,'ytext']), **akwargs)
+    j=np.int64(-1)
+    for x in udf['VIP']:
+        j+=1
+        ax.annotate('%s'%x, xy=(udf[x_n].iloc[j],udf[y_n].iloc[j]),
+                     xytext=(udf['xtext'].iloc[j],udf['ytext'].iloc[j]), **akwargs)
+    return udf
+
 #%%% Seaborn extra
 import seaborn as sns
 def sns_pointplot_MMeb(ax, data, x,y, hue=None,
