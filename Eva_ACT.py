@@ -1511,8 +1511,8 @@ def main():
        
     # option = 'single'
     # option = 'series'
-    option = 'complete'
-    # option = 'pack-complete'
+    # option = 'complete'
+    option = 'pack-complete'
     
     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
                    'B01.1','B01.2','B01.3', 'B02.3',
@@ -1577,15 +1577,17 @@ def main():
             ACT_series(paths = combpaths.loc[ser],
                        no_stats_fc = no_stats_fc,
                        var_suffix = var_suffix)
+            
     elif option == 'pack-complete':        
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/ACT/B3-B7_ACT-Summary"
         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ACT/B3-B7_ACT-Summary"
+        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/ACT/B3-B7_ACT-Summary"
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
                       hdf_naming = 'Designation', var_suffix = var_suffix,
                       h5_conc = 'Material_Parameters', h5_data = 'Measurement',
                       opt_pd_out = False, opt_hdf_save = True)
+        print("Successfully created %s"%out_path)
         
     else:
         raise NotImplementedError('%s not implemented!'%option)

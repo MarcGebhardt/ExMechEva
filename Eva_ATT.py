@@ -158,7 +158,8 @@ def ATT_Option_reader(options):
             if Evac.check_empty(options[o]):
                 # options[o]=[0.15,0.75,'U','opt_LG',True,8]
                 # options[o]=[0.05,0.75,'U','opt_LG',True,8]
-                options[o]=[0.05,0.75,'Y','opt_LG',True,8]
+                # options[o]=[0.05,0.75,'Y','opt_LG',True,8] #bis 231025
+                options[o]=[0.10,0.75,'Y','opt_LG',True,8]
                 # options[o]=['S1',0.75,'U','opt_LG',True,8]
                 # options[o]=[0.05,0.75,'U','opt_LG',True,4]
             else:
@@ -1564,8 +1565,8 @@ def main():
     
     
     if option == 'single':
-        ser='B3'
-        des='sr03a'
+        ser='B6'
+        des='sr13'
         mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
         
         prot=pd.read_excel(combpaths.loc[ser,'prot'],
@@ -1576,7 +1577,7 @@ def main():
                      mfile_add = mfile_add)
         
     elif option == 'series':
-        ser='B3'
+        ser='B6'
         ATT_series(paths = combpaths.loc[ser],
                    no_stats_fc = no_stats_fc,
                    var_suffix = var_suffix)
@@ -1586,6 +1587,7 @@ def main():
             ATT_series(paths = combpaths.loc[ser],
                        no_stats_fc = no_stats_fc,
                        var_suffix = var_suffix)
+            
     elif option == 'pack-complete':        
         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ATT/B3-B7_ATT-Summary"
         out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/ATT/B3-B7_ATT-Summary"
@@ -1595,6 +1597,7 @@ def main():
                       hdf_naming = 'Designation', var_suffix = var_suffix,
                       h5_conc = 'Material_Parameters', h5_data = 'Measurement',
                       opt_pd_out = False, opt_hdf_save = True)
+        print("Successfully created %s"%out_path)
         
     else:
         raise NotImplementedError('%s not implemented!'%option)

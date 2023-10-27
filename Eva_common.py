@@ -8,7 +8,7 @@ Changelog:
 """
 import os
 import warnings
-from functools import partial, wraps
+# from functools import partial, wraps
 import pandas as pd
 import numpy as np
 import lmfit
@@ -3020,7 +3020,7 @@ def Yield_redet2_Multi(m_df, VIP, YM, YM_abs,
 
 def DetFinSSC(mdf, YM, iS, iLE=None, 
               StressN='Stress', StrainN='Strain', 
-              addzero=True, izero=None):
+              addzero=True, izero=None, option='YM'):
     """
     Determine final stress-strain curve (moved to strain offset from elastic modulus).
 
@@ -3030,7 +3030,8 @@ def DetFinSSC(mdf, YM, iS, iLE=None,
         Original stress-strain curve data.
     YM : dict or pd.Series or float
         Elastic modulus (float) or 
-        elastic modulus (key=E) and intersection on strain=0 (key=Eabs).
+        elastic modulus (key=E) and intersection on strain=0 (key=Eabs) or
+        direct input of strain offset (if option is in ['strain_offset','SO','so']).
     iS : index of mdf
         Start of linear behavior (all values befor will dropped).
     iLE : TYPE, optional
@@ -3045,6 +3046,11 @@ def DetFinSSC(mdf, YM, iS, iLE=None,
         The default is True.
     izero: index of mdf, optional
         Index for zero value line (p.e. to match old start index)
+    option: string, optional
+        Option for strain offset. Possible:
+            - 'YM': Strain offset determined by elastic modulus.
+            - ['strain_offset','SO','so']: Direct input of strain offset.
+        The default is 'YM'.
 
     Returns
     -------
@@ -3055,14 +3061,19 @@ def DetFinSSC(mdf, YM, iS, iLE=None,
 
     """
     out=mdf.loc[iS:,[StressN,StrainN]].copy(deep=True)
-    if isinstance(YM,dict) or pd_isSer(YM):
-        so=-YM['E_abs']/YM['E']
-    elif isinstance(YM,float):
-        if iLE is None:
-            lindet=out.iloc[0][[StressN,StrainN]]
-        else:
-            lindet=out.loc[[iS,iLE],[StressN,StrainN]].mean(axis=0)
-        so=lindet[StrainN]-lindet[StressN]/YM
+    if option in ['YM']:
+        if isinstance(YM,dict) or pd_isSer(YM):
+            so=-YM['E_abs']/YM['E']
+        elif isinstance(YM,float):
+            if iLE is None:
+                lindet=out.iloc[0][[StressN,StrainN]]
+            else:
+                lindet=out.loc[[iS,iLE],[StressN,StrainN]].mean(axis=0)
+            so=lindet[StrainN]-lindet[StressN]/YM
+    elif option in ['strain_offset','SO','so']:
+        so = YM
+    else:
+        raise NotImplementedError("Option %s not implemented!"%option)
     out[StrainN]=out[StrainN]-so
     if addzero:
         if izero is None:
@@ -3555,10 +3566,63 @@ def pd_agg_custom(pdo, agg_funcs=['mean',meanwoso,'median',
         pda = pda.rename(af_ren)
     return pda
 
+def deal_dupl_index(df,deal_dupl_ind='raise'):
+    """
+    Deal with dupliceted index values according option.
+
+    Parameters
+    ----------
+    df : pandas.Series or pandas.DataFrame
+        Data input.
+    deal_dupl_ind : string, optional
+        Option to deal with duplicated index entries. 
+        Possible are:
+            - 'raise': raises IndexError when finding duplicates.
+            - 'keep': keep unchanged and give no error.
+            - 'keep-first': drop all duplicated entries except first one.
+            - 'keep-last': drop all duplicated entries except first one.
+            - Aggratable function or string accapted by pd.agg: Aggregate duplicated index entries by function.
+        The default is 'raise'.
+
+    Raises
+    ------
+    IndexError
+        Index has duplicates and option set to 'raise'.
+    ValueError
+        option (deal_dupl_ind) is not aggregatable.
+
+    Returns
+    -------
+    dft : pandas.Series or pandas.DataFrame
+        Data output.
+
+    """
+    dft = df.copy(deep=True)
+    tmp=dft.index.duplicated(keep=False)
+    if tmp.any() and deal_dupl_ind!='keep':
+        if deal_dupl_ind=='raise':
+                raise IndexError('Duplicated index found: \n%s'%dft.loc[tmp])
+        elif deal_dupl_ind=='drop':
+            tmp=dft.index.duplicated(keep=False)
+            dft=dft.loc[~tmp]
+        elif deal_dupl_ind=='keep-first':
+            tmp=dft.index.duplicated(keep='first')
+            dft=dft.loc[~tmp]
+        elif deal_dupl_ind=='keep-last':
+            tmp=dft.index.duplicated(keep='last')
+            dft=dft.loc[~tmp]
+        else:
+            try:
+                tmp=list(range(dft.index.nlevels))
+                dft=dft.groupby(level=tmp).agg(deal_dupl_ind)
+            except:
+                raise ValueError('Operation %s not aggregatable!'%deal_dupl_ind)
+    return dft
+
 def Dist_test(pds, alpha=0.05, mcomp='Shapiro', mkws={},
               skipna=True, add_out = False):
     """
-    Distribution test of data to Hypothesis sample looks Gaussian.
+    Distribution test of data to Hypothesis sample looks Gaussian (reject, if p<=alpha).
 
     Parameters
     ----------
@@ -3587,19 +3651,22 @@ def Dist_test(pds, alpha=0.05, mcomp='Shapiro', mkws={},
         Output of test results, depending on add_out.
 
     """
-    if mcomp in ['Shapiro','S','shapiro']:
-        stats_test  = wraps(partial(stats.shapiro, **mkws))(stats.shapiro)
-    elif mcomp in ['Normaltest','normaltest','K2','Ksquare',
-                   'DAgostino','dagostino','D’Agostino’s K^2']:
-        stats_test  = wraps(partial(stats.normaltest, **mkws))(stats.normaltest)
-    else:
-        raise NotImplementedError('Method %s for distribution test not implemented!'%mcomp)
     if skipna:
         data = pds.dropna()
     else:
         data = pds
     ano_n = data.count()
-    t = stats_test(data)
+    # problem with wraps(partial(*))(*)
+    if mcomp in ['Shapiro','S','shapiro']:
+        # stats_test  = wraps(partial(stats.shapiro, **mkws))(stats.shapiro)
+        t = stats.shapiro(data, **mkws)
+    elif mcomp in ['Normaltest','normaltest','K2','Ksquare',
+                   'DAgostino','dagostino','D’Agostino’s K^2']:
+        # stats_test  = wraps(partial(stats.normaltest, **mkws))(stats.normaltest)
+        t = stats.normaltest(data, **mkws)
+    else:
+        raise NotImplementedError('Method %s for distribution test not implemented!'%mcomp)
+    # t = stats_test(data)
     F = t.statistic
     p = t.pvalue
     if p < alpha:
@@ -3664,7 +3731,7 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
                       group_str=None, ano_str=None,
                       mpop = "ANOVA", alpha=0.05, group_ren={},
                       do_mcomp_a=1, mcomp='TukeyHSD', mpadj='bonf', Ffwalpha=2,
-                      mkws={}, nan_policy='omit',
+                      mkws={}, nan_policy='omit', check_resnorm=False,
                       add_T_ind=3, add_out = False):
     """
     Performs an one way ANOVA and multi comparision test for given variable, in respect to given groups.
@@ -3781,44 +3848,75 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
     Atxt=("- F(%3d,%4d) = %7.3f, p = %.3e, for %s to %s (%s)"%(ano_df1,ano_df2,
                                                                F,p,
                                                                ano_str,group_str,
-                                                               rtxt+atxt)) # Gruppen sind signifikant verschieden bei p<0.05    
+                                                               rtxt+atxt)) # Gruppen sind signifikant verschieden bei p<0.05
+    if check_resnorm:
+        tmp=df[[groupby,ano_Var]].copy()
+        tmp.index=pd.MultiIndex.from_arrays([tmp.index,tmp.loc(axis=1)[groupby]])
+        tmp1=df.groupby(groupby)[ano_Var].mean()
+        dtest=Dist_test(tmp[ano_Var]-tmp1, alpha=alpha, mcomp='Shapiro', add_out='Series' )
+        Atxt+='  -> Residuals are normally distributed = {H0} (F({N:d}) = {Stat:.3e}, p = {p:.3e})'.format(**dtest)
     if do_mcomp_a >= 2:
         # t = pairwise_tukeyhsd(endog=df[ano_Var], groups=df[groupby], alpha=alpha)
         mcp = MultiComparison(data=df[ano_Var], groups=df[groupby])
         if mcomp=='TukeyHSD':
             t = mcp.tukeyhsd(alpha=alpha*Ffwalpha)
             Ttxt = str_indent(t.summary(),add_T_ind)
-        # elif mcomp=='ttest_ind':
-        #     t = mcp.allpairtest(stats.ttest_ind, alpha=alpha, method=mpadj)
-        # elif mcomp=='ttest_rel':
-        #     t = mcp.allpairtest(stats.ttest_rel, alpha=alpha, method=mpadj)
-        else:
-            if mcomp=='ttest_ind':
-                stats_test  = wraps(partial(stats.ttest_ind, **mkws))(stats.ttest_ind)
-            elif mcomp=='ttest_rel':
-                stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
-            elif mcomp=='mannwhitneyu':
-                stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
-            elif mcomp=='wilcoxon':
-                stats_test  = wraps(partial(stats.wilcoxon, **mkws))(stats.wilcoxon)
-            else:
-                raise NotImplementedError('Method %s for multi comparison not implemented!'%mcomp)
-            t = mcp.allpairtest(stats_test, alpha=alpha*Ffwalpha, method=mpadj)[0]
+        elif mcomp=='Dunn':
+            import scikit_posthocs as sck_ph
+            def dunn_o2(a,b):
+                data=[a,b]
+                pvalue = sck_ph.posthoc_dunn(data)
+                pvalue = pvalue[1][2]
+                statistic = np.nan
+                #return dict(statistic=statistic,pvalue=pvalue)
+                return [statistic,pvalue]
+            t = mcp.allpairtest(dunn_o2, alpha=alpha*Ffwalpha, method=mpadj)[0]
             Ttxt = str_indent(t,add_T_ind)
+        elif mcomp=='ttest_ind':
+            t = mcp.allpairtest(stats.ttest_ind, alpha=alpha*Ffwalpha, method=mpadj)[0]
+            Ttxt = str_indent(t,add_T_ind)
+        elif mcomp=='ttest_rel':
+            t = mcp.allpairtest(stats.ttest_rel, alpha=alpha*Ffwalpha, method=mpadj)[0]
+            Ttxt = str_indent(t,add_T_ind)
+        elif mcomp=='mannwhitneyu':
+            t = mcp.allpairtest(stats.mannwhitneyu, alpha=alpha*Ffwalpha, method=mpadj)[0]
+            Ttxt = str_indent(t,add_T_ind)
+        elif mcomp=='wilcoxon':
+            t = mcp.allpairtest(stats.ttest_rel, alpha=alpha*Ffwalpha, method=mpadj)[0]
+            Ttxt = str_indent(t,add_T_ind)
+        else:
+            # problem with wraps(partial(*))(*)
+            # if mcomp=='ttest_ind':
+            #     stats_test  = wraps(partial(stats.ttest_ind, **mkws))(stats.ttest_ind)
+            # elif mcomp=='ttest_rel':
+            #     stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
+            # elif mcomp=='mannwhitneyu':
+            # #     stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
+            # # elif mcomp=='wilcoxon':
+            # #     stats_test  = wraps(partial(stats.wilcoxon, **mkws))(stats.wilcoxon)
+            # else:
+                raise NotImplementedError('Method %s for multi comparison not implemented!'%mcomp)
+            # t = mcp.allpairtest(stats_test, alpha=alpha*Ffwalpha, method=mpadj)[0]
+            # Ttxt = str_indent(t,add_T_ind)
         txt = Atxt + Ttxt
     else:
         t='No multi comparision done, see do_mcomp_a.'
         txt = Atxt
+    if check_resnorm:
+        outser=pd.Series({"DF1": ano_df1, "DF2":ano_df2,
+                          "Normp": dtest['p'], "NormH0": dtest['H0'],
+                          "Stat":F, "p": p, "H0": H0,
+                          "txt": txt, "MCP": t})
+    else:
+        outser=pd.Series({"DF1": ano_df1, "DF2":ano_df2,
+                          "Stat":F, "p": p, "H0": H0,
+                          "txt": txt, "MCP": t})
     if add_out==True:
         return txt, [F,p], t
     elif add_out=='Series':
-        return pd.Series({"DF1": ano_df1, "DF2":ano_df2,
-                          "Stat":F, "p": p, "H0": H0,
-                          "txt": txt, "MCP": t})
+        return outser
     elif add_out=='Test':
-        return pd.Series({"DF1": ano_df1, "DF2":ano_df2,
-                          "Stat":F, "p": p, "H0": H0,
-                          "txt": txt, "MCP": t}), ano_data
+        return outser, ano_data
     else:
         return txt
     
@@ -3951,7 +4049,7 @@ def group_ANOVA_MComp_multi(df, group_main='Series', group_sub=['A'],
                             ano_Var=['WC_vol'],
                             mpop = "ANOVA", alpha=0.05, group_ren={},
                             do_mcomp_a=0, mcomp='TukeyHSD', mpadj='bonf', Ffwalpha=1,
-                            mkws={},
+                            mkws={}, check_resnorm=False,
                             Transpose=True):
     """
     Performs an one way ANOVA and multi comparision test for given variable,
@@ -4016,6 +4114,7 @@ def group_ANOVA_MComp_multi(df, group_main='Series', group_sub=['A'],
                                        do_mcomp_a=do_mcomp_a, 
                                        mcomp=mcomp, 
                                        mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
+                                       check_resnorm=check_resnorm,
                                        add_out = 'Series')
             # name='_'.join([group_main,av,sg])
             name=av
@@ -4030,6 +4129,7 @@ def group_ANOVA_MComp_multi(df, group_main='Series', group_sub=['A'],
                                            do_mcomp_a=do_mcomp_a, 
                                            mcomp=mcomp, 
                                            mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
+                                           check_resnorm=check_resnorm,
                                            add_out = 'Series')
                 # name='_'.join([group_main,av,sg])
                 name='_'.join([av,sg])
@@ -4043,6 +4143,7 @@ def Hypo_test(df, groupby, ano_Var,
               alpha=0.05, group_ren={},
               mcomp='TukeyHSD', mkws={},
               rel=False, rel_keys=[],
+              deal_dupl_ind='raise',
               add_T_ind=3, add_out = False):
     if ano_str is None:
         ano_str = ano_Var
@@ -4055,6 +4156,7 @@ def Hypo_test(df, groupby, ano_Var,
         dft.index = pd.MultiIndex.from_arrays([dft.index,
                                                dft.loc(axis=1)[groupby]])
     dft = dft[ano_Var]
+    dft =deal_dupl_index(dft,deal_dupl_ind=deal_dupl_ind) # new 231026
     dft = dft.unstack(level=-1)
     if rel: dft=dft.dropna(axis=0)
     
@@ -4065,19 +4167,25 @@ def Hypo_test(df, groupby, ano_Var,
     b = dft[dfgr[1]].dropna()
     ano_df2=a.count()+b.count()-2 #Freiheitsgrad = Testpersonen pro Gruppe - 1
     
+    # problem with wraps(partial(*))(*)
     if mcomp=='TukeyHSD':
-        stats_test  = wraps(partial(stats.tukey_hsd, **mkws))(stats.tukey_hsd)
+        # stats_test  = wraps(partial(stats.tukey_hsd, **mkws))(stats.tukey_hsd)
+        t = stats.tukey_hsd(a,b, **mkws)
     elif mcomp=='ttest_ind':
-        stats_test  = wraps(partial(stats.ttest_ind, **mkws))(stats.ttest_ind)
+        # stats_test  = wraps(partial(stats.ttest_ind, **mkws))(stats.ttest_ind)
+        t = stats.ttest_ind(a,b, **mkws)
     elif mcomp=='ttest_rel':
-        stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
+        # stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
+        t = stats.ttest_rel(a,b, **mkws)
     elif mcomp=='mannwhitneyu':
-        stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
+        # stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
+        t = stats.mannwhitneyu(a,b, **mkws)
     elif mcomp=='wilcoxon':
-        stats_test  = wraps(partial(stats.wilcoxon, **mkws))(stats.wilcoxon)
+        # stats_test  = wraps(partial(stats.wilcoxon, **mkws))(stats.wilcoxon)
+        t = stats.wilcoxon(a,b, **mkws)
     else:
-        raise NotImplementedError('Method %s for multi comparison not implemented!'%mcomp)
-    t = stats_test(a,b)
+        raise NotImplementedError('Method %s for hyphotesis test not implemented!'%mcomp)
+    # t = stats_test(a,b) # problem with wraps(partial(*))(*)
     F = t.statistic
     p = t.pvalue
     if p < alpha:
@@ -4103,21 +4211,34 @@ def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
                     ano_Var=['WC_vol'],
                     mcomp='mannwhitneyu', alpha=0.05, mkws={},
                     rel=False, rel_keys=[],
+                    deal_dupl_ind='raise',
                     Transpose=True):
     df_out=pd.DataFrame([],dtype='O')
-    # for sg in group_sub:
-    #     for av in ano_Var:
-    for av in ano_Var:
-        for sg in group_sub:
-            tmp=Hypo_test(df=df, groupby=(group_main,sg), 
-                          ano_Var=(av,sg), alpha=alpha,
+    if group_sub is None:
+        for av in ano_Var:
+            tmp=Hypo_test(df=df, groupby=group_main, 
+                          ano_Var=av, alpha=alpha,
                           mcomp=mcomp, mkws=mkws,
-                          # rel=rel, rel_keys=rel_keys, add_out = 'Series')
-                          rel=rel, rel_keys=[(x,sg) for x in rel_keys], 
+                          rel=rel, rel_keys= rel_keys,
+                          deal_dupl_ind=deal_dupl_ind,
                           add_out = 'Series')
-            # name='_'.join([group_main,av,sg])
-            name='_'.join([av,sg])
+            name=av
             df_out[name]=tmp
+    else:
+        # for sg in group_sub:
+        #     for av in ano_Var:
+        for av in ano_Var:
+            for sg in group_sub:
+                tmp=Hypo_test(df=df, groupby=(group_main,sg), 
+                              ano_Var=(av,sg), alpha=alpha,
+                              mcomp=mcomp, mkws=mkws,
+                              # rel=rel, rel_keys=rel_keys, add_out = 'Series')
+                              rel=rel, rel_keys=[(x,sg) for x in rel_keys],
+                              deal_dupl_ind=deal_dupl_ind,
+                              add_out = 'Series')
+                # name='_'.join([group_main,av,sg])
+                name='_'.join([av,sg])
+                df_out[name]=tmp
     if Transpose:
         df_out=df_out.T
     return df_out

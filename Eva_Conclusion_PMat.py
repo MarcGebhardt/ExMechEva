@@ -136,22 +136,41 @@ def boxplt_dl(pdf, var, ytxt,
               xl, axl, tl, xtxtl,
               xd, axd, td, xtxtd, 
               xltirep={}, xdtirep={},
+              hue=None, htirep={}, hn=None,
               bplkws={'showmeans':True, 'meanprops':{"marker":"_", "markerfacecolor":"white",
                                                      "markeredgecolor":"black", "markersize":"12",
                                                      "alpha":0.75}},
               splkws={'dodge':True, 'edgecolor':"black", 'linewidth':.5, 'alpha':.5, 'size':2}):
-    df=pd.melt(pdf, id_vars=[xl], value_vars=[var])
-    df[xl].replace(xltirep,inplace=True)
-    axt = sns.boxplot(x=xl, y="value", data=df, ax=axl, **bplkws)
-    axt = sns.swarmplot(x=xl, y="value",data=df, ax=axl, **splkws)
+    if hue is None:
+        dfl=pd.melt(pdf, id_vars=[xl], value_vars=[var])
+        dfd=pd.melt(pdf, id_vars=[xd], value_vars=[var])
+    else:
+        dfl=pd.melt(pdf, id_vars=[xl,hue], value_vars=[var])
+        dfd=pd.melt(pdf, id_vars=[xd,hue], value_vars=[var])
+        dfl[hue].replace(htirep,inplace=True)
+        dfd[hue].replace(htirep,inplace=True)
+    dfl[xl].replace(xltirep,inplace=True)
+    dfd[xd].replace(xdtirep,inplace=True)
+    if hue is None:
+        axt = sns.boxplot(x=xl, y="value", data=dfl, ax=axl, **bplkws)
+        axt = sns.swarmplot(x=xl, y="value",data=dfl, ax=axl, **splkws)
+    else:
+        axt = sns.boxplot(x=xl, y="value", hue=hue, data=dfl, ax=axl, **bplkws)
+        axt = sns.swarmplot(x=xl, y="value", hue=hue, data=dfl, ax=axl, **splkws)  
+        h, l = axl.get_legend_handles_labels()
+        axl.legend(h[0:dfl[hue].unique().size], l[0:dfl[hue].unique().size], title=hn)      
     axl.set_title(tl)
     axl.set_xlabel(xtxtl)
     axl.set_ylabel('')
     axl.tick_params(axis='y',which='both',left=False,labelleft=False)
-    df=pd.melt(pdf, id_vars=[xd], value_vars=[var])
-    df[xd].replace(xdtirep,inplace=True)
-    axt = sns.boxplot(x=xd, y="value", data=df, ax=axd,**bplkws)
-    axt = sns.swarmplot(x=xd, y="value",data=df, ax=axd, **splkws)
+    if hue is None:
+        axt = sns.boxplot(x=xd, y="value", data=dfd, ax=axd,**bplkws)
+        axt = sns.swarmplot(x=xd, y="value",data=dfd, ax=axd, **splkws)
+    else:
+        axt = sns.boxplot(x=xd, y="value", hue=hue, data=dfd, ax=axd,**bplkws)
+        axt = sns.swarmplot(x=xd, y="value", hue=hue, data=dfd, ax=axd, **splkws)
+        h, l = axd.get_legend_handles_labels()
+        axd.legend(h[0:dfd[hue].unique().size], l[0:dfd[hue].unique().size], title=hn)
     axd.set_title(td)
     axd.set_xlabel(xtxtd)
     axd.set_ylabel(ytxt)
@@ -162,7 +181,7 @@ def boxplt_dl(pdf, var, ytxt,
 Version="231023"
 ptype="TBT"
 # ptype="ACT"
-ptype="ATT"
+# ptype="ATT"
 
 no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
                'B01.1','B01.2','B01.3', 'B02.3',
@@ -255,6 +274,8 @@ elif ptype=="ATT":
                        YM_con_str:'E_con'}
     VIPar_plt_renamer.update({D_con_str:'$D_{con}$',YM_con_str:'$E_{con}$'})
 if ptype=="TBT" or ptype=="ACT":  
+    relist_woLR=[' L',' M',' R',
+                 ' proximal',' distal',' ventral'] # Zu entfernende Worte
     relist=[' 4',' 5',' 1',' L',' R',' anterior superior',
             ' proximal',' distal',' ventral',
             ' anterior',' posterior',
@@ -269,6 +290,7 @@ if ptype=="TBT" or ptype=="ACT":
              'Corpus vertebrae lumbales':  'CVLu',
              'Corpus vertebrae sacrales':  'CVSa'}
 elif ptype == "ATT":
+    relist_woLR=[' L',' M',' R'] # Zu entfernende Worte
     relist=[' L',' M',' R',
             ' caudal',' medial',' lateral',' cranial',
             ' längs',' quer'] # Zu entfernende Worte
@@ -321,16 +343,35 @@ dfa.Failure_code  = Evac.list_cell_compiler(dfa.Failure_code)
 dfa['statistics'] = Evac.list_interpreter(dfa.Failure_code, no_stats_fc)
 
 h=dfa.Origin
+for i in relist_woLR:
+    h=h.str.replace(i,'')
+dfa.insert(3,'Origin_woLRpd',h)
+h=dfa.Origin
 for i in relist:
     h=h.str.replace(i,'')
 for i in h.index:
     if h[i].endswith(' '): h[i]=h[i][:-1]
 h2=h.map(Locdict)
 if (h2.isna()).any(): print('Locdict have missing/wrong values! \n   (Lnr: %s)'%['{:s}'.format(i) for i in h2.loc[h2.isna()].index])
-dfa.insert(3,'Origin_short',h)
-dfa.insert(4,'Origin_sshort',h2)
+dfa.insert(4,'Origin_short',h)
+dfa.insert(5,'Origin_sshort',h2)
 del h, h2
 
+def containsetter(a, sd={' L':'L',' R':'R'}):
+    out=''
+    for i in sd.keys():
+        if i in a:
+            if out=='': 
+                out = sd[i]
+            else:
+                out += sd[i]
+    return out
+tmp=dfa.Origin.apply(containsetter, sd={' L':'L',' R':'R'})
+dfa.insert(6,'Side_LR',tmp)
+if ptype == 'TBT':
+    tmp=dfa.Origin.apply(containsetter, sd={' proximal':'p',' distal':'d'})
+    dfa.insert(7,'Side_pd',tmp)
+    
 # ## Add Strain Energy Density
 # tmp=dfa.loc(axis=1)[dfa.columns.str.startswith('W')].copy(deep=True)
 # if ptype=="TBT":
@@ -411,8 +452,6 @@ if ptype == "ATT":
     tmp2 = cs_epl_m
     tmp2.columns = 'epl_con_'+tmp2.columns
     cs_cyc = pd.concat([cs_cfl,tmp2,tmp],axis=1)
-
-
     
 #%%% Assessment Codes
 Evac.MG_strlog("\n "+"="*100,**MG_logopt)
@@ -486,26 +525,36 @@ Evac.MG_strlog("\n\n "+"="*100, **MG_logopt)
 Evac.MG_strlog("\n Statistical tests ", **MG_logopt)
 #%%% Set
 alpha=0.05
+# stat_ttype_parametric=True # Testtype
 stat_ttype_parametric=False # Testtype
 
 if stat_ttype_parametric:
+    mcomp_ind="ttest_ind"
+    mcomp_rel="ttest_rel"
+    mcomp_ph="TukeyHSD"
     mpop="ANOVA"
     # Tukey HSD test:
-    MComp_kws={'do_mcomp_a':2, 'mcomp':'TukeyHSD', 'mpadj':'', 
+    MComp_kws={'do_mcomp_a':2, 'mcomp':mcomp_ind, 'mpadj':'', 
                 'Ffwalpha':1, 'mkws':{}, 'add_T_ind':3, 'add_out':True}
+    MCompdf_kws={'do_mcomp_a':1, 'mcomp':mcomp_ph, 'mpadj':'holm', 
+                 'Ffwalpha':1, 'mkws':{}, 'check_resnorm':True}
     mcorr="pearson"
 else:
+    mcomp_ind="mannwhitneyu"
+    mcomp_rel="wilcoxon"
+    # mcomp_ph="mannwhitneyu"
+    mcomp_ph="Dunn"
     mpop="Kruskal-Wallis H-test"
     # Mann-Whitney U test: (two independent)
-    MComp_kws={'do_mcomp_a':2, 'mcomp':'mannwhitneyu', 'mpadj':'holm', 
+    MComp_kws={'do_mcomp_a':2, 'mcomp':mcomp_ph, 'mpadj':'holm', 
                 'Ffwalpha':1, 'mkws':{}, 'add_T_ind':3, 'add_out':True}
+    MCompdf_kws={'do_mcomp_a':1, 'mcomp':mcomp_ph, 'mpadj':'holm', 
+                 'Ffwalpha':1, 'mkws':{}, 'check_resnorm':True}
     mcorr="spearman"
-    MCompdf_kws={'do_mcomp_a':1, 'mcomp':'mannwhitneyu', 'mpadj':'holm', 
-                 'Ffwalpha':1, 'mkws':{}}
 
 #%%% Distribution
 Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
-Evac.MG_strlog("\n Distribution tests ", **MG_logopt)
+Evac.MG_strlog("\n Distribution tests: (HO=sample looks Gaussian)", **MG_logopt)
 tmp = Evac.Dist_test_multi(cs_short.loc(axis=1)[css_ncols], alpha=alpha)
 Evac.MG_strlog(Evac.str_indent(tmp.to_string()), **MG_logopt)
 
@@ -541,6 +590,100 @@ tmp2=tmp.loc[tmp.H0 == False]['MCP'].apply(Evac.MComp_interpreter)
 tmp2=tmp2.droplevel(0).apply(pd.Series)[0].apply(pd.Series).T
 Evac.MG_strlog(Evac.str_indent(tmp2.to_string(),5),**MG_logopt)
 
+#%%% Hyphotesis tests
+#%%%% Side Left Right
+Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
+Evac.MG_strlog("\n Hypothesis test - body side (left/right): (significantly different for p < %.3f)"%(alpha),**MG_logopt)
+Evac.MG_strlog("\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(mcomp_ind, mcomp_rel),**MG_logopt)
+if ptype == 'TBT':
+    stat_dd_ind='raise'
+    stat_dd_rel=['Donor','Origin_woLRpd','Side_pd']
+    # stat_dd_ind='mean'
+    # stat_dd_rel=['Donor','Origin_short','Side_pd']
+elif ptype == 'ACT':
+    stat_dd_ind='raise'
+    stat_dd_rel=['Donor','Origin_woLRpd','Direction_test']
+    # stat_dd_ind='mean'
+    # stat_dd_rel=['Donor','Origin_short','Direction_test']
+elif ptype == 'ATT':
+    stat_dd_ind='mean'
+    stat_dd_rel=['Donor','Origin_short']
+else:
+    stat_dd_ind='raise'
+# tmp=pd.concat([cs_short,cs[['Side_LR']+stat_dd_rel]],axis=1)
+# tmp=tmp.query("Side_LR =='L' or Side_LR =='R'")
+tmp=cs.query("Side_LR =='L' or Side_LR =='R'")
+tmp1=Evac.Hypo_test_multi(tmp, group_main='Side_LR', group_sub=None, 
+                     ano_Var=VIParams_geo+VIParams_mat, 
+                     rel=False, rel_keys=[], 
+                     mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+tmp2=Evac.Hypo_test_multi(tmp, group_main='Side_LR', group_sub=None, 
+                     ano_Var=VIParams_geo+VIParams_mat, 
+                     rel=True, rel_keys=stat_dd_rel, 
+                     mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
+Evac.MG_strlog(Evac.str_indent(tmp3.to_string()),**MG_logopt)
+
+#%%%% Side proximal distal (TBT only)
+if ptype == 'TBT':
+    Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
+    Evac.MG_strlog("\n Hypothesis test - body side (proximal/distal): (significantly different for p < %.3f)"%(alpha),**MG_logopt)
+    Evac.MG_strlog("\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(mcomp_ind, mcomp_rel),**MG_logopt)
+    # tmp=pd.concat([cs_short,cs[['Side_pd','Donor','Origin_short']]],axis=1)
+    tmp=cs.query("Side_pd =='p' or Side_pd =='d'")
+    tmp1=Evac.Hypo_test_multi(tmp, group_main='Side_pd', group_sub=None, 
+                         ano_Var=VIParams_geo+VIParams_mat, 
+                         rel=False, rel_keys=[], 
+                         mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp2=Evac.Hypo_test_multi(tmp, group_main='Side_pd', group_sub=None, 
+                         ano_Var=VIParams_geo+VIParams_mat, 
+                         rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                         mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
+    Evac.MG_strlog(Evac.str_indent(tmp3.to_string()),**MG_logopt)
+    
+#%%%% Direction of test (ACT only)
+if ptype == 'ACT':
+    Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
+    Evac.MG_strlog("\n Hypothesis test - direction (x/y/z): (significantly different for p < %.3f)"%(alpha),**MG_logopt)
+    Evac.MG_strlog("\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(mcomp_ind, mcomp_rel),**MG_logopt)
+    # tmp=pd.concat([cs_short,cs[['Direction_test','Donor','Origin_short']]],axis=1)
+    Evac.MG_strlog("\n  - x to y:",**MG_logopt)
+    tmp4=cs.query("Direction_test =='x' or Direction_test =='y'")
+    tmp1=Evac.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
+                         ano_Var=VIParams_geo+VIParams_mat, 
+                         rel=False, rel_keys=[], 
+                         mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp2=Evac.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
+                         ano_Var=VIParams_geo+VIParams_mat, 
+                         rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                         mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
+    Evac.MG_strlog(Evac.str_indent(tmp3.to_string()),**MG_logopt)
+    Evac.MG_strlog("\n  - x to z:",**MG_logopt)
+    tmp4=cs.query("Direction_test =='x' or Direction_test =='z'")
+    tmp1=Evac.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
+                         ano_Var=VIParams_geo+VIParams_mat, 
+                         rel=False, rel_keys=[], 
+                         mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp2=Evac.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
+                         ano_Var=VIParams_geo+VIParams_mat, 
+                         rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                         mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
+    Evac.MG_strlog(Evac.str_indent(tmp3.to_string()),**MG_logopt)
+    Evac.MG_strlog("\n  - y to z:",**MG_logopt)
+    tmp4=cs.query("Direction_test =='y' or Direction_test =='z'")
+    tmp1=Evac.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
+                         ano_Var=VIParams_geo+VIParams_mat, 
+                         rel=False, rel_keys=[], 
+                         mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp2=Evac.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
+                         ano_Var=VIParams_geo+VIParams_mat, 
+                         rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                         mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
+    Evac.MG_strlog(Evac.str_indent(tmp3.to_string()),**MG_logopt)
 
 #%%% Correlations
 cs_short_corr = cs_short.corr(method=mcorr)
@@ -953,7 +1096,7 @@ if ptype == 'TBT':
     ind_E3='B'
     Vsr={'F3':'L'}
     Vs1=['S','L','YK','Y','U','B','E','SU','SE']
-    Vs2=['S','L','YK','Y1','Y2','Y','U','B','E']
+    Vs2=['S','L','YK','Y0','Y1','Y2','Y','U','B','E']
     Vs3=['L','Y','U','B']
 elif ptype == 'ACT':
     subj='0000-0001-8378-3108_LEIULANA_60-17_LuPeCo_tm21y'
@@ -966,7 +1109,7 @@ elif ptype == 'ACT':
     ind_E3='B'
     Vsr={'F3':'L'}
     Vs1=['S','L','YK','Y','U','B','E','SU','SE']
-    Vs2=['S','L','YK','Y1','Y2','Y','U','B','E']
+    Vs2=['S','L','YK','Y0','Y1','Y2','Y','U','B','E']
     Vs3=['L','Y','U','B']
 elif ptype == 'ATT':
     subj='0000-0001-8378-3108_LEIULANA_60-17_LuPeCo_sr03a'
@@ -978,8 +1121,11 @@ elif ptype == 'ATT':
     ind_E2='E'
     ind_E3='B'
     Vsr={'F3':'L'}
-    Vs1=['S','L','YK','Y','U','B','E','SU','SE']
-    Vs2=['S','L','YK','Y1','Y2','Y','U','B','E']
+    # Vs1=['S','L','YK','Y','U','B','E','SU','SE']
+    Vs1=['S','C1+', 'C1-', 'C2+', 'C2-', 'C3+', 'C3-', 'C4+', 'C4-', 'C5+',
+       'C5-', 'C6+', 'C6-', 'C7+', 'C7-', 'C8+', 'C8-', 'C9+', 'C9-', 'C10+',
+       'C10-','L','YK','Y','U','B','E','SU','SE']
+    Vs2=['S','L','YK','Y0','Y1','Y2','Y','U','B','E']
     Vs3=['L','Y','U','B']
 tmp=dft[subj]
 tmp2=VIP_rebuild(tmp[Viupu])
@@ -991,8 +1137,12 @@ tmp4[epsu]=tmp4[epsu]-tmp3.loc[leps]
 #                       iS=tmp2['L'], iLE=None,
 #                       StressN='Stress', StrainN=epsu, 
 #                       addzero=True, izero=0)
-tmpf = pd.concat([pd.DataFrame([[0,0]], index=[0], columns=[epsu,'Stress']),
-                 tmp4.loc[tmp2['L']:]])
+# tmpf = pd.concat([pd.DataFrame([[0,0]], index=[0], columns=[epsu,'Stress']),
+#                  tmp4.loc[tmp2['L']:]])
+tmpf,_=Evac.DetFinSSC(mdf=tmp, YM=tmp3.loc[leps], 
+                       iS=tmp2['L'], iLE=None,
+                       StressN='Stress', StrainN=epsu, 
+                       addzero=True, izero=0, option='SO')
 colp=sns.color_palette()
 gs_kw = dict(width_ratios=[1.0], height_ratios=[1, 1, 1],
                  wspace=0.1, hspace=0.1)
@@ -1014,8 +1164,8 @@ ax['fotot'].plot(a, b, 'x', color=colp[3], label='Points of interest')
 j=np.int64(-1)
 for x in tmp21.index:
     j+=1
-    if j%2: c=(6,-6)
-    else:   c=(-6,6)
+    if j%2: c=(8,-8)
+    else:   c=(-8,8)
     ax['fotot'].annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), 
                          xycoords='data', xytext=c, 
                          ha="center", va="center", 
@@ -1046,8 +1196,8 @@ j=np.int64(-1)
 ax['sigeps'].plot(a, b, 'x', color=colp[3], label='Points of interest')
 for x in tmp22.index:
     j+=1
-    if j%2: c=(6,-6)
-    else:   c=(-6,6)
+    if j%2: c=(8,-8)
+    else:   c=(-8,8)
     ax['sigeps'].annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), xycoords='data',
                   xytext=c, ha="center", va="center", textcoords='offset points')
 ax['sigeps'].legend()
@@ -1064,23 +1214,26 @@ ax['sigepsf'].plot(tmpf.iloc[:2][epsu],
                    '-', color=colp[2],label='Linearization')
 ax['sigepsf'].fill_between(tmpf.loc[:tmp23['Y']][epsu],
                            tmpf.loc[:tmp23['Y']]['Stress'],
-                            **dict(color=colp[1], hatch='||', alpha= 0.2), 
+                            **dict(color=colp[1], hatch='|||',
+                            edgecolor='black', alpha= 0.2, lw=0), 
                             label='$U_{y}$')
 ax['sigepsf'].fill_between(tmpf.loc[:tmp23['U']][epsu],
                            tmpf.loc[:tmp23['U']]['Stress'],
-                            **dict(color=colp[1], hatch='//', alpha= 0.2), 
+                            **dict(color=colp[1], hatch='///',
+                            edgecolor='black', alpha= 0.2, lw=0),  
                             label='$U_{u}$')
 ax['sigepsf'].fill_between(tmpf.loc[:tmp23['B']][epsu],
                            tmpf.loc[:tmp23['B']]['Stress'],
-                            **dict(color=colp[1], hatch='..', alpha= 0.2), 
+                            **dict(color=colp[1], hatch='...',
+                            edgecolor='black', alpha= 0.2, lw=0),  
                             label='$U_{b}$')
 a, b=tmpf[epsu][tmp23[:ind_E3]],tmp.Stress[tmp23[:ind_E3]]
 j=np.int64(-1)
 ax['sigepsf'].plot(a, b, 'x', color=colp[3], label='Points of interest')
 for x in tmp23[:ind_E3].index:
     j+=1
-    if j%2: c=(6,-6)
-    else:   c=(-6,6)
+    if j%2: c=(-8,8)
+    else:   c=(-8,8)
     ax['sigepsf'].annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), 
                             xycoords='data', xytext=c, 
                             ha="center", va="center", 
@@ -1372,6 +1525,41 @@ ax['U'].sharex(ax['e'])
 ax['U'].set_xticklabels(tmp.loc['name',~(tmp.columns=='U')].to_list())
 fig.suptitle(None)
 Evac.plt_handle_suffix(fig,path=path+"SM-YD",**plt_Fig_dict)
+
+#%%%% Add Eva side dependence
+gs_kw = dict(width_ratios=gs_kw_width_ratios, 
+             height_ratios=[1, 1, 1, 1],
+             wspace=0.1, hspace=0.1)
+fig, ax = plt.subplot_mosaic([['ED','EL'],
+                              ['fD','fL'],
+                              ['eD','eL'],
+                              ['UD','UL']],
+                              gridspec_kw=gs_kw,
+                              # empty_sentinel='lower mid',
+                              figsize=figsize_sup,
+                              constrained_layout=True)
+boxplt_dl(pdf=cs, var=pltvartmp, ytxt='Elastic modulus in MPa',
+          xl='Origin_sshort', axl=ax['EL'], tl='By harvesting region', xtxtl='Region',
+          xd='Donor', axd=ax['ED'], td='By cadaver', xtxtd='Cadaver', 
+          xltirep={}, xdtirep=doda.Naming,
+          hue='Side_LR', htirep={'L':'Left','R':'Right'}, hn=None)
+boxplt_dl(pdf=cs, var='fy', ytxt='Yield strength in MPa',
+          xl='Origin_sshort', axl=ax['fL'], tl=None, xtxtl='Region',
+          xd='Donor', axd=ax['fD'], td=None, xtxtd='Cadaver', 
+          xltirep={}, xdtirep=doda.Naming,
+          hue='Side_LR', htirep={'L':'Left','R':'Right'}, hn=None)
+boxplt_dl(pdf=cs, var='ey'+pltvarco, ytxt='Strain at yield stress',
+          xl='Origin_sshort', axl=ax['eL'], tl=None, xtxtl='Region',
+          xd='Donor', axd=ax['eD'], td=None, xtxtd='Cadaver', 
+          xltirep={}, xdtirep=doda.Naming,
+          hue='Side_LR', htirep={'L':'Left','R':'Right'}, hn=None)
+boxplt_dl(pdf=cs, var='Uy'+pltvarco, ytxt='Yield strain energy in mJ/mm³',
+          xl='Origin_sshort', axl=ax['UL'], tl=None, xtxtl='Region',
+          xd='Donor', axd=ax['UD'], td=None, xtxtd='Cadaver', 
+          xltirep={}, xdtirep=doda.Naming,
+          hue='Side_LR', htirep={'L':'Left','R':'Right'}, hn=None)
+fig.suptitle(None)
+Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
 #%%%% Correlation
 cs_short_corr1, cs_short_corr2 = Evac.Corr_ext(cs_short[css_ncols], method=mcorr, 
