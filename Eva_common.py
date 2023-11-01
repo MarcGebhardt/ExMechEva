@@ -4144,6 +4144,7 @@ def Hypo_test(df, groupby, ano_Var,
               mcomp='TukeyHSD', mkws={},
               rel=False, rel_keys=[],
               deal_dupl_ind='raise',
+              group_ord=None,
               add_T_ind=3, add_out = False):
     if ano_str is None:
         ano_str = ano_Var
@@ -4160,7 +4161,10 @@ def Hypo_test(df, groupby, ano_Var,
     dft = dft.unstack(level=-1)
     if rel: dft=dft.dropna(axis=0)
     
-    dfgr=dft.columns.values
+    if group_ord is None:
+        dfgr=dft.columns.values
+    else:
+        dfgr=group_ord
     if not len(dfgr)==2:
         raise ValueError('More than two groups (%s)!'%dfgr)
     a = dft[dfgr[0]].dropna()
@@ -4212,6 +4216,7 @@ def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
                     mcomp='mannwhitneyu', alpha=0.05, mkws={},
                     rel=False, rel_keys=[],
                     deal_dupl_ind='raise',
+                    group_ord=None,
                     Transpose=True):
     df_out=pd.DataFrame([],dtype='O')
     if group_sub is None:

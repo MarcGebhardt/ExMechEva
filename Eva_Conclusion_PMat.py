@@ -136,7 +136,8 @@ def boxplt_dl(pdf, var, ytxt,
               xl, axl, tl, xtxtl,
               xd, axd, td, xtxtd, 
               xltirep={}, xdtirep={},
-              hue=None, htirep={}, hn=None,
+              hue=None, htirep={}, hn=None, 
+              orderl=None, orderd=None, hue_order=None,
               bplkws={'showmeans':True, 'meanprops':{"marker":"_", "markerfacecolor":"white",
                                                      "markeredgecolor":"black", "markersize":"12",
                                                      "alpha":0.75}},
@@ -152,11 +153,13 @@ def boxplt_dl(pdf, var, ytxt,
     dfl[xl].replace(xltirep,inplace=True)
     dfd[xd].replace(xdtirep,inplace=True)
     if hue is None:
-        axt = sns.boxplot(x=xl, y="value", data=dfl, ax=axl, **bplkws)
-        axt = sns.swarmplot(x=xl, y="value",data=dfl, ax=axl, **splkws)
+        axt = sns.boxplot(x=xl, y="value", data=dfl, order=orderl, ax=axl, **bplkws)
+        axt = sns.swarmplot(x=xl, y="value",data=dfl, order=orderl,  ax=axl, **splkws)
     else:
-        axt = sns.boxplot(x=xl, y="value", hue=hue, data=dfl, ax=axl, **bplkws)
-        axt = sns.swarmplot(x=xl, y="value", hue=hue, data=dfl, ax=axl, **splkws)  
+        axt = sns.boxplot(x=xl, y="value", hue=hue, data=dfl, 
+                          order=orderl, hue_order=hue_order, ax=axl, **bplkws)
+        axt = sns.swarmplot(x=xl, y="value", hue=hue, data=dfl, 
+                           order=orderl, hue_order=hue_order, ax=axl, **splkws)  
         h, l = axl.get_legend_handles_labels()
         axl.legend(h[0:dfl[hue].unique().size], l[0:dfl[hue].unique().size], title=hn)      
     axl.set_title(tl)
@@ -164,11 +167,13 @@ def boxplt_dl(pdf, var, ytxt,
     axl.set_ylabel('')
     axl.tick_params(axis='y',which='both',left=False,labelleft=False)
     if hue is None:
-        axt = sns.boxplot(x=xd, y="value", data=dfd, ax=axd,**bplkws)
-        axt = sns.swarmplot(x=xd, y="value",data=dfd, ax=axd, **splkws)
+        axt = sns.boxplot(x=xd, y="value", data=dfd, order=orderd, ax=axd,**bplkws)
+        axt = sns.swarmplot(x=xd, y="value",data=dfd, order=orderd, ax=axd, **splkws)
     else:
-        axt = sns.boxplot(x=xd, y="value", hue=hue, data=dfd, ax=axd,**bplkws)
-        axt = sns.swarmplot(x=xd, y="value", hue=hue, data=dfd, ax=axd, **splkws)
+        axt = sns.boxplot(x=xd, y="value", hue=hue, data=dfd, 
+                          order=orderd, hue_order=hue_order, ax=axd,**bplkws)
+        axt = sns.swarmplot(x=xd, y="value", hue=hue, data=dfd, 
+                            order=orderd, hue_order=hue_order, ax=axd, **splkws)
         h, l = axd.get_legend_handles_labels()
         axd.legend(h[0:dfd[hue].unique().size], l[0:dfd[hue].unique().size], title=hn)
     axd.set_title(td)
@@ -180,7 +185,7 @@ def boxplt_dl(pdf, var, ytxt,
 #%%% Main
 Version="231023"
 ptype="TBT"
-# ptype="ACT"
+ptype="ACT"
 # ptype="ATT"
 
 no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
@@ -220,7 +225,8 @@ if ptype=="TBT":
     name_in   = "B3-B7_TBT-Summary"
     name_out  = "B3-B7_TBT-Conclusion"
     name_Head = "Compact bone"
-    YM_con=['inc','R','A0Al','meanwoso']
+    # YM_con=['inc','R','A0Al','meanwoso']
+    YM_con=['lsq','R','A0Al','E']
     YM_opt=['inc','R','D2Mgwt','meanwoso']
     YM_con_str='E_{}_{}_{}_{}'.format(*YM_con)
     YM_opt_str='E_{}_{}_{}_{}'.format(*YM_opt)
@@ -273,20 +279,48 @@ elif ptype=="ATT":
     VIParams_rename = {D_con_str:'D_con',
                        YM_con_str:'E_con'}
     VIPar_plt_renamer.update({D_con_str:'$D_{con}$',YM_con_str:'$E_{con}$'})
-if ptype=="TBT" or ptype=="ACT":  
+if ptype=="TBT":  
     relist_woLR=[' L',' M',' R',
                  ' proximal',' distal',' ventral'] # Zu entfernende Worte
     relist=[' 4',' 5',' 1',' L',' R',' anterior superior',
             ' proximal',' distal',' ventral',
             ' anterior',' posterior',
             ' supraacetabular',' postacetabular'] # Zu entfernende Worte
-    Locdict={'Ala ossis ilii':             'AOIl',
-             'Ala ossis ilii superior':    'AOIlS',
+    # Locdict={'Ala ossis ilii':             'AOIl',
+    #          'Ala ossis ilii superior':    'AOIlS',
+    #          'Ala ossis ilii inferior':    'AOIlI',
+    #          'Corpus ossis ilii':          'COIl',
+    #          'Corpus ossis ischii':        'COIs',
+    #          'Ramus superior ossis pubis': 'ROPu',
+    #          'Ramus ossis ischii':         'ROIs',
+    #          'Corpus vertebrae lumbales':  'CVLu',
+    #          'Corpus vertebrae sacrales':  'CVSa'}
+    Locdict={'Ala ossis ilii superior':    'AOIlS',
              'Ala ossis ilii inferior':    'AOIlI',
              'Corpus ossis ilii':          'COIl',
              'Corpus ossis ischii':        'COIs',
              'Ramus superior ossis pubis': 'ROPu',
              'Ramus ossis ischii':         'ROIs',
+             'Corpus vertebrae lumbales':  'CVLu'}
+elif ptype=="ACT":  
+    relist_woLR=[' L',' M',' R',
+                 ' proximal',' distal',' ventral'] # Zu entfernende Worte
+    relist=[' 4',' 5',' 1',' L',' R',' anterior superior',
+            ' proximal',' distal',' ventral',
+            ' anterior',' posterior',
+            ' supraacetabular',' postacetabular'] # Zu entfernende Worte
+    # Locdict={'Ala ossis ilii':             'AOIl',
+    #          'Ala ossis ilii superior':    'AOIlS',
+    #          'Ala ossis ilii inferior':    'AOIlI',
+    #          'Corpus ossis ilii':          'COIl',
+    #          'Corpus ossis ischii':        'COIs',
+    #          'Ramus superior ossis pubis': 'ROPu',
+    #          'Ramus ossis ischii':         'ROIs',
+    #          'Corpus vertebrae lumbales':  'CVLu',
+    #          'Corpus vertebrae sacrales':  'CVSa'}
+    Locdict={'Ala ossis ilii inferior':    'AOIlI',
+             'Corpus ossis ilii':          'COIl',
+             'Corpus ossis ischii':        'COIs',
              'Corpus vertebrae lumbales':  'CVLu',
              'Corpus vertebrae sacrales':  'CVSa'}
 elif ptype == "ATT":
@@ -294,21 +328,37 @@ elif ptype == "ATT":
     relist=[' L',' M',' R',
             ' caudal',' medial',' lateral',' cranial',
             ' längs',' quer'] # Zu entfernende Worte
-    Locdict={'Ligamentum sacrotuberale':                    'SacTub',
-             'Ligamentum sacrospinale':                     'SacSpi',
-             'Ligamentum iliolumbale':                      'IliLum',
-             'Ligamentum inguinale':                        'Ingui',
-             'Ligamentum pectineum':                        'Pecti',
-             'Ligamenta sacroiliaca anteriora':             'SaIlia',
-             'Ligamenta sacroiliaca posteriora':            'SaIlip',
-             'Ligamentum sacroiliacum posterior longum':    'SaIlil',
-             'Membrana obturatoria':                        'MObt',
-             'Fascia glutea':                               'FGlu',
-             'Fascia lumbalis':                             'FLum',
-             'Fascia crescent':                             'FCres',
-             'Fascia endopelvina':                          'FEnPe',
-             'Fascia thoracolumbalis lamina superficalis':  'FTCLls',
-             'Fascia thoracolumbalis lamina profunda':      'FTCLlp'}
+    # Locdict={'Ligamentum sacrotuberale':                    'SacTub',
+    #           'Ligamentum sacrospinale':                     'SacSpi',
+    #           'Ligamentum iliolumbale':                      'IliLum',
+    #           'Ligamentum inguinale':                        'Ingui',
+    #           'Ligamentum pectineum':                        'Pecti',
+    #           'Ligamenta sacroiliaca anteriora':             'SaIlia',
+    #           'Ligamenta sacroiliaca posteriora':            'SaIlip',
+    #           'Ligamentum sacroiliacum posterior longum':    'SaIlil',
+    #           'Membrana obturatoria':                        'MObt',
+    #           'Fascia glutea':                               'FGlu',
+    #           'Fascia lumbalis':                             'FLum',
+    #           'Fascia crescent':                             'FCres',
+    #           'Fascia endopelvina':                          'FEnPe',
+    #           'Fascia thoracolumbalis lamina superficalis':  'FTCLls',
+    #           'Fascia thoracolumbalis lamina profunda':      'FTCLlp'}
+    Locdict_F={'Membrana obturatoria':                        'MObt',
+               'Fascia glutea':                               'FGlu',
+               # 'Fascia lumbalis':                             'FLum',
+               'Fascia crescent':                             'FCre',
+               'Fascia endopelvina':                          'FEnP',
+               'Fascia thoracolumbalis lamina superficalis':  'FTLs',
+               'Fascia thoracolumbalis lamina profunda':      'FTLp'}
+    Locdict_L={'Ligamentum sacrotuberale':                    'SaTu',
+               'Ligamentum sacrospinale':                     'SaSp',
+               'Ligamentum iliolumbale':                      'IlLu',
+               'Ligamentum inguinale':                        'Ingu',
+               'Ligamentum pectineum':                        'Pect',
+               'Ligamenta sacroiliaca anteriora':             'SaIla',
+               'Ligamenta sacroiliaca posteriora':            'SaIlp',
+               'Ligamentum sacroiliacum posterior longum':    'SaIll'}
+    Locdict=pd.concat([pd.Series(Locdict_F),pd.Series(Locdict_L)]).to_dict()
 else: print("Failure ptype!!!")
 
 #%%% Output
@@ -428,10 +478,15 @@ if ptype == "ATT":
     cs_E_lsq_m_pR=cs_E_lsq_m.loc(axis=1)[cs_E_lsq_m.columns.str.contains(r'^C',regex=True)]
     cs_E_lsq_m_pR=cs_E_lsq_m_pR.div(cs_E_lsq_m['F'],axis=0)
     cs_E_lsq_m_pR.dropna(axis=0, inplace=True)
+    cs_E_lsq_m_sR=cs_E_lsq_m.loc(axis=1)[cs_E_lsq_m.columns.str.contains(r'^C',regex=True)]
+    cs_E_lsq_m_sR=cs_E_lsq_m_sR.sub(cs_E_lsq_m['F'],axis=0)
+    cs_E_lsq_m_sR.dropna(axis=0, inplace=True)
+    cs_E_lsq_m_dR=cs_E_lsq_m.loc(axis=1)[cs_E_lsq_m.columns.str.contains(r'^C',regex=True)]
+    cs_E_lsq_m_dR=(cs_E_lsq_m_dR.sub(cs_E_lsq_m['F'],axis=0)).div(cs_E_lsq_m['F'],axis=0)
+    cs_E_lsq_m_dR.dropna(axis=0, inplace=True)
     
     cs_E_lsq_m_pR_rise = cs_E_lsq_m_pR.loc(axis=1)[cs_E_lsq_m_pR.columns.str.contains(r'^C.*\+$',regex=True)]
     cs_E_lsq_m_pR_fall = cs_E_lsq_m_pR.loc(axis=1)[cs_E_lsq_m_pR.columns.str.contains(r'^C.*\-$',regex=True)]
-
     cs_E_lsq_m_pR_rise.columns=cs_E_lsq_m_pR_rise.columns.str.replace('C','',regex=True).str.replace('\+','',regex=True)
     cs_E_lsq_m_pR_fall.columns=cs_E_lsq_m_pR_fall.columns.str.replace('C','',regex=True).str.replace('\-','',regex=True)
 
@@ -447,9 +502,9 @@ if ptype == "ATT":
     cs_E_lsq_m_pR_fall_si=Evac.stat_outliers(cs_E_lsq_m_pR_fall.mean(axis=1),out='inner')
     cs_epl_m_si = Evac.stat_outliers(cs_epl_m.mean(axis=1),out='inner')
     
-    tmp = cs_E_lsq_m
+    tmp = cs_E_lsq_m.copy()
     tmp.columns = 'E_con_'+tmp.columns
-    tmp2 = cs_epl_m
+    tmp2 = cs_epl_m.copy()
     tmp2.columns = 'epl_con_'+tmp2.columns
     cs_cyc = pd.concat([cs_cfl,tmp2,tmp],axis=1)
     
@@ -474,30 +529,6 @@ txt='- fail:\n   %s'%fc_b_df_fail_sum[fc_b_df_fail_sum!=0].to_dict()
 Evac.MG_strlog(Evac.str_indent(txt,5),**MG_logopt)
 txt='- no fail:\n   %s'%fc_b_df_nofail_sum[fc_b_df_nofail_sum!=0].to_dict()
 Evac.MG_strlog(Evac.str_indent(txt,5),**MG_logopt)
-
-#%%% Additional Logging
-if ptype == "ATT":
-    txt="\n "+"="*100
-    txt+=("\n Cyclic-loading influence: (%d samples)"%cs.OPT_pre_load_cycles[cs.OPT_pre_load_cycles>0].size)
-    txt += Evac.str_indent('- cyclic loading stress level (related to ultimate strength):')
-    txt += Evac.str_indent('- preload (aim: 0.10):',6)
-    txt += Evac.str_indent('  {0:.3f} ± {1:.3f} ({2:.3f}-{3:.3f})'.format(*cs_cfl.cyc_f_lo.agg(['mean','std','min','max'])),6)
-    txt += Evac.str_indent('- cyclic (aim: 0.30):',6)
-    txt += Evac.str_indent('  {0:.3f} ± {1:.3f} ({2:.3f}-{3:.3f})'.format(*cs_cfl.cyc_f_hi.agg(['mean','std','min','max'])),6)
-    txt += Evac.str_indent('- cyclic related to final Youngs Modulus:')
-    txt += Evac.str_indent('- loading (ascending):',6)
-    txt += Evac.str_indent(cs_E_lsq_m_pR_rise.agg(agg_funcs).T,9)
-    txt += Evac.str_indent('statistical outliers: %d'%len(cs_E_lsq_m_pR_rise_so),9)
-    txt += Evac.str_indent(cs.Failure_code[cs_E_lsq_m_pR_rise_so],9)    
-    txt += Evac.str_indent('- relaxation (descending):',6)
-    txt += Evac.str_indent(cs_E_lsq_m_pR_fall.agg(agg_funcs).T,9)
-    txt += Evac.str_indent('statistical outliers: %d'%len(cs_E_lsq_m_pR_fall_so),9)
-    txt += Evac.str_indent(cs.Failure_code[cs_E_lsq_m_pR_fall_so],12)
-    txt += Evac.str_indent('- plastic strain after cycle:')
-    txt += Evac.str_indent(cs_epl_m.agg(agg_funcs).T,9)
-    txt += Evac.str_indent('statistical outliers: %d'%len(cs_epl_m_so),9)
-    txt += Evac.str_indent(cs.Failure_code[cs_epl_m_so],12)
-    Evac.MG_strlog(txt,**MG_logopt)
     
 #%% Data-Export
 writer = pd.ExcelWriter(out_full+'.xlsx', engine = 'xlsxwriter')
@@ -558,6 +589,43 @@ Evac.MG_strlog("\n Distribution tests: (HO=sample looks Gaussian)", **MG_logopt)
 tmp = Evac.Dist_test_multi(cs_short.loc(axis=1)[css_ncols], alpha=alpha)
 Evac.MG_strlog(Evac.str_indent(tmp.to_string()), **MG_logopt)
 
+#%%% Additional Logging
+if ptype == "ATT":
+    txt="\n "+"="*100
+    txt+=("\n Cyclic-loading influence: (%d samples)"%cs.OPT_pre_load_cycles[cs.OPT_pre_load_cycles>0].size)
+    txt += Evac.str_indent('- cyclic loading stress level (related to ultimate strength):')
+    txt += Evac.str_indent('- preload (aim: 0.10):',6)
+    tmp=cs_cfl.cyc_f_lo.agg(agg_funcs)[['mean','std','min','max','CImin','CImax']]
+    txt += Evac.str_indent('  {0:.5f} ± {1:.5f} ({2:.5f}-{3:.5f}, CI: {4:.5f}-{5:.5f})'.format(*tmp),6)
+    txt += Evac.str_indent('- cyclic (aim: 0.30):',6)
+    tmp=cs_cfl.cyc_f_hi.agg(agg_funcs)[['mean','std','min','max','CImin','CImax']]
+    txt += Evac.str_indent('  {0:.5f} ± {1:.5f} ({2:.5f}-{3:.5f}, CI: {4:.5f}-{5:.5f})'.format(*tmp),6)
+    txt += Evac.str_indent('- cyclic related to final Youngs Modulus:')
+    txt += Evac.str_indent('- loading (ascending):',6)
+    txt += Evac.str_indent(cs_E_lsq_m_pR_rise.agg(agg_funcs).T.to_string(),9)
+    txt += Evac.str_indent('Hypothesis test equality:',9)
+    tmp=cs_E_lsq_m.dropna(axis=0)
+    tmp=tmp.loc(axis=1)['R':].apply(lambda x: stats.wilcoxon(x,tmp['F']))
+    tmp.index=['F','p']
+    tmp.loc['H0']=tmp.loc['p'].apply(lambda x: False if x <= alpha else True)
+    tmp1=tmp.columns.str.contains(r'^C.*\-$',regex=True)
+    txt += Evac.str_indent(tmp.loc(axis=1)[~tmp1].to_string(),9)
+    txt += Evac.str_indent('statistical outliers: %d'%len(cs_E_lsq_m_pR_rise_so),9)
+    txt += Evac.str_indent(cs.Failure_code[cs_E_lsq_m_pR_rise_so],9)
+    txt += Evac.str_indent('- relaxation (descending):',6)
+    txt += Evac.str_indent(cs_E_lsq_m_pR_fall.agg(agg_funcs).T.to_string(),9)
+    txt += Evac.str_indent('Mean over all:',9)
+    txt += Evac.str_indent(cs_E_lsq_m_pR_fall.stack().agg(agg_funcs).to_string(),9)
+    txt += Evac.str_indent('Hypothesis test equality:',9)
+    txt += Evac.str_indent(tmp.loc(axis=1)[tmp1].to_string(),9)
+    txt += Evac.str_indent('statistical outliers: %d'%len(cs_E_lsq_m_pR_fall_so),9)
+    txt += Evac.str_indent(cs.Failure_code[cs_E_lsq_m_pR_fall_so],12)
+    txt += Evac.str_indent('- plastic strain after cycle:')
+    txt += Evac.str_indent(cs_epl_m.agg(agg_funcs).T.to_string(),9)
+    txt += Evac.str_indent('statistical outliers: %d'%len(cs_epl_m_so),9)
+    txt += Evac.str_indent(cs.Failure_code[cs_epl_m_so],12)
+    Evac.MG_strlog(txt,**MG_logopt)
+    
 #%%% Variance analyses
 Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
 Evac.MG_strlog("\n %s-Harvesting location: (Groups are significantly different for p < %.3f)"%(mpop,alpha),**MG_logopt)
@@ -624,6 +692,14 @@ tmp2=Evac.Hypo_test_multi(tmp, group_main='Side_LR', group_sub=None,
 tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
 Evac.MG_strlog(Evac.str_indent(tmp3.to_string()),**MG_logopt)
 
+if ptype == 'ATT':
+    Evac.MG_strlog("\n Hypothesis test - type (Fascia/Ligament): (%s, significantly different for p < %.3f)"%(mcomp_ind,alpha),**MG_logopt)
+    tmp1=Evac.Hypo_test_multi(cs, group_main='Type', group_sub=None, 
+                     ano_Var=VIParams_geo+VIParams_mat, 
+                     rel=False, rel_keys=[], 
+                     mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    Evac.MG_strlog(Evac.str_indent(tmp1.to_string()),**MG_logopt)
+
 #%%%% Side proximal distal (TBT only)
 if ptype == 'TBT':
     Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
@@ -647,6 +723,10 @@ if ptype == 'ACT':
     Evac.MG_strlog("\n\n "+"-"*100, **MG_logopt)
     Evac.MG_strlog("\n Hypothesis test - direction (x/y/z): (significantly different for p < %.3f)"%(alpha),**MG_logopt)
     Evac.MG_strlog("\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(mcomp_ind, mcomp_rel),**MG_logopt)
+    tmp=Evac.Multi_conc(df=cs,group_main='Direction_test', anat='VAwoSg',
+               stdict=pd.Series(VIParams_geo+VIParams_mat, index=VIParams_geo+VIParams_mat).to_dict(), 
+               met=mpop, alpha=alpha, kws=MCompdf_kws)
+    Evac.MG_strlog(Evac.str_indent(tmp.loc(axis=1)['DF1':'H0'].to_string()),**MG_logopt)
     # tmp=pd.concat([cs_short,cs[['Direction_test','Donor','Origin_short']]],axis=1)
     Evac.MG_strlog("\n  - x to y:",**MG_logopt)
     tmp4=cs.query("Direction_test =='x' or Direction_test =='y'")
@@ -684,7 +764,56 @@ if ptype == 'ACT':
                          mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
     tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
     Evac.MG_strlog(Evac.str_indent(tmp3.to_string()),**MG_logopt)
-
+    
+    Evac.MG_strlog("\n  - Corpus vertebrae lumbales (CVLu, x/z equal/greater y):",**MG_logopt)
+    tmp1=pd.DataFrame([])
+    tmp2=cs.query("Origin_sshort=='CVLu'")
+    tmp1['yx-wi-eq']=Evac.Hypo_test(tmp2, groupby='Direction_test',
+                        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
+                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                        mcomp=mcomp_rel,  alpha=alpha,
+                        deal_dupl_ind=stat_dd_ind, group_ord=['y','x'], add_out='Series')
+    tmp1['yx-wi-gr']=Evac.Hypo_test(tmp2, groupby='Direction_test',
+                        ano_Var=YM_con_str, mkws={'alternative':'greater'},
+                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                        mcomp=mcomp_rel,  alpha=alpha,
+                        deal_dupl_ind=stat_dd_ind, group_ord=['y','x'], add_out='Series')
+    tmp1['yz-wi-eq']=Evac.Hypo_test(tmp2, groupby='Direction_test',
+                        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
+                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                        mcomp=mcomp_rel,  alpha=alpha,
+                        deal_dupl_ind=stat_dd_ind, group_ord=['y','z'], add_out='Series')
+    tmp1['yz-wi-gr']=Evac.Hypo_test(tmp2, groupby='Direction_test',
+                        ano_Var=YM_con_str, mkws={'alternative':'greater'},
+                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                        mcomp=mcomp_rel,  alpha=alpha,
+                        deal_dupl_ind=stat_dd_ind, group_ord=['y','z'], add_out='Series')      
+    Evac.MG_strlog(Evac.str_indent(tmp1.to_string()),**MG_logopt)
+    Evac.MG_strlog("\n  - Corpus vertebrae sacrales (CVSa, x/y equal/greater z):",**MG_logopt)
+    tmp1=pd.DataFrame([])
+    tmp2=cs.query("Origin_sshort=='CVSa'")
+    tmp1['zx-wi-eq']=Evac.Hypo_test(tmp2, groupby='Direction_test',
+                        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
+                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                        mcomp=mcomp_rel,  alpha=alpha,
+                        deal_dupl_ind=stat_dd_ind, group_ord=['z','x'], add_out='Series')
+    tmp1['zx-wi-le']=Evac.Hypo_test(tmp2, groupby='Direction_test',
+                        ano_Var=YM_con_str, mkws={'alternative':'greater'},
+                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                        mcomp=mcomp_rel,  alpha=alpha,
+                        deal_dupl_ind=stat_dd_ind, group_ord=['z','x'], add_out='Series')
+    tmp1['zy-wi-eq']=Evac.Hypo_test(tmp2, groupby='Direction_test',
+                        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
+                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                        mcomp=mcomp_rel,  alpha=alpha,
+                        deal_dupl_ind=stat_dd_ind, group_ord=['z','y'], add_out='Series')
+    tmp1['zy-wi-le']=Evac.Hypo_test(tmp2, groupby='Direction_test',
+                        ano_Var=YM_con_str, mkws={'alternative':'greater'},
+                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+                        mcomp=mcomp_rel,  alpha=alpha,
+                        deal_dupl_ind=stat_dd_ind, group_ord=['z','y'], add_out='Series')    
+    Evac.MG_strlog(Evac.str_indent(tmp1.to_string()),**MG_logopt)
+    
 #%%% Correlations
 cs_short_corr = cs_short.corr(method=mcorr)
 
@@ -762,12 +891,16 @@ if ptype in ["TBT","ACT"]:
     ax['Pelvis'].axis('off')
     
     df=pd.melt(cs, id_vars=['Origin_sshort'], value_vars=[pltvartmp])
-    axt = sns.boxplot(x="Origin_sshort", y="value", data=df, ax=ax['Location'], 
+    axt = sns.boxplot(x="Origin_sshort", y="value", 
+                      data=df, ax=ax['Location'], 
+                      order=Locdict.values(),
                       showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
                                                  "markeredgecolor":"black", "markersize":"12",
                                                  "alpha":0.75})
     axt = sns.swarmplot(x="Origin_sshort", y="value",
-                        data=df, ax=ax['Location'], dodge=True, edgecolor="black",
+                        data=df, ax=ax['Location'], 
+                        order=Locdict.values(),
+                        dodge=True, edgecolor="black",
                         linewidth=.5, alpha=.5, size=2)
     ax['Location'].set_title('By harvesting region')
     ax['Location'].set_xlabel('Region')
@@ -777,12 +910,14 @@ if ptype in ["TBT","ACT"]:
     
     df=pd.melt(cs, id_vars=['Donor'], value_vars=[pltvartmp])
     df.Donor.replace(doda.Naming,inplace=True)
-    axt = sns.boxplot(x="Donor", y="value", data=df, ax=ax['Donor'], 
+    axt = sns.boxplot(x="Donor", y="value", 
+                      data=df, ax=ax['Donor'], 
                       showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
                                                  "markeredgecolor":"black", "markersize":"12",
                                                  "alpha":0.75})
     axt = sns.swarmplot(x="Donor", y="value",
-                        data=df, ax=ax['Donor'], dodge=True, edgecolor="black",
+                        data=df, ax=ax['Donor'], 
+                        dodge=True, edgecolor="black",
                         linewidth=.5, alpha=.5, size=2)
     ax['Donor'].set_title('By cadaver')
     ax['Donor'].set_xlabel('Cadaver')
@@ -830,11 +965,13 @@ if ptype == "ATT":
     
     df=pd.melt(cs[cs.Type=='Fascia'], id_vars=['Origin_sshort'], value_vars=[pltvartmp])
     axt = sns.boxplot(x="Origin_sshort", y="value", data=df, ax=ax['LocationF'], 
+                      order=Locdict_F.values(),
                       showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
                                                  "markeredgecolor":"black", "markersize":"12",
                                                  "alpha":0.75})
-    axt = sns.swarmplot(x="Origin_sshort", y="value",
-                        data=df, ax=ax['LocationF'], dodge=True, edgecolor="black",
+    axt = sns.swarmplot(x="Origin_sshort", y="value", data=df, ax=ax['LocationF'], 
+                        order=Locdict_F.values(),
+                        dodge=True, edgecolor="black",
                         linewidth=.5, alpha=.5, size=2)
     ax['LocationF'].set_title('Fascia by harvesting region')
     ax['LocationF'].set_xlabel('Region')
@@ -871,11 +1008,14 @@ if ptype == "ATT":
     
     df=pd.melt(cs[cs.Type=='Ligament'], id_vars=['Origin_sshort'], value_vars=[pltvartmp])
     axt = sns.boxplot(x="Origin_sshort", y="value", data=df, ax=ax['LocationL'], 
+                      order=Locdict_L.values(),
                       showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
                                                  "markeredgecolor":"black", "markersize":"12",
                                                  "alpha":0.75})
     axt = sns.swarmplot(x="Origin_sshort", y="value",
-                        data=df, ax=ax['LocationL'], dodge=True, edgecolor="black",
+                        data=df, ax=ax['LocationL'], 
+                        order=Locdict_L.values(),
+                        dodge=True, edgecolor="black",
                         linewidth=.5, alpha=.5, size=2)
     ax['LocationL'].set_title('Ligaments by harvesting region')
     ax['LocationL'].set_xlabel('Region')
@@ -889,8 +1029,8 @@ if ptype == "ATT":
                       showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
                                                  "markeredgecolor":"black", "markersize":"12",
                                                  "alpha":0.75})
-    axt = sns.swarmplot(x="Donor", y="value",
-                        data=df, ax=ax['DonorL'], dodge=True, edgecolor="black",
+    axt = sns.swarmplot(x="Donor", y="value", data=df, ax=ax['DonorL'], 
+                        dodge=True, edgecolor="black",
                         linewidth=.5, alpha=.5, size=2)
     ax['DonorL'].set_title('Ligaments by cadaver')
     ax['DonorL'].set_xlabel('Cadaver')
@@ -1008,9 +1148,10 @@ if ptype == "ATT":
     sns.scatterplot(data=df,x='cyc_f_hi',y='10',label='Cycle 10',ax=ax['slvl'])
     ax['slvl'].axvline(0.3, color='green', label='Aim')
     ax['slvl'].axhline(1.0, color='green',)
-    ax['slvl'].set_title('')
+    ax['slvl'].set_title('Loading elastic modulus ratio vs. cyclic stress level')
     ax['slvl'].set_xlabel('Ratio of upper cyclic to ultimate stress')
-    ax['slvl'].set_ylabel('Cyclic related to\nfinal elastic modulus')
+    # ax['slvl'].set_ylabel('Cyclic related to\nfinal elastic modulus')
+    ax['slvl'].set_ylabel('Elastic modulus ratio')
     ax['slvl'].legend(ncol=3)
     plt_add_figsubl(text='a', axo=ax['slvl'],**subfiglabeldict)
     
@@ -1036,9 +1177,11 @@ if ptype == "ATT":
     ln += lns.get_legend_handles_labels()[0]
     la += lns.get_legend_handles_labels()[1]
     ax2.legend_.remove()
+    ax['Ecyc'].set_title('Elastic modulus ratio and plastic strain vs. applied cycles')
     ax['Ecyc'].set_xlabel('Cycle')
     ax['Ecyc'].set_xticklabels(cs_epl_m.columns.str.replace('epl_con_',''))
-    ax['Ecyc'].set_ylabel('Cyclic related to\nfinal elastic modulus')
+    # ax['Ecyc'].set_ylabel('Cyclic related to\nfinal elastic modulus')
+    ax['Ecyc'].set_ylabel('Elastic modulus ratio')
     ax2.set_ylabel('Plastic strain')
     ax2.legend(ln,la,loc='center right')
     plt_add_figsubl(text='b', axo=ax['Ecyc'],**subfiglabeldict)
@@ -1354,10 +1497,10 @@ Evac.plt_handle_suffix(fig,path=path+"SM-OH",**plt_Fig_dict)
 
 #%%%% Add Eva Overview
 if ptype == "TBT":
+    pltvarco='_opt'
     pltvartmp=YM_opt_str
     tmp=cs[['Donor','Origin_sshort']].agg(lambda x: x.drop_duplicates().count())
     gs_kw_width_ratios=[tmp[0]/tmp[1], 1.0]
-    pltvarco='_opt'
 elif ptype in ["ACT","ATT"]:
     pltvarco='_con'
     pltvartmp=YM_con_str
@@ -1378,19 +1521,19 @@ fig, ax = plt.subplot_mosaic([['ED','EL'],
 boxplt_dl(pdf=cs, var=pltvartmp, ytxt='Elastic modulus in MPa',
           xl='Origin_sshort', axl=ax['EL'], tl='By harvesting region', xtxtl='Region',
           xd='Donor', axd=ax['ED'], td='By cadaver', xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='fy', ytxt='Yield strength in MPa',
           xl='Origin_sshort', axl=ax['fL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['fD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='ey'+pltvarco, ytxt='Strain at yield stress',
           xl='Origin_sshort', axl=ax['eL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['eD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='Uy'+pltvarco, ytxt='Yield strain energy in mJ/mm³',
           xl='Origin_sshort', axl=ax['UL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['UD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 fig.suptitle(None)
 Evac.plt_handle_suffix(fig,path=path+"SM-OV1",**plt_Fig_dict) 
    
@@ -1408,15 +1551,15 @@ fig, ax = plt.subplot_mosaic([['fuD','fuL'],
 boxplt_dl(pdf=cs, var='fu', ytxt='Ultimate strength in MPa',
           xl='Origin_sshort', axl=ax['fuL'], tl='By harvesting region', xtxtl='Region',
           xd='Donor', axd=ax['fuD'], td='By cadaver', xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='eu'+pltvarco, ytxt='Strain at ultimate stress',
           xl='Origin_sshort', axl=ax['euL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['euD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='Uu'+pltvarco, ytxt='Ultimate strain energy in mJ/mm³',
           xl='Origin_sshort', axl=ax['UuL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['UuD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 fig.suptitle(None)
 Evac.plt_handle_suffix(fig,path=path+"SM-OV2",**plt_Fig_dict) 
 
@@ -1433,15 +1576,15 @@ fig, ax = plt.subplot_mosaic([['fbD','fbL'],
 boxplt_dl(pdf=cs, var='fb', ytxt='Fracture strength in MPa',
           xl='Origin_sshort', axl=ax['fbL'], tl='By harvesting region', xtxtl='Region',
           xd='Donor', axd=ax['fbD'], td='By cadaver', xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='eb'+pltvarco, ytxt='Strain at fracture stress',
           xl='Origin_sshort', axl=ax['ebL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['ebD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='Ub'+pltvarco, ytxt='Fracture strain energy in mJ/mm³',
           xl='Origin_sshort', axl=ax['UbL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['UbD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming)
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 fig.suptitle(None)
 Evac.plt_handle_suffix(fig,path=path+"SM-OV3",**plt_Fig_dict)
 
@@ -1538,28 +1681,31 @@ fig, ax = plt.subplot_mosaic([['ED','EL'],
                               # empty_sentinel='lower mid',
                               figsize=figsize_sup,
                               constrained_layout=True)
-boxplt_dl(pdf=cs, var=pltvartmp, ytxt='Elastic modulus in MPa',
+tmp=cs.query("Side_LR =='L' or Side_LR =='R'")
+# tmp=tmp.sort_values(['Side_LR','Donor','Origin_sshort'])
+# tmp=tmp.sort_values('Side_LR')
+boxplt_dl(pdf=tmp, var=pltvartmp, ytxt='Elastic modulus in MPa',
           xl='Origin_sshort', axl=ax['EL'], tl='By harvesting region', xtxtl='Region',
           xd='Donor', axd=ax['ED'], td='By cadaver', xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming,
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values(),
           hue='Side_LR', htirep={'L':'Left','R':'Right'}, hn=None)
-boxplt_dl(pdf=cs, var='fy', ytxt='Yield strength in MPa',
+boxplt_dl(pdf=tmp, var='fy', ytxt='Yield strength in MPa',
           xl='Origin_sshort', axl=ax['fL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['fD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming,
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values(),
           hue='Side_LR', htirep={'L':'Left','R':'Right'}, hn=None)
-boxplt_dl(pdf=cs, var='ey'+pltvarco, ytxt='Strain at yield stress',
+boxplt_dl(pdf=tmp, var='ey'+pltvarco, ytxt='Strain at yield stress',
           xl='Origin_sshort', axl=ax['eL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['eD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming,
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values(),
           hue='Side_LR', htirep={'L':'Left','R':'Right'}, hn=None)
-boxplt_dl(pdf=cs, var='Uy'+pltvarco, ytxt='Yield strain energy in mJ/mm³',
+boxplt_dl(pdf=tmp, var='Uy'+pltvarco, ytxt='Yield strain energy in mJ/mm³',
           xl='Origin_sshort', axl=ax['UL'], tl=None, xtxtl='Region',
           xd='Donor', axd=ax['UD'], td=None, xtxtd='Cadaver', 
-          xltirep={}, xdtirep=doda.Naming,
+          xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values(),
           hue='Side_LR', htirep={'L':'Left','R':'Right'}, hn=None)
 fig.suptitle(None)
-Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+Evac.plt_handle_suffix(fig,path=path+"SM-SLR",**plt_Fig_dict)
 
 #%%%% Correlation
 cs_short_corr1, cs_short_corr2 = Evac.Corr_ext(cs_short[css_ncols], method=mcorr, 
