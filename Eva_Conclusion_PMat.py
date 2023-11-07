@@ -181,12 +181,41 @@ def boxplt_dl(pdf, var, ytxt,
     axd.set_ylabel(ytxt)
     axl.sharey(axd)
     
+def boxplt_ext(pdf, var, ytxt,
+              xl, axl, tl, xtxtl,
+              xltirep={},
+              hue=None, htirep={}, hn=None, 
+              orderl=None, hue_order=None,
+              bplkws={'showmeans':True, 'meanprops':{"marker":"_", "markerfacecolor":"white",
+                                                     "markeredgecolor":"black", "markersize":"12",
+                                                     "alpha":0.75}},
+              splkws={'dodge':True, 'edgecolor':"black", 'linewidth':.5, 'alpha':.5, 'size':2}):
+    if hue is None:
+        dfl=pd.melt(pdf, id_vars=[xl], value_vars=[var])
+    else:
+        dfl=pd.melt(pdf, id_vars=[xl,hue], value_vars=[var])
+        dfl[hue].replace(htirep,inplace=True)
+    dfl[xl].replace(xltirep,inplace=True)
+    if hue is None:
+        axt = sns.boxplot(x=xl, y="value", data=dfl, order=orderl, ax=axl, **bplkws)
+        axt = sns.swarmplot(x=xl, y="value",data=dfl, order=orderl,  ax=axl, **splkws)
+    else:
+        axt = sns.boxplot(x=xl, y="value", hue=hue, data=dfl, 
+                          order=orderl, hue_order=hue_order, ax=axl, **bplkws)
+        axt = sns.swarmplot(x=xl, y="value", hue=hue, data=dfl, 
+                           order=orderl, hue_order=hue_order, ax=axl, **splkws)  
+        h, l = axl.get_legend_handles_labels()
+        axl.legend(h[0:dfl[hue].unique().size], l[0:dfl[hue].unique().size], title=hn)      
+    axl.set_title(tl)
+    axl.set_xlabel(xtxtl)
+    axl.set_ylabel(ytxt)
+    
 #%% Einlesen und auswählen
 #%%% Main
 Version="231023"
 ptype="TBT"
 ptype="ACT"
-# ptype="ATT"
+ptype="ATT"
 
 no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
                'B01.1','B01.2','B01.3', 'B02.3',
@@ -1110,7 +1139,11 @@ if ptype == "ACT":
                                                 "markeredgecolor":"black",
                                                 "markersize":"8","alpha":0.75})
     axt = sns.swarmplot(x="Origin_sshort", y="value", hue="Direction_test",
-                       data=df, ax=ax['fu'], palette={'x':'r','y':'g','z':'b'},
+                       data=df, ax=ax['fu'], 
+                       # palette={'x':'r','y':'g','z':'b'},
+                       palette={'x':sns.color_palette()[3],
+                                'y':sns.color_palette()[2],
+                                'z':sns.color_palette()[0]},
                        dodge=True, edgecolor="black", linewidth=.5, alpha=.5, size=2)
     ax['fu'].set_title('Ultimate strength by harvesting region and testing direction')
     ax['fu'].set_xlabel('Region')
@@ -1593,9 +1626,9 @@ Evac.plt_handle_suffix(fig,path=path+"SM-OV3",**plt_Fig_dict)
 if ptype == "TBT":
     tmp=pd.DataFrame({'YK':['fyk','eyk_opt','Uyk_opt','KLA'],
                       'Y0':['fy0','ey0_opt','Uy0_opt','0.0 % plso.'],
-                      'Y1':['fy1','ey1_opt','Uy1_opt','0.007 %% plso.'],
-                      'Y2':['fy2','ey2_opt','Uy2_opt','0.1 %% plso.'],
-                      'Y': ['fy', 'ey_opt', 'Uy_opt', '0.2 %% plso.'],
+                      'Y1':['fy1','ey1_opt','Uy1_opt','0.007 % plso.'],
+                      'Y2':['fy2','ey2_opt','Uy2_opt','0.1 % plso.'],
+                      'Y': ['fy', 'ey_opt', 'Uy_opt', '0.2 % plso.'],
                       'U': ['fu', 'eu_opt', 'Uu_opt', 'u']},
                       # 'B': ['fb', 'eb_opt', 'Ub_opt', 'b']}, 
                      index=['f','e','U','name'])  
@@ -1707,6 +1740,85 @@ boxplt_dl(pdf=tmp, var='Uy'+pltvarco, ytxt='Yield strain energy in mJ/mm³',
 fig.suptitle(None)
 Evac.plt_handle_suffix(fig,path=path+"SM-SLR",**plt_Fig_dict)
 
+if ptype == "TBT":
+    pltvarco='_opt'
+    pltvartmp=YM_opt_str
+    tmp=cs.query("Side_pd =='p' or Side_pd =='d'")
+
+    gs_kw = dict(width_ratios=[1], 
+                 height_ratios=[1, 1, 1, 1],
+                 wspace=0.1, hspace=0.1)
+    fig, ax = plt.subplot_mosaic([['EL'],
+                                  ['fL'],
+                                  ['eL'],
+                                  ['UL']],
+                                  gridspec_kw=gs_kw,
+                                  # empty_sentinel='lower mid',
+                                  figsize=figsize_sup,
+                                  constrained_layout=True)
+    boxplt_ext(pdf=tmp, var=pltvartmp, ytxt='Elastic modulus in MPa',
+              xl='Origin_sshort', axl=ax['EL'], tl=None, xtxtl='Region',
+              hue='Side_pd',htirep={'d':'distal','p':'proximal'},
+              orderl=Locdict.values())
+    boxplt_ext(pdf=tmp, var='fy', ytxt='Yield strength in MPa',
+              xl='Origin_sshort', axl=ax['fL'], tl=None, xtxtl='Region',
+              hue='Side_pd',htirep={'d':'distal','p':'proximal'},
+              orderl=Locdict.values())
+    boxplt_ext(pdf=tmp, var='ey'+pltvarco, ytxt='Strain at yield stress',
+              xl='Origin_sshort', axl=ax['eL'], tl=None, xtxtl='Region',
+              hue='Side_pd',htirep={'d':'distal','p':'proximal'},
+              orderl=Locdict.values())
+    boxplt_ext(pdf=tmp, var='Uy'+pltvarco, ytxt='Yield strain energy in mJ/mm³',
+              xl='Origin_sshort', axl=ax['UL'], tl=None, xtxtl='Region',
+              hue='Side_pd',htirep={'d':'distal','p':'proximal'},
+              orderl=Locdict.values())
+    fig.suptitle(None)
+    Evac.plt_handle_suffix(fig,path=path+"SM-Spd",**plt_Fig_dict)
+
+if ptype == "ACT":
+    pltvarco='_con'
+    pltvartmp=YM_con_str
+    tmp=cs.query("Direction_test =='x' or Direction_test =='y' or Direction_test =='z'")
+    tmp1=dict(palette={'x':sns.color_palette()[3],
+                       'y':sns.color_palette()[2],
+                       'z':sns.color_palette()[0]}, 
+              showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
+                                         "markeredgecolor":"black",
+                                         "markersize":"8","alpha":0.75})
+    tmp2=dict(palette={'x':sns.color_palette()[3],
+                       'y':sns.color_palette()[2],
+                       'z':sns.color_palette()[0]}, 
+              dodge=True, edgecolor="black", linewidth=.5, alpha=.5, size=2)
+    gs_kw = dict(width_ratios=[1], 
+                 height_ratios=[1, 1, 1, 1],
+                 wspace=0.1, hspace=0.1)
+    fig, ax = plt.subplot_mosaic([['EL'],
+                                  ['fL'],
+                                  ['eL'],
+                                  ['UL']],
+                                  gridspec_kw=gs_kw,
+                                  # empty_sentinel='lower mid',
+                                  figsize=figsize_sup,
+                                  constrained_layout=True)
+    boxplt_ext(pdf=tmp, var=pltvartmp, ytxt='Elastic modulus in MPa',
+              xl='Origin_sshort', axl=ax['EL'], tl=None, xtxtl='Region',
+              hue='Direction_test', orderl=Locdict.values(),
+              bplkws=tmp1, splkws=tmp2)
+    boxplt_ext(pdf=tmp, var='fy', ytxt='Yield strength in MPa',
+              xl='Origin_sshort', axl=ax['fL'], tl=None, xtxtl='Region',
+              hue='Direction_test', orderl=Locdict.values(),
+              bplkws=tmp1, splkws=tmp2)
+    boxplt_ext(pdf=tmp, var='ey'+pltvarco, ytxt='Strain at yield stress',
+              xl='Origin_sshort', axl=ax['eL'], tl=None, xtxtl='Region',
+              hue='Direction_test', orderl=Locdict.values(),
+              bplkws=tmp1, splkws=tmp2)
+    boxplt_ext(pdf=tmp, var='Uy'+pltvarco, ytxt='Yield strain energy in mJ/mm³',
+              xl='Origin_sshort', axl=ax['UL'], tl=None, xtxtl='Region',
+              hue='Direction_test', orderl=Locdict.values(),
+              bplkws=tmp1, splkws=tmp2)
+    fig.suptitle(None)
+    Evac.plt_handle_suffix(fig,path=path+"SM-SlD",**plt_Fig_dict)
+    
 #%%%% Correlation
 cs_short_corr1, cs_short_corr2 = Evac.Corr_ext(cs_short[css_ncols], method=mcorr, 
               sig_level={0.001:'$^a$',0.01:'$^b$',0.05:'$^c$',0.10:'$^d$'},
