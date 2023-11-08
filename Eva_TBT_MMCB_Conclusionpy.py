@@ -44,252 +44,252 @@ def relDev(pdo, pdr):
     out = (pdo - pdr)/pdr
     return out
 
-def pd_agg_custom(pdo, agg_funcs=['mean',Evac.meanwoso,'median',
-                                   'std',Evac.coefficient_of_variation, 
-                                   Evac.stdwoso, Evac.coefficient_of_variation_woso,
-                                   'min','max',Evac.confidence_interval], 
-                                   # 'max','min',Evac.confidence_interval], 
-                  numeric_only=False, 
-                  af_ren={'coefficient_of_variation_woso':'CVwoso',
-                          'coefficient_of_variation':'CV'},
-                  af_unp={'confidence_interval': ['CImin','CImax']}):
-    def unpack_aggval(o, n, rn):
-        tmp=o.loc[n].apply(lambda x: pd.Series([*x], index=rn))
-        i = o.index.get_indexer_for([n])[0]
-        s=pd.concat([o.iloc[:i],tmp.T,o.iloc[i+1:]],axis=0)
-        return s
-    pda = Evac.pd_agg(pd_o=pdo, agg_funcs=agg_funcs, numeric_only=numeric_only)
-    for i in af_unp.keys():
-        pda = unpack_aggval(pda, i, af_unp[i])
-    if len(af_ren.keys())>0:
-        pda = pda.rename(af_ren)
-    return pda
+# def pd_agg_custom(pdo, agg_funcs=['mean',Evac.meanwoso,'median',
+#                                    'std',Evac.coefficient_of_variation, 
+#                                    Evac.stdwoso, Evac.coefficient_of_variation_woso,
+#                                    'min','max',Evac.confidence_interval], 
+#                                    # 'max','min',Evac.confidence_interval], 
+#                   numeric_only=False, 
+#                   af_ren={'coefficient_of_variation_woso':'CVwoso',
+#                           'coefficient_of_variation':'CV'},
+#                   af_unp={'confidence_interval': ['CImin','CImax']}):
+#     def unpack_aggval(o, n, rn):
+#         tmp=o.loc[n].apply(lambda x: pd.Series([*x], index=rn))
+#         i = o.index.get_indexer_for([n])[0]
+#         s=pd.concat([o.iloc[:i],tmp.T,o.iloc[i+1:]],axis=0)
+#         return s
+#     pda = Evac.pd_agg(pd_o=pdo, agg_funcs=agg_funcs, numeric_only=numeric_only)
+#     for i in af_unp.keys():
+#         pda = unpack_aggval(pda, i, af_unp[i])
+#     if len(af_ren.keys())>0:
+#         pda = pda.rename(af_ren)
+#     return pda
 
 
-def CD_rep(pdo, groupby='Series', var='DEFlutoB', 
-           det_met='SM-RRT', outtype='txt', tnform='{:.3e}'):
-    """ Calculate critical differences and compare to given.
-    """
-    # grsagg=pdo.groupby(groupby)[var].agg(['mean','std','count'])
-    grsagg=pdo[[groupby,var]].groupby(groupby).agg(['mean','std','count'])
-    if isinstance(var,tuple):
-        grsagg=grsagg.droplevel([0,1],axis=1)
-    grs_sumhrn=grsagg['count'].apply(lambda x: 1/(2*x)).sum()
-    grs_MD=grsagg['mean'].max()-grsagg['mean'].min()
+# def CD_rep(pdo, groupby='Series', var='DEFlutoB', 
+#            det_met='SM-RRT', outtype='txt', tnform='{:.3e}'):
+#     """ Calculate critical differences and compare to given.
+#     """
+#     # grsagg=pdo.groupby(groupby)[var].agg(['mean','std','count'])
+#     grsagg=pdo[[groupby,var]].groupby(groupby).agg(['mean','std','count'])
+#     if isinstance(var,tuple):
+#         grsagg=grsagg.droplevel([0,1],axis=1)
+#     grs_sumhrn=grsagg['count'].apply(lambda x: 1/(2*x)).sum()
+#     grs_MD=grsagg['mean'].max()-grsagg['mean'].min()
     
-    CDF= 1.96 * 2**0.5 # 2.8 only implemented for 95%-probability level (only two groups?)
-    if det_met=='SM-RRT': #https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf
-        allagg=pdo[var].agg(['mean','std','count'])
-        CD=CDF*allagg['std']*np.sqrt(grs_sumhrn)
-    elif det_met=='CV-DC': #https://flexikon.doccheck.com/de/Kritische_Differenz
-        allagg=pdo[var].agg(['max',Evac.coefficient_of_variation])
-        CD=abs(allagg['coefficient_of_variation']*CDF*allagg['max'])
-    elif det_met=='CV': #https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887
-        allagg=pdo[var].agg([Evac.coefficient_of_variation])
-        CD=abs(allagg['coefficient_of_variation'])*CDF
-    elif det_met=='SD': #https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1
-        allagg=pdo[var].agg(['std'])
-        CD=abs(allagg['std'])*CDF
-    else:
-        raise NotImplementedError("Method %s not implemented!"%det_met)
+#     CDF= 1.96 * 2**0.5 # 2.8 only implemented for 95%-probability level (only two groups?)
+#     if det_met=='SM-RRT': #https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf
+#         allagg=pdo[var].agg(['mean','std','count'])
+#         CD=CDF*allagg['std']*np.sqrt(grs_sumhrn)
+#     elif det_met=='CV-DC': #https://flexikon.doccheck.com/de/Kritische_Differenz
+#         allagg=pdo[var].agg(['max',Evac.coefficient_of_variation])
+#         CD=abs(allagg['coefficient_of_variation']*CDF*allagg['max'])
+#     elif det_met=='CV': #https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887
+#         allagg=pdo[var].agg([Evac.coefficient_of_variation])
+#         CD=abs(allagg['coefficient_of_variation'])*CDF
+#     elif det_met=='SD': #https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1
+#         allagg=pdo[var].agg(['std'])
+#         CD=abs(allagg['std'])*CDF
+#     else:
+#         raise NotImplementedError("Method %s not implemented!"%det_met)
         
-    eta = grs_MD/CD
-    # MD_l_CD=True if abs(grs_MD) < CD else False
-    MD_l_CD=False
-    t_grs_MD=tnform.format(grs_MD)
-    t_CD    =tnform.format(CD)
-    txt="{} >  {} -> Repeatability not verified! (eta={})".format(t_grs_MD,t_CD,eta,)
-    if abs(grs_MD) <= CD:
-        MD_l_CD=True
-        txt="{} <= {} -> Repeatability verified! (eta={})".format(t_grs_MD,t_CD,eta,)
+#     eta = grs_MD/CD
+#     # MD_l_CD=True if abs(grs_MD) < CD else False
+#     MD_l_CD=False
+#     t_grs_MD=tnform.format(grs_MD)
+#     t_CD    =tnform.format(CD)
+#     txt="{} >  {} -> Repeatability not verified! (eta={})".format(t_grs_MD,t_CD,eta,)
+#     if abs(grs_MD) <= CD:
+#         MD_l_CD=True
+#         txt="{} <= {} -> Repeatability verified! (eta={})".format(t_grs_MD,t_CD,eta,)
     
-    if outtype=='Ser_all':
-        out= pd.Series({'df_groups_agg':grsagg,'df_all_agg':allagg,
-                        'groups_MD':grs_MD, 'CD':CD, 'eta':eta, 'MDlCD':MD_l_CD})
-    elif outtype=='Tuple_all':
-        out=grsagg,allagg,grs_MD,CD,eta,MD_l_CD
-    elif outtype=='txt':
-        out= txt
-    elif outtype=='Series':
-        out= pd.Series({'MD':grs_MD,'CD':CD, 'eta':eta, 'H0': MD_l_CD})
-    return out
+#     if outtype=='Ser_all':
+#         out= pd.Series({'df_groups_agg':grsagg,'df_all_agg':allagg,
+#                         'groups_MD':grs_MD, 'CD':CD, 'eta':eta, 'MDlCD':MD_l_CD})
+#     elif outtype=='Tuple_all':
+#         out=grsagg,allagg,grs_MD,CD,eta,MD_l_CD
+#     elif outtype=='txt':
+#         out= txt
+#     elif outtype=='Series':
+#         out= pd.Series({'MD':grs_MD,'CD':CD, 'eta':eta, 'H0': MD_l_CD})
+#     return out
 
 
-def CD_test_multi(df, group_main='Series', group_sub=['A'],
-                    ano_Var=['WC_vol'],
-                    det_met='SM-RRT',
-                    Transpose=True):
-    df_out=pd.DataFrame([],dtype='O')
-    # for sg in group_sub:
-    #     for av in ano_Var:
-    for av in ano_Var:
-        for sg in group_sub:
-            tmp=CD_rep(pdo=df, groupby=(group_main,sg), 
-                          var=(av,sg), det_met=det_met,
-                          outtype = 'Series')
-            # name='_'.join([group_main,av,sg])
-            name='_'.join([av,sg])
-            df_out[name]=tmp
-    if Transpose:
-        df_out=df_out.T
-    return df_out
+# def CD_test_multi(df, group_main='Series', group_sub=['A'],
+#                     ano_Var=['WC_vol'],
+#                     det_met='SM-RRT',
+#                     Transpose=True):
+#     df_out=pd.DataFrame([],dtype='O')
+#     # for sg in group_sub:
+#     #     for av in ano_Var:
+#     for av in ano_Var:
+#         for sg in group_sub:
+#             tmp=CD_rep(pdo=df, groupby=(group_main,sg), 
+#                           var=(av,sg), det_met=det_met,
+#                           outtype = 'Series')
+#             # name='_'.join([group_main,av,sg])
+#             name='_'.join([av,sg])
+#             df_out[name]=tmp
+#     if Transpose:
+#         df_out=df_out.T
+#     return df_out
 
-def group_ANOVA_MComp_multi(df, group_main='Series', group_sub=['A'],
-                            ano_Var=['WC_vol'],
-                            mpop = "ANOVA", alpha=0.05, group_ren={},
-                            do_mcomp_a=0, mcomp='TukeyHSD', mpadj='bonf', Ffwalpha=1,
-                            mkws={},
-                            Transpose=True):
-    df_out=pd.DataFrame([],dtype='O')
-    for av in ano_Var:
-        if len(group_sub) == 0:
-            tmp=Evac.group_ANOVA_MComp(df=df, groupby=group_main, 
-                                       ano_Var=av,
-                                       group_str=group_main,
-                                       ano_str=av,
-                                       mpop=mpop, alpha=alpha,
-                                       do_mcomp_a=do_mcomp_a, 
-                                       mcomp=mcomp, 
-                                       mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
-                                       add_out = 'Series')
-            # name='_'.join([group_main,av,sg])
-            name=av
-            df_out[name]=tmp
-        else:
-            for sg in group_sub:
-                tmp=Evac.group_ANOVA_MComp(df=df, groupby=(group_main,sg), 
-                                           ano_Var=(av,sg),
-                                           group_str=group_main,
-                                           ano_str='_'.join([av,sg]),
-                                           mpop=mpop, alpha=alpha,
-                                           do_mcomp_a=do_mcomp_a, 
-                                           mcomp=mcomp, 
-                                           mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
-                                           add_out = 'Series')
-                # name='_'.join([group_main,av,sg])
-                name='_'.join([av,sg])
-                df_out[name]=tmp
-    if Transpose:
-        df_out=df_out.T
-    return df_out
+# def group_ANOVA_MComp_multi(df, group_main='Series', group_sub=['A'],
+#                             ano_Var=['WC_vol'],
+#                             mpop = "ANOVA", alpha=0.05, group_ren={},
+#                             do_mcomp_a=0, mcomp='TukeyHSD', mpadj='bonf', Ffwalpha=1,
+#                             mkws={},
+#                             Transpose=True):
+#     df_out=pd.DataFrame([],dtype='O')
+#     for av in ano_Var:
+#         if len(group_sub) == 0:
+#             tmp=Evac.group_ANOVA_MComp(df=df, groupby=group_main, 
+#                                        ano_Var=av,
+#                                        group_str=group_main,
+#                                        ano_str=av,
+#                                        mpop=mpop, alpha=alpha,
+#                                        do_mcomp_a=do_mcomp_a, 
+#                                        mcomp=mcomp, 
+#                                        mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
+#                                        add_out = 'Series')
+#             # name='_'.join([group_main,av,sg])
+#             name=av
+#             df_out[name]=tmp
+#         else:
+#             for sg in group_sub:
+#                 tmp=Evac.group_ANOVA_MComp(df=df, groupby=(group_main,sg), 
+#                                            ano_Var=(av,sg),
+#                                            group_str=group_main,
+#                                            ano_str='_'.join([av,sg]),
+#                                            mpop=mpop, alpha=alpha,
+#                                            do_mcomp_a=do_mcomp_a, 
+#                                            mcomp=mcomp, 
+#                                            mpadj=mpadj, Ffwalpha=Ffwalpha, mkws=mkws,
+#                                            add_out = 'Series')
+#                 # name='_'.join([group_main,av,sg])
+#                 name='_'.join([av,sg])
+#                 df_out[name]=tmp
+#     if Transpose:
+#         df_out=df_out.T
+#     return df_out
 
-from functools import partial, wraps
-def Hypo_test(df, groupby, ano_Var,
-              group_str=None, ano_str=None,
-              alpha=0.05, group_ren={},
-              mcomp='TukeyHSD', mkws={},
-              rel=False, rel_keys=[],
-              add_T_ind=3, add_out = False):
-    if ano_str is None:
-        ano_str = ano_Var
-    if group_str is None:
-        group_str = groupby
-    dft = df.copy(deep=True)
-    if rel and rel_keys!=[]:
-        # dft.index = pd.MultiIndex.from_frame(dft.loc(axis=1)[np.concatenate((rel_keys,
-        #                                                                      [groupby]))])
-        dft.index = pd.MultiIndex.from_frame(dft.loc(axis=1)[rel_keys+[groupby]])
+# from functools import partial, wraps
+# def Hypo_test(df, groupby, ano_Var,
+#               group_str=None, ano_str=None,
+#               alpha=0.05, group_ren={},
+#               mcomp='TukeyHSD', mkws={},
+#               rel=False, rel_keys=[],
+#               add_T_ind=3, add_out = False):
+#     if ano_str is None:
+#         ano_str = ano_Var
+#     if group_str is None:
+#         group_str = groupby
+#     dft = df.copy(deep=True)
+#     if rel and rel_keys!=[]:
+#         # dft.index = pd.MultiIndex.from_frame(dft.loc(axis=1)[np.concatenate((rel_keys,
+#         #                                                                      [groupby]))])
+#         dft.index = pd.MultiIndex.from_frame(dft.loc(axis=1)[rel_keys+[groupby]])
 
-    else:
-        dft.index = pd.MultiIndex.from_arrays([dft.index,
-                                               dft.loc(axis=1)[groupby]])
-    dft = dft[ano_Var]
-    dft = dft.unstack(level=-1)
-    if rel: dft=dft.dropna(axis=0)
+#     else:
+#         dft.index = pd.MultiIndex.from_arrays([dft.index,
+#                                                dft.loc(axis=1)[groupby]])
+#     dft = dft[ano_Var]
+#     dft = dft.unstack(level=-1)
+#     if rel: dft=dft.dropna(axis=0)
     
-    dfgr=dft.columns.values
-    if not len(dfgr)==2:
-        raise ValueError('More than two groups (%s)!'%dfgr)
-    a = dft[dfgr[0]].dropna()
-    b = dft[dfgr[1]].dropna()
-    ano_df2=a.count()+b.count()-2 #Freiheitsgrad = Testpersonen pro Gruppe - 1
+#     dfgr=dft.columns.values
+#     if not len(dfgr)==2:
+#         raise ValueError('More than two groups (%s)!'%dfgr)
+#     a = dft[dfgr[0]].dropna()
+#     b = dft[dfgr[1]].dropna()
+#     ano_df2=a.count()+b.count()-2 #Freiheitsgrad = Testpersonen pro Gruppe - 1
     
-    if mcomp=='TukeyHSD':
-        stats_test  = wraps(partial(stats.tukey_hsd, **mkws))(stats.tukey_hsd)
-    elif mcomp=='ttest_ind':
-        stats_test  = wraps(partial(stats.ttest_ind, **mkws))(stats.ttest_ind)
-    elif mcomp=='ttest_rel':
-        stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
-    elif mcomp=='mannwhitneyu':
-        stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
-    elif mcomp=='wilcoxon':
-        stats_test  = wraps(partial(stats.wilcoxon, **mkws))(stats.wilcoxon)
-    else:
-        raise NotImplementedError('Method %s for multi comparison not implemented!'%mcomp)
-    t = stats_test(a,b)
-    F = t.statistic
-    p = t.pvalue
-    if p < alpha:
-        rtxt = 'H0 rejected!'
-        H0=False
-    else:
-        rtxt = 'Fail to reject H0!'
-        H0=True
-    txt=("- F(%d) = %.3e, p = %.3e, for %s to %s (%s)"%(ano_df2,
-                                                          F,p,
-                                                          ano_str,group_str,
-                                                          rtxt)) # Gruppen sind signifikant verschieden bei p<0.05
-    if add_out is True:
-        return txt, t
-    elif add_out=='Series':
-        return pd.Series({'DF2':ano_df2, 'Stat':F, 'p':p, 'H0':H0})
-    elif add_out=='Test':
-        return dft, pd.Series({'DF2':ano_df2, 'Stat':F, 'p':p, 'H0':H0}), txt
-    else:
-        return txt
+#     if mcomp=='TukeyHSD':
+#         stats_test  = wraps(partial(stats.tukey_hsd, **mkws))(stats.tukey_hsd)
+#     elif mcomp=='ttest_ind':
+#         stats_test  = wraps(partial(stats.ttest_ind, **mkws))(stats.ttest_ind)
+#     elif mcomp=='ttest_rel':
+#         stats_test  = wraps(partial(stats.ttest_rel, **mkws))(stats.ttest_rel)
+#     elif mcomp=='mannwhitneyu':
+#         stats_test  = wraps(partial(stats.mannwhitneyu, **mkws))(stats.mannwhitneyu)
+#     elif mcomp=='wilcoxon':
+#         stats_test  = wraps(partial(stats.wilcoxon, **mkws))(stats.wilcoxon)
+#     else:
+#         raise NotImplementedError('Method %s for multi comparison not implemented!'%mcomp)
+#     t = stats_test(a,b)
+#     F = t.statistic
+#     p = t.pvalue
+#     if p < alpha:
+#         rtxt = 'H0 rejected!'
+#         H0=False
+#     else:
+#         rtxt = 'Fail to reject H0!'
+#         H0=True
+#     txt=("- F(%d) = %.3e, p = %.3e, for %s to %s (%s)"%(ano_df2,
+#                                                           F,p,
+#                                                           ano_str,group_str,
+#                                                           rtxt)) # Gruppen sind signifikant verschieden bei p<0.05
+#     if add_out is True:
+#         return txt, t
+#     elif add_out=='Series':
+#         return pd.Series({'DF2':ano_df2, 'Stat':F, 'p':p, 'H0':H0})
+#     elif add_out=='Test':
+#         return dft, pd.Series({'DF2':ano_df2, 'Stat':F, 'p':p, 'H0':H0}), txt
+#     else:
+#         return txt
 
-def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
-                    ano_Var=['WC_vol'],
-                    mcomp='mannwhitneyu', alpha=0.05, mkws={},
-                    rel=False, rel_keys=[],
-                    Transpose=True):
-    df_out=pd.DataFrame([],dtype='O')
-    # for sg in group_sub:
-    #     for av in ano_Var:
-    for av in ano_Var:
-        for sg in group_sub:
-            tmp=Hypo_test(df=df, groupby=(group_main,sg), 
-                          ano_Var=(av,sg), alpha=alpha,
-                          mcomp=mcomp, mkws=mkws,
-                          # rel=rel, rel_keys=rel_keys, add_out = 'Series')
-                          rel=rel, rel_keys=[(x,sg) for x in rel_keys], 
-                          add_out = 'Series')
-            # name='_'.join([group_main,av,sg])
-            name='_'.join([av,sg])
-            df_out[name]=tmp
-    if Transpose:
-        df_out=df_out.T
-    return df_out
+# def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
+#                     ano_Var=['WC_vol'],
+#                     mcomp='mannwhitneyu', alpha=0.05, mkws={},
+#                     rel=False, rel_keys=[],
+#                     Transpose=True):
+#     df_out=pd.DataFrame([],dtype='O')
+#     # for sg in group_sub:
+#     #     for av in ano_Var:
+#     for av in ano_Var:
+#         for sg in group_sub:
+#             tmp=Hypo_test(df=df, groupby=(group_main,sg), 
+#                           ano_Var=(av,sg), alpha=alpha,
+#                           mcomp=mcomp, mkws=mkws,
+#                           # rel=rel, rel_keys=rel_keys, add_out = 'Series')
+#                           rel=rel, rel_keys=[(x,sg) for x in rel_keys], 
+#                           add_out = 'Series')
+#             # name='_'.join([group_main,av,sg])
+#             name='_'.join([av,sg])
+#             df_out[name]=tmp
+#     if Transpose:
+#         df_out=df_out.T
+#     return df_out
 
-def Multi_conc(df, group_main='Donor', anat='VA', 
-               met='Kruskal', alpha=0.05,
-               stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
-                       'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
-                       # 'Hyst_APn':['B'],'DHAPntoB':['C','G','L']},
-                       'Hyst_An':['B'],'DHAntoB':['C','G','L']},
-               rel=False, rel_keys=[], kws={}):
-    out=pd.DataFrame([],dtype='O')
-    for i in stdict.keys():
-        if anat=='VA':
-            out2=group_ANOVA_MComp_multi(df=df, 
-                                 group_main=group_main, 
-                                 group_sub=stdict[i],
-                                 ano_Var=[i],
-                                 mpop=met, alpha=alpha, **kws)
-        elif anat=='HT':
-            out2=Hypo_test_multi(df=df, 
-                                 group_main=group_main, 
-                                 group_sub=stdict[i],
-                                 ano_Var=[i], mcomp=met, alpha=alpha,
-                                 rel=rel, rel_keys=rel_keys, **kws)
-        elif anat=='CD':
-            out2=CD_test_multi(df=df, 
-                                 group_main=group_main, 
-                                 group_sub=stdict[i],
-                                 ano_Var=[i], det_met=met, **kws)
-        out=pd.concat([out,out2])
-    out.index=pd.MultiIndex.from_product([[group_main],out.index])
-    return out
+# def Multi_conc(df, group_main='Donor', anat='VA', 
+#                met='Kruskal', alpha=0.05,
+#                stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
+#                        'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
+#                        # 'Hyst_APn':['B'],'DHAPntoB':['C','G','L']},
+#                        'Hyst_An':['B'],'DHAntoB':['C','G','L']},
+#                rel=False, rel_keys=[], kws={}):
+#     out=pd.DataFrame([],dtype='O')
+#     for i in stdict.keys():
+#         if anat=='VA':
+#             out2=group_ANOVA_MComp_multi(df=df, 
+#                                  group_main=group_main, 
+#                                  group_sub=stdict[i],
+#                                  ano_Var=[i],
+#                                  mpop=met, alpha=alpha, **kws)
+#         elif anat=='HT':
+#             out2=Hypo_test_multi(df=df, 
+#                                  group_main=group_main, 
+#                                  group_sub=stdict[i],
+#                                  ano_Var=[i], mcomp=met, alpha=alpha,
+#                                  rel=rel, rel_keys=rel_keys, **kws)
+#         elif anat=='CD':
+#             out2=CD_test_multi(df=df, 
+#                                  group_main=group_main, 
+#                                  group_sub=stdict[i],
+#                                  ano_Var=[i], det_met=met, **kws)
+#         out=pd.concat([out,out2])
+#     out.index=pd.MultiIndex.from_product([[group_main],out.index])
+#     return out
 
 import lmfit
 def func_exp(x, a, b, c):
@@ -1172,14 +1172,14 @@ dft_comb_rel.loc[~dft_comb_rel.statistics, ['fu','eu_opt']] = np.nan # SettingWi
 writer = pd.ExcelWriter(out_full+'.xlsx', engine = 'xlsxwriter')
 tmp=dft_comb_rel.rename(VIPar_plt_renamer,axis=1)
 tmp.to_excel(writer, sheet_name='Conclusion')
-tmp=pd_agg_custom(dft_comb_rel.loc[idx[:,'A'], rel_col_geo])
+tmp=Evac.pd_agg_custom(dft_comb_rel.loc[idx[:,'A'], rel_col_geo])
 tmp=tmp.rename(VIPar_plt_renamer,axis=1)
 tmp.T.to_excel(writer, sheet_name='Geometry_Descriptive')
-tmp=pd_agg_custom(dft_comb_rel[rel_col_add].unstack())
+tmp=Evac.pd_agg_custom(dft_comb_rel[rel_col_add].unstack())
 tmp=tmp.dropna(axis=1)
 tmp=tmp.rename(VIPar_plt_renamer,axis=1)
 tmp.T.to_excel(writer, sheet_name='Moisture_Descriptive')
-tmp=pd_agg_custom(dft_comb_rel[rel_col_mec].unstack())
+tmp=Evac.pd_agg_custom(dft_comb_rel[rel_col_mec].unstack())
 tmp=tmp.drop(columns='statistics').dropna(axis=1)
 tmp=tmp.rename(VIPar_plt_renamer,axis=1)
 tmp.T.to_excel(writer, sheet_name='Mechanical_Descriptive')
@@ -1707,7 +1707,7 @@ Evac.MG_strlog(Evac.str_indent("Hystereseisarea C equal B: %s"%str(tmp2),6),
 
 Evac.MG_strlog("\n\n  %s Conclusion:"%mpop,
                log_mg, 1, printopt=False)
-tmp3=group_ANOVA_MComp_multi(df=dft_comb,
+tmp3=Evac.group_ANOVA_MComp_multi(df=dft_comb,
                 group_main='Variant',group_sub=[],
                # ano_Var=['WC_vol','WC_vol_rDA',
                #          'lu_F_mean','DEFlutoB',
@@ -1768,7 +1768,7 @@ Evac.MG_strlog("\n  %s water content vs. donor:"%mpop,
 #                                  mpop=mpop, alpha=alpha,  
 #                                  group_ren=doda.Naming.to_dict(), **MComp_kws)
 # Evac.MG_strlog(Evac.str_indent(txt),log_mg,1, printopt=False)
-tmp2=group_ANOVA_MComp_multi(df=dft_comb.unstack(), 
+tmp2=Evac.group_ANOVA_MComp_multi(df=dft_comb.unstack(), 
                            group_main='Donor', 
                            group_sub=['A','B','L'],
                            ano_Var=['WC_vol'],
@@ -1827,7 +1827,7 @@ stdict={'WC_vol': ['A','B','C','D','E','F',    'H','I','J','K','L'],
        'DHAntoB':        ['C','D','E','F','G','H','I','J','K','L']}
 Evac.MG_strlog("\n\n  Hypothesistests to donordata (H-test):",
                log_mg, 1, printopt=False)
-tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Donor', anat='VA',
+tmp3=Evac.Multi_conc(df=dft_comb.unstack(),group_main='Donor', anat='VA',
                # stdict={'WC_vol':['A','B','L'],'WC_vol_rDA':['B','C','L'],
                #         'lu_F_mean':['B'],'DEFlutoB':['C','G','L'],
                #         # 'Hyst_APn':['B'],'DHAPntoB':['C','G','L']}, 
@@ -1845,11 +1845,11 @@ for i in tmp3.loc[tmp3.H0 == False].index:
     
 Evac.MG_strlog("\n\n  Hypothesistests to location (proximal/distal) (Mann-Whitney-U/Wilcoxon):",
                log_mg, 1, printopt=False)
-tmp2=Multi_conc(df=dft_comb.unstack(),group_main='Side_pd', anat='HT',
+tmp2=Evac.Multi_conc(df=dft_comb.unstack(),group_main='Side_pd', anat='HT',
                stdict=stdict, 
                met='mannwhitneyu', alpha=alpha, 
                rel=False, rel_keys=['Donor','Side_LR'], kws={})
-tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Side_pd', anat='HT',
+tmp3=Evac.Multi_conc(df=dft_comb.unstack(),group_main='Side_pd', anat='HT',
                stdict=stdict, 
                met='wilcoxon', alpha=alpha, 
                rel=True, rel_keys=['Donor','Side_LR'], kws={})
@@ -1859,11 +1859,11 @@ Evac.MG_strlog(Evac.str_indent(tmp.to_string()),
 
 Evac.MG_strlog("\n\n  Hypothesistests to side (left/right) (Mann-Whitney-U/Wilcoxon):",
                log_mg, 1, printopt=False)
-tmp2=Multi_conc(df=dft_comb.unstack(),group_main='Side_LR', anat='HT',
+tmp2=Evac.Multi_conc(df=dft_comb.unstack(),group_main='Side_LR', anat='HT',
                stdict=stdict, 
                met='mannwhitneyu', alpha=alpha, 
                rel=False, rel_keys=['Donor','Side_pd'], kws={})
-tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Side_LR', anat='HT',
+tmp3=Evac.Multi_conc(df=dft_comb.unstack(),group_main='Side_LR', anat='HT',
                stdict=stdict, 
                met='wilcoxon', alpha=alpha, 
                rel=True, rel_keys=['Donor','Side_pd'], kws={})
@@ -1923,7 +1923,7 @@ Evac.MG_strlog("\n\n "+"="*100, log_mg, 1, printopt=False)
 
 Evac.MG_strlog("\n\n  Hypothesistests to series (Repeatability; 1/2) (Mann-Whitney-U):",
                log_mg, 1, printopt=False)
-tmp=Multi_conc(df=dft_comb.unstack(),group_main='Series', anat='HT',
+tmp=Evac.Multi_conc(df=dft_comb.unstack(),group_main='Series', anat='HT',
                stdict=stdict, 
                met='mannwhitneyu', alpha=alpha, 
                rel=False, rel_keys=[], kws={})
@@ -1975,7 +1975,7 @@ Evac.MG_strlog("\n\n  - Critical Differences (Method:%s):"%det_met_CD_rep,
 #     Evac.MG_strlog(Evac.str_indent(tmp,6),
 #                    log_mg,1, printopt=False)
 
-tmp3=Multi_conc(df=dft_comb.unstack(),group_main='Series', anat='CD',
+tmp3=Evac.Multi_conc(df=dft_comb.unstack(),group_main='Series', anat='CD',
                 stdict={'WC_vol':['A','B','C','D','E','F','H','I','J','K','L'],
                         'WC_vol_rDA':['B','C','D','E','F','H','I','J','K','L'],
                         'lu_F_mean':['B','C','D','E','F','G','H','I','J','K','L'],
@@ -2459,19 +2459,19 @@ ax[0].set_ylabel('Procedure step')
 fig.suptitle(None)
 Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
 
-tmp=Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
+tmp=Evac.Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
                     group_sub=['A'],
                     ano_Var=['WC_vol'],
                     mcomp='mannwhitneyu', mkws={},
                     rel=False, rel_keys=[])
-tmp2=Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
+tmp2=Evac.Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
                     # group_sub=['B','C','L'],
                      group_sub=['B','C','D','E','F','H','I','J','K','L'],
                     ano_Var=['WC_vol','WC_vol_rDA'],
                     mcomp='mannwhitneyu', mkws={},
                     rel=False, rel_keys=[])
 tmp=pd.concat([tmp,tmp2],axis=0)
-tmp2=Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
+tmp2=Evac.Hypo_test_multi(df=dft_comb.unstack(), group_main='Series', 
                      # group_sub=['C','G','L'],
                      group_sub=['C','D','E','F','G','H','I','J','K','L'],
                     # ano_Var=['DEFlutoB','DHAPntoB'],
@@ -3860,9 +3860,9 @@ ax1.text(6,0.015,"dry",ha='center',va='bottom', rotation=90,
 ax1.text(7,0.5,"Adsorption",ha='center',va='center', 
            bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
 #ax1.set_title('%sVolumetric water content of the different manipulation variants'%name_Head)
-ax1.set_xlabel('Procedure step / -')
+ax1.set_xlabel('Procedure step')
 # ax1.set_ylabel(r'$\Phi_{vol,Water}=V_{Water}/V_{Total}$ / -')
-ax1.set_ylabel(r'$\Phi$ / -')
+ax1.set_ylabel(r'$\Phi$')
 ax1.set_yscale("log")
 ax1.grid(True, which='both', axis='y')
 ax1.yaxis.set_major_formatter(plt_tick.FormatStrFormatter('%0.1f'))
@@ -3872,8 +3872,8 @@ Evac.plt_handle_suffix(fig,path=out_full+'-Paper-Fig04',**plt_Fig_dict)
 #-------- Figure 05
 fig, ax1 = plt.subplots()
 # ax1.set_title('Exponential regression of water content vs. relative storage humidity')
-ax1.set_xlabel(r'$\phi_{env}$ / -')
-ax1.set_ylabel(r'$\Phi$ / -')
+ax1.set_xlabel(r'$\phi_{env}$')
+ax1.set_ylabel(r'$\Phi$')
 tmp=dft.copy(deep=True)
 tmp.index.names=['Key','Step']
 sns.scatterplot(data=tmp,
@@ -3921,8 +3921,8 @@ ax1.text(5,-0.25,"dry",ha='center',va='center', rotation=90,
 ax1.text(7.5,2.25,"Adsorption",ha='center',va='center', 
            bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
 # ax1.set_title('%sDeviation of Youngs Modulus (fixed range) based on water storaged\nof the different manipulation variants'%name_Head)
-ax1.set_xlabel('Procedure step / -')
-ax1.set_ylabel(r'$D_{E,saturated}$ / -')
+ax1.set_xlabel('Procedure step')
+ax1.set_ylabel(r'$D_{E,sat}$')
 fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=out_full+'-Paper-Fig06',**plt_Fig_dict)
 
@@ -3937,7 +3937,7 @@ tmp=Regfitret(pdo=tmp2.query("Variant<='G'"),
 plt_ax_Reg(pdo=tmp2.query("Variant<='G'"),
               x='WC_vol_rDA', y='DEFlutoB',
             fit=tmp, ax=ax1, label_f=True, label_d='Data Desorption',
-            xlabel=r'$D_{\Phi_{vol},fresh}$', ylabel=r'$D_{E,saturated}$', 
+            xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,sat}$', 
             title=None,
             skws=dict(color=sns.color_palette("tab10")[3]),
             lkws=dict(color=sns.color_palette("tab10")[1]))
@@ -3948,7 +3948,7 @@ tmp=Regfitret(pdo=tmp2.query("Variant>='G'"),
 plt_ax_Reg(pdo=tmp2.query("Variant>='G'"),
               x='WC_vol_rDA', y='DEFlutoB',
             fit=tmp, ax=ax1, label_f=True, label_d='Data Adsorption',
-            xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,saturated}$', 
+            xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,sat}$', 
             # title='Relation between relative deviation of Youngs Modulus to saturated\nand relative deviation of water content to fresh',
             title=None,
             skws=dict(color=sns.color_palette("tab10")[2]),
@@ -3975,8 +3975,8 @@ ax1.text(5,0.625,"dry",ha='center',va='center', rotation=90,
 ax1.text(7.5,1.125,"Adsorption",ha='center',va='center', 
            bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
 # ax1.set_title('%sDeviation of normed hysteresis area based on saturated\nof the different manipulation variants'%name_Head)
-ax1.set_xlabel('Procedure step / -')
-ax1.set_ylabel(r'$D_{H_{n},saturated}$ / -')
+ax1.set_xlabel('Procedure step')
+ax1.set_ylabel(r'$D_{H_{n},sat}$')
 fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=out_full+'-Paper-Fig08',**plt_Fig_dict)
 
