@@ -1156,7 +1156,8 @@ rel_col_geo=['thickness_1','thickness_2','thickness_3',
              'width_1','width_2','width_3','Length','VolTot']
 rel_col_add=['RHstore','Mass','Density_app','MassW','WC_gra','DMWtoG','WC_vol',
              'WC_gra_rDA','WC_vol_rDA']
-rel_col_mec=['statistics','fu','eu_opt',
+# rel_col_mec=['statistics','fu','eu_opt',
+rel_col_mec=['fu','eu_opt',
              'lu_F_mean','DEFlutoB','DEFlutoG','lu_F_ratio',
              # 'Hyst_AP','Hyst_APn','DHAPntoB','DHAPntoG']
              'HA','HAn','DHAntoB','DHAntoG']
@@ -1165,9 +1166,14 @@ rel_col_dod=['Designation','Donor','Naming','Origin',
              'Age','Postmortem_LT','Storage_Time',
              'ICDCodes','Special_Anamnesis','Note_Anamnesis',
              'Fixation','Note_Fixation']
-dft_comb_rel = dft_comb[rel_col_com+rel_col_geo+rel_col_add+rel_col_mec]
-dft_comb_rel.loc[~dft_comb_rel.statistics, ['fu','eu_opt']] = np.nan # SettingWithCopyWarning
-
+rel_dod_ren={'Body_Weight':'$m_{DB}$','Body_Height':'$h_{DB}$',
+            'Postmortem_LT':r'$t_{PML}$','Storage_Time':r'$t_{store}$',
+            # 'Age':r'$Age$','BMI':r'$BMI$','Sex':r'$Sex$',
+            'ICDCodes':'ICD'}
+dft_comb_rel = dft_comb[rel_col_com+rel_col_geo+rel_col_add+rel_col_mec].copy()
+# dft_comb_rel.loc[~dft_comb_rel.statistics, ['fu','eu_opt']] = np.nan # SettingWithCopyWarning
+dft_comb_rel.loc[~dft_comb.statistics, ['fu','eu_opt']] = np.nan
+dft_comb_rel.Origin=dft_comb_rel.Origin.str.replace('Ramus ossis ischii','Ischiopubic ramus')
 
 writer = pd.ExcelWriter(out_full+'.xlsx', engine = 'xlsxwriter')
 tmp=dft_comb_rel.rename(VIPar_plt_renamer,axis=1)
@@ -1180,10 +1186,12 @@ tmp=tmp.dropna(axis=1)
 tmp=tmp.rename(VIPar_plt_renamer,axis=1)
 tmp.T.to_excel(writer, sheet_name='Moisture_Descriptive')
 tmp=Evac.pd_agg_custom(dft_comb_rel[rel_col_mec].unstack())
-tmp=tmp.drop(columns='statistics').dropna(axis=1)
+# tmp=tmp.drop(columns='statistics').dropna(axis=1)
 tmp=tmp.rename(VIPar_plt_renamer,axis=1)
 tmp.T.to_excel(writer, sheet_name='Mechanical_Descriptive')
 tmp=dft_doda_comb.loc(axis=0)[:,'A'][rel_col_dod].droplevel(1)
+tmp.Origin=tmp.Origin.str.replace('Ramus ossis ischii','Ischiopubic ramus')
+tmp=tmp.rename(rel_dod_ren,axis=1)
 tmp.to_excel(writer, sheet_name='Donor_Data')
 writer.close()
 
@@ -3894,7 +3902,7 @@ tmp=Regfitret(pdo=dft.query("Variant>='G'"), x='RHstore', y='WC_vol',
           xl=r'\phi_{env}',yl=r'\Phi_{ads}', t_form='{a:.3e},{b:.3e},{c:.3f}')
 plt_ax_Reg_fo(pdo=dft.query("Variant>='G'"), x='RHstore',
               fit=tmp, ax=ax2, label_f=True,
-              lkws=dict(color=sns.color_palette("tab10")[0]))
+              lkws=dict(color=sns.color_palette("tab10")[0], ls='--'))
 ax2.set_ylim(ax1.get_ylim())
 ax2.tick_params(right = False , labelright = False)
 tmp=ax2.legend(title='         Exponential fit', bbox_to_anchor=(0.01, 0.52),
@@ -3939,8 +3947,8 @@ plt_ax_Reg(pdo=tmp2.query("Variant<='G'"),
             fit=tmp, ax=ax1, label_f=True, label_d='Data Desorption',
             xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,sat}$', 
             title=None,
-            skws=dict(color=sns.color_palette("tab10")[3]),
-            lkws=dict(color=sns.color_palette("tab10")[1]))
+            skws=dict(color=sns.color_palette("tab10")[3], marker='o'),
+            lkws=dict(color=sns.color_palette("tab10")[1], ls='-'))
 tmp=Regfitret(pdo=tmp2.query("Variant>='G'"),
               x='WC_vol_rDA', y='DEFlutoB',
           name='exponential', guess = dict(a=0.01, b=0.01, c=1),
@@ -3951,8 +3959,8 @@ plt_ax_Reg(pdo=tmp2.query("Variant>='G'"),
             xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,sat}$', 
             # title='Relation between relative deviation of Youngs Modulus to saturated\nand relative deviation of water content to fresh',
             title=None,
-            skws=dict(color=sns.color_palette("tab10")[2]),
-            lkws=dict(color=sns.color_palette("tab10")[0]))
+            skws=dict(color=sns.color_palette("tab10")[2], marker='s'),
+            lkws=dict(color=sns.color_palette("tab10")[0], ls='--'))
 fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=out_full+'-Paper-Fig07',**plt_Fig_dict)
 
