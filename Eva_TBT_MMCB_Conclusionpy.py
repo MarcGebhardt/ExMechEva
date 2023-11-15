@@ -556,7 +556,7 @@ VIPar_plt_renamer = {'fy':'$f_{y}$','fu':'$f_{u}$','fb':'$f_{b}$',
                      'WC_vol': r'$\Phi$', 'WC_gra': r'$w$',
                      'WC_vol_toA':r'$\Delta_{\Phi,fresh}$','WC_vol_rDA':r'$D_{\Phi,fresh}$',
                      'WC_gra_toA':r'$\Delta_{w,fresh}$','WC_gra_rDA':r'$D_{w,fresh}$',
-                     'lu_F_mean': r'$\overline{E}_{lr}$','lu_F_ratio': r'${E}_{r}/{E}_{l}$',
+                     'lu_F_mean': r'$\overline{E}_{lu}$','lu_F_ratio': r'${E}_{u}/{E}_{l}$',
                      'DEFlutoB': r'$D_{E,sat}$','DEFlutoG': r'$D_{E,dry}$',
                      # 'Hyst_An': r'$H_{n}$','DHAntoB': r'$D_{H_{n},sat}$','DHAntoG': r'$D_{H_{n},dry}$',
                      # 'Hyst_APn': r'$H_{n}$','DHAPntoB': r'$D_{H_{n},sat}$','DHAPntoG': r'$D_{H_{n},dry}$'}
@@ -973,14 +973,14 @@ def Hysteresis_params(pdo, strain_col, stress_col,
         # ax.plot(pdt[strain_col].loc[iS],pdt[stress_col].loc[iS], 'o')
         # ax.plot(pdt[strain_col].loc[iE],pdt[stress_col].loc[iE], 's')
         # ax.plot(pdt[strain_col].loc[iC],pdt[stress_col].loc[iC], '+')
-        ax.plot(pdt_l[strain_col],pdt_l[stress_col],'r-', label='Loading')
-        ax.plot(pdt_u[strain_col],pdt_u[stress_col],'b-', label='Relaxation')
+        ax.plot(pdt_l[strain_col],pdt_l[stress_col],'r-', label='Loading branch')
+        ax.plot(pdt_u[strain_col],pdt_u[stress_col],'b-', label='Unloading branch')
         ax.fill_between(pdt_l[strain_col],pdt_l[stress_col], y2=miny,
                         **dict(color='r', hatch='|', alpha= 0.2), 
-                        label='Work under loading')
+                        label='Strain energy density under loading branch')
         ax.fill_between(pdt_u[strain_col],pdt_u[stress_col], y2=miny,
                         **dict(color='b', hatch='-', alpha= 0.2),
-                        label='Work under relaxation')
+                        label='Strain energy density under unloading branch')
     if outtype=='Series':
         out=pd.Series(out)
     elif outtype=='Tuple':
@@ -3947,7 +3947,7 @@ plt_ax_Reg(pdo=tmp2.query("Variant<='G'"),
             fit=tmp, ax=ax1, label_f=True, label_d='Data Desorption',
             xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,sat}$', 
             title=None,
-            skws=dict(color=sns.color_palette("tab10")[3], marker='o'),
+            skws=dict(color=sns.color_palette("tab10")[3], marker='o', s=10, alpha=0.7),
             lkws=dict(color=sns.color_palette("tab10")[1], ls='-'))
 tmp=Regfitret(pdo=tmp2.query("Variant>='G'"),
               x='WC_vol_rDA', y='DEFlutoB',
@@ -3959,7 +3959,7 @@ plt_ax_Reg(pdo=tmp2.query("Variant>='G'"),
             xlabel=r'$D_{\Phi,fresh}$', ylabel=r'$D_{E,sat}$', 
             # title='Relation between relative deviation of Youngs Modulus to saturated\nand relative deviation of water content to fresh',
             title=None,
-            skws=dict(color=sns.color_palette("tab10")[2], marker='s'),
+            skws=dict(color=sns.color_palette("tab10")[2], marker='s', s=10, alpha=0.7),
             lkws=dict(color=sns.color_palette("tab10")[0], ls='--'))
 fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=out_full+'-Paper-Fig07',**plt_Fig_dict)
@@ -4207,7 +4207,7 @@ fig, ax = plt.subplots(ncols=1,nrows=4,
                         gridspec_kw={'height_ratios': [1, 1, 1, 0.001]},
                         figsize=figsize_sup, constrained_layout=True)
 #tmp = dfVIP.loc[dfVIP.index.str.contains("MMS102")].index
-tmp = pd.Series(['saturated','dry','saturated-rehydration'],
+tmp = pd.Series(['saturated','dry','saturated-rewetting'],
                 index='0000-0001-8378-3108_LEIULANA_39-21_LuPeCo_MMS102'+pd.Series(['B','G','L']))
 j1=0
 j2=0
@@ -4231,7 +4231,7 @@ for i in tmp.index:
         j2=0
 ax[j1].grid(False)
 ax[j1].axis('off')
-ax[j1].legend(h,l, loc='center', ncol=4,fontsize=8.0)
+ax[j1].legend(h,l, loc='center', ncol=2,fontsize=8.0)
 Evac.plt_handle_suffix(fig,path=out_full+'-SM-HN_Examples',**plt_Fig_dict)
 
 
@@ -4537,7 +4537,7 @@ ax[1] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(),
                                             "markeredgecolor":"black", "markersize":"10","alpha":0.75})
 ax[1].set_title('Relative deviation of elastic modulus based on water storaged')
 ax[1].set_xlabel('Procedure step / -')
-ax[1].set_ylabel(r'$D_{E,saturated}$ / -')
+ax[1].set_ylabel(r'$D_{E,sat}$ / -')
 
 tmp2=pd.concat([cs[['Series','WC_vol_rDA']],cEEm_eva['DEFlutoB']],axis=1)
 tmp21=tmp2.query("Series=='1'")
@@ -4599,7 +4599,7 @@ tmp3=[4,5,6,7,0,1,2,3]
 ax[2].legend([tmp1[i] for i in tmp3], [tmp2[i] for i in tmp3],
              ncol=2, fontsize=6)
 ax[2].set_xlabel(r'$D_{\Phi,fresh}$ / -')
-ax[2].set_ylabel(r'$D_{E,saturated}$ / -')
+ax[2].set_ylabel(r'$D_{E,sat}$ / -')
 ax[2].set_title('Relation between the relative deviations of elastic modulus and water content')
 fig.suptitle('')
 Evac.plt_handle_suffix(fig,path=out_full+'-SM-Series_dep',**plt_Fig_dict)
@@ -4629,7 +4629,7 @@ ax[2] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(),
                                             "markeredgecolor":"black", "markersize":"4","alpha":0.75})
 ax[2].set_title('Relative deviation of elastic modulus based on water storaged')
 ax[2].set_xlabel('Procedure step / -')
-ax[2].set_ylabel(r'$D_{E,saturated}$ / -')
+ax[2].set_ylabel(r'$D_{E,sat}$ / -')
 for i in range(ax.size):
     ax[i].legend(loc="best",ncol=2)
     Evac.tick_legend_renamer(ax=ax[i],
@@ -4663,7 +4663,7 @@ ax[2] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(),
                                             "markeredgecolor":"black", "markersize":"10","alpha":0.75})
 ax[2].set_title('Relative deviation of elastic modulus based on water storaged')
 ax[2].set_xlabel('Procedure step / -')
-ax[2].set_ylabel(r'$D_{E,saturated}$ / -')
+ax[2].set_ylabel(r'$D_{E,sat}$ / -')
 for i in range(ax.size):
     Evac.tick_legend_renamer(ax=ax[i],
                              renamer={'L':'Left','R':'Right'},
@@ -4696,7 +4696,7 @@ ax[2] = sns.boxplot(data=dft_comb.query("Variant!='A'").reset_index(),
                                             "markeredgecolor":"black", "markersize":"10","alpha":0.75})
 ax[2].set_title('Relative deviation of elastic modulus based on water storaged')
 ax[2].set_xlabel('Procedure step / -')
-ax[2].set_ylabel(r'$D_{E,saturated}$ / -')
+ax[2].set_ylabel(r'$D_{E,sat}$ / -')
 for i in range(ax.size):
     Evac.tick_legend_renamer(ax=ax[i],
                              renamer={'proximal':'proximal','distal':'distal'},

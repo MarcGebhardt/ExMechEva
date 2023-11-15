@@ -641,7 +641,7 @@ if ptype == "ATT":
     txt += Evac.str_indent(tmp.loc(axis=1)[~tmp1].to_string(),9)
     txt += Evac.str_indent('statistical outliers: %d'%len(cs_E_lsq_m_pR_rise_so),9)
     txt += Evac.str_indent(cs.Failure_code[cs_E_lsq_m_pR_rise_so],9)
-    txt += Evac.str_indent('- relaxation (descending):',6)
+    txt += Evac.str_indent('- unloading (descending):',6)
     txt += Evac.str_indent(cs_E_lsq_m_pR_fall.agg(agg_funcs).T.to_string(),9)
     txt += Evac.str_indent('Mean over all:',9)
     txt += Evac.str_indent(cs_E_lsq_m_pR_fall.stack().agg(agg_funcs).to_string(),9)
@@ -1197,7 +1197,7 @@ if ptype == "ATT":
                  label='Loading',ax=ax['Ecyc'])
     lns = sns.lineplot(data=cs_E_lsq_m_pR_fall.loc[cs_E_lsq_m_pR_fall_si].mean(),color='red',
                  linestyle='-',linewidth=1.0,legend=True,
-                 label='Relaxation',ax=ax['Ecyc'])
+                 label='Unloading',ax=ax['Ecyc'])
     ax['Ecyc'].legend_.remove()
     ln = lns.get_legend_handles_labels()[0]
     la = lns.get_legend_handles_labels()[1]
