@@ -27,26 +27,29 @@ Changelog:
 """
 
 #%% 0 Imports
-import sys
+# import sys
+import os
 import traceback
 import pandas as pd
 import numpy as np
-import scipy.integrate   as scint
-import scipy.interpolate as scipo
-import scipy.optimize    as scopt
-import lmfit
+# import scipy.integrate   as scint
+# import scipy.interpolate as scipo
+# import scipy.optimize    as scopt
+# import lmfit
 import matplotlib.pyplot as plt
-from matplotlib import cm
-import matplotlib.colors as colors
-from mpl_toolkits.mplot3d import Axes3D
-import vg
-from datetime import datetime, timedelta
+# from matplotlib import cm
+# import matplotlib.colors as colors
+# from mpl_toolkits.mplot3d import Axes3D
+# import vg
+# from datetime import datetime, timedelta
+from datetime import datetime
 import time
 import warnings
 import json
 
-import Bending as Bend
-import Eva_common as Evac
+# import Bending as Bend
+# import Eva_common as Evac
+import exmecheva.Eva_common as Evac #import Eva_common relative?
 
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 warnings.filterwarnings('ignore',category=FutureWarning)
@@ -243,10 +246,10 @@ def ATT_single(prot_ser, paths, mfile_add=''):
             width_mean     = prot_ser[['width_1','width_2']].mean()
             Area   = thickness_mean * width_mean
             Volume = Area * prot_ser['Length']
-        elif prot_ser['CS_type'] == 'Dogbone':
-            raise NotImplementedError("Cross section type %s not implemented"%prot_ser['CS_type'])
         else:
             raise NotImplementedError("Cross section type %s not implemented"%prot_ser['CS_type'])
+    elif prot_ser['Test_Shape'] == 'Dogbone':
+        raise NotImplementedError("Test shape %s not implemented"%prot_ser['Test_Shape'])
     else:
         raise NotImplementedError("Test shape %s not implemented"%prot_ser['Test_Shape'])
     
@@ -1469,22 +1472,15 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     return timings,cout
 
 #%% 9 Main
-def ATT_series(paths, no_stats_fc, var_suffix):
-    prot = pd.read_excel(paths['prot'],
-                         header=11, skiprows=range(12,13),
-                         index_col=0)
+def ATT_series(paths, no_stats_fc, var_suffix, prot_rkws):
+    prot = pd.read_excel(paths['prot'], **prot_rkws)
     
-    logfp = paths['out'] + paths['prot'].split('/')[-1].replace('.xlsx','.log')
+    logfp = paths['out'] + os.path.basename(paths['prot']).replace('.xlsx','.log')
     if output_lvl>=1: log_mg=open(logfp,'w')
         
-    # prot.Failure_code = prot.Failure_code.astype(str)
-    # prot.Failure_code = prot.Failure_code.agg(lambda x: x.split(','))
-    # eva_b = prot.Failure_code.agg(lambda x: False if len(set(x).intersection(set(no_stats_fc)))>0 else True)
     prot.Failure_code  = Evac.list_cell_compiler(prot.Failure_code)
     eva_b = Evac.list_interpreter(prot.Failure_code, no_stats_fc)
     
-    # Evac.MG_strlog("\n paths:\n%s"%str(paths).replace(',','\n'),
-    #                         log_mg,output_lvl,printopt=False)
     Evac.MG_strlog("\n paths:",log_mg,output_lvl,printopt=False)
     for path in paths.index:
         Evac.MG_strlog("\n  %s: %s"%(path,paths[path]),
@@ -1515,82 +1511,71 @@ def ATT_series(paths, no_stats_fc, var_suffix):
     if output_lvl>=1: log_mg.close()
   
 
-def main():
-       
-    # option = 'single'
-    # option = 'series'
-    # option = 'complete'
-    option = 'pack-complete'
-    
-    no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
-                   'B01.1','B01.2','B01.3', 'B02.3',
-                   'C01.1','C01.2','C01.3', 'C02.3',
-                   'D01.1','D01.2','D01.3', 'D02.3',
-                   'F01.1','F01.2','F01.3', 'F02.3']
-    # var_suffix = ["A","B","C","D"] #Suffix of variants of measurements (p.E. diffferent moistures)
-    var_suffix = [""] #Suffix of variants of measurements (p.E. diffferent moistures)
-        
-    protpaths = pd.DataFrame([],dtype='string')
-    combpaths = pd.DataFrame([],dtype='string')
-    # protpaths.loc['ZR','path_main'] = "F:/Messung/002-190813-ZESBO_Rückenfaszien-ZZV/"
-    # protpaths.loc['ZR','name_prot'] = "190813_ZESBO_ZZV_Protokoll_new.xlsx"
-    # protpaths.loc['B1','path_main'] = "F:/Messung/003-190821-Becken1-ZZV/"
-    # protpaths.loc['B1','name_prot'] = "190821_Becken1_ZZV_Protokoll_new.xlsx"
-    # protpaths.loc['B2','path_main'] = "F:/Messung/004-200512-Becken2-AZV/"
-    # protpaths.loc['B2','name_prot'] = "200512_Becken2_AZV_Protokoll_new.xlsx"
-    protpaths.loc['B3','path_main'] = "F:/Messung/005-200721_Becken3-AZV/"
-    protpaths.loc['B3','name_prot'] = "200721_Becken3-AZV_Protokoll_new.xlsx"
-    protpaths.loc['B4','path_main'] = "F:/Messung/006-200910_Becken4-AZV/"
-    protpaths.loc['B4','name_prot'] = "200910_Becken4-AZV_Protokoll_new.xlsx"
-    protpaths.loc['B5','path_main'] = "F:/Messung/007-201009_Becken5-AZV/"
-    protpaths.loc['B5','name_prot'] = "201009_Becken5-AZV_Protokoll_new.xlsx"
-    protpaths.loc['B6','path_main'] = "F:/Messung/008-201117_Becken6-AZV/"
-    protpaths.loc['B6','name_prot'] = "201117_Becken6-AZV_Protokoll_new.xlsx"
-    protpaths.loc['B7','path_main'] = "F:/Messung/009-210114_Becken7-AZV/"
-    protpaths.loc['B7','name_prot'] = "210114_Becken7-AZV_Protokoll_new.xlsx"
+def Selector(option, combpaths, no_stats_fc,
+             var_suffix=[""], ser='', des='', out_path='',
+             prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0)):
+    """
+    Selects suitable evaluation method acc. to choosen option.
 
-    protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
-    protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
-    protpaths.loc[:,'path_eva1']    = "Auswertung/"
-    protpaths.loc[:,'path_eva2']    = "ExMechEva/"
-    
-    # t=protpaths[['path_main','path_eva1','name_prot']].stack()
-    # t.groupby(level=0).apply(lambda x: '{0}{1}{2}'.format(*x))
-    combpaths['prot'] = protpaths['path_main']+protpaths['path_eva1']+protpaths['name_prot']
-    combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
-    combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
-    combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
-    
-    # mfile_add="" # suffix für Feuchte
-    
-    
+    Parameters
+    ----------
+    option : str
+        Evaluation option. Possible are:
+            - 'single': Evaluate single measurement
+            - 'series': Evaluate series of measurements (see protocol table)
+            - 'complete': Evaluate series of series
+            - 'pack': Pack all evaluations into single hdf-file (only results and evaluated measurement)
+            - 'pack-all': Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
+    combpaths : pandas.DataFrame
+        Combined paths for in- and output of evaluations.
+    no_stats_fc : list of str
+        Assessment codes for excluding from evaluation (searched in protocol variable "Failure_code").
+    var_suffix : list of str, optional
+        Suffix of variants of measurements (p.E. different moistures ["A","B",...]). 
+        The default is [""].
+    ser : str, optional
+        Accessor for series. Must be as index in combpaths. The default is ''.
+    des : str, optional
+        Accessor for/Designation of measurement/specimen. 
+        Must be as index in combpaths. The default is ''.
+    out_path : str or Path, optional
+        Additional outputpath for packed evaluation (hdf file). The default is ''.
+    prot_rkws : dict, optional
+        Dictionary for reading protocol. Must be keyword ind pandas.read_excel.
+        The default is dict(header=11, skiprows=range(12,13),index_col=0).
+
+    Raises
+    ------
+    NotImplementedError
+        Option not implemented.
+
+    Returns
+    -------
+    None.
+
+    """
     if option == 'single':
-        ser='B6'
-        des='sr13'
-        mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
+        mfile_add = var_suffix[0]
         
-        prot=pd.read_excel(combpaths.loc[ser,'prot'],
-                           header=11, skiprows=range(12,13),
-                           index_col=0)
+        prot=pd.read_excel(combpaths.loc[ser,'prot'],**prot_rkws)
         _=ATT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
                      paths=combpaths.loc[ser],
                      mfile_add = mfile_add)
         
     elif option == 'series':
-        ser='B6'
         ATT_series(paths = combpaths.loc[ser],
                    no_stats_fc = no_stats_fc,
-                   var_suffix = var_suffix)
+                   var_suffix = var_suffix,
+                   prot_rkws=prot_rkws)
         
     elif option == 'complete':
         for ser in combpaths.index:
             ATT_series(paths = combpaths.loc[ser],
                        no_stats_fc = no_stats_fc,
-                       var_suffix = var_suffix)
+                       var_suffix = var_suffix,
+                       prot_rkws=prot_rkws)
             
-    elif option == 'pack-complete':        
-        # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ATT/B3-B7_ATT-Summary"
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/ATT/B3-B7_ATT-Summary"
+    elif option == 'pack':
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
@@ -1598,10 +1583,105 @@ def main():
                       h5_conc = 'Material_Parameters', h5_data = 'Measurement',
                       opt_pd_out = False, opt_hdf_save = True)
         print("Successfully created %s"%out_path)
+    elif option == 'pack-all':
+        packpaths = combpaths[['prot','out']]
+        packpaths.columns=packpaths.columns.str.replace('out','hdf')
+        Evac.pack_hdf_mul(in_paths=packpaths, out_path = out_path,
+                          hdf_naming = 'Designation', var_suffix = var_suffix,
+                          h5_conc = 'Material_Parameters',
+                          opt_pd_out = False, opt_hdf_save = True)
+        print("Successfully created %s"%out_path)
         
     else:
-        raise NotImplementedError('%s not implemented!'%option)
+        raise NotImplementedError('Option %s not implemented!'%option)
+
+# def main():
+       
+#     # option = 'single'
+#     # option = 'series'
+#     # option = 'complete'
+#     option = 'pack-complete'
+    
+#     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
+#                    'B01.1','B01.2','B01.3', 'B02.3',
+#                    'C01.1','C01.2','C01.3', 'C02.3',
+#                    'D01.1','D01.2','D01.3', 'D02.3',
+#                    'F01.1','F01.2','F01.3', 'F02.3']
+#     # var_suffix = ["A","B","C","D"] #Suffix of variants of measurements (p.E. diffferent moistures)
+#     var_suffix = [""] #Suffix of variants of measurements (p.E. diffferent moistures)
+        
+#     protpaths = pd.DataFrame([],dtype='string')
+#     combpaths = pd.DataFrame([],dtype='string')
+#     # protpaths.loc['ZR','path_main'] = "F:/Messung/002-190813-ZESBO_Rückenfaszien-ZZV/"
+#     # protpaths.loc['ZR','name_prot'] = "190813_ZESBO_ZZV_Protokoll_new.xlsx"
+#     # protpaths.loc['B1','path_main'] = "F:/Messung/003-190821-Becken1-ZZV/"
+#     # protpaths.loc['B1','name_prot'] = "190821_Becken1_ZZV_Protokoll_new.xlsx"
+#     # protpaths.loc['B2','path_main'] = "F:/Messung/004-200512-Becken2-AZV/"
+#     # protpaths.loc['B2','name_prot'] = "200512_Becken2_AZV_Protokoll_new.xlsx"
+#     protpaths.loc['B3','path_main'] = "F:/Messung/005-200721_Becken3-AZV/"
+#     protpaths.loc['B3','name_prot'] = "200721_Becken3-AZV_Protokoll_new.xlsx"
+#     protpaths.loc['B4','path_main'] = "F:/Messung/006-200910_Becken4-AZV/"
+#     protpaths.loc['B4','name_prot'] = "200910_Becken4-AZV_Protokoll_new.xlsx"
+#     protpaths.loc['B5','path_main'] = "F:/Messung/007-201009_Becken5-AZV/"
+#     protpaths.loc['B5','name_prot'] = "201009_Becken5-AZV_Protokoll_new.xlsx"
+#     protpaths.loc['B6','path_main'] = "F:/Messung/008-201117_Becken6-AZV/"
+#     protpaths.loc['B6','name_prot'] = "201117_Becken6-AZV_Protokoll_new.xlsx"
+#     protpaths.loc['B7','path_main'] = "F:/Messung/009-210114_Becken7-AZV/"
+#     protpaths.loc['B7','name_prot'] = "210114_Becken7-AZV_Protokoll_new.xlsx"
+
+#     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
+#     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
+#     protpaths.loc[:,'path_eva1']    = "Auswertung/"
+#     protpaths.loc[:,'path_eva2']    = "ExMechEva/"
+    
+#     # t=protpaths[['path_main','path_eva1','name_prot']].stack()
+#     # t.groupby(level=0).apply(lambda x: '{0}{1}{2}'.format(*x))
+#     combpaths['prot'] = protpaths['path_main']+protpaths['path_eva1']+protpaths['name_prot']
+#     combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
+#     combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
+#     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
+    
+#     # mfile_add="" # suffix für Feuchte
+    
+    
+#     if option == 'single':
+#         ser='B6'
+#         des='sr13'
+#         mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
+        
+#         prot=pd.read_excel(combpaths.loc[ser,'prot'],
+#                            header=11, skiprows=range(12,13),
+#                            index_col=0)
+#         _=ATT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
+#                      paths=combpaths.loc[ser],
+#                      mfile_add = mfile_add)
+        
+#     elif option == 'series':
+#         ser='B6'
+#         ATT_series(paths = combpaths.loc[ser],
+#                    no_stats_fc = no_stats_fc,
+#                    var_suffix = var_suffix)
+        
+#     elif option == 'complete':
+#         for ser in combpaths.index:
+#             ATT_series(paths = combpaths.loc[ser],
+#                        no_stats_fc = no_stats_fc,
+#                        var_suffix = var_suffix)
+            
+#     elif option == 'pack-complete':        
+#         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ATT/B3-B7_ATT-Summary"
+#         out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/ATT/B3-B7_ATT-Summary"
+#         packpaths = combpaths[['prot','out']]
+#         packpaths.columns=packpaths.columns.str.replace('out','hdf')
+#         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
+#                       hdf_naming = 'Designation', var_suffix = var_suffix,
+#                       h5_conc = 'Material_Parameters', h5_data = 'Measurement',
+#                       opt_pd_out = False, opt_hdf_save = True)
+#         print("Successfully created %s"%out_path)
+        
+#     else:
+#         raise NotImplementedError('%s not implemented!'%option)
         
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

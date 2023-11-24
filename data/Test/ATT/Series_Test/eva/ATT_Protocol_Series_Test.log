@@ -1,0 +1,12 @@
+
+ paths:
+  prot: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\ATT_Protocol_Series_Test.xlsx
+  meas: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\meas\conventional\
+  dic: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\meas\optical\
+  out: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\eva\
+ evaluation: 1 / 1
+['sr03a']
+ not evaluated: 0 / 1
+[]
+ sr03a
+   Eva_time: 7.29430 s (Control: )
