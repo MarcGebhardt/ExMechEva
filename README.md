@@ -16,9 +16,9 @@ To install the development version:
 ## Getting started
 In [EXAMPLES](./scripts/00_examples) you can find example scripts evaluating test data provided in [DATA](./data/test).
 Available are:
-- Simple axial compression test [ACT](./scripts/00_examples/ACT_Test.py) evaluating [ACT-DATA](./data/test/ACT/Series_Test)
-- Cyclic preloaded axial tensile test [ATT](./scripts/00_examples/ATT_Test.py) evaluating [ATT-DATA](./data/test/ATT/Series_Test)
-- Three-point bending test [TBT](./scripts/00_examples/TBT_Test.py), with different elastic modulus evalutaion types, evaluating [TBT-DATA](./data/test/TBT/Series_Test)
+- Simple axial compression test [ACT](./scripts/00_examples/ACT_Test.py) evaluating [ACT-DATA](./data/Test/ACT/Series_Test/)
+- Cyclic preloaded axial tensile test [ATT](./scripts/00_examples/ATT_Test.py) evaluating [ATT-DATA](./data/Test/ATT/Series_Test/)
+- Three-point bending test [TBT](./scripts/00_examples/TBT_Test.py), with different elastic modulus evalutaion types, evaluating [TBT-DATA](./data/Test/TBT/Series_Test/)
 
 To start, select evaluation option (by uncommenting):
 - 'single': Evaluate single measurement
@@ -43,5 +43,5 @@ If you use this framework, please cite this paper:
 ```
 ## Licence and Copyright
 **Author:** Marc Gebhardt.
-**Copyright:** Copyright by the authors, 2023.  
+**Copyright:** Copyright by the authors, 2023.
 **License:** This software is released under MIT licence, see [LICENSE](./LICENSE) for details.
