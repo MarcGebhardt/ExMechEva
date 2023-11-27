@@ -9,4 +9,18 @@
  not evaluated: 0 / 1
 []
  tl21x
-   Eva_time: 4.71153 s (Control: )
+   Exception:
+
+     Traceback (most recent call last):
+       File "D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva\Eva_ACT.py", line 1494, in ACT_series
+         paths = paths, mfile_add=mfile_add)
+       File "D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva\Eva_ACT.py", line 184, in ACT_single
+         path_meas = paths['meas']+_opts['OPT_File_Meas']+mfile_add+".xlsx"
+       File "D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva\Eva_ACT.py", line 184, in ACT_single
+         path_meas = paths['meas']+_opts['OPT_File_Meas']+mfile_add+".xlsx"
+       File "C:\ProgramData\Anaconda3\envs\MGenv\lib\bdb.py", line 88, in trace_dispatch
+         return self.dispatch_line(frame)
+       File "C:\ProgramData\Anaconda3\envs\MGenv\lib\bdb.py", line 113, in dispatch_line
+         if self.quitting: raise BdbQuit
+     bdb.BdbQuit
+     
