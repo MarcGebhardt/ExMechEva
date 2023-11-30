@@ -3088,113 +3088,113 @@ def Selector(option, combpaths, no_stats_fc,
     else:
         raise NotImplementedError('Option %s not implemented!'%option)
 
-def main():
+# def main():
        
-    # option = 'single'
-    # option = 'series'
-    # option = 'complete'
-    option = 'pack-complete'
-    # option = 'pack-complete-all'
+#     # option = 'single'
+#     # option = 'series'
+#     # option = 'complete'
+#     option = 'pack-complete'
+#     # option = 'pack-complete-all'
     
-    no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
-                   'B01.1','B01.2','B01.3', 'B02.3',
-                   'C01.1','C01.2','C01.3', 'C02.3',
-                   'D01.1','D01.2','D01.3', 'D02.3',
-                   'F01.1','F01.2','F01.3', 'F02.3']
-                   # 'G01.1','G01.2','G01.3', 'G02.3']
-    # var_suffix = ["A","B","C","D"] #Suffix of variants of measurements (p.E. diffferent moistures)
-    var_suffix = [""] #Suffix of variants of measurements (p.E. diffferent moistures)
+#     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
+#                    'B01.1','B01.2','B01.3', 'B02.3',
+#                    'C01.1','C01.2','C01.3', 'C02.3',
+#                    'D01.1','D01.2','D01.3', 'D02.3',
+#                    'F01.1','F01.2','F01.3', 'F02.3']
+#                    # 'G01.1','G01.2','G01.3', 'G02.3']
+#     # var_suffix = ["A","B","C","D"] #Suffix of variants of measurements (p.E. diffferent moistures)
+#     var_suffix = [""] #Suffix of variants of measurements (p.E. diffferent moistures)
         
-    protpaths = pd.DataFrame([],dtype='string')
-    combpaths = pd.DataFrame([],dtype='string')
-    # path_main="F:/Messung/003-190822-Becken1-DBV/"
-    # name_protokoll="190822_Becken1_DBV_Protokoll.xlsx"
-    # path_main="F:/Messung/004-191129-Schulter-DBV/"
-    # name_protokoll="191129_Schulter_DBV_Protokoll.xlsx"
-    # path_main="D:/Gebhardt/Messungen/200226_Test_FU_Holz_A/"
-    # name_protokoll="200226_Test_FU_Holz_Protokoll.xlsx"
-    # path_main="D:/Gebhardt/Messungen/200401_Test_FU_Weide/"
-    # name_protokoll="200401_Test_FU_Weide_Protokoll_new.xlsx"
-    # protpaths.loc['B2','path_main'] = "F:/Messung/004-200515-Becken2-DBV/"
-    # protpaths.loc['B2','name_prot'] = "200515_Becken2_DBV_Protokoll_new.xlsx"
-    protpaths.loc['B3','path_main'] = "F:/Messung/005-200724_Becken3-DBV/"
-    protpaths.loc['B3','name_prot'] = "200724_Becken3-DBV_Protokoll_new.xlsx"
-    protpaths.loc['B4','path_main'] = "F:/Messung/006-200917_Becken4-DBV/"
-    protpaths.loc['B4','name_prot'] = "200917_Becken4-DBV_Protokoll_new.xlsx"
-    protpaths.loc['B5','path_main'] = "F:/Messung/007-201014_Becken5-DBV/"
-    protpaths.loc['B5','name_prot'] = "201014_Becken5-DBV_Protokoll_new.xlsx"
-    protpaths.loc['B6','path_main'] = "F:/Messung/008-201125_Becken6-DBV/"
-    protpaths.loc['B6','name_prot'] = "201125_Becken6-DBV_Protokoll_new.xlsx"
-    protpaths.loc['B7','path_main'] = "F:/Messung/009-210120_Becken7-DBV/"
-    protpaths.loc['B7','name_prot'] = "210120_Becken7-DBV_Protokoll_new.xlsx"
+#     protpaths = pd.DataFrame([],dtype='string')
+#     combpaths = pd.DataFrame([],dtype='string')
+#     # path_main="F:/Messung/003-190822-Becken1-DBV/"
+#     # name_protokoll="190822_Becken1_DBV_Protokoll.xlsx"
+#     # path_main="F:/Messung/004-191129-Schulter-DBV/"
+#     # name_protokoll="191129_Schulter_DBV_Protokoll.xlsx"
+#     # path_main="D:/Gebhardt/Messungen/200226_Test_FU_Holz_A/"
+#     # name_protokoll="200226_Test_FU_Holz_Protokoll.xlsx"
+#     # path_main="D:/Gebhardt/Messungen/200401_Test_FU_Weide/"
+#     # name_protokoll="200401_Test_FU_Weide_Protokoll_new.xlsx"
+#     # protpaths.loc['B2','path_main'] = "F:/Messung/004-200515-Becken2-DBV/"
+#     # protpaths.loc['B2','name_prot'] = "200515_Becken2_DBV_Protokoll_new.xlsx"
+#     protpaths.loc['B3','path_main'] = "F:/Messung/005-200724_Becken3-DBV/"
+#     protpaths.loc['B3','name_prot'] = "200724_Becken3-DBV_Protokoll_new.xlsx"
+#     protpaths.loc['B4','path_main'] = "F:/Messung/006-200917_Becken4-DBV/"
+#     protpaths.loc['B4','name_prot'] = "200917_Becken4-DBV_Protokoll_new.xlsx"
+#     protpaths.loc['B5','path_main'] = "F:/Messung/007-201014_Becken5-DBV/"
+#     protpaths.loc['B5','name_prot'] = "201014_Becken5-DBV_Protokoll_new.xlsx"
+#     protpaths.loc['B6','path_main'] = "F:/Messung/008-201125_Becken6-DBV/"
+#     protpaths.loc['B6','name_prot'] = "201125_Becken6-DBV_Protokoll_new.xlsx"
+#     protpaths.loc['B7','path_main'] = "F:/Messung/009-210120_Becken7-DBV/"
+#     protpaths.loc['B7','name_prot'] = "210120_Becken7-DBV_Protokoll_new.xlsx"
 
-    protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
-    protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
-    protpaths.loc[:,'path_eva1']    = "Auswertung/"
-    protpaths.loc[:,'path_eva2']    = "ExMechEva/"
+#     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
+#     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
+#     protpaths.loc[:,'path_eva1']    = "Auswertung/"
+#     protpaths.loc[:,'path_eva2']    = "ExMechEva/"
     
-    # t=protpaths[['path_main','path_eva1','name_prot']].stack()
-    # t.groupby(level=0).apply(lambda x: '{0}{1}{2}'.format(*x))
-    combpaths['prot'] = protpaths['path_main']+protpaths['path_eva1']+protpaths['name_prot']
-    combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
-    combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
-    combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
+#     # t=protpaths[['path_main','path_eva1','name_prot']].stack()
+#     # t.groupby(level=0).apply(lambda x: '{0}{1}{2}'.format(*x))
+#     combpaths['prot'] = protpaths['path_main']+protpaths['path_eva1']+protpaths['name_prot']
+#     combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
+#     combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
+#     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
     
-    # mfile_add="" # suffix für Feuchte
+#     # mfile_add="" # suffix für Feuchte
     
     
-    if option == 'single':
-        ser='B5'
-        des='cm31a'
-        mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
+#     if option == 'single':
+#         ser='B5'
+#         des='cm31a'
+#         mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
         
-        prot=pd.read_excel(combpaths.loc[ser,'prot'],
-                           header=11, skiprows=range(12,13),
-                           index_col=0)
-        cout=TBT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
-                        paths=combpaths.loc[ser],
-                        mfile_add = mfile_add)
-        print("\nEva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]))
+#         prot=pd.read_excel(combpaths.loc[ser,'prot'],
+#                            header=11, skiprows=range(12,13),
+#                            index_col=0)
+#         cout=TBT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
+#                         paths=combpaths.loc[ser],
+#                         mfile_add = mfile_add)
+#         print("\nEva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]))
         
-    elif option == 'series':
-        ser='B6'
-        TBT_series(paths = combpaths.loc[ser],
-                   no_stats_fc = no_stats_fc,
-                   var_suffix = var_suffix)
+#     elif option == 'series':
+#         ser='B6'
+#         TBT_series(paths = combpaths.loc[ser],
+#                    no_stats_fc = no_stats_fc,
+#                    var_suffix = var_suffix)
         
-    elif option == 'complete':
-        for ser in combpaths.index:
-            TBT_series(paths = combpaths.loc[ser],
-                       no_stats_fc = no_stats_fc,
-                       var_suffix = var_suffix)
+#     elif option == 'complete':
+#         for ser in combpaths.index:
+#             TBT_series(paths = combpaths.loc[ser],
+#                        no_stats_fc = no_stats_fc,
+#                        var_suffix = var_suffix)
             
-    elif option == 'pack-complete':        
-        # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/TBT/B3-B7_TBT-Summary"
-        # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/211217/B3-B7_TBT-Summary"
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/TBT/B3-B7_TBT-Summary"
-        packpaths = combpaths[['prot','out']]
-        packpaths.columns=packpaths.columns.str.replace('out','hdf')
-        Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
-                      hdf_naming = 'Designation', var_suffix = var_suffix,
-                      h5_conc = 'Material_Parameters', h5_data = 'Measurement',
-                      opt_pd_out = False, opt_hdf_save = True)
-        print("Successfully created %s"%out_path)
+#     elif option == 'pack-complete':        
+#         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/TBT/B3-B7_TBT-Summary"
+#         # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/211217/B3-B7_TBT-Summary"
+#         out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/TBT/B3-B7_TBT-Summary"
+#         packpaths = combpaths[['prot','out']]
+#         packpaths.columns=packpaths.columns.str.replace('out','hdf')
+#         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
+#                       hdf_naming = 'Designation', var_suffix = var_suffix,
+#                       h5_conc = 'Material_Parameters', h5_data = 'Measurement',
+#                       opt_pd_out = False, opt_hdf_save = True)
+#         print("Successfully created %s"%out_path)
         
-    elif option == 'pack-complete-all':        
-        # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/211206/TBT/B3-B7_TBT-Summary"
-        # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/220905/B3-B7_TBT-Summary_new2"
-        out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/TBT/B3-B7_TBT-Summary-all"
-        packpaths = combpaths[['prot','out']]
-        packpaths.columns=packpaths.columns.str.replace('out','hdf')
-        Evac.pack_hdf_mul(in_paths=packpaths, out_path = out_path,
-                          hdf_naming = 'Designation', var_suffix = var_suffix,
-                          h5_conc = 'Material_Parameters',
-                          opt_pd_out = False, opt_hdf_save = True)
-        print("Successfully created %s"%out_path)
+#     elif option == 'pack-complete-all':        
+#         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/211206/TBT/B3-B7_TBT-Summary"
+#         # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/220905/B3-B7_TBT-Summary_new2"
+#         out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/TBT/B3-B7_TBT-Summary-all"
+#         packpaths = combpaths[['prot','out']]
+#         packpaths.columns=packpaths.columns.str.replace('out','hdf')
+#         Evac.pack_hdf_mul(in_paths=packpaths, out_path = out_path,
+#                           hdf_naming = 'Designation', var_suffix = var_suffix,
+#                           h5_conc = 'Material_Parameters',
+#                           opt_pd_out = False, opt_hdf_save = True)
+#         print("Successfully created %s"%out_path)
         
-    else:
-        raise NotImplementedError('%s not implemented!'%option)
+#     else:
+#         raise NotImplementedError('%s not implemented!'%option)
         
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

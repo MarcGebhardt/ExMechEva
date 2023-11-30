@@ -50,12 +50,14 @@ def main():
     protpaths.loc['TS','path_main'] = main_path+"Series_Test\\"
     protpaths.loc['TS','name_prot'] = "ACT_Protocol_Series_Test.xlsx"
     ## Path extensions for all series
+    protpaths.loc[:,'name_opts']    = "com_eva_opts.json"
     protpaths.loc[:,'path_con']     = "meas\\conventional\\"
     protpaths.loc[:,'path_dic']     = "meas\\optical\\"
     protpaths.loc[:,'path_eva1']    = "eva\\"
     
     # Path builder 
     combpaths['prot'] = protpaths['path_main']+protpaths['name_prot']
+    combpaths['opts'] = protpaths['path_main']+protpaths['name_opts']
     combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
     combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']

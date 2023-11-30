@@ -51,6 +51,8 @@ sns.set_theme(context="paper",style="whitegrid",
                   'legend.title_fontsize': 9,'legend.fontsize': 9,
                   'lines.linewidth': 1.0,'markers.fillstyle': 'none'})
 
+# , "axes.axisbelow": True
+
 plt_Fig_dict={'tight':True, 'show':True, 
               'save':True, 's_types':["pdf","png"], 
               'clear':True, 'close':True}

@@ -202,7 +202,7 @@ def ACT_single(prot_ser, paths, mfile_add=''):
     elif _opts['OPT_YM_Determination_refinement'][3].split('_')[-2] == 'c':
         tmp_md = '4'
     else:
-        raise ValueError('OPT_YM_Determination_refinement seams to be wrong')
+        raise ValueError('OPT_YM_Determination_refinement seems to be wrong')
     loc_Yd_tmp = 'E_lsq_R_A%s%sl'%(tmp_md,tmp_in)
         
     cout =''
