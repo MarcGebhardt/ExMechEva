@@ -5,13 +5,19 @@ Simple example using data/ACT for showing evaluation acc. to "bla".
 """
 
 import os 
+import sys
 from pathlib import Path
+
+sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva')
+
 nwd = Path.cwd().resolve().parent.parent
 os.chdir(nwd)
+
 
 import pandas as pd
 # import exmecheva.Eva_common as emec
 import exmecheva.Eva_ACT as emeact
+import exmecheva.eva as eva
 
 def main():
     # Set up new DataFrames for paths
@@ -66,8 +72,13 @@ def main():
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function
-    emeact.Selector(option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
-                    var_suffix=var_suffix, ser=ser, des=des, out_path=out_path)
+    # emeact.Selector(option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
+    #                 var_suffix=var_suffix, ser=ser, des=des, out_path=out_path)
+    
+    eva.selector(eva_single_func=emeact.ACT_single, 
+                 option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
+                 var_suffix=var_suffix, ser=ser, des=des, out_path=out_path,
+                 prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0))
 
 if __name__ == "__main__":
     main()

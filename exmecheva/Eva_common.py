@@ -79,15 +79,50 @@ def MG_strlog(s, logfp, output_lvl = 1, logopt=True, printopt=True):
 
 def check_empty(x, empty_str=['',' ','  ','   ',
                               '#NV''NaN','nan','NA']):
+    """
+    Tests if given variable (string or float) can interpreted as empty.
+
+    Parameters
+    ----------
+    x : None or string or float
+        Given variable to test.
+    empty_str : list of strings
+        Strings determining if variable can interpreted as empty.
+
+    Returns
+    -------
+    t : bool
+        Test result.
+
+    """
     # t = (x == '' or (isinstance(x, float) and  np.isnan(x)))
-    t = (x in empty_str or (isinstance(x, float) and  np.isnan(x)))
+    # t = (x in empty_str or (isinstance(x, float) and  np.isnan(x)))
+    t = (x is None or 
+         x in empty_str or
+         (isinstance(x, float) and  np.isnan(x)))
     return t
 
-def str_to_bool(x):
-    pt=["True","true","Yes","1","On"]
+def str_to_bool(x, str_true=["True","true","Yes","1","On"]):
+    """
+    Interpretes a given string as boolean value
+
+    Parameters
+    ----------
+    x : string or bool
+        Value to be interpreted.
+    str_true : list of strings
+        List of strings interpreted as True.
+
+    Returns
+    -------
+    t : bool
+        Boolean value result.
+
+    """
+    
     if x is True:
         t = x
-    elif x in pt:
+    elif x in str_true:
         t = True
     else:
         t = False

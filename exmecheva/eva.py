@@ -2,7 +2,9 @@
 """
 Created on Wed Nov 29 12:23:31 2023
 
-@author: mgebhard
+@author: MarcGebhardt
+ToDo:
+    - series only work with output_lvl>=1
 """
 import os
 import traceback
@@ -10,7 +12,31 @@ import pandas as pd
 
 import exmecheva.Eva_common as Evac #import Eva_common relative?
 
-def series(eva_single_func, paths, no_stats_fc, var_suffix, prot_rkws, output_lvl=0):
+def series(eva_single_func, paths, no_stats_fc, var_suffix, 
+           prot_rkws, output_lvl=1):
+    """
+    
+
+    Parameters
+    ----------
+    eva_single_func : TYPE
+        DESCRIPTION.
+    paths : TYPE
+        DESCRIPTION.
+    no_stats_fc : TYPE
+        DESCRIPTION.
+    var_suffix : TYPE
+        DESCRIPTION.
+    prot_rkws : TYPE
+        DESCRIPTION.
+    output_lvl : TYPE, optional
+        DESCRIPTION. The default is 1.
+
+    Returns
+    -------
+    None.
+
+    """
     prot = pd.read_excel(paths['prot'], **prot_rkws)
     
     logfp = paths['out'] + os.path.basename(paths['prot']).replace('.xlsx','.log')
