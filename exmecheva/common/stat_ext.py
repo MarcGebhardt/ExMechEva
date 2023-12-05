@@ -10,7 +10,7 @@ from scipy import stats
 from statsmodels.stats.multicomp import MultiComparison
 
 from .pd_ext import (pd_outsort, deal_dupl_index)
-from .helper import str_indent
+from .output import str_indent
 
 #%% statistical outliers
 def stat_outliers(data, option='IQR', span=1.5,

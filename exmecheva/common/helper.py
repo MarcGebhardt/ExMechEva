@@ -1,13 +1,46 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 23 13:21:05 2023
+Contains test and basic numeric functionality.
 
-@author: mgebhard
+@author: MarcGebhardt
 """
+import warnings
 import numpy as np
-import pandas as pd
 
 #%% tests
+def _test_overwrites(impmods, overwr):
+    """
+    Tests if function in module. Use while importing.
+
+    Parameters
+    ----------
+    impmods : list, optional
+        Modules to search for function overwrites. The default is [].
+    overwr : list, optional
+        Function overwrites to check in modules. The default is [].
+
+    Raises
+    ------
+    ImportWarning
+        Function in module and will be overwritten.
+
+    """
+    def funcinmod(func, mod):
+        if str(func) in dir(mod):
+            o = True
+        else:
+            o = False
+        return o
+    
+    # _overrides=["indlim","meanwoso","stdwoso"]
+    # _impmods=[pd.Series,pd.DataFrame]
+    for ta in overwr:
+        for tb in impmods:
+            if funcinmod(func=ta, mod=tb):
+                warnings.warn("Function %s in %s and will be overwritten!"%(ta,tb),
+                              ImportWarning)
+
+
 def check_empty(x, empty_str=['',' ','  ','   ',
                               '#NV''NaN','nan','NA']):
     """
@@ -106,45 +139,3 @@ def round_to_sigdig(x, sd=3):
     xr =  round(x, rdig)
     return xr
 
-def Inter_Lines(r1,c1, r2,c2, out='x'):
-    """
-    Determine intersection point of two lines.
-
-    Parameters
-    ----------
-    r1 : float
-        Rise of first line.
-    c1 : float
-        Constant part of first line.
-    r2 : float
-        Rise of second line.
-    c2 : float
-        Constant part of second line.
-    out : string, optional
-        Option for output ('x', 'y', or 'xy'). The default is 'x'.
-
-    Returns
-    -------
-    float or tuple of float
-        Output values.
-
-    """
-    # if r1 == r2:
-    #     raise ValueError("Lines are parallel (no intersection)!")
-    #     return None
-    x = (c2-c1)/(r1-r2)
-    if out == 'x':
-        return x
-    else: 
-        y = r1 * x + c1
-        if out == 'y':
-            return x, y
-        elif out == 'xy':
-            return x, y
-    
-def Line_from2P(P1, P2):
-    """Determine line from two points (1st argument is x)"""
-    slope = (P2[1] - P1[1]) / (P2[0] - P1[0])
-    constant = P1[1] - slope * P1[0]
-    return slope, constant
-    

@@ -361,6 +361,7 @@ def pd_axischange(axis):
         NotImplementedError("Axis %s not implemented!"%axis)
     return a
 
+#%% NaN handling
 def pd_exclnan(pdo,axis=1):
     if pd_isDF(pdo):
         exm=pdo.isna().any(axis=axis)

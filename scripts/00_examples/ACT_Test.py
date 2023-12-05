@@ -6,6 +6,7 @@ Simple example using data/ACT for showing evaluation acc. to "bla".
 
 import os 
 import sys
+import pandas as pd
 from pathlib import Path
 
 sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva')
@@ -13,8 +14,6 @@ sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva')
 nwd = Path.cwd().resolve().parent.parent
 os.chdir(nwd)
 
-
-import pandas as pd
 # import exmecheva.Eva_common as emec
 import exmecheva.Eva_ACT as emeact
 import exmecheva.eva as eva
@@ -29,12 +28,12 @@ def main():
     option = 'single'
     ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
     option = 'series'
-    # ## Evaluate series of series (here only one series, named 'TS')
-    # option = 'complete'
-    # ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
-    # option = 'pack'
-    # ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
-    # option = 'pack-all'
+    ## Evaluate series of series (here only one series, named 'TS')
+    option = 'complete'
+    ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
+    option = 'pack'
+    ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
+    option = 'pack-all'
 
     # Example (Series='TS' and specimen designation='tl21x', see protocol table): 
     ser='TS'

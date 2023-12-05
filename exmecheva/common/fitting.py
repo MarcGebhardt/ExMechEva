@@ -7,8 +7,10 @@ Created on Mon Dec  4 17:43:14 2023
 import warnings
 
 import numpy as np
-
+import pandas as pd
 import lmfit
+
+from .pd_ext import (pd_combine_index)
 
 def YM_sigeps_lin(stress_ser, strain_ser, 
                   method='leastsq', nan_policy='omit',

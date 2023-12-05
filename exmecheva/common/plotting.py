@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from .analyse import (normalize, threshhold_setter)
+from .analyze import (normalize, threshhold_setter)
 
 #%% core
 def plt_handle_suffix(fig, path='foo', tight=True, show=True, 
@@ -165,7 +165,7 @@ def MCurve_Char_Plotter(cps, cip, dfp, df,
                         do_kwargs={'norm':'absmax', 'normadd':0.5,
                                    'th':0.05, 'th_option':'abs', 'th_set_val':0},
                         limDQ=False, limDQvals=[-1.1,1.1]):
-    """Plotting method for MCurve_Characterizer results."""
+    """Plotting method for mc_char.MCurve_Characterizer results."""
     if disp_opt_DQ == 'True':
         df_u_DQ = df
     else:
