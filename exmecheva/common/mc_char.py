@@ -198,6 +198,89 @@ def test_pdmon(df,cols,m,dist):
             if c[j]:  d[j]=i
     return (d)
 
+def YM_eva_range_refine(m_df, VIP, n_strain, n_stress,
+                         n_loBo='S', n_upBo='U',
+                         d_loBo=0.05, d_max=0.75, 
+                         rise_det=[True,4],
+                         n_Outlo='F3',n_Outmi='FM',n_Outhi='F4'):
+    """
+    Refines the Youngs Modulus determinition range according to 
+    "Keuerleber, M. (2006) - Bestimmung des Elastizitätsmoduls von Kunststoffen
+    bei hohen Dehnraten am Beispiel von PP. Von der Fakultät Maschinenbau der 
+    Universität Stuttgart zur Erlangung der Würde eines Doktor-Ingenieurs (Dr.-Ing.) 
+    genehmigte Abhandlung. Doktorarbeit. Universität Stuttgart, Stuttgart"
+
+    Parameters
+    ----------
+    m_df : pd.DataFrame
+        Measured data.
+    VIP : pd.Series
+        Important points corresponding to measured data.
+    n_strain : string
+        Name of used strain (have to be in measured data).
+    n_stress : string
+        Name of used stress (have to be in measured data).
+    n_loBo : string
+        Lower border for determination (have to be in VIP). The default is 'S'.
+    n_upBo : string
+        Upper border for determination (have to be in VIP). The default is 'U'.
+    d_loBo : float/str, optional
+        When float: Percentage of range between n_upBo and n_loBo as start distance to n_loBo.
+        When str starting with 'S', followed by integer: Distance in steps to n_loBo.
+        The default is 0.05.
+    d_max : float, optional
+        Percentage of . The default is 0.75.
+    rise_det : [bool, int], optional
+        Determination options for stress rising ([smoothing, smoothing factor]).
+    n_Outlo : string, optional
+        Name of new lower border. The default is 'F3'.
+    n_Outmi : string, optional
+        Name of maximum differential quotient. The default is 'FM'.
+    n_Outhi : string, optional
+        Name of new upper border. The default is 'F4'.
+
+    Yields
+    ------
+    VIP_new : pd.Series
+        Important points corresponding to measured data.
+    txt : string
+        Documantation string.
+    """
+    if isinstance(d_loBo, str):
+        if d_loBo.startswith('S'):
+            i_loBo = int(d_loBo[1:])
+        else:
+            raise ValueError("Distance to lower border %s seems to be a string, but doesn't starts with 'S'"%d_loBo)
+        Lbord = VIP[n_loBo]+i_loBo
+        ttmp = m_df.loc[VIP[n_loBo]+i_loBo:VIP[n_upBo],n_stress]
+    else:
+        ttmp = m_df.loc[VIP[n_loBo]:VIP[n_upBo],n_stress]
+        ftmp=float(ttmp.iloc[0]+(ttmp.iloc[-1]-ttmp.iloc[0])*d_loBo)
+        Lbord=abs(ttmp-ftmp).idxmin()
+
+    DQdf=pd.concat(Diff_Quot(m_df.loc[:,n_strain], m_df.loc[:,n_stress],
+                              rise_det[0], rise_det[1]), axis=1)
+    DQdf=m_df.loc(axis=1)[[n_strain,n_stress]].join(DQdf,how='outer')
+    DQdfs=DQdf.loc[Lbord:VIP[n_upBo]]
+    
+    
+    VIP_new = VIP
+    txt =""
+    VIP_new[n_Outmi]=DQdfs.DQ1.idxmax()
+    try:
+        VIP_new[n_Outlo]=DQdfs.loc[:VIP_new[n_Outmi]].iloc[::-1].loc[(DQdfs.DQ1/DQdfs.DQ1.max())<d_max].index[0]+1
+    except IndexError:
+        VIP_new[n_Outlo]=DQdfs.index[0]
+        txt+="%s set to start of diff.-quot. determination "%n_Outlo
+    try:
+        VIP_new[n_Outhi]=DQdfs.loc[VIP_new[n_Outmi]:].loc[(DQdfs.DQ1/DQdfs.DQ1.max())<d_max].index[0]-1
+    except IndexError:
+        # VIP_new[n_Outhi]=VIP_new[n_Outmi]-1 #-1 könnte zu Problemen führen
+        VIP_new[n_Outhi]=VIP_new[n_upBo] #-1 könnte zu Problemen führen
+        txt+="%s set on maximum of diff.-quot. "%n_Outhi
+    VIP_new=VIP_new.sort_values()
+    return VIP_new, DQdfs, txt
+
 def Diff_Quot2(x, y, 
                smooth_bool=False, smooth_type='SMA', 
                smooth_opts={'window_length':3}, 

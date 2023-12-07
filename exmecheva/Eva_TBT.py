@@ -28,29 +28,24 @@ Changelog:
 """
 
 #%% 0 Imports
-# import sys
-import os
-import traceback
 import pandas as pd
 import numpy as np
-# import scipy.integrate   as scint
-# import scipy.interpolate as scipo
-# import scipy.optimize    as scopt
 import lmfit
 import matplotlib.pyplot as plt
-# from matplotlib import cm
-# import matplotlib.colors as colors
-# from mpl_toolkits.mplot3d import Axes3D
-# from datetime import datetime, timedelta
 from datetime import datetime
 import time
 import warnings
-import json
 
 # import Bending as Bend
 # import Eva_common as Evac
-import exmecheva.Eva_common as Evac #import Eva_common relative?
+# import exmecheva.Eva_common as Evac #import Eva_common relative?
+import exmecheva.common as emec
 import exmecheva.Bending as Bend
+
+log_custom = emec.output.str_log
+log_cind = emec.output.str_indent
+
+plt_hsuf =  emec.plotting.plt_handle_suffix
 
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 warnings.filterwarnings('ignore',category=FutureWarning)
@@ -67,136 +62,24 @@ plt.rcParams['axes.grid']= True
 
 output_lvl= 1 # 0=none, 1=only text, 2=add_diagramms
 plt_Fig_dict={'tight':True, 'show':True, 
-              'save':True, 's_types':["pdf","png"], 
+              'save':True, 's_types':["pdf"], 
               'clear':True, 'close':True}
 MG_logopt={'logfp':None,'output_lvl':output_lvl,'logopt':True,'printopt':False}
 
-#%% 0.1 Add. modules
-def TBT_Option_reader(options):
-    def check_empty(x):
-        t = (x == '' or (isinstance(x, float) and  np.isnan(x)))
-        return t
-    for o in options.index:
-        if (o=='OPT_File_Meas') or (o=='OPT_File_Meas'):
-            if check_empty(options[o]):
-                options[o]='Test'
-            else:
-                options[o]=str(options[o])
-        elif (o=='OPT_Measurement_file'):
-            if check_empty(options[o]):
-                options[o]='{"header":48,"head_names":["Time","Trigger","F_WZ","L_PM","F_PM","L_IWA1","L_IWA2"], "used_names_dict":{"Time":"Time","Force":"F_WZ","Way":["L_IWA1","L_IWA2"]}}'
-            options[o]=json.loads(options[o])
-            
-        
-        elif (o=='OPT_End'):
-            if check_empty(options[o]):
-                options[o]=np.nan
-        
-        elif (o=='OPT_Resampling'):
-            if check_empty(options[o]):
-                options[o]=True
-        elif (o=='OPT_Resampling_moveave'):
-            if check_empty(options[o]):
-                options[o]=True
-        elif (o=='OPT_Resampling_Frequency'):
-            if check_empty(options[o]):
-                options[o]=4.0
-                
-        
-        elif (o=='OPT_Springreduction'):
-            if check_empty(options[o]):
-                options[o]=False
-        elif (o=='OPT_Springreduction_K'):
-            if check_empty(options[o]):
-                options[o]=-0.116
-        elif (o=='OPT_LVDT_failure'):
-            if check_empty(options[o]):
-                options[o]=False
-        elif (o=='OPT_Compression'):
-            if check_empty(options[o]):
-                options[o]=True
-                
-        
-        elif (o=='OPT_DIC'):
-            if check_empty(options[o]):
-                options[o]=True
-        elif (o=='OPT_DIC_Points_device_prefix') or (o=='OPT_DIC_Points_meas_prefix'):
-            if check_empty(options[o]):
-                if o=='OPT_DIC_Points_device_prefix':
-                    options[o]='S'
-                else:
-                    options[o]='P'                    
-            else:
-                options[o]=str(options[o]).replace('"','')        
-        elif (o=='OPT_DIC_Points_TBT_device'):
-            if check_empty(options[o]):
-                options[o]=['S1','S2','S3']
-            else:
-                options[o]=str(options[o]).replace('"','').split(',')
-        elif (o=='OPT_DIC_Points_meas_fork'):
-            if check_empty(options[o]):
-                options[o]=['P3','P4','P5']
-            else:
-                options[o]=str(options[o]).replace('"','').split(',')
-        elif (o=='OPT_DIC_Fitting'):
-            if check_empty(options[o]):
-                # options[o]='{"Bending_Legion_Builder":"FSE_fixed","Bending_Legion_Name":"FSE fit","Bending_MCFit_opts":{"error_weights_pre":[   1,   0,1000, 100],"error_weights_bend":[   1,   0,1000, 100],"error_weights_pre_inc":[   1,   0,1000, 100],"error_weights_bend_inc":[   1,   0,1000, 100],"fit_max_nfev_pre": 500,"fit_max_nfev_bend": 500,"fit_max_nfev_pre_inc": 500,"fit_max_nfev_bend_inc": 500},"pwargs":{"param_val": {"xmin":-10,"xmax":10,"FP":"pi/(xmax-xmin)","b1":-1.0,"b2":-0.1,"b3":-0.01,"b4":-0.001,"c":0.0,"d":0.0},"param_min": {},"param_max": {"b1":1.0,"b2":1.0,"b3":1.0,"b4":1.0}}}'
-                options[o]='{"Bending_Legion_Builder":"FSE_fixed","Bending_Legion_Name":"FSE fit","Bending_MCFit_opts":{"error_weights_pre":[   1,   0,1000, 100],"error_weights_bend":[   1,  10,1000, 100],"error_weights_pre_inc":[   1,   0,1000, 100],"error_weights_bend_inc":[   1,  10,1000, 100],"fit_max_nfev_pre": 500,"fit_max_nfev_bend": 500,"fit_max_nfev_pre_inc": 500,"fit_max_nfev_bend_inc": 500},"pwargs":{"param_val": {"xmin":-10,"xmax":10,"FP":"pi/(xmax-xmin)","b1":-1.0,"b2":-0.1,"b3":-0.01,"b4":-0.001,"c":0.0,"d":0.0},"param_min": {},"param_max": {"b1":1.0,"b2":1.0,"b3":1.0,"b4":1.0}}}'
-            options[o]=json.loads(options[o])
-        elif (o=='OPT_DIC_Tester'):
-            if check_empty(options[o]):
-                # options[o]=[0.005, 50.0, 3, 7]
-                options[o]=[0.005, 50.0, 3, 6]
-            else:
-                options[o]=str(options[o]).replace('"','').split(',')
-            options[o][0]=float(options[o][0])
-            options[o][1]=float(options[o][1])
-            options[o][2]=  int(options[o][2])
-            options[o][3]=  int(options[o][3])
-        elif (o=='OPT_Poisson_prediction'):
-            if check_empty(options[o]):
-                options[o]=0.30
-            else:
-                options[o]=float(options[o])
-        elif (o=='OPT_Determination_Distance'):
-            if check_empty(options[o]):
-                options[o]=30
-            else:
-                options[o]=int(options[o])
-                
-        elif (o=='OPT_YM_Determination_range'):
-            if check_empty(options[o]):
-                # options[o]=[0.25,0.75,'U']
-                options[o]=[0.25,0.50,'U']
-            else:
-                options[o]=str(options[o]).replace('"','').split(',')
-            options[o][0]=float(options[o][0])
-            options[o][1]=float(options[o][1])
-        elif(o=='OPT_YM_Determination_refinement'):
-            if check_empty(options[o]):
-                # options[o]=[0.15,0.75,'U','DStrain_M']
-                # options[o]=[0.15,0.75,'U','c_M']
-                # options[o]=[0.10,0.75,'U','d_M']
-                # options[o]=[0.15,0.75,'U','d_M',True,4]
-                options[o]=[0.15,0.75,'U','d_M',True,8]
-            else:
-                options[o]=str(options[o]).replace('"','').split(',')
-            options[o][0]=float(options[o][0])
-            options[o][1]=float(options[o][1])
-            options[o][4]= bool(options[o][4])
-            options[o][5]=  int(options[o][5])
-    return options
 #%% 1.0 Evaluation
 def TBT_single(prot_ser, paths, mfile_add=''):
-    # out_name = prot_ser['Donor']+'_'+prot_ser['Designation']
     out_name = prot_ser['Designation']+mfile_add
-    # out_name = prot_ser.name
     out_full = paths['out']+out_name
-    _opts = prot_ser[prot_ser.index.str.startswith('OPT_')]
-    _opts = TBT_Option_reader(_opts)
     
-    # path_meas = paths['meas']+_opts['OPT_File_Meas']+".xlsx"
-    # path_dic = paths['dic']+_opts['OPT_File_DIC']+".csv"
+    _opts=emec.eva_opt_hand.option_reader_sel(
+        prot_ser=prot_ser, paths=paths, 
+        search_inds=['Number','Designation','name'], 
+        variant='',
+        option='JFile+Prot',
+        sheet_name="",
+        re_rkws=dict()
+        )
+    
     path_meas = paths['meas']+_opts['OPT_File_Meas']+mfile_add+".xlsx"
     path_dic = paths['dic']+_opts['OPT_File_DIC']+mfile_add+".csv"
     
@@ -209,16 +92,12 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     Bo_Ri =  Length/2
     xlin = np.linspace(-Length/2,Length/2,101)
     
-    rel_time_digs = Evac.sigdig(_opts['OPT_Resampling_Frequency'], 4)
+    # rel_time_digs = emec.helper.sigdig(_opts['OPT_Resampling_Frequency'], 4)
     rel_time_digs = 2
     
     bl = Bend.Bend_func_legion(name=_opts['OPT_DIC_Fitting']['Bending_Legion_Name'])
     bl.Builder(option=_opts['OPT_DIC_Fitting']['Bending_Legion_Builder'])
     
-    # pwargs={'param_val': {'xmin':-Length/2,'xmax':Length/2,'FP':'pi/(xmax-xmin)',
-    #                   'b1':-1.0,'b2':-0.1,'b3':-0.01,'b4':-0.001,'c':0.0,'d':0.0},
-    #         'param_min': {'b1':-np.inf,'b2':-np.inf,'b3':-np.inf,'b4':-np.inf},
-    #         'param_max': {'b1':1.0,'b2':1.0,'b3':1.0,'b4':1.0}}
     pwargs=_opts['OPT_DIC_Fitting']['pwargs']
     # krücke
     pwargs['param_val']['xmin']=Bo_Le
@@ -259,12 +138,12 @@ def TBT_single(prot_ser, paths, mfile_add=''):
           ("   DIC-names of special points (l,r,head), = %s, %s, %s" %(*_opts['OPT_DIC_Points_TBT_device'],)),
           ("   DIC-names of meas. points for fork (l,m,r), = %s, %s, %s" %(*_opts['OPT_DIC_Points_meas_fork'],)),
           ("   DIC-maximal SD = %.3f mm and maximal displacement between steps %.1f mm" %(_opts['OPT_DIC_Tester'][0],_opts['OPT_DIC_Tester'][1])))
-    Evac.MG_strlog('\n'.join(ftxt),log_mg,output_lvl,printopt=False)
+    log_custom('\n'.join(ftxt),log_mg,output_lvl,printopt=False)
     #%% 2 Geometry
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 2 Geometry ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 2 Geometry ###",log_mg,output_lvl,printopt=False)
     timings.loc[2.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -302,26 +181,31 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax3.plot(xlin, func_I(xlin), 'g-', label = 'MoI-fit')
         ax3.plot(geo.loc[:,'x'],geo.loc[:,'t']**3*geo.loc[:,'w']/12, 'gh', label = 'MoI')
         ax3.legend()
-        Evac.plt_handle_suffix(fig,path=out_full+"-Geo",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-Geo",**plt_Fig_dict)
     
-    Evac.MG_strlog("\n  Measured Geometry:"+Evac.str_indent(geo),log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n  Function of thickness:"+Evac.str_indent(func_t),log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n  Function of width:"+Evac.str_indent(func_w),log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n  Function of area:"+Evac.str_indent(func_A),log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n  Function of moment of inertia:"+Evac.str_indent(func_I),log_mg,output_lvl,printopt=False)
+    log_custom("\n  Measured Geometry:"+log_cind(geo),
+               log_mg,output_lvl,printopt=False)
+    log_custom("\n  Function of thickness:"+log_cind(func_t),
+               log_mg,output_lvl,printopt=False)
+    log_custom("\n  Function of width:"+log_cind(func_w),
+               log_mg,output_lvl,printopt=False)
+    log_custom("\n  Function of area:"+log_cind(func_A),
+               log_mg,output_lvl,printopt=False)
+    log_custom("\n  Function of moment of inertia:"+log_cind(func_I),
+            log_mg,output_lvl,printopt=False)
 
     # =============================================================================
     #%% 3 Read in measurements
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 3 Read in measurements ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 3 Read in measurements ###",log_mg,output_lvl,printopt=False)
     timings.loc[3.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     # =============================================================================
     #%%% 3.1 Read in conventional measurement data
     timings.loc[3.1]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     mess=pd.read_excel(path_meas, header=_opts['OPT_Measurement_file']['header'],
@@ -338,7 +222,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     # # =============================================================================
     # #%%% 3.2 Specify used conventional measured force and way
     timings.loc[3.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     messu = pd.DataFrame({'Time': mess[_opts['OPT_Measurement_file']['used_names_dict']['Time']],
@@ -356,7 +240,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     # =============================================================================
     #%%% 3.3 Read in optical measurement data
     timings.loc[3.3]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     if _opts['OPT_DIC']:
@@ -406,8 +290,8 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         anp=tester.loc[0,tester.loc[0].index.str.contains(pat='P',na=False,regex=True)].count()
         ans=tester.loc[0,tester.loc[0].index.str.contains(pat='S',na=False,regex=True)].count()
         dic_t_str=pd.Series([],dtype='O')
-        Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-        Evac.MG_strlog("\n  DIC-Tester:",log_mg,output_lvl,printopt=False)
+        log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+        log_custom("\n  DIC-Tester:",log_mg,output_lvl,printopt=False)
         for s in tester.index:
             dic_t_str[s]=""
             if tester.loc[s].any():
@@ -426,8 +310,8 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                     dic_t_str[s]=dic_t_str[s]+("\n    Failed points: %d of %d meas. | %d of %d special %s" %(fpnp,anp,fpns,ans,fps))
                     if ((anp-fpnp) < _opts['OPT_DIC_Tester'][3])|((ans-fpns) < _opts['OPT_DIC_Tester'][2]): dic_t_str[s]=dic_t_str[s]+"\n    -> DIC-curving of step dropped!!!"
     
-        Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-        Evac.MG_strlog("\n  Coordinate transformation and curvature calculation:",log_mg,output_lvl,printopt=False)
+        log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+        log_custom("\n  Coordinate transformation and curvature calculation:",log_mg,output_lvl,printopt=False)
         
         Points_T=pd.Series([],dtype='O')
         Points_L_T=pd.Series([],dtype='O')
@@ -503,7 +387,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
             ax1.annotate('%s' % x, xy=(pt.loc[0].loc[x,'x'],pt.loc[0].loc[x,'y']),
                          xycoords='data', xytext=(7, -7), textcoords='offset points')
         ax1.legend()
-        Evac.plt_handle_suffix(fig,path=out_full+"-DIC_fit_Geo",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-DIC_fit_Geo",**plt_Fig_dict)
         
         P_xcoord_ydisp = Points_L_T_stacked.loc(axis=1)[:,['x','y']].copy()
         P_xcoord_ydisp.loc(axis=1)[:,'y'] = P_xcoord_ydisp.loc(axis=1)[:,'y']-P_xcoord_ydisp.loc(axis=1)[:,'y'].loc[0]
@@ -524,16 +408,16 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     
     # =============================================================================
     #%% 4 Merging measurements
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 4 Merging measurements ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 4 Merging measurements ###",log_mg,output_lvl,printopt=False)
     timings.loc[4.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     # =============================================================================
     #%%% 4.1 Determine time offset between conventional and optical measurement
     timings.loc[4.1]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     if _opts['OPT_DIC']:
@@ -566,11 +450,11 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                   '$t_{S,DIC}$ = % 2.4f s '%(tsd))
             fig.text(0.95,0.15,'\n'.join(ftxt),
                      ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
-            Evac.plt_handle_suffix(fig,path=out_full+"-toff",**plt_Fig_dict)
+            plt_hsuf(fig,path=out_full+"-toff",**plt_Fig_dict)
             del xlin_tmp
         
-        Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-        Evac.MG_strlog("\n   Time offset between PM and DIC: %.3f s" %(toff),log_mg,output_lvl)
+        log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+        log_custom("\n   Time offset between PM and DIC: %.3f s" %(toff),log_mg,output_lvl)
     else:
         toff=0.0
         
@@ -579,7 +463,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     # =============================================================================
     #%%% 4.2 Downsampling of conventional data
     timings.loc[4.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     mess_dt=messu.Time.diff().mean()
@@ -608,7 +492,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     # =============================================================================
     #%%% 4.3 Merge optical to conventional data
     timings.loc[4.3]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     if _opts['OPT_DIC']:
@@ -624,16 +508,16 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         
     # =============================================================================
     #%% 5 Start and End
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 5 Start and End ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 5 Start and End ###",log_mg,output_lvl,printopt=False)
     timings.loc[5.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)                                                    
     # =============================================================================
     #%%% 5.1 Determine start and end of evaluation
     timings.loc[5.1]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     if np.isnan(_opts['OPT_End']):
@@ -643,7 +527,11 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         dic_to_mess_End=messu.loc[messu.Time<=_opts['OPT_End']].index[-1]
         
     mun_tmp=messu.loc[:min(dic_to_mess_End,messu.Force.idxmax()),'Force']
-    messu['driF'],messu['dcuF'],messu['driF_schg']=Evac.rise_curve(messu.loc[:dic_to_mess_End]['Force'],True,2)
+    messu['driF'],messu['dcuF'],messu['driF_schg']=emec.mc_char.rise_curve(
+        messu.loc[:dic_to_mess_End]['Force'],
+        True,
+        2
+        )
     
     for i in messu.index: # Startpunkt über Vorzeichenwechsel im Anstieg
         if messu.loc[i,'driF_schg']:
@@ -651,26 +539,34 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                 messu_iS=i
                 break
     
-    messu_iS,_=Evac.find_SandE(messu.loc[messu_iS:+messu_iS+_opts['OPT_Determination_Distance'],
-                                         'driF'],abs(messu['driF']).quantile(0.5),"pgm_other",0.1)
-    # _,messu_iE=Evac.find_SandE(messu['driF'],0,"qua_self",0.5) # not changed 251022 (B5-sr09)
+    messu_iS,_=emec.mc_char.find_SandE(
+        messu.loc[messu_iS:+messu_iS+_opts['OPT_Determination_Distance'],'driF'],
+        abs(messu['driF']).quantile(0.5),
+        "pgm_other",
+        0.1
+        )
+    # _,messu_iE=emec.mc_char.find_SandE(messu['driF'],0,"qua_self",0.5) # not changed 251022 (B5-sr09)
     try: # search after maximum Force
-        _,messu_iE=Evac.find_SandE(messu['driF'].loc[messu.Force.idxmax():],
-                                   messu['driF'],"qua_other",0.5)
+        _,messu_iE=emec.mc_char.find_SandE(
+            messu['driF'].loc[messu.Force.idxmax():],
+            messu['driF'],
+            "qua_other",
+            0.5
+            )
     except IndexError:
         messu_iE=dic_to_mess_End
     messu_iE=min(messu_iE,dic_to_mess_End)
     
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n   Start of evaluation after %.3f seconds, corresponds to %.5f %% of max. force."
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n   Start of evaluation after %.3f seconds, corresponds to %.5f %% of max. force."
                    %(messu.Time[messu_iS],100*abs(messu.Force[messu_iS])/abs(messu.Force).max()),log_mg,output_lvl)
     
     messu=messu.loc[messu_iS:messu_iE]
     if _opts['OPT_DIC']:
         P_xcoord_ydisp_meas=P_xcoord_ydisp_meas.loc[messu_iS:messu_iE]
         P_xcoord_ydisp_spec=P_xcoord_ydisp_spec.loc[messu_iS:messu_iE]
-        step_range_dic = Evac.pd_combine_index(step_range_dic,messu.index)
-        # step_range_dic = Evac.pd_combine_index(step_range_dic[1:],messu.index)
+        step_range_dic = emec.pd_ext.pd_combine_index(step_range_dic,messu.index)
+        # step_range_dic = emec.pd_ext.pd_combine_index(step_range_dic[1:],messu.index)
         
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Measuring'%plt_name)
@@ -699,12 +595,12 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         # ax2.plot(dic.Time, dic.DDisp_PM_c, 'm:', label='Way-DIC-P')
         # ax2.plot(dic.Time, dic.DDisp_PC_c, 'g:', label='Way-DIC-C')
     fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.9), ncol=1)
-    Evac.plt_handle_suffix(fig,path=out_full+"-meas",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-meas",**plt_Fig_dict)
     
     # =============================================================================
     #%%% 5.2 Resetting way
     timings.loc[5.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     # messu.Force=messu.Force-messu.Force.loc[messu_iS]
@@ -735,23 +631,23 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         # ax2.plot(messu.Time, messu.DDisp_PM_c, 'm:', label='Way-DIC-P')
         # ax2.plot(messu.Time, messu.DDisp_PC_c, 'g:', label='Way-DIC-C')
     fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.9), ncol=1)
-    Evac.plt_handle_suffix(fig,path=out_full+"-meas_u",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-meas_u",**plt_Fig_dict)
     
     # =============================================================================
     #%% 6 Evaluation
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 6 Evaluation ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 6 Evaluation ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     # =============================================================================
     #%%% 6.0 Perform DIC-fittings
     #%%%% 6.11 Pre-Fit with all components (Indentaion, shear force deformation and bending deformation)
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog('\n## Pre-fit on displacements:',log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom('\n## Pre-fit on displacements:',log_mg,output_lvl,printopt=False)
     timings.loc[6.11]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -769,16 +665,16 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ftxt=lmfit.fit_report(Pre_fit_df['Fit_Result'].loc[step])
         ftxt=ftxt.replace("\n[[Variables]]","\n    R-square-multi     = %1.5f\n[[Variables]]"%Pre_fit_df['Rquad_multi'].loc[step])
         ftxt=ftxt.replace("\n[[Variables]]","\n    R-square-disp      = %1.5f\n[[Variables]]"%Pre_fit_df['Rquad_disp'].loc[step])
-        Evac.MG_strlog('\n  Step %d'%step+Evac.str_indent(ftxt),
+        log_custom('\n  Step %d'%step+log_cind(ftxt),
                        log_mg,output_lvl,printopt=False)
 
     
     # =============================================================================
     #%%%% 6.12 Refit to adjusted bending deformation
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog('\n## Bend-fit on displacements:',log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom('\n## Bend-fit on displacements:',log_mg,output_lvl,printopt=False)
     timings.loc[6.12]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -804,7 +700,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ftxt=lmfit.fit_report(Bend_fit_df['Fit_Result'].loc[step])
         ftxt=ftxt.replace("\n[[Variables]]","\n    R-square-multi     = %1.5f\n[[Variables]]"%Bend_fit_df['Rquad_multi'].loc[step])
         ftxt=ftxt.replace("\n[[Variables]]","\n    R-square-disp      = %1.5f\n[[Variables]]"%Bend_fit_df['Rquad_disp'].loc[step])
-        Evac.MG_strlog('\n  Step %d'%step+Evac.str_indent(ftxt),
+        log_custom('\n  Step %d'%step+log_cind(ftxt),
                        log_mg,output_lvl,printopt=False)
     
     # =============================================================================
@@ -822,10 +718,10 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     step_range_dic_inc = step_range_dic[np.where(np.invert(Bend.Point_df_idx(P_xcoord_ydiff_meas, steps=step_range_dic, coords='y').isna()).sum(axis=1) >= (_opts['OPT_DIC_Tester'][3]))]
     # =============================================================================
     #%%%% 6.13 Pre-Fit with all components (Indentaion, shear force deformation and bending deformation)
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog('\n## Pre-fit on increments:',log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom('\n## Pre-fit on increments:',log_mg,output_lvl,printopt=False)
     timings.loc[6.13]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -842,16 +738,16 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ftxt=lmfit.fit_report(Pre_inc_fit_df['Fit_Result'].loc[step])
         ftxt=ftxt.replace("\n[[Variables]]","\n    R-square-multi     = %1.5f\n[[Variables]]"%Pre_inc_fit_df['Rquad_multi'].loc[step])
         ftxt=ftxt.replace("\n[[Variables]]","\n    R-square-disp      = %1.5f\n[[Variables]]"%Pre_inc_fit_df['Rquad_disp'].loc[step])
-        Evac.MG_strlog('\n  Step %d'%step+Evac.str_indent(ftxt),
+        log_custom('\n  Step %d'%step+log_cind(ftxt),
                        log_mg,output_lvl,printopt=False)
     
     
     # =============================================================================
     #%%%% 6.14 Refit to adjusted bending deformation
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog('\n## Bend-fit on increments:',log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom('\n## Bend-fit on increments:',log_mg,output_lvl,printopt=False)
     timings.loc[6.14]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -877,7 +773,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ftxt=lmfit.fit_report(Bend_inc_fit_df['Fit_Result'].loc[step])
         ftxt=ftxt.replace("\n[[Variables]]","\n    R-square-multi     = %1.5f\n[[Variables]]"%Bend_inc_fit_df['Rquad_multi'].loc[step])
         ftxt=ftxt.replace("\n[[Variables]]","\n    R-square-disp      = %1.5f\n[[Variables]]"%Bend_inc_fit_df['Rquad_disp'].loc[step])
-        Evac.MG_strlog('\n  Step %d'%step+Evac.str_indent(ftxt),
+        log_custom('\n  Step %d'%step+log_cind(ftxt),
                        log_mg,output_lvl,printopt=False)
     
 
@@ -885,7 +781,10 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     if True:
         # Fit comparison ----------------------------------------------------------
         # step=messu.Force.idxmax()
-        step = Evac.pd_combine_index(messu.loc[:messu.Force.idxmax()],step_range_dic_inc)[-1]
+        step = emec.pd_ext.pd_combine_index(
+            messu.loc[:messu.Force.idxmax()],
+            step_range_dic_inc
+            )[-1]
         
         fig, ax1 = plt.subplots()
         ax1.set_title('%s - Fit-compare - Displacement for step %i'%(plt_name,step))
@@ -900,7 +799,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax1.plot(P_xcoord_ydisp_meas.loc[step].loc[:,'x'],P_xcoord_ydisp_meas.loc[step].loc[:,'y'], 'ko', label='org. P')
         ax1.plot(P_xcoord_ydisp_meas_M.loc[step].loc[:,'x'],P_xcoord_ydisp_meas_M.loc[step].loc[:,'y'], 'go', label='M P')
         ax1.legend()
-        Evac.plt_handle_suffix(fig,path=out_full+"-DIC_fit-bl_U-d0",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-DIC_fit-bl_U-d0",**plt_Fig_dict)
         
         fig, ax1 = plt.subplots()
         ax1.set_title('%s - Fit-compare - Slope for step %i'%(plt_name,step))
@@ -911,7 +810,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax1.plot(xlin, bl['w_V']['d1'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'm--', label='V')
         ax1.plot(xlin, bl['w_M']['d1'](xlin,Bend_fit_df.loc[step,'Fit_params_dict']), 'r--', label='M')
         ax1.legend()
-        Evac.plt_handle_suffix(fig,path=out_full+"-DIC_fit-bl_U-d1",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-DIC_fit-bl_U-d1",**plt_Fig_dict)
         
         fig, ax1 = plt.subplots()
         ax1.set_title('%s - Fit-compare - Curvature for step %i'%(plt_name,step))
@@ -921,7 +820,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax1.plot(xlin, bl['w_S']['d2'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'b:', label='Wo. ind.')
         ax1.plot(xlin, bl['w_M']['d2'](xlin,Bend_fit_df.loc[step,'Fit_params_dict']), 'r--', label='M')
         ax1.legend()
-        Evac.plt_handle_suffix(fig,path=out_full+"-DIC_fit-bl_U-d2",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-DIC_fit-bl_U-d2",**plt_Fig_dict)
         
         fig, ax1 = plt.subplots()
         ax1.set_title('%s - Fit-compare-inc - Displacement for step %i'%(plt_name,step))
@@ -936,7 +835,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax1.plot(P_xcoord_ydiff_meas.loc[step].loc[:,'x'],P_xcoord_ydiff_meas.loc[step].loc[:,'y'], 'ko', label='org. P')
         ax1.plot(P_xcoord_ydiff_meas_M.loc[step].loc[:,'x'],P_xcoord_ydiff_meas_M.loc[step].loc[:,'y'], 'go', label='M P')
         ax1.legend()
-        Evac.plt_handle_suffix(fig,path=out_full+"-INC_fit-bl_U-d0",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-INC_fit-bl_U-d0",**plt_Fig_dict)
         
         # Pre-Fit -----------------------------------------------------------------
         Bend.Plotter.colplt_funcs_all(x=xlin, func_cohort=bl['w_A'],
@@ -979,10 +878,10 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     
     
     #%%% 6.2 Determine evaluation curves
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.2 Determine evaluation curves ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.2 Determine evaluation curves ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -1015,29 +914,27 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         messu.loc[messu_iS,[    'Disp_opt_A',    'Disp_opt_S',    'Disp_opt_M',]]=0.0
         messu.loc[messu_iS,['Strain_opt_d_A','Strain_opt_d_S','Strain_opt_d_M',]]=0.0
         messu.loc[messu_iS,['Strain_opt_c_A','Strain_opt_c_S','Strain_opt_c_M',]]=0.0
-        
-        # messu['Strain_opt_c_P']=12*messu['DDisp_PM']*prot.loc[prot_lnr]['t2']*prot.loc[prot_lnr]['lE']/(prot.loc[prot_lnr]['lE']**2*(3*messu['DDisp_PM_L']-prot.loc[prot_lnr]['lE'])+(prot.loc[prot_lnr]['lE']-messu['DDisp_PM_L'])**3)
-        # # Ermittlung über drei imaginäre Punkte auf gefitteter Mittellinie (Gabelaufnehmer):
-        # messu['Strain_opt_c_C']=12*messu['DDisp_PC']*prot.loc[prot_lnr]['t2']*prot.loc[prot_lnr]['lE']/(prot.loc[prot_lnr]['lE']**2*(3*Pcoord_val_L-prot.loc[prot_lnr]['lE'])+(prot.loc[prot_lnr]['lE']-Pcoord_val_L)**3)
 
     #Test Anstieg
-        tmon=Evac.test_pdmon(messu,['Stress','Strain',
-                                    'Strain_opt_d_A','Strain_opt_d_S','Strain_opt_d_M',
-                                    'Strain_opt_c_A','Strain_opt_c_S','Strain_opt_c_M'],1,10)
+        tmon=emec.mc_char.test_pdmon(
+            messu,
+            ['Stress','Strain',
+             'Strain_opt_d_A','Strain_opt_d_S','Strain_opt_d_M',
+             'Strain_opt_c_A','Strain_opt_c_S','Strain_opt_c_M'],
+            1,10
+            )
     else:
-        tmon=Evac.test_pdmon(messu,['Stress','Strain'],1,10)
+        tmon=emec.mc_char.test_pdmon(messu,['Stress','Strain'],1,10)
     
-    Evac.MG_strlog("\n   Last 10 monoton increasing periods:\n    %s"
+    log_custom("\n   Last 10 monoton increasing periods:\n    %s"
                    %tmon.to_frame(name='Epoche').T.to_string().replace('\n','\n    '),log_mg,output_lvl)
-    
-    
     
     # =============================================================================
     #%%% 6.3 Determine points of interest
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.3 Determine points of interest ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.3 Determine points of interest ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.31]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     VIP_messu=pd.Series([],dtype='int64',name='VIP_messu')
@@ -1050,7 +947,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         VIP_messu['Y']=mun_tmp.loc[mun_tmp.driF_schg==True].index[0]-1
     else:
         VIP_messu['Y']=VIP_messu['U']
-        Evac.MG_strlog('\n    Fy set on datapoint of Fu!',log_mg,output_lvl)
+        log_custom('\n    Fy set on datapoint of Fu!',log_mg,output_lvl)
         
     # mun_tmp = messu.loc[VIP_messu['U']:VIP_messu['E']-1]
     mun_tmp = messu.loc[VIP_messu['U']-1:VIP_messu['E']-1]
@@ -1062,7 +959,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     # if (mun_tmp['driF'].min()/mun_tmp['driF'].quantile(0.25))>=1.0:
     #     VIP_messu['B']=mun_tmp['driF'].idxmin()-1
     else:
-        Evac.MG_strlog('\n   Fb not reliably determinable!',log_mg,output_lvl)
+        log_custom('\n   Fb not reliably determinable!',log_mg,output_lvl)
             
     
     ftmp=float(messu.Force.loc[VIP_messu[_opts['OPT_YM_Determination_range'][2]]]*_opts['OPT_YM_Determination_range'][0])
@@ -1077,7 +974,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         # VIP_messu['F4']=VIP_messu['Y']
         # VIP_dicu['F2']=VIP_dicu['Y']
         # VIP_dicu['F4']=VIP_dicu['Y']
-        Evac.MG_strlog("\n   F2 set on Y (Force-rise between F1 and old F2)",log_mg,output_lvl)
+        log_custom("\n   F2 set on Y (Force-rise between F1 and old F2)",log_mg,output_lvl)
     
     ## Krücke
     # VIP_messu['F3']=VIP_messu['F1']
@@ -1089,18 +986,19 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     
     #%%%% 6.3.2 Improvement of evaluation range
     timings.loc[6.32]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     # (siehe Keuerleber, M. (2006). Bestimmung des Elastizitätsmoduls von Kunststoffen bei hohen Dehnraten am Beispiel von PP. Von der Fakultät Maschinenbau der Universität Stuttgart zur Erlangung der Würde eines Doktor-Ingenieurs (Dr.-Ing.) genehmigte Abhandlung. Doktorarbeit. Universität Stuttgart, Stuttgart.)
     ftmp=float(messu.Stress.loc[VIP_messu[_opts['OPT_YM_Determination_range'][2]]]*_opts['OPT_YM_Determination_refinement'][0])
     Lbord=abs(messu.Stress.loc[:VIP_messu[_opts['OPT_YM_Determination_range'][2]]]-ftmp).idxmin()
     
-    DQcon=pd.concat(Evac.Diff_Quot(messu.loc[:,'Strain'],
-                              messu.loc[:,'Stress'],
-                              _opts['OPT_YM_Determination_refinement'][4],
-                              _opts['OPT_YM_Determination_refinement'][5]), axis=1)
-                              # True,4), axis=1)
+    DQcon=pd.concat(emec.mc_char.Diff_Quot(
+        messu.loc[:,'Strain'],
+        messu.loc[:,'Stress'],
+        _opts['OPT_YM_Determination_refinement'][4],
+        _opts['OPT_YM_Determination_refinement'][5]
+        ), axis=1)
     DQcon=messu.loc(axis=1)[['Strain','Stress']].join(DQcon,how='outer')
     DQcons=DQcon.loc[Lbord:VIP_messu[_opts['OPT_YM_Determination_refinement'][2]]]
     VIP_messu['FM']=DQcons.DQ1.idxmax()
@@ -1116,13 +1014,13 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         VIP_messu['F4']=VIP_messu['FM']-1 #-1 könnte zu Problemen führen
     VIP_messu=VIP_messu.sort_values()
     
-    
     # optisch:    
-    DQopt=pd.concat(Evac.Diff_Quot(messu.loc[:,dic_used_Strain],
-                                   messu.loc[:,'Stress'],
-                                   _opts['OPT_YM_Determination_refinement'][4],
-                                   _opts['OPT_YM_Determination_refinement'][5]), axis=1)
-                                   # True,4), axis=1)
+    DQopt=pd.concat(emec.mc_char.Diff_Quot(
+        messu.loc[:,dic_used_Strain],
+        messu.loc[:,'Stress'],
+        _opts['OPT_YM_Determination_refinement'][4],
+        _opts['OPT_YM_Determination_refinement'][5]
+        ), axis=1)
     DQopt=messu.loc(axis=1)[[dic_used_Strain,'Stress']].join(DQopt,how='outer')
     DQopts=DQopt.loc[Lbord:VIP_dicu[_opts['OPT_YM_Determination_refinement'][2]]]
     VIP_dicu['FM']=DQopts.DQ1.idxmax()
@@ -1213,10 +1111,10 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                     color='gray', linestyle='--')
         ax4.set_yticks([-1,0,1])
         ax4.grid(which='major',axis='y',linestyle=':')
-        Evac.plt_handle_suffix(fig,path=out_full+"-YMRange_Imp",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YMRange_Imp",**plt_Fig_dict)
     
     
-    # Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
+    # log_custom("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
     #                %(VIP_messu['F2']-VIP_messu['F1'],VIP_dicu['F2']-VIP_dicu['F1'],
     #                  VIP_messu['F4']-VIP_messu['F3'],VIP_dicu['F4']-VIP_dicu['F3']),log_mg,output_lvl)
     if _opts['OPT_DIC']:
@@ -1224,24 +1122,24 @@ def TBT_single(prot_ser, paths, mfile_add=''):
              'opt F1-F2':VIP_dicu['F2']-VIP_dicu['F1'],
              'con F3-F4':VIP_messu['F4']-VIP_messu['F3'],
              'opt F3-F4':VIP_dicu['F4']-VIP_dicu['F3']}
-        Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
+        log_custom("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
                        %(*tmp.values(),),log_mg,output_lvl)
         for i in tmp.keys(): 
             if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
     else:
         tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
              'con F3-F4':VIP_messu['F4']-VIP_messu['F3']}
-        Evac.MG_strlog("\n   Datapoints (con) between F1-F2: %d and F3-F4: %d."
+        log_custom("\n   Datapoints (con) between F1-F2: %d and F3-F4: %d."
                        %(*tmp.values(),),log_mg,output_lvl)
         for i in tmp.keys(): 
             if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
             
     # =====================================================================================
     #%%% 6.4 Determine Youngs-Moduli
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.4 Determine Youngs-Moduli ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.4 Determine Youngs-Moduli ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.4]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -1261,15 +1159,19 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     Ind_YM_f=['F1','F2']
     Ind_YM_r=['F3','F4']
     sf_eva_con = messu.loc[VIP_messu[Ind_YM_f[0]]:VIP_messu[Ind_YM_f[1]]].index
-    sf_eva_dic = Evac.pd_combine_index(step_range_dic, 
-                                       messu.loc[VIP_dicu[Ind_YM_f[0]]:VIP_dicu[Ind_YM_f[1]]])
+    sf_eva_dic = emec.pd_ext.pd_combine_index(
+        step_range_dic, 
+        messu.loc[VIP_dicu[Ind_YM_f[0]]:VIP_dicu[Ind_YM_f[1]]]
+        )
     sr_eva_con = messu.loc[VIP_messu[Ind_YM_r[0]]:VIP_messu[Ind_YM_r[1]]].index
-    sr_eva_dic = Evac.pd_combine_index(step_range_dic, 
-                                       messu.loc[VIP_dicu[Ind_YM_r[0]]:VIP_dicu[Ind_YM_r[1]]])
+    sr_eva_dic = emec.pd_ext.pd_combine_index(
+        step_range_dic, 
+        messu.loc[VIP_dicu[Ind_YM_r[0]]:VIP_dicu[Ind_YM_r[1]]]
+        )
     # -------------------------------------------------------------------------------------
     #%%%% 6.4.1 Method A
     timings.loc[6.41]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -1313,10 +1215,10 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     E_A_df = pd.concat([A0Al_ser,
                         A2Al_ser, A2Sl_ser, A2Ml_ser,
                         A4Al_ser, A4Sl_ser, A4Ml_ser],axis=1)
-    # E_A = Evac.pd_agg(E_A_df.loc[sr_eva_con]) # geändert 21-09-20
+    # E_A = emec.stat_ext.pd_agg(E_A_df.loc[sr_eva_con]) # geändert 21-09-20
     cols_con=E_A_df.columns.str.contains('0')
-    E_A_con = Evac.pd_agg(E_A_df.loc[sr_eva_con,cols_con])
-    E_A_opt = Evac.pd_agg(E_A_df.loc[sr_eva_dic,np.invert(cols_con)])
+    E_A_con = emec.stat_ext.pd_agg(E_A_df.loc[sr_eva_con,cols_con])
+    E_A_opt = emec.stat_ext.pd_agg(E_A_df.loc[sr_eva_dic,np.invert(cols_con)])
     E_A = pd.concat([E_A_con,E_A_opt],axis=1)
 
     if True:
@@ -1349,7 +1251,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax2.axvline(x=VIP_messu['F4'], color='brown', linestyle='--')
         ax2.axvline(x=VIP_dicu['F3'], color='olive', linestyle=':')
         ax2.axvline(x=VIP_dicu['F4'], color='olive', linestyle='--')
-        Evac.plt_handle_suffix(fig,path=out_full+"-YM-Me_A",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YM-Me_A",**plt_Fig_dict)
         
     #least-square fit
     E_lsq_F_A0Al = Bend.YM_eva_method_A(stress_mid_ser=messu.Stress,
@@ -1498,7 +1400,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     
     #%%%% 6.4.2 Method B
     timings.loc[6.42]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     B1Al_ser, B1Al_strain_ser = Bend.YM_eva_method_B(option="Points", 
@@ -1558,7 +1460,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     
     E_B_df = pd.concat([B1Al_ser,B1Sl_ser,B1Ml_ser,
                         B2Al_ser,B2Sl_ser,B2Ml_ser],axis=1)
-    E_B = Evac.pd_agg(E_B_df.loc[sr_eva_dic])
+    E_B = emec.stat_ext.pd_agg(E_B_df.loc[sr_eva_dic])
     
     if True:
         fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
@@ -1579,7 +1481,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax2.set_ylabel('E / MPa')
         for k in cc:
             ax2.plot(sr_eva_dic, E_B_df[k].loc[sr_eva_dic], cc[k])
-        Evac.plt_handle_suffix(fig,path=out_full+"-YM-Me_B",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YM-Me_B",**plt_Fig_dict)
         
     # least-square-fit
     E_lsq_F_B1Al = Bend.YM_eva_method_B(option="Points",
@@ -1764,7 +1666,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
 
     #%%%% 6.4.3 Method C
     timings.loc[6.43]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     
@@ -1794,7 +1696,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                                   comp=_opts['OPT_Compression'], option="M+V", name="C2Cl")
     
     E_C_df = pd.concat([E_C2Al_ser,E_C2Sl_ser,E_C2Ml_ser,E_C2Cl_ser],axis=1)
-    E_C = Evac.pd_agg(E_C_df.loc[sr_eva_dic])
+    E_C = emec.stat_ext.pd_agg(E_C_df.loc[sr_eva_dic])
     
     if True:    
         fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
@@ -1815,70 +1717,70 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax2.set_ylabel('E / MPa')
         for k in cc:
             ax2.plot(sr_eva_dic,E_C_df[k].loc[sr_eva_dic], cc[k])
-        Evac.plt_handle_suffix(fig,path=out_full+"-YM-Me_C",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YM-Me_C",**plt_Fig_dict)
 
     del E_C2Al_ser, E_C2Sl_ser, E_C2Ml_ser
     
     #%%%% 6.4.4 Method D
     timings.loc[6.44]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     
-    # D2Mg_mwt,D2Mg_mwt_df=Bend.YM_eva_method_D(P_df=P_xcoord_ydiff_meas_M, Force_ser=d_Force,
-    #                                             Length=Length, func_I=func_I, n=100,
-    #                                             weighted=True, weight_func=Bend.Weight_func,
-    #                                             wargs=['Custom_cut', bl['w_M']['d0']],
-    #                                             wkwargs=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-    #                                             pb_b=True, name='D2Mg_mwt')  
-    # D2Mg_muw,D2Mg_muw_df=Bend.YM_eva_method_D(P_df=P_xcoord_ydiff_meas_M, Force_ser=d_Force,
-    #                                                Length=Length, func_I=func_I, n=100,
-    #                                                weighted=True, weight_func=Bend.Weight_func,
-    #                                                wkwargs={'option':'Cut',
-    #                                                         'xmin':-Length/2,'xmax':Length/2},
-    #                                                pb_b=True, name='D2Mg_muw')
-    D1Agwt,D1Agwt_df=Bend.YM_eva_method_D(P_df=P_xcoord_ydiff_meas, Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wargs=['Custom_cut', bl['w_A']['d0']],
-                                          wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                          pb_b=True, name='D1Agwt')  
-    D1Aguw,D1Aguw_df=Bend.YM_eva_method_D(P_df=P_xcoord_ydiff_meas, Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wkwargs={'option':'Cut',
-                                                   'xmin':Bo_Le,'xmax':Bo_Ri},
-                                          pb_b=True, name='D1Aguw')
-    D1Sgwt,D1Sgwt_df=Bend.YM_eva_method_D(P_df=P_xcoord_ydiff_meas_S, Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wargs=['Custom_cut', bl['w_S']['d0']],
-                                          wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                          pb_b=True, name='D1Sgwt')  
-    D1Sguw,D1Sguw_df=Bend.YM_eva_method_D(P_df=P_xcoord_ydiff_meas_S, Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wkwargs={'option':'Cut',
-                                                   'xmin':Bo_Le,'xmax':Bo_Ri},
-                                          pb_b=True, name='D1Sguw')
-    D1Mgwt,D1Mgwt_df=Bend.YM_eva_method_D(P_df=P_xcoord_ydiff_meas_M, Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wargs=['Custom_cut', bl['w_M']['d0']],
-                                          wkwargs=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                          pb_b=True, name='D1Mgwt')  
-    D1Mguw,D1Mguw_df=Bend.YM_eva_method_D(P_df=P_xcoord_ydiff_meas_M, Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wkwargs={'option':'Cut',
-                                                   'xmin':Bo_Le,'xmax':Bo_Ri},
-                                          pb_b=True, name='D1Mguw')
+    D1Agwt,D1Agwt_df=Bend.YM_eva_method_D(
+        P_df=P_xcoord_ydiff_meas, Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wargs=['Custom_cut', bl['w_A']['d0']],
+        wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        pb_b=True, name='D1Agwt'
+        )  
+    D1Aguw,D1Aguw_df=Bend.YM_eva_method_D(
+        P_df=P_xcoord_ydiff_meas, Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wkwargs={'option':'Cut',
+                 'xmin':Bo_Le,'xmax':Bo_Ri},
+        pb_b=True, name='D1Aguw'
+        )
+    D1Sgwt,D1Sgwt_df=Bend.YM_eva_method_D(
+        P_df=P_xcoord_ydiff_meas_S, Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wargs=['Custom_cut', bl['w_S']['d0']],
+        wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        pb_b=True, name='D1Sgwt'
+        )  
+    D1Sguw,D1Sguw_df=Bend.YM_eva_method_D(
+        P_df=P_xcoord_ydiff_meas_S, Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wkwargs={'option':'Cut',
+                 'xmin':Bo_Le,'xmax':Bo_Ri},
+        pb_b=True, name='D1Sguw'
+        )
+    D1Mgwt,D1Mgwt_df=Bend.YM_eva_method_D(
+        P_df=P_xcoord_ydiff_meas_M, Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wargs=['Custom_cut', bl['w_M']['d0']],
+        wkwargs=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        pb_b=True, name='D1Mgwt'
+        )  
+    D1Mguw,D1Mguw_df=Bend.YM_eva_method_D(
+        P_df=P_xcoord_ydiff_meas_M, Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wkwargs={'option':'Cut',
+                 'xmin':Bo_Le,'xmax':Bo_Ri},
+        pb_b=True, name='D1Mguw'
+        )
     
     dftmp = Bend.Point_df_from_lin(xlin,step_range_dic)
     Diff_A_d0 = bl['w_A']['d0'](xlin,Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'])
@@ -1887,52 +1789,64 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     S_d0_inc_df = Bend.Point_df_combine(dftmp,Diff_S_d0)
     Diff_M_d0 = bl['w_M']['d0'](xlin,Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'])
     M_d0_inc_df = Bend.Point_df_combine(dftmp,Diff_M_d0)
-    D2Agwt,D2Agwt_df=Bend.YM_eva_method_D(P_df=A_d0_inc_df,Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wargs=['Custom_cut', bl['w_A']['d0']],
-                                          wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                          pb_b=True, name='D2Agwt')
-    D2Aguw,D2Aguw_df=Bend.YM_eva_method_D(P_df=A_d0_inc_df,Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wkwargs={'option':'Cut',
-                                                   'xmin':Bo_Le,'xmax':Bo_Ri},
-                                          pb_b=True, name='D2Aguw')
-    D2Sgwt,D2Sgwt_df=Bend.YM_eva_method_D(P_df=S_d0_inc_df,Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wargs=['Custom_cut', bl['w_S']['d0']],
-                                          wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                          pb_b=True, name='D2Sgwt')
-    D2Sguw,D2Sguw_df=Bend.YM_eva_method_D(P_df=S_d0_inc_df,Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wkwargs={'option':'Cut',
-                                                   'xmin':Bo_Le,'xmax':Bo_Ri},
-                                          pb_b=True, name='D2Sguw')
-    D2Mgwt,D2Mgwt_df=Bend.YM_eva_method_D(P_df=M_d0_inc_df,Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wargs=['Custom_cut', bl['w_M']['d0']],
-                                          wkwargs=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                          pb_b=True, name='D2Mgwt')
-    D2Mguw,D2Mguw_df=Bend.YM_eva_method_D(P_df=M_d0_inc_df,Force_ser=d_Force,
-                                          rel_steps = step_range_dic_inc,
-                                          Length=Length, func_I=func_I, n=100,
-                                          weighted=True, weight_func=Bend.Weight_func,
-                                          wkwargs={'option':'Cut',
-                                                   'xmin':Bo_Le,'xmax':Bo_Ri},
-                                          pb_b=True, name='D2Mguw')
+    D2Agwt,D2Agwt_df=Bend.YM_eva_method_D(
+        P_df=A_d0_inc_df,Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wargs=['Custom_cut', bl['w_A']['d0']],
+        wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        pb_b=True, name='D2Agwt'
+        )
+    D2Aguw,D2Aguw_df=Bend.YM_eva_method_D(
+        P_df=A_d0_inc_df,Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wkwargs={'option':'Cut',
+                 'xmin':Bo_Le,'xmax':Bo_Ri},
+        pb_b=True, name='D2Aguw'
+        )
+    D2Sgwt,D2Sgwt_df=Bend.YM_eva_method_D(
+        P_df=S_d0_inc_df,Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wargs=['Custom_cut', bl['w_S']['d0']],
+        wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        pb_b=True, name='D2Sgwt'
+        )
+    D2Sguw,D2Sguw_df=Bend.YM_eva_method_D(
+        P_df=S_d0_inc_df,Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wkwargs={'option':'Cut',
+                 'xmin':Bo_Le,'xmax':Bo_Ri},
+        pb_b=True, name='D2Sguw'
+        )
+    D2Mgwt,D2Mgwt_df=Bend.YM_eva_method_D(
+        P_df=M_d0_inc_df,Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wargs=['Custom_cut', bl['w_M']['d0']],
+        wkwargs=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        pb_b=True, name='D2Mgwt'
+        )
+    D2Mguw,D2Mguw_df=Bend.YM_eva_method_D(
+        P_df=M_d0_inc_df,Force_ser=d_Force,
+        rel_steps = step_range_dic_inc,
+        Length=Length, func_I=func_I, n=100,
+        weighted=True, weight_func=Bend.Weight_func,
+        wkwargs={'option':'Cut',
+                 'xmin':Bo_Le,'xmax':Bo_Ri},
+        pb_b=True, name='D2Mguw'
+        )
     
     E_D_df = pd.concat([D1Agwt,D1Aguw,D1Sgwt,D1Sguw,D1Mgwt,D1Mguw,
                         D2Agwt,D2Aguw,D2Sgwt,D2Sguw,D2Mgwt,D2Mguw],axis=1)
-    E_D = Evac.pd_agg(E_D_df.loc[sr_eva_dic])
+    E_D = emec.stat_ext.pd_agg(E_D_df.loc[sr_eva_dic])
     
     if True:        
         fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
@@ -1955,7 +1869,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         for k in cc:
             ax2.plot(sr_eva_dic,E_D_df[k].loc[sr_eva_dic],
                      cc[k], label='%s - %.2f MPa'%(k,E_D.at['mean',k]))
-        Evac.plt_handle_suffix(fig,path=out_full+"-YM-Me_D",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YM-Me_D",**plt_Fig_dict)
     
     del D1Agwt,D1Aguw,D1Sgwt,D1Sguw,D1Mgwt,D1Mguw
     del D2Agwt,D2Aguw,D2Sgwt,D2Sguw,D2Mgwt,D2Mguw
@@ -1964,67 +1878,83 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     
     #%%%% 6.4.5 Method E
     timings.loc[6.45]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     
-    E4A = Bend.YM_eva_method_E(Force_ser=d_Force, length=Length,
-                               func_curve=bl['w_A']['d2'], 
-                               params_curve=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                               func_MoI=func_I,
-                               func_thick=func_t, evopt=1/2,
-                               opt_det='all', n=100,
-                               opt_g='strain', opt_g_lim=0.5, name='E4A')
+    E4A = Bend.YM_eva_method_E(
+        Force_ser=d_Force, length=Length,
+        func_curve=bl['w_A']['d2'], 
+        params_curve=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        func_MoI=func_I,
+        func_thick=func_t, evopt=1/2,
+        opt_det='all', n=100,
+        opt_g='strain', opt_g_lim=0.5, name='E4A'
+        )
     E4A_E_df, E4A_sig_eps_df, E4A_E_to_x, E4A_stress_df, E4A_strain_df, E4A_E_to_x_g = E4A
 
-    E4S = Bend.YM_eva_method_E(Force_ser=d_Force, length=Length,
-                               func_curve=bl['w_S']['d2'], 
-                               params_curve=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                               func_MoI=func_I,
-                               func_thick=func_t, evopt=1/2,
-                               opt_det='all', n=100,
-                               opt_g='strain', opt_g_lim=0.5, name='E4S')
+    E4S = Bend.YM_eva_method_E(
+        Force_ser=d_Force, length=Length,
+        func_curve=bl['w_S']['d2'], 
+        params_curve=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        func_MoI=func_I,
+        func_thick=func_t, evopt=1/2,
+        opt_det='all', n=100,
+        opt_g='strain', opt_g_lim=0.5, name='E4S'
+        )
     E4S_E_df, E4S_sig_eps_df, E4S_E_to_x, E4S_stress_df, E4S_strain_df, E4S_E_to_x_g = E4S
 
-    E4M = Bend.YM_eva_method_E(Force_ser=d_Force, length=Length,
-                               func_curve=bl['w_M']['d2'], 
-                               params_curve=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                               func_MoI=func_I, 
-                               func_thick=func_t, evopt=1/2,
-                               opt_det='all', n=100,
-                               opt_g='strain', opt_g_lim=0.5, name='E4M')
+    E4M = Bend.YM_eva_method_E(
+        Force_ser=d_Force, length=Length,
+        func_curve=bl['w_M']['d2'], 
+        params_curve=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        func_MoI=func_I, 
+        func_thick=func_t, evopt=1/2,
+        opt_det='all', n=100,
+        opt_g='strain', opt_g_lim=0.5, name='E4M'
+        )
     E4M_E_df, E4M_sig_eps_df, E4M_E_to_x, E4M_stress_df, E4M_strain_df, E4M_E_to_x_g = E4M
 
     E_E_df = pd.concat([E4A_E_df, E4S_E_df, E4M_E_df],axis=1)
-    E_E = Evac.pd_agg(E_E_df.loc[sr_eva_dic])
+    E_E = emec.stat_ext.pd_agg(E_E_df.loc[sr_eva_dic])
     
     if True:
-        fig, (ax1,ax2,ax3) = plt.subplots(nrows=3, ncols=1, sharex=False, sharey=False, figsize = (6.3,3*3.54))
+        fig, (ax1,ax2,ax3) = plt.subplots(nrows=3, ncols=1, 
+                                          sharex=False, sharey=False, 
+                                          figsize = (6.3,3*3.54))
         fig.suptitle("%s - M - Stress, Strain, Youngs-Modulus to x-coordinate for F3 to F4"%(plt_name))
-        ax1 = Bend.Plotter.colplt_common_ax(xdata=E4M_stress_df.columns,
-                                               ydata=E4M_stress_df,
-                                               step_range=sr_eva_dic, ax=ax1,
-                                               title='Stress to x over Increment',
-                                               xlabel='x / mm', 
-                                               ylabel='$\sigma$ / MPa')
+        ax1 = Bend.Plotter.colplt_common_ax(
+            xdata=E4M_stress_df.columns,
+            ydata=E4M_stress_df,
+            step_range=sr_eva_dic, ax=ax1,
+            title='Stress to x over Increment',
+            xlabel='x / mm', 
+            ylabel='$\sigma$ / MPa'
+            )
         ax1.axvline(x=0, color='gray', linestyle='--')
-        ax2 = Bend.Plotter.colplt_common_ax(xdata=E4M_strain_df.columns,
-                                               ydata=E4M_strain_df,
-                                               step_range=sr_eva_dic, ax=ax2,
-                                               title='Strain to x over Increment',
-                                               xlabel='x / mm', 
-                                               ylabel='$\sigma$ / MPa')
+        ax2 = Bend.Plotter.colplt_common_ax(
+            xdata=E4M_strain_df.columns,
+            ydata=E4M_strain_df,
+            step_range=sr_eva_dic, ax=ax2,
+            title='Strain to x over Increment',
+            xlabel='x / mm', 
+            ylabel='$\sigma$ / MPa'
+            )
         ax2.axvline(x=0, color='gray', linestyle='--')
-        ax3 = Bend.Plotter.colplt_common_ax(xdata=E4M_E_to_x_g.columns,
-                                               ydata=E4M_E_to_x_g,
-                                               step_range=sr_eva_dic, ax=ax3,
-                                               title='Youngs Modulus to x over Increment',
-                                               xlabel='x / mm',
-                                               ylabel='E / MPa')
+        ax3 = Bend.Plotter.colplt_common_ax(
+            xdata=E4M_E_to_x_g.columns,
+            ydata=E4M_E_to_x_g,
+            step_range=sr_eva_dic, ax=ax3,
+            title='Youngs Modulus to x over Increment',
+            xlabel='x / mm',
+            ylabel='E / MPa'
+            )
         ax3.axvline(x=0, color='gray', linestyle='--')
-        Evac.plt_handle_suffix(fig,path=None,**plt_Fig_dict)
+        plt_hsuf(fig,path=None,**plt_Fig_dict)
         
-        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
+        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
+                                      sharex=False, sharey=False, 
+                                      figsize = (6.3,2*3.54))
         fig.suptitle('%s - Compare method E'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -2043,7 +1973,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax2.set_ylabel('E / MPa')
         for k in cc:
             ax2.plot(sr_eva_dic,E_E_df[k].loc[sr_eva_dic], cc[k])
-        Evac.plt_handle_suffix(fig,path=out_full+"-YM-Me_E",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YM-Me_E",**plt_Fig_dict)
         
     del E4A, E4A_E_df, E4A_sig_eps_df, E4A_E_to_x, E4A_stress_df, E4A_strain_df, E4A_E_to_x_g
     del E4S, E4S_E_df, E4S_sig_eps_df, E4S_E_to_x, E4S_stress_df, E4S_strain_df, E4S_E_to_x_g
@@ -2051,7 +1981,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
 
     #%%%% 6.4.6 Method F
     timings.loc[6.46]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     
@@ -2083,13 +2013,15 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                               pb_b=True, name='F4Mg', n=100)
     
     E_F_df = pd.concat([F4A_df, F4S_df, F4M_df],axis=1)
-    E_F = Evac.pd_agg(E_F_df.loc[sr_eva_dic])
+    E_F = emec.stat_ext.pd_agg(E_F_df.loc[sr_eva_dic])
     
     if True:    
         cc={'F4Agha':'r:', 'F4Agth':'r--',
             'F4Sgha':'b:', 'F4Sgth':'b--',
             'F4Mgha':'g:', 'F4Mgth':'g--'}
-        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
+        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
+                                      sharex=False, sharey=False, 
+                                      figsize = (6.3,2*3.54))
         fig.suptitle('%s - Compare method F'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -2106,73 +2038,79 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax2.set_ylabel('E / MPa')
         for k in cc:
             ax2.plot(sr_eva_dic,E_F_df[k].loc[sr_eva_dic], cc[k])
-        Evac.plt_handle_suffix(fig,path=out_full+"-YM-Me_F",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YM-Me_F",**plt_Fig_dict)
         
     del F4A_df, F4S_df, F4M_df
     
     #%%%% 6.4.7 Method G
     timings.loc[6.47]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     
-    E_G3Ag_ser = Bend.YM_eva_method_G(Force_ser=d_Force,
-                                      w_func_f_0=bl['w_A']['d0'], 
-                                      w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                      c_func=bl['w_A']['d2'],
-                                      r_func=None,
-                                      c_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                      r_params=None,
-                                      length=Length, I_func=func_I, A_func=func_A,
-                                      CS_type='Rectangle', kappa=None,
-                                      poisson=_opts['OPT_Poisson_prediction'],
-                                      comp=_opts['OPT_Compression'],
-                                      option="ignore_V", name="G3Ag")
-
-    E_G3Sg_ser = Bend.YM_eva_method_G(Force_ser=d_Force,
-                                      w_func_f_0=bl['w_S']['d0'], 
-                                      w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                      c_func=bl['w_S']['d2'],
-                                      r_func=None,
-                                      c_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                      r_params=None,
-                                      length=Length, I_func=func_I, A_func=func_A,
-                                      CS_type='Rectangle', kappa=None,
-                                      poisson=_opts['OPT_Poisson_prediction'],
-                                      comp=_opts['OPT_Compression'],
-                                      option="ignore_V", name="G3Sg")
-
-    E_G3Mg_ser = Bend.YM_eva_method_G(Force_ser=d_Force,
-                                      w_func_f_0=bl['w_M']['d0'], 
-                                      w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                      c_func=bl['w_M']['d2'],
-                                      r_func=None,
-                                      c_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                      r_params=None,
-                                      length=Length, I_func=func_I, A_func=func_A,
-                                      CS_type='Rectangle', kappa=None,
-                                      poisson=_opts['OPT_Poisson_prediction'],
-                                      comp=_opts['OPT_Compression'],
-                                      option="ignore_V", name="G3Mg")
-    
-    E_G3Cg_ser = Bend.YM_eva_method_G(Force_ser=d_Force,
-                                      w_func_f_0=bl['w_S']['d0'], 
-                                      w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                      c_func=bl['w_M']['d2'],
-                                      r_func=bl['w_V']['d1'],
-                                      c_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                      r_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                      length=Length, I_func=func_I, A_func=func_A,
-                                      CS_type='Rectangle', kappa=None,
-                                      poisson=_opts['OPT_Poisson_prediction'],
-                                      comp=_opts['OPT_Compression'],
-                                      option="M+V", name="G3Cg")
-    
+    E_G3Ag_ser = Bend.YM_eva_method_G(
+        Force_ser=d_Force,
+        w_func_f_0=bl['w_A']['d0'], 
+        w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        c_func=bl['w_A']['d2'],
+        r_func=None,
+        c_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        r_params=None,
+        length=Length, I_func=func_I, A_func=func_A,
+        CS_type='Rectangle', kappa=None,
+        poisson=_opts['OPT_Poisson_prediction'],
+        comp=_opts['OPT_Compression'],
+        option="ignore_V", name="G3Ag"
+        )
+    E_G3Sg_ser = Bend.YM_eva_method_G(
+        Force_ser=d_Force,
+        w_func_f_0=bl['w_S']['d0'], 
+        w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        c_func=bl['w_S']['d2'],
+        r_func=None,
+        c_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        r_params=None,
+        length=Length, I_func=func_I, A_func=func_A,
+        CS_type='Rectangle', kappa=None,
+        poisson=_opts['OPT_Poisson_prediction'],
+        comp=_opts['OPT_Compression'],
+        option="ignore_V", name="G3Sg"
+        )
+    E_G3Mg_ser = Bend.YM_eva_method_G(
+        Force_ser=d_Force,
+        w_func_f_0=bl['w_M']['d0'], 
+        w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        c_func=bl['w_M']['d2'],
+        r_func=None,
+        c_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        r_params=None,
+        length=Length, I_func=func_I, A_func=func_A,
+        CS_type='Rectangle', kappa=None,
+        poisson=_opts['OPT_Poisson_prediction'],
+        comp=_opts['OPT_Compression'],
+        option="ignore_V", name="G3Mg"
+        )
+    E_G3Cg_ser = Bend.YM_eva_method_G(
+        Force_ser=d_Force,
+        w_func_f_0=bl['w_S']['d0'], 
+        w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        c_func=bl['w_M']['d2'],
+        r_func=bl['w_V']['d1'],
+        c_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        r_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        length=Length, I_func=func_I, A_func=func_A,
+        CS_type='Rectangle', kappa=None,
+        poisson=_opts['OPT_Poisson_prediction'],
+        comp=_opts['OPT_Compression'],
+        option="M+V", name="G3Cg"
+        )
     E_G_df = pd.concat([E_G3Ag_ser, E_G3Sg_ser, E_G3Mg_ser, E_G3Cg_ser],axis=1)
-    E_G = Evac.pd_agg(E_G_df.loc[sr_eva_dic])
+    E_G = emec.stat_ext.pd_agg(E_G_df.loc[sr_eva_dic])
     
     if True:    
-        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
+        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
+                                      sharex=False, sharey=False, 
+                                      figsize = (6.3,2*3.54))
         fig.suptitle('%s - Compare method G'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -2191,13 +2129,13 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax2.set_ylabel('E / MPa')
         for k in cc:
             ax2.plot(sr_eva_dic,E_G_df[k].loc[sr_eva_dic], cc[k])
-        Evac.plt_handle_suffix(fig,path=out_full+"-YM-Me_G",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YM-Me_G",**plt_Fig_dict)
     
     del E_G3Ag_ser, E_G3Sg_ser, E_G3Mg_ser, E_G3Cg_ser
 
     #%%%% 6.4.8 Method compare
     timings.loc[6.48]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
 
@@ -2206,23 +2144,23 @@ def TBT_single(prot_ser, paths, mfile_add=''):
 
     # E_Methods = pd.concat([E_A,E_B,E_C,E_D,E_E,E_F,E_G],axis=1)
     E_Methods_df = pd.concat([E_A_df,E_B_df,E_C_df,E_D_df,E_E_df,E_F_df,E_G_df],axis=1)
-    # E_agg_funcs = ['mean',Evac.meanwoso,'median','std','max','min']
-    E_agg_funcs = ['mean',Evac.meanwoso,'median','std',Evac.stdwoso,'max','min']
+    E_agg_funcs = ['mean',emec.stat_ext.meanwoso,'median',
+                   'std',emec.stat_ext.stdwoso,'max','min']
     
     cols_con=E_Methods_df.columns.str.contains('0')
-    # E_inc_F_comp_con = Evac.pd_agg(E_Methods_df.loc[sf_eva_con,cols_con])
-    # E_inc_F_comp_opt = Evac.pd_agg(E_Methods_df.loc[sf_eva_dic,np.invert(cols_con)])
+    # E_inc_F_comp_con = emec.pd_ext.pd_agg(E_Methods_df.loc[sf_eva_con,cols_con])
+    # E_inc_F_comp_opt = emec.pd_ext.pd_agg(E_Methods_df.loc[sf_eva_dic,np.invert(cols_con)])
     E_inc_F_comp_con = E_Methods_df.loc[sf_eva_con,cols_con].agg(E_agg_funcs)
     E_inc_F_comp_opt = E_Methods_df.loc[sf_eva_dic,np.invert(cols_con)].agg(E_agg_funcs)
     E_inc_F_comp = pd.concat([E_inc_F_comp_con,E_inc_F_comp_opt],axis=1)
     E_inc_F_comp.loc['stdn']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['mean'].abs()
     # E_inc_F_comp.loc['stdnwoso']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['meanwoso'].abs()
     E_inc_F_comp.loc['stdnwoso']=E_inc_F_comp.loc['stdwoso']/E_inc_F_comp.loc['meanwoso'].abs()
-    # E_inc_F_comp = Evac.pd_agg(E_Methods_df.loc[sf_eva_dic])
+    # E_inc_F_comp = emec.pd_ext.pd_agg(E_Methods_df.loc[sf_eva_dic])
 
     cols_con=E_Methods_df.columns.str.contains('0')
-    # E_inc_R_comp_con = Evac.pd_agg(E_Methods_df.loc[sr_eva_con,cols_con])
-    # E_inc_R_comp_opt = Evac.pd_agg(E_Methods_df.loc[sr_eva_dic,np.invert(cols_con)])
+    # E_inc_R_comp_con = emec.pd_ext.pd_agg(E_Methods_df.loc[sr_eva_con,cols_con])
+    # E_inc_R_comp_opt = emec.pd_ext.pd_agg(E_Methods_df.loc[sr_eva_dic,np.invert(cols_con)])
     E_inc_R_comp_con = E_Methods_df.loc[sr_eva_con,cols_con].agg(E_agg_funcs)
     E_inc_R_comp_opt = E_Methods_df.loc[sr_eva_dic,np.invert(cols_con)].agg(E_agg_funcs)
     E_inc_R_comp = pd.concat([E_inc_R_comp_con,E_inc_R_comp_opt],axis=1)
@@ -2230,20 +2168,20 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     # E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['meanwoso'].abs()
     E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['stdwoso']/E_inc_R_comp.loc['meanwoso'].abs()
     
-    Evac.MG_strlog("\n\n  Method comaparison:",log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n  - least square fit",log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent('\n'+E_lsq.loc[['E','Rquad']].T.to_string()),
+    log_custom("\n\n  Method comaparison:",log_mg,output_lvl,printopt=True)
+    log_custom("\n  - least square fit",log_mg,output_lvl,printopt=True)
+    log_custom(log_cind('\n'+E_lsq.loc[['E','Rquad']].T.to_string()),
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n\n  - incremental - fixed range:",
+    log_custom("\n\n  - incremental - fixed range:",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent('\n'+E_inc_F_comp.T.to_string()),
+    log_custom(log_cind('\n'+E_inc_F_comp.T.to_string()),
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent('\n'+E_inc_F_comp.agg(['idxmax','idxmin'],axis=1).to_string()),
+    log_custom(log_cind('\n'+E_inc_F_comp.agg(['idxmax','idxmin'],axis=1).to_string()),
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n\n  - incremental - refined range:",log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent('\n'+E_inc_R_comp.T.to_string()),
+    log_custom("\n\n  - incremental - refined range:",log_mg,output_lvl,printopt=True)
+    log_custom(log_cind('\n'+E_inc_R_comp.T.to_string()),
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent('\n'+E_inc_R_comp.agg(['idxmax','idxmin'],axis=1).to_string()),
+    log_custom(log_cind('\n'+E_inc_R_comp.agg(['idxmax','idxmin'],axis=1).to_string()),
                    log_mg,output_lvl,printopt=True)
 
 
@@ -2257,15 +2195,15 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                                                  rel_steps=sr_eva_dic, n=100,pb_b=False,name='M')
     check_MtoD_g, check_MtoD_x, check_M, w_D_to_M = Check_M
     
-    Evac.MG_strlog("\n\n  Check Methods with D (M-Displacement deviation):",
+    log_custom("\n\n  Check Methods with D (M-Displacement deviation):",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n  - mean over all (except first and last):",
+    log_custom("\n  - mean over all (except first and last):",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent(check_MtoD_g.mean()),
+    log_custom(log_cind(check_MtoD_g.mean()),
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n  - only in mid:",
+    log_custom("\n  - only in mid:",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent(check_MtoD_x.mean()),
+    log_custom(log_cind(check_MtoD_x.mean()),
                    log_mg,output_lvl,printopt=True)
     
     check_S_tmp=E_Methods_df.loc(axis=1)[E_Methods_df.columns.str.contains('S')]
@@ -2278,15 +2216,15 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                                                n=100,pb_b=False,name='S')
     check_StoD_g, check_StoD_x, check_S, w_D_to_S = Check_S
     
-    Evac.MG_strlog("\n\n  Check Methods with D (S-Displacement deviation):",
+    log_custom("\n\n  Check Methods with D (S-Displacement deviation):",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n  - mean over all (except first and last):",
+    log_custom("\n  - mean over all (except first and last):",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent(check_StoD_g.mean()),
+    log_custom(log_cind(check_StoD_g.mean()),
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n  - only in mid:",
+    log_custom("\n  - only in mid:",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent(check_StoD_x.mean()),
+    log_custom(log_cind(check_StoD_x.mean()),
                    log_mg,output_lvl,printopt=True)
     
     check_A_tmp=E_Methods_df.loc(axis=1)[E_Methods_df.columns.str.contains('Al|Ae|Ag')]
@@ -2299,15 +2237,15 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                                                n=100,pb_b=False,name='A')
     check_AtoD_g, check_AtoD_x, check_A, w_D_to_A = Check_A
     
-    Evac.MG_strlog("\n\n  Check Methods with D (A-Displacement deviation):",
+    log_custom("\n\n  Check Methods with D (A-Displacement deviation):",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n  - mean over all (except first and last):",
+    log_custom("\n  - mean over all (except first and last):",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent(check_AtoD_g.mean()),
+    log_custom(log_cind(check_AtoD_g.mean()),
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n  - only in mid:",
+    log_custom("\n  - only in mid:",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent(check_AtoD_x.mean()),
+    log_custom(log_cind(check_AtoD_x.mean()),
                    log_mg,output_lvl,printopt=True)
     
     Check_to_D = pd.Series({'MtoD_g':check_MtoD_g, 'MtoD_x': check_MtoD_x,
@@ -2322,146 +2260,63 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     if loc_Yd_tmp.startswith('E_lsq'):
         YM_pref_opt=E_lsq[loc_Yd_tmp]
     elif loc_Yd_tmp.startswith('E_inc_R'):
-        YM_pref_opt=Evac.Refit_YM_vals(m_df=messu, 
-                                       YM = E_inc_R_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
-                                       VIP=VIP_dicu,
-                                       n_strain=dic_used_Strain, n_stress='Stress',
-                                       n_loBo=['F3'], n_upBo=['F4'])
+        YM_pref_opt=emec.fitting.Refit_YM_vals(
+            m_df=messu, 
+            YM = E_inc_R_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
+            VIP=VIP_dicu,
+            n_strain=dic_used_Strain, n_stress='Stress',
+            n_loBo=['F3'], n_upBo=['F4']
+            )
     elif loc_Yd_tmp.startswith('E_inc_F'):
-        YM_pref_opt=Evac.Refit_YM_vals(m_df=messu, 
-                                       YM = E_inc_F_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
-                                       VIP=VIP_dicu,
-                                       n_strain=dic_used_Strain, n_stress='Stress',
-                                       n_loBo=['F1'], n_upBo=['F2'])
+        YM_pref_opt=emec.fitting.Refit_YM_vals(
+            m_df=messu, 
+            YM = E_inc_F_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
+            VIP=VIP_dicu,
+            n_strain=dic_used_Strain, n_stress='Stress',
+            n_loBo=['F1'], n_upBo=['F2']
+            )
     else:
         raise NotImplementedError('Prefered YM-method not selectable!')
     # --------------------------------------------------------------------------
     #%%% 6.5 Determine yield point
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.5 Determine yield point ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.5 Determine yield point ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.5]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     
-    # #     mit 0.2% Dehnversatz E(F+-F-) finden
-    # Evac.MG_strlog("\n  Determination of yield strain-conventional:",log_mg,output_lvl)
-    # mun_tmp=messu.loc[min(VIP_messu[['F1','F3']]):VIP_messu['U']]
-    # # stress_fit3=(mun_tmp.Strain+(-.002))*E2+E2_abs
-    # stress_fit3=(mun_tmp.Strain+(-.002))*E_lsq_A['E_lsq_R_A0Al']['E']+E_lsq_A['E_lsq_R_A0Al']['E_abs']
-    # c=mun_tmp.Stress-stress_fit3
-    # c_sign = np.sign(c)
-    # c_signchange = ((np.roll(c_sign, True) - c_sign) != False).astype(bool)
-    # c_signchange = pd.Series(c_signchange,index=c.index)
-    # c_signchange = c_signchange.loc[min(VIP_messu[['F2','F4']]):] # Y erst ab F- suchen
-    # daF_signchange_F=messu.driF_schg.loc[min(VIP_messu[['F1','F3']])+2:VIP_messu['U']+2]
-    
-    # if (c_signchange.any()==True)and(daF_signchange_F.any()==True):
-    #     if(c_signchange.loc[c_signchange].index[0])<=(daF_signchange_F.loc[daF_signchange_F==True].index[0]):
-    #         VIP_messu['Y']=c_signchange.loc[c_signchange].index[0]
-    #         Evac.MG_strlog("\n    Fy set on intersection with 0.2% pl. strain!",log_mg,output_lvl)
-    #     else:
-    #         VIP_messu['Y']=daF_signchange_F.loc[daF_signchange_F==True].index[0]-2 #-2 wegen Anstiegsberechnung
-    #         Evac.MG_strlog("\n    Fy on first point between F+ and Fu with rise of 0, instead intersection 0.2% pl. strain! (earlier)",log_mg,output_lvl)
-    # elif (c_signchange.any()==True)and(daF_signchange_F.all()==False):
-    #     VIP_messu['Y']=c_signchange.loc[c_signchange].index[0]
-    #     Evac.MG_strlog("\n    Fy set on intersection with 0.2% pl. strain!",log_mg,output_lvl)
-    # else:
-    #     # daF_signchange_F=messu.driF_schg.loc[VIP_messu['F+']+2:VIP_messu['U']-1]
-    #     VIP_messu['Y']=daF_signchange_F.loc[daF_signchange_F==True].index[0]-2
-    #     Evac.MG_strlog("\n    Fy on first point between F+ and Fu with rise of 0, instead intersection 0.2% pl. strain! (No intersection found!)",log_mg,output_lvl)
-    # VIP_messu=VIP_messu.sort_values()
-    
-    # if _opts['OPT_DIC']:    
-    #     # VIP_dicu['Y']=VIP_messu['Y']
-    #     Evac.MG_strlog("\n  Determination of yield strain-optical:",log_mg,output_lvl)
-    #     mun_tmp=messu.loc[min(VIP_dicu[['F1','F3']]):VIP_dicu['U']]
-    #     # stress_fit3=(mun_tmp.loc[:,dic_used_Strain]+(-.002))*ED2+ED2_abs
-    #     stress_fit3=(mun_tmp.loc[:,dic_used_Strain]+(-.002))*E_lsq_A[loc_Yd_tmp]['E']+E_lsq_A[loc_Yd_tmp]['E_abs']
-    #     c=mun_tmp.Stress-stress_fit3
-    #     c_sign = np.sign(c)
-    #     c_signchange = ((np.roll(c_sign, True) - c_sign) != False).astype(bool)
-    #     c_signchange = pd.Series(c_signchange,index=c.index)
-    #     c_signchange = c_signchange.loc[min(VIP_dicu[['F2','F4']]):] # Y erst ab F- suchen
-    #     daF_signchange_F=messu.driF_schg.loc[min(VIP_dicu[['F1','F3']])+2:VIP_dicu['U']+2]
-        
-    #     if (c_signchange.any()==True)and(daF_signchange_F.any()==True):
-    #         if(c_signchange.loc[c_signchange].index[0])<=(daF_signchange_F.loc[daF_signchange_F==True].index[0]):
-    #             VIP_dicu['Y']=c_signchange.loc[c_signchange].index[0]
-    #             Evac.MG_strlog("\n    Fy set on intersection with 0.2% pl. strain!",log_mg,output_lvl)
-    #         else:
-    #             VIP_dicu['Y']=daF_signchange_F.loc[daF_signchange_F==True].index[0]-2 #-2 wegen Anstiegsberechnung
-    #             Evac.MG_strlog("\n    Fy on first point between F+ and Fu with rise of 0, instead intersection 0.2% pl. strain! (earlier)",log_mg,output_lvl)
-    #     elif (c_signchange.any()==True)and(daF_signchange_F.all()==False):
-    #         VIP_dicu['Y']=c_signchange.loc[c_signchange].index[0]
-    #         Evac.MG_strlog("\n    Fy set on intersection with 0.2% pl. strain!",log_mg,output_lvl)
-    #     else:
-    #         # daF_signchange_F=messu.driF_schg.loc[VIP_dicu['F+']+2:VIP_dicu['U']-1]
-    #         VIP_dicu['Y']=daF_signchange_F.loc[daF_signchange_F==True].index[0]-2
-    #         Evac.MG_strlog("\n    Fy on first point between F+ and Fu with rise of 0, instead intersection 0.2% pl. strain! (No intersection found!)",log_mg,output_lvl)
-    #     VIP_dicu=VIP_dicu.sort_values()
 
-    
     strain_osd = {'YK':0.0,'Y0':0.0,'Y1':0.007/100,'Y2':0.1/100,'Y':0.2/100} #acc. Zhang et al. 2021, DOI: 10.1007/s10439-020-02719-2
     strain_osdf={'YK':'F4'}
         
-    Evac.MG_strlog("\n  Determination of yield strain-conventional:",log_mg,output_lvl)
-    # for i in strain_osd.keys():
-    #     if i=='YK':
-    #         VIP_messu[i] = VIP_messu['F4']
-    #         txt="YK set on F4 (end of Keuherleber approach)"
-    #         Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
-    #     else:
-    #         tmp = Evac.Yield_redet2(m_df=messu, VIP=VIP_messu,
-    #                                   n_strain='Strain', n_stress='Stress',
-    #                                   n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
-    #                                   YM     = YM_pref_con['E'],
-    #                                   YM_abs = YM_pref_con['E_abs'],
-    #                                   strain_offset=strain_osd[i],
-    #                                   use_rd =True, rise_det=[True,2], 
-    #                                   n_yield=i, ywhere='n')
-    #         VIP_messu,txt,tmp = tmp
-    #         Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
-    tmp=Evac.Yield_redet2_Multi(m_df=messu, VIP=VIP_messu,
-                           strain_osd=strain_osd, 
-                           strain_osdf=strain_osdf,
-                           n_strain='Strain', n_stress='Stress',
-                           n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
-                           YM     = YM_pref_con['E'],
-                           YM_abs = YM_pref_con['E_abs'],
-                           use_rd =True, rise_det=[True,2], 
-                           ywhere='n')
+    log_custom("\n  Determination of yield strain-conventional:",log_mg,output_lvl)
+    tmp=emec.mc_yield.Yield_redet2_Multi(
+        m_df=messu, VIP=VIP_messu,
+        strain_osd=strain_osd, strain_osdf=strain_osdf,
+        n_strain='Strain', n_stress='Stress',
+        n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
+        YM     = YM_pref_con['E'],
+        YM_abs = YM_pref_con['E_abs'],
+        use_rd =True, rise_det=[True,2], 
+        ywhere='n'
+        )
     VIP_messu, yield_df_con, txt = tmp
-    Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
+    log_custom(log_cind(txt,3), log_mg,output_lvl)
     if _opts['OPT_DIC']:
-        Evac.MG_strlog("\n  Determination of yield strain-optical:",log_mg,output_lvl)
-      # for i in strain_osd.keys():
-      #   if i=='YK':
-      #       VIP_dicu[i] = VIP_dicu['F4']
-      #       txt="YK set on F4 (end of Keuherleber approach)"
-      #       Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
-      #   else:
-      #       tmp = Evac.Yield_redet2(m_df=messu, VIP=VIP_dicu,
-      #                                 n_strain=dic_used_Strain, n_stress='Stress',
-      #                                 n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
-      #                                 YM     = YM_pref_opt['E'],
-      #                                 YM_abs = YM_pref_opt['E_abs'],
-      #                                 strain_offset=strain_osd[i],
-      #                                 use_rd =True,rise_det=[True,2], 
-      #                                 n_yield=i, ywhere='n')
-      #       VIP_dicu,txt,tmp = tmp
-      #       Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
-        tmp=Evac.Yield_redet2_Multi(m_df=messu, VIP=VIP_dicu,
-                               strain_osd=strain_osd, 
-                               strain_osdf=strain_osdf,
-                               n_strain=dic_used_Strain, n_stress='Stress',
-                               n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
-                               YM     = YM_pref_opt['E'],
-                               YM_abs = YM_pref_opt['E_abs'],
-                               use_rd =True, rise_det=[True,2], 
-                               ywhere='n')
+        log_custom("\n  Determination of yield strain-optical:",log_mg,output_lvl)
+        tmp=emec.mc_yield.Yield_redet2_Multi(
+            m_df=messu, VIP=VIP_dicu,
+            strain_osd=strain_osd, strain_osdf=strain_osdf,
+            n_strain=dic_used_Strain, n_stress='Stress',
+            n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
+            YM     = YM_pref_opt['E'],
+            YM_abs = YM_pref_opt['E_abs'],
+            use_rd =True, rise_det=[True,2], 
+            ywhere='n'
+            )
         VIP_dicu, yield_df_opt, txt = tmp
-        Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
+        log_custom(log_cind(txt,3), log_mg,output_lvl)
         
     fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
                                   sharex=False, sharey=False, 
@@ -2473,11 +2328,12 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     ax1.plot(messu.loc[:VIP_messu['B']]['Strain'], messu.loc[:VIP_messu['B']]['Stress'], 'r--',label='con')
     tmp=ax1.get_xlim(),ax1.get_ylim()
     for i in strain_osd.keys():
-        ax1.plot(Evac.strain_linfit([0,1000],
-                                    YM_pref_con['E'], 
-                                    YM_pref_con['E_abs'], 
-                                    strain_offset=strain_osd[i]),[0,1000],
-                 '-',label='$E_{off-%.3fp}$'%(strain_osd[i]*100))
+        ax1.plot(emec.fitting.strain_linfit(
+            [0,1000],
+            YM_pref_con['E'], 
+            YM_pref_con['E_abs'], 
+            strain_offset=strain_osd[i]
+            ),[0,1000], '-',label='$E_{off-%.3fp}$'%(strain_osd[i]*100))
     ax1.set_xlim(tmp[0])
     ax1.set_ylim(tmp[1])
     a, b=messu.Strain[VIP_messu[:'B']],messu.Stress[VIP_messu[:'B']]
@@ -2498,11 +2354,12 @@ def TBT_single(prot_ser, paths, mfile_add=''):
                  'r--',label='opt')
         tmp=ax2.get_xlim(),ax1.get_ylim()
         for i in strain_osd.keys():
-            ax2.plot(Evac.strain_linfit([0,1000],
-                                        YM_pref_opt['E'], 
-                                        YM_pref_opt['E_abs'], 
-                                        strain_offset=strain_osd[i]),[0,1000],
-                     '-',label='$E_{off-%.3fp}$'%(strain_osd[i]*100))
+            ax2.plot(emec.fitting.strain_linfit(
+                [0,1000],
+                YM_pref_opt['E'], 
+                YM_pref_opt['E_abs'], 
+                strain_offset=strain_osd[i]
+                ),[0,1000], '-',label='$E_{off-%.3fp}$'%(strain_osd[i]*100))
         ax2.set_xlim(tmp[0])
         ax2.set_ylim(tmp[1])
         a, b=messu[dic_used_Strain][VIP_dicu[:'B']],messu.Stress[VIP_dicu[:'B']]
@@ -2515,38 +2372,42 @@ def TBT_single(prot_ser, paths, mfile_add=''):
             ax2.annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), xycoords='data',
                           xytext=c, ha="center", va="center", textcoords='offset points')
         ax2.legend()
-    Evac.plt_handle_suffix(fig,path=out_full+"-sigeps_yielddet",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-sigeps_yielddet",**plt_Fig_dict)
     
     # ============================================================================
     #%%% 6.6 Determine final curve
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.6 Determine final stress-strain curve ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.6 Determine final stress-strain curve ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.6]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     FinSSC = True # finale kurve für werteermittlung auf Ym linearisieren an anfang
     if FinSSC:
-        messu_FP,linstrainos_con=Evac.DetFinSSC(mdf=messu, YM=YM_pref_con, 
-                                     iS=VIP_messu['F3'], iLE=None,
-                                     StressN='Stress', StrainN='Strain', 
-                                     addzero=True, izero=VIP_messu['S'])
+        messu_FP,linstrainos_con=emec.mc_man.DetFinSSC(
+            mdf=messu, YM=YM_pref_con, 
+            iS=VIP_messu['F3'], iLE=None,
+            StressN='Stress', StrainN='Strain', 
+            addzero=True, izero=VIP_messu['S']
+            )
         yield_df_con['Strain']=yield_df_con['Strain']-linstrainos_con
         yield_df_con['Force']=yield_df_con['Stress']/Bend.stress_perF(0.0,func_I,func_t,Bo_Le,Bo_Ri)
         yield_df_con['Way']=(yield_df_con['Strain']*Length**2)/(6*prot_ser['thickness_2'])
-        Evac.MG_strlog("\n   Strain offset (conventional) about %.5f"%(linstrainos_con),log_mg,output_lvl,printopt=False)
+        log_custom("\n   Strain offset (conventional) about %.5f"%(linstrainos_con),log_mg,output_lvl,printopt=False)
         if _opts['OPT_DIC']:
-            tmp,     linstrainos_opt=Evac.DetFinSSC(mdf=messu, YM=YM_pref_opt, 
-                                         iS=VIP_dicu['F3'], iLE=None,
-                                         StressN='Stress', StrainN=dic_used_Strain, 
-                                         addzero=True, izero=VIP_messu['S'])
+            tmp, linstrainos_opt=emec.mc_man.DetFinSSC(
+                mdf=messu, YM=YM_pref_opt, 
+                iS=VIP_dicu['F3'], iLE=None,
+                StressN='Stress', StrainN=dic_used_Strain, 
+                addzero=True, izero=VIP_messu['S']
+                )
             messu_FP=messu_FP.join(tmp, how='outer', lsuffix='', rsuffix='_opt')
             messu_FP['Stress'].fillna(messu_FP['Stress_opt'],inplace=True)
             yield_df_opt[dic_used_Strain]=yield_df_opt[dic_used_Strain]-linstrainos_opt
             del messu_FP['Stress_opt']
             yield_df_opt['Force']=yield_df_opt['Stress']/Bend.stress_perF(0.0,func_I,func_t,Bo_Le,Bo_Ri)
             yield_df_opt[dic_used_Disp]=(yield_df_opt[dic_used_Strain]*Length**2)/(6*prot_ser['thickness_2'])
-        Evac.MG_strlog("\n   Strain offset (optical) about %.5f"%(linstrainos_opt),log_mg,output_lvl,printopt=False)
+        log_custom("\n   Strain offset (optical) about %.5f"%(linstrainos_opt),log_mg,output_lvl,printopt=False)
     
         messu_FP['Force']=messu_FP['Stress']/Bend.stress_perF(0.0,func_I,func_t,Bo_Le,Bo_Ri)
         messu_FP['Way']=(messu_FP['Strain']*Length**2)/(6*prot_ser['thickness_2'])
@@ -2555,20 +2416,20 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         messu_FP =  messu
         linstrainos_con = 0
         linstrainos_opt = 0
-        Evac.MG_strlog("\n   No linear start of final stress-strain-curve",log_mg,output_lvl,printopt=False)
+        log_custom("\n   No linear start of final stress-strain-curve",log_mg,output_lvl,printopt=False)
         
     # ============================================================================
     #%% 7 Outputs
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 7 Outputs ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 7 Outputs ###",log_mg,output_lvl,printopt=False)
     timings.loc[7.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     # ============================================================================
     #%%% 7.1 Prepare outputs
     timings.loc[7.1]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
 
@@ -2584,8 +2445,10 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         
         t=bl['w_I']['d0'](np.array([Bo_Le,Bo_Ri]),
                           Pre_fit_df.loc(axis=1)['Fit_params_dict'])
-        steps = Evac.pd_combine_index(messu.loc[VIP_messu['S']:VIP_messu['U']],
-                                      Pre_fit_df)[[0,-1]]
+        steps = emec.pd_ext.pd_combine_index(
+            messu.loc[VIP_messu['S']:VIP_messu['U']],
+            Pre_fit_df
+            )[[0,-1]]
         
         # tl, tr = t.loc[[VIP_messu['S']+1,VIP_messu['U']]].diff().iloc[-1].values
         tl, tr = t.loc[steps].diff().iloc[-1].values
@@ -2603,32 +2466,36 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     if _opts['OPT_DIC']: out_tab['leos_opt']   = linstrainos_opt
 
     relVS = [*np.sort([*strain_osd.keys()]),'U','B']
-    tmp=Evac.Otvalgetter_Multi(messu_FP, Vs=relVS,
-                          datasep=['con','opt'], 
-                          VIPs={'con':VIP_messu,'opt':VIP_dicu}, 
-                          exacts={'con':yield_df_con,'opt':yield_df_opt}, 
-                          orders={'con':['f','e','U'],'opt':['e','U']}, 
-                          add_esufs={'con':'_con','opt':'_opt'},
-                          n_strains={'con':'Strain','opt':dic_used_Strain}, 
-                          n_stresss={'con':'Stress','opt':'Stress'},
-                          use_exacts=True)
+    tmp=emec.output.Otvalgetter_Multi(
+        messu_FP, Vs=relVS,
+        datasep=['con','opt'], 
+        VIPs={'con':VIP_messu,'opt':VIP_dicu}, 
+        exacts={'con':yield_df_con,'opt':yield_df_opt}, 
+        orders={'con':['f','e','U'],'opt':['e','U']}, 
+        add_esufs={'con':'_con','opt':'_opt'},
+        n_strains={'con':'Strain','opt':dic_used_Strain}, 
+        n_stresss={'con':'Stress','opt':'Stress'},
+        use_exacts=True
+        )
     tmp.name=prot_ser.name
     out_tab=out_tab.append(tmp)
-    tmp=Evac.Otvalgetter_Multi(messu_FP, Vs=relVS,
-                          datasep=['con','opt'], 
-                          VIPs={'con':VIP_messu,'opt':VIP_dicu}, 
-                          exacts={'con':yield_df_con,'opt':yield_df_opt}, 
-                          orders={'con':['F','s','W'],'opt':['s','W']}, 
-                          add_esufs={'con':'_con','opt':'_opt'},
-                          n_strains={'con':'Way','opt': dic_used_Disp}, 
-                          n_stresss={'con':'Force','opt':'Force'},
-                          use_exacts=True)
+    tmp=emec.output.Otvalgetter_Multi(
+        messu_FP, Vs=relVS,
+        datasep=['con','opt'], 
+        VIPs={'con':VIP_messu,'opt':VIP_dicu}, 
+        exacts={'con':yield_df_con,'opt':yield_df_opt}, 
+        orders={'con':['F','s','W'],'opt':['s','W']}, 
+        add_esufs={'con':'_con','opt':'_opt'},
+        n_strains={'con':'Way','opt': dic_used_Disp}, 
+        n_stresss={'con':'Force','opt':'Force'},
+        use_exacts=True
+        )
     tmp.name=prot_ser.name
     out_tab=out_tab.append(tmp)
     # ============================================================================
     #%%% 7.2 Generate plots
     timings.loc[7.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
         
@@ -2659,7 +2526,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     ax2.plot(messu.Time, messu.dcuF, 'g:', label='Force-curve')
     ax2.tick_params(axis='y', labelcolor=color2)
     fig.legend(loc='lower right', bbox_to_anchor=(0.85, 0.15))
-    Evac.plt_handle_suffix(fig,path=out_full+"-Fdricu",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-Fdricu",**plt_Fig_dict)
     
     if _opts['OPT_DIC']:
         fig, ax1 = plt.subplots()
@@ -2679,7 +2546,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         #       '$E_{curve-P4O}$ = % 8.3f MPa '%(ED2_vgl4))
         # fig.text(0.97,0.15,'\n'.join(ftxt),
         #          ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
-        Evac.plt_handle_suffix(fig,path=out_full+"-sigeps_dicvgl",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-sigeps_dicvgl",**plt_Fig_dict)
     
             # Pre-Fit -----------------------------------------------------------------
         plot_range_dic=messu.loc[VIP_dicu[(VIP_dicu[['F1','F3']]).idxmin()]:VIP_dicu[(VIP_dicu[['F2','F4']]).idxmax()]].index
@@ -2756,14 +2623,22 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         # ax1.plot(t, ED2_fit.eval(x=t), 'b-',label='$E_{opt}$')
         ax1.plot(t, YM_pref_opt['E']*t+YM_pref_opt['E_abs'],
              'b-',label='$E_{opt}$')
-    ftxt=('$f_{y}$ = % 6.3f MPa ($\epsilon_{y}$ = %4.3f %%)'%(out_tab['fy'],out_tab['ey_opt']*100),
-          '$f_{u}$ = % 6.3f MPa ($\epsilon_{u}$ = %4.3f %%)'%(out_tab['fu'],out_tab['eu_opt']*100),
+    ftxt=('$f_{y}$ = % 6.3f MPa ($\epsilon_{y}$ = %4.3f %%)'%(
+            out_tab['fy'],
+            out_tab['ey_opt']*100
+            ),
+          '$f_{u}$ = % 6.3f MPa ($\epsilon_{u}$ = %4.3f %%)'%(
+            out_tab['fu'],
+            out_tab['eu_opt']*100
+            ),
           '$E_{con}$ = % 8.3f MPa ($R²$ = %4.3f)'%(*YM_pref_con[['E','Rquad']],),
           '$E_{opt}$ = % 8.3f MPa ($R²$ = %4.3f)'%(*YM_pref_opt[['E','Rquad']],))
     fig.text(0.95,0.15,'\n'.join(ftxt),
-              ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
+              ha='right',va='bottom', 
+              bbox=dict(boxstyle='round', edgecolor='0.8', 
+                        facecolor='white', alpha=0.8))
     fig.legend(loc='upper left', bbox_to_anchor=(0.10, 0.91))
-    Evac.plt_handle_suffix(fig,path=out_full+"-sigeps_wl",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-sigeps_wl",**plt_Fig_dict)
     
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Stress vs. strain curve, final part, with labels'%plt_name)
@@ -2772,8 +2647,8 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     ax1.plot(messu_FP['Strain'], messu_FP['Stress'], 'r--', label='con')
     if _opts['OPT_DIC']:
         ax1.plot(messu_FP[dic_used_Strain], messu_FP['Stress'], 'm--',label='opt')
-    a,b = Evac.stress_linfit_plt(messu_FP['Strain'], VIP_messu[['F3','F4']],
-                                 YM_pref_con['E'],0)
+    a,b = emec.fitting.stress_linfit_plt(
+        messu_FP['Strain'], VIP_messu[['F3','F4']], YM_pref_con['E'], 0)
     ax1.plot(a, b, 'g-',label='$E_{con}$')
     tmp=VIP_messu[['S','F3','F4','Y','Y0','Y1','U']].sort_values()
     if 'B' in VIP_messu.index: tmp=tmp.append(VIP_messu[['B']])
@@ -2802,11 +2677,11 @@ def TBT_single(prot_ser, paths, mfile_add=''):
             else:   c=(-6,6)
             ax1.annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), xycoords='data', 
                          xytext=c, ha="center", va="center", textcoords='offset points')
-        a,b = Evac.stress_linfit_plt(messu_FP[dic_used_Strain], VIP_dicu[['F3','F4']],
-                                     YM_pref_opt['E'],0)
+        a,b = emec.fitting.stress_linfit_plt(
+            messu_FP[dic_used_Strain], VIP_dicu[['F3','F4']], YM_pref_opt['E'], 0)
         ax1.plot(a, b, 'b-',label='$E_{opt}$')
     ax1.legend()
-    Evac.plt_handle_suffix(fig,path=out_full+"-sigeps_fin",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-sigeps_fin",**plt_Fig_dict)
     
     mun_tmp = messu.loc[:VIP_messu['U']]
     fig, ax1 = plt.subplots()
@@ -2829,42 +2704,52 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     a,b=messu.loc[VIP_dicu[:'U'],dic_used_Strain],messu.Stress[VIP_dicu[:'U']]
     ax1.plot(a, b, 'yx')    
     t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['A0Al']
-    tra = Evac.Rquad(mun_tmp.Strain, t)
-    trf = Evac.Rquad(mun_tmp.Strain.loc[sf_eva_con], t.loc[sf_eva_con])
-    trr = Evac.Rquad(mun_tmp.Strain.loc[sr_eva_con], t.loc[sr_eva_con])
+    tra = emec.fitting.Rquad(mun_tmp.Strain, t)
+    trf = emec.fitting.Rquad(mun_tmp.Strain.loc[sf_eva_con], 
+                             t.loc[sf_eva_con])
+    trr = emec.fitting.Rquad(mun_tmp.Strain.loc[sr_eva_con], 
+                             t.loc[sr_eva_con])
     ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'r:',
              label='A0Al %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
     t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['B2Ml']
-    tra = Evac.Rquad(mun_tmp[dic_used_Strain], t)
-    trf = Evac.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic], t.loc[sf_eva_dic])
-    trr = Evac.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], t.loc[sr_eva_dic])
+    tra = emec.fitting.Rquad(mun_tmp[dic_used_Strain], t)
+    trf = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic],
+                             t.loc[sf_eva_dic])
+    trr = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], 
+                             t.loc[sr_eva_dic])
     ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'y:',
              label='B2Ml %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
     t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['E4Mg']
-    tra = Evac.Rquad(mun_tmp[dic_used_Strain], t)
-    trf = Evac.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic], t.loc[sf_eva_dic])
-    trr = Evac.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], t.loc[sr_eva_dic])
+    tra = emec.fitting.Rquad(mun_tmp[dic_used_Strain], t)
+    trf = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic], 
+                             t.loc[sf_eva_dic])
+    trr = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], 
+                             t.loc[sr_eva_dic])
     ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'm:',
              label='E4Mg %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
     t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['G3Mg']
-    tra = Evac.Rquad(mun_tmp[dic_used_Strain], t)
-    trf = Evac.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic], t.loc[sf_eva_dic])
-    trr = Evac.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], t.loc[sr_eva_dic])
+    tra = emec.fitting.Rquad(mun_tmp[dic_used_Strain], t)
+    trf = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic],
+                             t.loc[sf_eva_dic])
+    trr = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], 
+                             t.loc[sr_eva_dic])
     ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'b:',
              label='G3Mg %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
     t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['D2Mgwt']
-    tra = Evac.Rquad(mun_tmp[dic_used_Strain], t)
-    trf = Evac.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic], t.loc[sf_eva_dic])
-    trr = Evac.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], t.loc[sr_eva_dic])
+    tra = emec.fitting.Rquad(mun_tmp[dic_used_Strain], t)
+    trf = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic], 
+                             t.loc[sf_eva_dic])
+    trr = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], 
+                             t.loc[sr_eva_dic])
     ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'g:',
              label='D2Mgwt %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
     ax1.legend()
-    Evac.plt_handle_suffix(fig,path=out_full+"-sigeps_YMcomp",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-sigeps_YMcomp",**plt_Fig_dict)
 
     # =============================================================================
     #%%% 7.3 Generate outputs
     timings.loc[7.3]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     
@@ -2958,243 +2843,8 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     HDFst['Check_to_D'] = Check_to_D
     
     HDFst.close()
-
     
     timings.loc[10.0]=time.perf_counter()
     if output_lvl>=1: log_mg.close()
     
     return timings, cout
-    
-#%% 9 Main
-def TBT_series(paths, no_stats_fc, var_suffix, prot_rkws):
-    prot = pd.read_excel(paths['prot'], **prot_rkws)
-    
-    logfp = paths['out'] + os.path.basename(paths['prot']).replace('.xlsx','.log')
-    if output_lvl>=1: log_mg=open(logfp,'w')
-        
-    prot.Failure_code  = Evac.list_cell_compiler(prot.Failure_code)
-    eva_b = Evac.list_interpreter(prot.Failure_code, no_stats_fc)
-    
-    Evac.MG_strlog("\n paths:",log_mg,output_lvl,printopt=False)
-    for path in paths.index:
-        Evac.MG_strlog("\n  %s: %s"%(path,paths[path]),
-                       log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n evaluation: %d / %d"%(prot.loc[eva_b].count()[0],prot.count()[0]),
-                            log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n%s"%prot.loc[eva_b].Designation.values,
-                            log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n not evaluated: %d / %d"%(prot.loc[eva_b==False].count()[0],prot.count()[0]),
-                            log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n%s"%prot.loc[eva_b==False].Designation.values,
-                            log_mg,output_lvl,printopt=False)
-
-    for eva in prot[eva_b].index:
-        for mfile_add in var_suffix:
-            Evac.MG_strlog("\n %s"%prot.loc[eva].Designation+mfile_add,
-                            log_mg,output_lvl,printopt=False)  
-            try:
-                cout = TBT_single(prot_ser = prot.loc[eva],
-                                     paths = paths, mfile_add=mfile_add)
-                Evac.MG_strlog("\n   Eva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]),
-                                log_mg,output_lvl,printopt=False)
-            except Exception:
-                txt = '\n   Exception:'
-                txt+=Evac.str_indent('\n{}'.format(traceback.format_exc()),5)
-                Evac.MG_strlog(txt, log_mg,output_lvl,printopt=False)  
-
-    if output_lvl>=1: log_mg.close()
-
-def Selector(option, combpaths, no_stats_fc,
-             var_suffix=[""], ser='', des='', out_path='',
-             prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0)):
-    """
-    Selects suitable evaluation method acc. to choosen option.
-
-    Parameters
-    ----------
-    option : str
-        Evaluation option. Possible are:
-            - 'single': Evaluate single measurement
-            - 'series': Evaluate series of measurements (see protocol table)
-            - 'complete': Evaluate series of series
-            - 'pack': Pack all evaluations into single hdf-file (only results and evaluated measurement)
-            - 'pack-all': Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
-    combpaths : pandas.DataFrame
-        Combined paths for in- and output of evaluations.
-    no_stats_fc : list of str
-        Assessment codes for excluding from evaluation (searched in protocol variable "Failure_code").
-    var_suffix : list of str, optional
-        Suffix of variants of measurements (p.E. different moistures ["A","B",...]). 
-        The default is [""].
-    ser : str, optional
-        Accessor for series. Must be as index in combpaths. The default is ''.
-    des : str, optional
-        Accessor for/Designation of measurement/specimen. 
-        Must be as index in combpaths. The default is ''.
-    out_path : str or Path, optional
-        Additional outputpath for packed evaluation (hdf file). The default is ''.
-    prot_rkws : dict, optional
-        Dictionary for reading protocol. Must be keyword ind pandas.read_excel.
-        The default is dict(header=11, skiprows=range(12,13),index_col=0).
-
-    Raises
-    ------
-    NotImplementedError
-        Option not implemented.
-
-    Returns
-    -------
-    None.
-
-    """
-    if option == 'single':
-        mfile_add = var_suffix[0]
-        
-        prot=pd.read_excel(combpaths.loc[ser,'prot'],**prot_rkws)
-        _=TBT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
-                     paths=combpaths.loc[ser],
-                     mfile_add = mfile_add)
-        
-    elif option == 'series':
-        TBT_series(paths = combpaths.loc[ser],
-                   no_stats_fc = no_stats_fc,
-                   var_suffix = var_suffix,
-                   prot_rkws=prot_rkws)
-        
-    elif option == 'complete':
-        for ser in combpaths.index:
-            TBT_series(paths = combpaths.loc[ser],
-                       no_stats_fc = no_stats_fc,
-                       var_suffix = var_suffix,
-                       prot_rkws=prot_rkws)
-            
-    elif option == 'pack':
-        packpaths = combpaths[['prot','out']]
-        packpaths.columns=packpaths.columns.str.replace('out','hdf')
-        Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
-                      hdf_naming = 'Designation', var_suffix = var_suffix,
-                      h5_conc = 'Material_Parameters', h5_data = 'Measurement',
-                      opt_pd_out = False, opt_hdf_save = True)
-        print("Successfully created %s"%out_path)
-    elif option == 'pack-all':
-        packpaths = combpaths[['prot','out']]
-        packpaths.columns=packpaths.columns.str.replace('out','hdf')
-        Evac.pack_hdf_mul(in_paths=packpaths, out_path = out_path,
-                          hdf_naming = 'Designation', var_suffix = var_suffix,
-                          h5_conc = 'Material_Parameters',
-                          opt_pd_out = False, opt_hdf_save = True)
-        print("Successfully created %s"%out_path)
-        
-    else:
-        raise NotImplementedError('Option %s not implemented!'%option)
-
-# def main():
-       
-#     # option = 'single'
-#     # option = 'series'
-#     # option = 'complete'
-#     option = 'pack-complete'
-#     # option = 'pack-complete-all'
-    
-#     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
-#                    'B01.1','B01.2','B01.3', 'B02.3',
-#                    'C01.1','C01.2','C01.3', 'C02.3',
-#                    'D01.1','D01.2','D01.3', 'D02.3',
-#                    'F01.1','F01.2','F01.3', 'F02.3']
-#                    # 'G01.1','G01.2','G01.3', 'G02.3']
-#     # var_suffix = ["A","B","C","D"] #Suffix of variants of measurements (p.E. diffferent moistures)
-#     var_suffix = [""] #Suffix of variants of measurements (p.E. diffferent moistures)
-        
-#     protpaths = pd.DataFrame([],dtype='string')
-#     combpaths = pd.DataFrame([],dtype='string')
-#     # path_main="F:/Messung/003-190822-Becken1-DBV/"
-#     # name_protokoll="190822_Becken1_DBV_Protokoll.xlsx"
-#     # path_main="F:/Messung/004-191129-Schulter-DBV/"
-#     # name_protokoll="191129_Schulter_DBV_Protokoll.xlsx"
-#     # path_main="D:/Gebhardt/Messungen/200226_Test_FU_Holz_A/"
-#     # name_protokoll="200226_Test_FU_Holz_Protokoll.xlsx"
-#     # path_main="D:/Gebhardt/Messungen/200401_Test_FU_Weide/"
-#     # name_protokoll="200401_Test_FU_Weide_Protokoll_new.xlsx"
-#     # protpaths.loc['B2','path_main'] = "F:/Messung/004-200515-Becken2-DBV/"
-#     # protpaths.loc['B2','name_prot'] = "200515_Becken2_DBV_Protokoll_new.xlsx"
-#     protpaths.loc['B3','path_main'] = "F:/Messung/005-200724_Becken3-DBV/"
-#     protpaths.loc['B3','name_prot'] = "200724_Becken3-DBV_Protokoll_new.xlsx"
-#     protpaths.loc['B4','path_main'] = "F:/Messung/006-200917_Becken4-DBV/"
-#     protpaths.loc['B4','name_prot'] = "200917_Becken4-DBV_Protokoll_new.xlsx"
-#     protpaths.loc['B5','path_main'] = "F:/Messung/007-201014_Becken5-DBV/"
-#     protpaths.loc['B5','name_prot'] = "201014_Becken5-DBV_Protokoll_new.xlsx"
-#     protpaths.loc['B6','path_main'] = "F:/Messung/008-201125_Becken6-DBV/"
-#     protpaths.loc['B6','name_prot'] = "201125_Becken6-DBV_Protokoll_new.xlsx"
-#     protpaths.loc['B7','path_main'] = "F:/Messung/009-210120_Becken7-DBV/"
-#     protpaths.loc['B7','name_prot'] = "210120_Becken7-DBV_Protokoll_new.xlsx"
-
-#     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
-#     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
-#     protpaths.loc[:,'path_eva1']    = "Auswertung/"
-#     protpaths.loc[:,'path_eva2']    = "ExMechEva/"
-    
-#     # t=protpaths[['path_main','path_eva1','name_prot']].stack()
-#     # t.groupby(level=0).apply(lambda x: '{0}{1}{2}'.format(*x))
-#     combpaths['prot'] = protpaths['path_main']+protpaths['path_eva1']+protpaths['name_prot']
-#     combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
-#     combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
-#     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
-    
-#     # mfile_add="" # suffix für Feuchte
-    
-    
-#     if option == 'single':
-#         ser='B5'
-#         des='cm31a'
-#         mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
-        
-#         prot=pd.read_excel(combpaths.loc[ser,'prot'],
-#                            header=11, skiprows=range(12,13),
-#                            index_col=0)
-#         cout=TBT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
-#                         paths=combpaths.loc[ser],
-#                         mfile_add = mfile_add)
-#         print("\nEva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]))
-        
-#     elif option == 'series':
-#         ser='B6'
-#         TBT_series(paths = combpaths.loc[ser],
-#                    no_stats_fc = no_stats_fc,
-#                    var_suffix = var_suffix)
-        
-#     elif option == 'complete':
-#         for ser in combpaths.index:
-#             TBT_series(paths = combpaths.loc[ser],
-#                        no_stats_fc = no_stats_fc,
-#                        var_suffix = var_suffix)
-            
-#     elif option == 'pack-complete':        
-#         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/TBT/B3-B7_TBT-Summary"
-#         # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/211217/B3-B7_TBT-Summary"
-#         out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/TBT/B3-B7_TBT-Summary"
-#         packpaths = combpaths[['prot','out']]
-#         packpaths.columns=packpaths.columns.str.replace('out','hdf')
-#         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
-#                       hdf_naming = 'Designation', var_suffix = var_suffix,
-#                       h5_conc = 'Material_Parameters', h5_data = 'Measurement',
-#                       opt_pd_out = False, opt_hdf_save = True)
-#         print("Successfully created %s"%out_path)
-        
-#     elif option == 'pack-complete-all':        
-#         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/211206/TBT/B3-B7_TBT-Summary"
-#         # out_path="D:/Gebhardt/Spezial/DBV/Methodenvgl/220905/B3-B7_TBT-Summary_new2"
-#         out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/TBT/B3-B7_TBT-Summary-all"
-#         packpaths = combpaths[['prot','out']]
-#         packpaths.columns=packpaths.columns.str.replace('out','hdf')
-#         Evac.pack_hdf_mul(in_paths=packpaths, out_path = out_path,
-#                           hdf_naming = 'Designation', var_suffix = var_suffix,
-#                           h5_conc = 'Material_Parameters',
-#                           opt_pd_out = False, opt_hdf_save = True)
-#         print("Successfully created %s"%out_path)
-        
-#     else:
-#         raise NotImplementedError('%s not implemented!'%option)
-        
-
-# if __name__ == "__main__":
-#     main()

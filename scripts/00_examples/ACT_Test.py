@@ -9,7 +9,8 @@ import sys
 import pandas as pd
 from pathlib import Path
 
-sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva')
+# sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva')
+sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva')
 
 nwd = Path.cwd().resolve().parent.parent
 os.chdir(nwd)
@@ -71,9 +72,6 @@ def main():
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function
-    # emeact.Selector(option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
-    #                 var_suffix=var_suffix, ser=ser, des=des, out_path=out_path)
-    
     eva.selector(eva_single_func=emeact.ACT_single, 
                  option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
                  var_suffix=var_suffix, ser=ser, des=des, out_path=out_path,

@@ -5,12 +5,17 @@ Simple example using data/ATT for showing evaluation acc. to "bla".
 """
 
 import os 
+import sys
 from pathlib import Path
+
+sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva')
+
 nwd = Path.cwd().resolve().parent.parent
 os.chdir(nwd)
 
 import pandas as pd
-# import exmecheva.Eva_common as emec
+
+import exmecheva.eva as eva
 import exmecheva.Eva_ATT as emeatt
 
 def main():
@@ -19,10 +24,10 @@ def main():
     combpaths = pd.DataFrame([],dtype='string')   
     
     # Options (uncomment to use):
-    # Evaluate single measurement
+    ## Evaluate single measurement
     option = 'single'
-    ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
-    option = 'series'
+    # ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
+    # option = 'series'
     # ## Evaluate series of series (here only one series, named 'TS')
     # option = 'complete'
     # ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
@@ -50,12 +55,14 @@ def main():
     protpaths.loc['TS','path_main'] = main_path+"Series_Test\\"
     protpaths.loc['TS','name_prot'] = "ATT_Protocol_Series_Test.xlsx"
     ## Path extensions for all series
+    protpaths.loc[:,'name_opts']    = "com_eva_opts.json"
     protpaths.loc[:,'path_con']     = "meas\\conventional\\"
     protpaths.loc[:,'path_dic']     = "meas\\optical\\"
     protpaths.loc[:,'path_eva1']    = "eva\\"
     
     # Path builder 
     combpaths['prot'] = protpaths['path_main']+protpaths['name_prot']
+    combpaths['opts'] = protpaths['path_main']+protpaths['name_opts']
     combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
     combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']
@@ -64,8 +71,10 @@ def main():
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function
-    emeatt.Selector(option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
-                    var_suffix=var_suffix, ser=ser, des=des, out_path=out_path)
+    eva.selector(eva_single_func=emeatt.ATT_single, 
+                  option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
+                  var_suffix=var_suffix, ser=ser, des=des, out_path=out_path,
+                  prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0))
 
 if __name__ == "__main__":
     main()

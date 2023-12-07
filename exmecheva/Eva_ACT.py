@@ -19,28 +19,13 @@ Changelog:
 """
 
 #%% 0 Imports
-# import os
-# import sys
-# import traceback
 import pandas as pd
 import numpy as np
-# import scipy.integrate   as scint
-# import scipy.interpolate as scipo
-# import scipy.optimize    as scopt
-# import lmfit
 import matplotlib.pyplot as plt
-# from matplotlib import cm
-# import matplotlib.colors as colors
-# from mpl_toolkits.mplot3d import Axes3D
-# import vg
-# from datetime import datetime, timedelta
 from datetime import datetime
 import time
 import warnings
-# import json
 
-# import Eva_common as Evac
-# import exmecheva.Eva_common as Evac #import Eva_common relative?
 import exmecheva.common as emec
 
 log_custom = emec.output.str_log
@@ -67,125 +52,12 @@ plt_Fig_dict={'tight':True, 'show':True,
               'clear':True, 'close':True}
 MG_logopt={'logfp':None,'output_lvl':output_lvl,'logopt':True,'printopt':False}
 
-#%% 0.1 Add. modules
-# def ACT_Option_reader(options):
-#     def check_empty(x):
-#         t = (x == '' or (isinstance(x, float) and  np.isnan(x)))
-#         return t
-    
-#     def str_to_bool(x):
-#         pt=["True","true","Yes","1","On"]
-#         if x is True:
-#             t = x
-#         elif x in pt:
-#             t = True
-#         else:
-#             t = False
-#         return t
 
-#     for o in options.index:
-#         if (o=='OPT_File_Meas') or (o=='OPT_File_Meas'):
-#             if check_empty(options[o]):
-#                 options[o]='Test'
-#             else:
-#                 options[o]=str(options[o])
-#         elif (o=='OPT_Measurement_file'):
-#             if check_empty(options[o]):
-#                 options[o]='{"header":48,"head_names":["Time","Trigger","F_WZ","L_PM","F_PM","L_IWA1","L_IWA2"], "used_names_dict":{"Time":"Time","Force":"F_WZ","Way":["L_IWA1","L_IWA2"]}}'
-#             options[o]=json.loads(options[o])
-            
-        
-#         elif (o=='OPT_End'):
-#             if check_empty(options[o]):
-#                 options[o]=np.nan
-        
-#         elif (o=='OPT_Resampling'):
-#             if check_empty(options[o]):
-#                 options[o]=True
-#             else:
-#                 options[o]= str_to_bool(options[o])
-#         elif (o=='OPT_Resampling_moveave'):
-#             if check_empty(options[o]):
-#                 options[o]=True
-#             else:
-#                 options[o]= str_to_bool(options[o])
-#         elif (o=='OPT_Resampling_Frequency'):
-#             if check_empty(options[o]):
-#                 options[o]=10.0
-                
-        
-#         elif (o=='OPT_Springreduction'):
-#             if check_empty(options[o]):
-#                 options[o]=False
-#             else:
-#                 options[o]= str_to_bool(options[o])
-#         elif (o=='OPT_Springreduction_K'):
-#             if check_empty(options[o]):
-#                 options[o]=-0.116
-#         elif (o=='OPT_LVDT_failure'):
-#             if check_empty(options[o]):
-#                 options[o]=[False,0,' ']
-#                 # options[o]=[True,-1,'L_PM']
-#             else:
-#                 options[o]=str(options[o]).replace('"','').split(',')
-#             options[o][0]= str_to_bool(options[o][0])
-#             options[o][1]=float(options[o][1])
-#             options[o][2]=  str(options[o][2])
-                
-#         elif (o=='OPT_Compression'):
-#             if check_empty(options[o]):
-#                 options[o]=True
-#             else:
-#                 options[o]= str_to_bool(options[o])
-                
-        
-#         elif (o=='OPT_DIC'):
-#             if check_empty(options[o]):
-#                 options[o]=False
-#             else:
-#                 options[o]= str_to_bool(options[o])
-         
-
-#         elif (o=='OPT_Determination_Distance'):
-#             if check_empty(options[o]):
-#                 options[o]=[100,100]
-#             else:
-#                 options[o]=str(options[o]).replace('"','').split(',')
-#             options[o][0]=int(options[o][0])
-#             options[o][1]=int(options[o][1])
-                
-#         elif (o=='OPT_YM_Determination_range'):
-#             if check_empty(options[o]):
-#                 # options[o]=[0.25,0.75,'U']
-#                 options[o]=[0.25,0.50,'U']
-#             else:
-#                 options[o]=str(options[o]).replace('"','').split(',')
-#             options[o][0]=float(options[o][0])
-#             options[o][1]=float(options[o][1])
-#         elif(o=='OPT_YM_Determination_refinement') or(o=='OPT_YM_Determination_refSecHard'):
-#             if check_empty(options[o]):
-#                 if (o=='OPT_YM_Determination_refinement'):
-#                     options[o]=[0.15,0.75,'U','d_M',True,8]
-#                 if (o=='OPT_YM_Determination_refSecHard'):
-#                     options[o]=[0.05,0.75,'SY','d_M',True,16]
-#             else:
-#                 options[o]=str(options[o]).replace('"','').split(',')
-#             options[o][0]=float(options[o][0])
-#             options[o][1]=float(options[o][1])
-#             options[o][4]= str_to_bool(options[o][4])
-#             options[o][5]=  int(options[o][5])
-#         elif (o=='OPT_Determination_SecHard'):
-#             if check_empty(options[o]):
-#                 options[o]=True
-#     return options
 #%% 1.0 Evaluation
 def ACT_single(prot_ser, paths, mfile_add=''):
-    # out_name = prot_ser['Donor']+'_'+prot_ser['Designation']
     out_name = prot_ser['Designation']+mfile_add
-    # out_name = prot_ser.name
     out_full = paths['out']+out_name
-    # _opts = prot_ser[prot_ser.index.str.startswith('OPT_')]
-    # _opts = ACT_Option_reader(_opts)
+    
     _opts=emec.eva_opt_hand.option_reader_sel(
         prot_ser=prot_ser, paths=paths, 
         search_inds=['Number','Designation','name'], 
@@ -577,8 +449,6 @@ def ACT_single(prot_ser, paths, mfile_add=''):
                    %tmon.to_frame(name='Epoche').T.to_string().replace('\n','\n    '),
                log_mg,output_lvl)
     
-    
-    
     # =============================================================================
     #%%% 6.3 Determine points of interest
     log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
@@ -823,7 +693,7 @@ def ACT_single(prot_ser, paths, mfile_add=''):
     
     d_stress_mid = messu.Stress.diff()
     d_strain_mid = messu.Strain.diff()
-    d_Force = messu.Force.diff()
+    # d_Force = messu.Force.diff()
     
     Ind_YM_f=['F1','F2']
     Ind_YM_r=['F3','F4']
@@ -940,7 +810,6 @@ def ACT_single(prot_ser, paths, mfile_add=''):
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
 
-
     E_lsq=E_lsq_A
 
     E_Methods_df = E_A_df
@@ -978,6 +847,7 @@ def ACT_single(prot_ser, paths, mfile_add=''):
     # set preffered Method
     YM_pref_con=E_lsq['E_lsq_R_A0Al']
     if _opts['OPT_Determination_SecHard']: YM_pref_conS=E_lsq['E_lsq_S_A0Al']
+    
     # --------------------------------------------------------------------------
     #%%% 6.5 Determine yield point
     log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
@@ -987,47 +857,6 @@ def ACT_single(prot_ser, paths, mfile_add=''):
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
-    # strain_osd = {'Y0':0.0,'Y':0.2/100,'Y1':0.05/100} #acc. Zhang et al. 2021, DOI: 10.1007/s10439-020-02719-2
-    # for i in strain_osd.keys():
-    #     if strain_osd[i]==0:
-    #         VIP_messu[i] = VIP_messu['F4']
-    #         if _opts['OPT_Determination_SecHard']: VIP_messu['S'+i] = VIP_messu['S4']
-    #         if _opts['OPT_DIC']: VIP_dicu[i] = VIP_dicu['F4']
-    #     else:
-    #         VIP_messu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_messu,
-    #                                           n_strain='Strain', n_stress='Stress',
-    #                                           n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F4'],
-    #                                           # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], # <13.10.2023 
-    #                                           # n_loBo=['F4'], n_upBo=['U'], n_loBo_int=['F4'], 
-    #                                           YM     = E_lsq_A['E_lsq_R_A0Al']['E'],
-    #                                           YM_abs = E_lsq_A['E_lsq_R_A0Al']['E_abs'],
-    #                                           strain_offset=strain_osd[i],
-    #                                           rise_det=[True,4], n_yield=i)
-    #         log_custom(log_cind(txt,3), log_mg,output_lvl)
-        
-    #         if _opts['OPT_Determination_SecHard']:
-    #             log_custom("\n  Determination of yield strain-second hardening:",log_mg,output_lvl)
-    #             VIP_messu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_messu,
-    #                                               n_strain='Strain', n_stress='Stress',
-    #                                               n_loBo=['S3'], n_upBo=['SU'], n_loBo_int=['S4'], 
-    #                                               # n_loBo=['S4'], n_upBo=['SU'], n_loBo_int=['S4'], 
-    #                                               YM     = E_lsq_A['E_lsq_S_A0Al']['E'],
-    #                                               YM_abs = E_lsq_A['E_lsq_S_A0Al']['E_abs'],
-    #                                               strain_offset=strain_osd[i],
-    #                                               rise_det=[True,4], n_yield='S'+i)
-    #             log_custom(log_cind(txt,3), log_mg,output_lvl)
-                
-    #         if _opts['OPT_DIC']:    
-    #             log_custom("\n  Determination of yield strain-optical:",log_mg,output_lvl)
-    #             VIP_dicu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_dicu,
-    #                                             n_strain=dic_used_Strain, n_stress='Stress',
-    #                                             n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F4'],
-    #                                             # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], # <13.10.2023 
-    #                                             YM     = E_lsq_A[loc_Yd_tmp]['E'],
-    #                                             YM_abs = E_lsq_A[loc_Yd_tmp]['E_abs'],
-    #                                             strain_offset=strain_osd[i],
-    #                                             rise_det=[True,4], n_yield=i)
-    #             log_custom(log_cind(txt,3), log_mg,output_lvl)
     strain_osd = {'YK':0.0,'Y0':0.0,'Y1':0.05/100,'Y2':0.1/100,'Y':0.2/100} #acc. Zhang et al. 2021, DOI: 10.1007/s10439-020-02719-2
     strain_osdf={'YK':'F4'}
 
@@ -1386,126 +1215,3 @@ def ACT_single(prot_ser, paths, mfile_add=''):
     if output_lvl>=1: log_mg.close()
     
     return timings, cout
-
-# #%% 9 Main
-# def ACT_series(paths, no_stats_fc, var_suffix, prot_rkws):
-#     prot = pd.read_excel(paths['prot'],**prot_rkws)
-    
-#     logfp = paths['out'] + os.path.basename(paths['prot']).replace('.xlsx','.log')
-#     if output_lvl>=1: log_mg=open(logfp,'w')
-        
-#     prot.Failure_code  = Evac.list_cell_compiler(prot.Failure_code)
-#     eva_b = Evac.list_interpreter(prot.Failure_code, no_stats_fc)
-    
-#     log_custom("\n paths:",log_mg,output_lvl,printopt=False)
-#     for path in paths.index:
-#         log_custom("\n  %s: %s"%(path,paths[path]),
-#                        log_mg,output_lvl,printopt=False)
-#     log_custom("\n evaluation: %d / %d"%(prot.loc[eva_b].count()[0],prot.count()[0]),
-#                             log_mg,output_lvl,printopt=False)
-#     log_custom("\n%s"%prot.loc[eva_b].Designation.values,
-#                             log_mg,output_lvl,printopt=False)
-#     log_custom("\n not evaluated: %d / %d"%(prot.loc[eva_b==False].count()[0],prot.count()[0]),
-#                             log_mg,output_lvl,printopt=False)
-#     log_custom("\n%s"%prot.loc[eva_b==False].Designation.values,
-#                             log_mg,output_lvl,printopt=False)
-
-#     for eva in prot[eva_b].index:
-#         for mfile_add in var_suffix:
-#             log_custom("\n %s"%prot.loc[eva].Designation+mfile_add,
-#                             log_mg,output_lvl,printopt=False)  
-#             try:
-#                 cout = ACT_single(prot_ser = prot.loc[eva],
-#                                      paths = paths, mfile_add=mfile_add)
-#                 log_custom("\n   Eva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]),
-#                                 log_mg,output_lvl,printopt=False)
-#             except Exception:
-#                 txt = '\n   Exception:'
-#                 txt+=log_cind('\n{}'.format(traceback.format_exc()),5)
-#                 log_custom(txt, log_mg,output_lvl,printopt=False)  
-
-#     if output_lvl>=1: log_mg.close()
-  
-# def Selector(option, combpaths, no_stats_fc,
-#              var_suffix=[""], ser='', des='', out_path='',
-#              prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0)):
-#     """
-#     Selects suitable evaluation method acc. to choosen option.
-
-#     Parameters
-#     ----------
-#     option : str
-#         Evaluation option. Possible are:
-#             - 'single': Evaluate single measurement
-#             - 'series': Evaluate series of measurements (see protocol table)
-#             - 'complete': Evaluate series of series
-#             - 'pack': Pack all evaluations into single hdf-file (only results and evaluated measurement)
-#             - 'pack-all': Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
-#     combpaths : pandas.DataFrame
-#         Combined paths for in- and output of evaluations.
-#     no_stats_fc : list of str
-#         Assessment codes for excluding from evaluation (searched in protocol variable "Failure_code").
-#     var_suffix : list of str, optional
-#         Suffix of variants of measurements (p.E. different moistures ["A","B",...]). 
-#         The default is [""].
-#     ser : str, optional
-#         Accessor for series. Must be as index in combpaths. The default is ''.
-#     des : str, optional
-#         Accessor for/Designation of measurement/specimen. 
-#         Must be as index in combpaths. The default is ''.
-#     out_path : str or Path, optional
-#         Additional outputpath for packed evaluation (hdf file). The default is ''.
-#     prot_rkws : dict, optional
-#         Dictionary for reading protocol. Must be keyword ind pandas.read_excel.
-#         The default is dict(header=11, skiprows=range(12,13),index_col=0).
-
-#     Raises
-#     ------
-#     NotImplementedError
-#         Option not implemented.
-
-#     Returns
-#     -------
-#     None.
-
-#     """
-#     if option == 'single':
-#         mfile_add = var_suffix[0]
-        
-#         prot=pd.read_excel(combpaths.loc[ser,'prot'],**prot_rkws)
-#         _=ACT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
-#                      paths=combpaths.loc[ser],
-#                      mfile_add = mfile_add)
-        
-#     elif option == 'series':
-#         ACT_series(paths = combpaths.loc[ser],
-#                    no_stats_fc = no_stats_fc,
-#                    var_suffix = var_suffix,
-#                    prot_rkws=prot_rkws)
-        
-#     elif option == 'complete':
-#         for ser in combpaths.index:
-#             ACT_series(paths = combpaths.loc[ser],
-#                        no_stats_fc = no_stats_fc,
-#                        var_suffix = var_suffix,
-#                        prot_rkws=prot_rkws)
-            
-#     elif option == 'pack':
-#         packpaths = combpaths[['prot','out']]
-#         packpaths.columns=packpaths.columns.str.replace('out','hdf')
-#         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
-#                       hdf_naming = 'Designation', var_suffix = var_suffix,
-#                       h5_conc = 'Material_Parameters', h5_data = 'Measurement',
-#                       opt_pd_out = False, opt_hdf_save = True)
-#         print("Successfully created %s"%out_path)
-#     elif option == 'pack-all':
-#         packpaths = combpaths[['prot','out']]
-#         packpaths.columns=packpaths.columns.str.replace('out','hdf')
-#         Evac.pack_hdf_mul(in_paths=packpaths, out_path = out_path,
-#                           hdf_naming = 'Designation', var_suffix = var_suffix,
-#                           h5_conc = 'Material_Parameters',
-#                           opt_pd_out = False, opt_hdf_save = True)
-#         print("Successfully created %s"%out_path)
-        
-#     else:
-#         raise NotImplementedError('Option %s not implemented!'%option)

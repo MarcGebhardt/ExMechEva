@@ -1,0 +1,192 @@
+{
+ "mtype": {
+  "OPT_Testtype": "String",
+  "OPT_File_Meas": "String",
+  "OPT_File_DIC": "String",
+  "OPT_Measurement_file": "Json",
+  "OPT_Start": "Float",
+  "OPT_End": "Float",
+  "OPT_Resampling": "Bool",
+  "OPT_Resampling_moveave": "Bool",
+  "OPT_Resampling_Frequency": "Float",
+  "OPT_Springreduction": "Bool",
+  "OPT_Springreduction_K": "Float",
+  "OPT_LVDT_failure": "Bool",
+  "OPT_Compression": "Bool",
+  "OPT_DIC": "Bool",
+  "OPT_TimeOS": "String",
+  "OPT_DIC_Points_device_prefix": "String",
+  "OPT_DIC_Points_TBT_device": "Array",
+  "OPT_DIC_Points_meas_prefix": "String",
+  "OPT_DIC_Points_meas_fork": "Array",
+  "OPT_DIC_Tester": "Array",
+  "OPT_DIC_Fitting": "Json",
+  "OPT_Poisson_prediction": "Float",
+  "OPT_Determination_Distance": "Int",
+  "OPT_YM_Determination_range": "Array",
+  "OPT_YM_Determination_refinement": "Array"
+ },
+ "stype": {
+  "OPT_Testtype": null,
+  "OPT_File_Meas": null,
+  "OPT_File_DIC": null,
+  "OPT_Measurement_file": null,
+  "OPT_Start": null,
+  "OPT_End": null,
+  "OPT_Resampling": null,
+  "OPT_Resampling_moveave": null,
+  "OPT_Resampling_Frequency": null,
+  "OPT_Springreduction": null,
+  "OPT_Springreduction_K": null,
+  "OPT_LVDT_failure": null,
+  "OPT_Compression": null,
+  "OPT_DIC": null,
+  "OPT_TimeOS": null,
+  "OPT_DIC_Points_device_prefix": null,
+  "OPT_DIC_Points_meas_prefix": null,
+  "OPT_DIC_Tester": [
+   "Float",
+   "Float",
+   "Int",
+   "Int"
+  ],
+  "OPT_DIC_Fitting": null,
+  "OPT_Poisson_prediction": null,
+  "OPT_Determination_Distance": null,
+  "OPT_YM_Determination_range": [
+   "Float",
+   "Float",
+   "String"
+  ],
+  "OPT_YM_Determination_refinement": [
+   "Float",
+   "Float",
+   "String",
+   "String",
+   "Bool",
+   "Int"
+  ]
+ },
+ "preset": {
+  "OPT_Testtype": "destructive",
+  "OPT_File_Meas": null,
+  "OPT_File_DIC": null,
+  "OPT_Measurement_file": {
+   "header": 48,
+   "head_names": [
+    "Time",
+    "Trigger",
+    "F_WZ",
+    "L_PM",
+    "F_PM",
+    "L_IWA1",
+    "L_IWA2"
+   ],
+   "used_names_dict": {
+    "Time": "Time",
+    "Force": "F_WZ",
+    "Way": [
+     "L_IWA1",
+     "L_IWA2"
+    ]
+   }
+  },
+  "OPT_Start": NaN,
+  "OPT_End": NaN,
+  "OPT_Resampling": true,
+  "OPT_Resampling_moveave": true,
+  "OPT_Resampling_Frequency": 4.0,
+  "OPT_Springreduction": false,
+  "OPT_Springreduction_K": NaN,
+  "OPT_LVDT_failure": false,
+  "OPT_Compression": true,
+  "OPT_DIC": true,
+  "OPT_DIC_Points_device_prefix": "S",
+  "OPT_DIC_Points_TBT_device": [
+   "S1",
+   "S2",
+   "S3"
+  ],
+  "OPT_DIC_Points_meas_prefix": "P",
+  "OPT_DIC_Points_meas_fork": [
+   "P3",
+   "P4",
+   "P5"
+  ],
+  "OPT_DIC_Tester": [
+   0.005,
+   50.0,
+   3,
+   6
+  ],
+  "OPT_DIC_Fitting": {
+   "Bending_Legion_Builder": "FSE_fixed",
+   "Bending_Legion_Name": "FSE fit",
+   "Bending_MCFit_opts": {
+    "error_weights_pre": [
+     1,
+     0,
+     1000,
+     100
+    ],
+    "error_weights_bend": [
+     1,
+     10,
+     1000,
+     100
+    ],
+    "error_weights_pre_inc": [
+     1,
+     0,
+     1000,
+     100
+    ],
+    "error_weights_bend_inc": [
+     1,
+     10,
+     1000,
+     100
+    ],
+    "fit_max_nfev_pre": 500,
+    "fit_max_nfev_bend": 500,
+    "fit_max_nfev_pre_inc": 500,
+    "fit_max_nfev_bend_inc": 500
+   },
+   "pwargs": {
+    "param_val": {
+     "xmin": -10,
+     "xmax": 10,
+     "FP": "pi/(xmax-xmin)",
+     "b1": -1.0,
+     "b2": -0.1,
+     "b3": -0.01,
+     "b4": -0.001,
+     "c": 0.0,
+     "d": 0.0
+    },
+    "param_min": {},
+    "param_max": {
+     "b1": 1.0,
+     "b2": 1.0,
+     "b3": 1.0,
+     "b4": 1.0
+    }
+   }
+  },
+  "OPT_Poisson_prediction": 0.3,
+  "OPT_Determination_Distance": 30,
+  "OPT_YM_Determination_range": [
+   0.25,
+   0.5,
+   "U"
+  ],
+  "OPT_YM_Determination_refinement": [
+   0.15,
+   0.75,
+   "U",
+   "d_M",
+   true,
+   8
+  ]
+ }
+}

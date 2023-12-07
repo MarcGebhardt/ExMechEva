@@ -45,7 +45,30 @@ def pd_limit(self, iS=None, iE=None):
 pd.Series.indlim = pd_limit
 pd.DataFrame.indlim = pd_limit
 
-def pd_slice_index(index,vals,option='range'):
+def pd_slice_index(index, vals, option='range'):
+    """
+    Slice an index by given values and option.
+
+    Parameters
+    ----------
+    index : pd.Index
+        Index.
+    vals : range or list
+        Slicing values (list or, lower and upper limits).
+    option : string, optional
+        Option for slicing (range or list). The default is 'range'.
+
+    Raises
+    ------
+    NotImplementedError
+        Option not implemented.
+
+    Returns
+    -------
+    ind_new : pd.Index
+        New index.
+
+    """
     if option=='range':
         ind=[]
         ind.append(index.searchsorted(vals[0], side='left'))
@@ -58,7 +81,8 @@ def pd_slice_index(index,vals,option='range'):
     return ind_new
 
 def pd_combine_index(pd1, pd2, option='dropna'):
-    """Returns a combined index of two pandas objects (series or dataframe) with valide values in both."""
+    """Returns a combined index of two pandas objects (series or dataframe) 
+    with valide values in both."""
     if option=='dropna':
         if isinstance(pd1,pd.core.indexes.base.Index):
             index1=pd1
@@ -302,65 +326,6 @@ def Find_first_sc(pds, val, iS=None, iE=None,
         i=tmp[tmp].index[0] 
     return i
 
-#%% misc
-def pd_vec_length(pdo, norm=False, norm_kws={}, out='Series'):
-    """Calculate (normalized) vector length and return ether whole series or index"""
-    if norm:
-        pds=normalize(pdo, **norm_kws)
-    else:
-        pds=pdo
-    pds=((pds**2).sum(axis=1))**0.5
-    if out=='Series':
-        out=pds
-    else:
-        out=pds.idxmax()
-    return out
-
-def pd_trapz(pdo, y=None, x=None, axis=0, nan_policy='omit'):
-    if pd_isDF(pdo):
-        pdo=pdo.loc(axis=pd_axischange(axis))[[x,y]]
-        if nan_policy=='omit':
-            pdo=pd_exclnan(pdo=pdo, axis=pd_axischange(axis))
-        elif nan_policy=='raise' and pdo.isna().any(None):
-            raise ValueError("NaN in objectiv!")
-        elif nan_policy=='interpolate':
-            pdo=pdo.interpolate(axis=axis)
-        out=np.trapz(y=pdo.loc(axis=pd_axischange(axis))[y],
-                     x=pdo.loc(axis=pd_axischange(axis))[x])
-    elif pd_isSer(pdo):
-        if nan_policy=='omit':
-            pdo=pd_exclnan(pdo=pdo)
-        elif nan_policy=='raise' and pdo.isna().any(None):
-            raise ValueError("NaN in objectiv!")
-        elif nan_policy=='interpolate':
-            pdo=pdo.interpolate()
-        out=np.trapz(y=pdo)
-    else:
-        NotImplementedError("Type %s not implemented!"%type(pdo))
-    return out
-
-def pd_outsort(data, outsort='ascending'):
-    if outsort in ['A','a','ascending',True,'r','rising','rise']:
-        dout = data.sort_values(ascending=True)
-    elif outsort in ['D','d','descending','f','falling','fall']:
-        dout = data.sort_values(ascending=False)
-    else:
-        dout = data
-    return dout
-
-def pd_axischange(axis):
-    if axis==0:
-        a=1
-    elif axis==1:
-        a=0
-    if axis=="columns":
-        a="index"
-    elif axis=="index":
-        a="columns"
-    else:
-        NotImplementedError("Axis %s not implemented!"%axis)
-    return a
-
 #%% NaN handling
 def pd_exclnan(pdo,axis=1):
     if pd_isDF(pdo):
@@ -417,3 +382,128 @@ def pd_nan_handler(pdo, ind=None, axis=0, nan_policy='omit'):
     else:
         NotImplementedError("Type %s not implemented!"%type(pds))
     return pds
+
+#%% misc
+
+def pd_outsort(data, outsort='ascending'):
+    """
+    Sorts pandas object by given string.
+
+    Parameters
+    ----------
+    data : pd.Series or pd.DataFrame
+        Data to be sorted.
+    outsort : str, optional
+        Option for sorting. Implemented:
+        - ascending: ['A','a','ascending',True,'r','rising','rise']
+        - descending: ['D','d','descending','f','falling','fall']
+        The default is 'ascending'.
+
+    Returns
+    -------
+    dout : pd.Series or pd.DataFrame
+        Sortted data.
+
+    """
+    if outsort in ['A','a','ascending',True,'r','rising','rise']:
+        dout = data.sort_values(ascending=True)
+    elif outsort in ['D','d','descending','f','falling','fall']:
+        dout = data.sort_values(ascending=False)
+    else:
+        dout = data
+    return dout
+
+def pd_axischange(axis):
+    """
+    Change axis (use for pandas object). Index will return columns, 
+    0 will return 1 and in visa versa.
+
+    Parameters
+    ----------
+    axis : int in [0,1] or string in [index,columns]
+        Axis determiner.
+
+    Returns
+    -------
+    a : int or string
+        Oposite axis of axis.
+
+    """
+    if axis==0:
+        a=1
+    elif axis==1:
+        a=0
+    if axis=="columns":
+        a="index"
+    elif axis=="index":
+        a="columns"
+    else:
+        NotImplementedError("Axis %s not implemented!"%axis)
+    return a
+
+def pd_vec_length(pdo, norm=False, norm_kws={}, out='Series'):
+    """Calculate (normalized) vector length and return ether whole series or index"""
+    if norm:
+        pds=normalize(pdo, **norm_kws)
+    else:
+        pds=pdo
+    pds=((pds**2).sum(axis=1))**0.5
+    if out=='Series':
+        out=pds
+    else:
+        out=pds.idxmax()
+    return out
+
+def pd_trapz(pdo, y=None, x=None, axis=0, nan_policy='omit'):
+    """
+    Extends usage of np.trapz for pandas with nan policy.
+
+    Parameters
+    ----------
+    pdo : pd.DataFrame or pd.Series
+        Pandas object containing data.
+    y : string, optional
+        Determiner for y-values. Have to be in index or columns (see axis).
+        The default is None.
+    x : string, optional
+        Determiner for x-values. Have to be in index or columns (see axis).
+        The default is None.
+    axis : int in [0,1] or string in [index,columns], optional
+        Axis determiner to perform action. The default is 0.
+    nan_policy : string, optional
+        Option for handling NaN-values. The default is 'omit'.
+
+    Raises
+    ------
+    ValueError
+        NaN handling.
+    NotImplementedError
+        Option for nan_policy not implemented.
+
+    Returns
+    -------
+    out : float or series of float
+        DESCRIPTION.
+
+    """
+    if pd_isDF(pdo):
+        pdo=pdo.loc(axis=pd_axischange(axis))[[x,y]]
+        if nan_policy=='omit':
+            pdo=pd_exclnan(pdo=pdo, axis=pd_axischange(axis))
+        elif nan_policy=='raise' and pdo.isna().any(None):
+            raise ValueError("NaN in objectiv!")
+        elif nan_policy=='interpolate':
+            pdo=pdo.interpolate(axis=axis)
+        out=np.trapz(y=pdo.loc(axis=pd_axischange(axis))[y],
+                     x=pdo.loc(axis=pd_axischange(axis))[x])
+    elif pd_isSer(pdo):
+        if nan_policy=='omit':
+            pdo=pd_exclnan(pdo=pdo)
+        elif nan_policy=='raise' and pdo.isna().any(None):
+            raise ValueError("NaN in objectiv!")
+        elif nan_policy=='interpolate':
+            pdo=pdo.interpolate()
+        out=np.trapz(y=pdo)
+    else:
+        NotImplementedError("Type %s not implemented!"%type(pdo))
+    return out

@@ -1,0 +1,137 @@
+{
+ "mtype": {
+  "OPT_Testtype": "String",
+  "OPT_File_Meas": "String",
+  "OPT_File_DIC": "String",
+  "OPT_Measurement_file": "Json",
+  "OPT_Force_measure_type": "String",
+  "OPT_Start": "Float",
+  "OPT_End": "Float",
+  "OPT_pre_load_cycles": "Int",
+  "OPT_Resampling": "Bool",
+  "OPT_Resampling_moveave": "Bool",
+  "OPT_Resampling_Frequency": "Float",
+  "OPT_Springreduction": "Bool",
+  "OPT_Springreduction_K": "Float",
+  "OPT_LVDT_failure": "Array",
+  "OPT_Compression": "Bool",
+  "OPT_DIC": "Bool",
+  "OPT_TimeOS": "String",
+  "OPT_DIC_Points_device_prefix": "String",
+  "OPT_DIC_Points_meas_prefix": "String",
+  "OPT_DIC_Fitting": "Json",
+  "OPT_DIC_Tester": "Array",
+  "OPT_Determination_Distance": "Array",
+  "OPT_YM_Determination_range": "Array",
+  "OPT_YM_Determination_refinement": "Array",
+  "OPT_Determination_Limit": "Float"
+ },
+ "stype": {
+  "OPT_Testtype": null,
+  "OPT_File_Meas": null,
+  "OPT_File_DIC": null,
+  "OPT_Measurement_file": null,
+  "OPT_Force_measure_type": null,
+  "OPT_Start": null,
+  "OPT_End": null,
+  "OPT_pre_load_cycles": null,
+  "OPT_Resampling": null,
+  "OPT_Resampling_moveave": null,
+  "OPT_Resampling_Frequency": null,
+  "OPT_Springreduction": null,
+  "OPT_Springreduction_K": null,
+  "OPT_LVDT_failure": [
+   "Bool",
+   "Float",
+   "String"
+  ],
+  "OPT_Compression": null,
+  "OPT_DIC": null,
+  "OPT_TimeOS": null,
+  "OPT_DIC_Points_device_prefix": null,
+  "OPT_DIC_Points_meas_prefix": null,
+  "OPT_DIC_Fitting": null,
+  "OPT_DIC_Tester": [
+   "Float",
+   "Float",
+   "Int",
+   "Int"
+  ],
+  "OPT_Determination_Distance": [
+   "Int",
+   "Int"
+  ],
+  "OPT_YM_Determination_range": [
+   "Float",
+   "Float",
+   "String"
+  ],
+  "OPT_YM_Determination_refinement": [
+   "Float",
+   "Float",
+   "String",
+   "String",
+   "Bool",
+   "Int"
+  ],
+  "OPT_Determination_Limit": null
+ },
+ "preset": {
+  "OPT_Testtype": "preload destructive",
+  "OPT_File_Meas": null,
+  "OPT_File_DIC": null,
+  "OPT_Measurement_file": {
+   "header": 48,
+   "head_names": [
+    "Time",
+    "Trigger",
+    "F_WZ",
+    "L_PM",
+    "F_PM",
+    "L_IWA1",
+    "L_IWA2"
+   ],
+   "used_names_dict": {
+    "Time": "Time",
+    "Force": "F_WZ",
+    "Way": [
+     "L_IWA1",
+     "L_IWA2"
+    ]
+   }
+  },
+  "OPT_Start": NaN,
+  "OPT_End": NaN,
+  "OPT_pre_load_cycles": 10,
+  "OPT_Resampling": true,
+  "OPT_Resampling_moveave": true,
+  "OPT_Resampling_Frequency": 10.0,
+  "OPT_Springreduction": true,
+  "OPT_Springreduction_K": -0.116,
+  "OPT_LVDT_failure": [
+   false,
+   0.0,
+   " "
+  ],
+  "OPT_Compression": false,
+  "OPT_DIC": false,
+  "OPT_YM_Determination_range": [
+   0.25,
+   0.5,
+   "U"
+  ],
+  "OPT_YM_Determination_refinement": [
+   0.10,
+   0.75,
+   "Y",
+   "opt_LG",
+   true,
+   8
+  ],
+  "OPT_Determination_Distance": [
+   25,
+   13
+  ],
+  "OPT_Determination_Limit": NaN
+ }
+}

@@ -5,12 +5,18 @@ Simple example using data/TBT for showing evaluation acc. to "bla".
 """
 
 import os 
+import sys
+import pandas as pd
 from pathlib import Path
+
+# sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva')
+sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva')
+
 nwd = Path.cwd().resolve().parent.parent
 os.chdir(nwd)
 
-import pandas as pd
 import exmecheva.Eva_TBT as emetbt
+import exmecheva.eva as eva
 
 def main():
     # Set up new DataFrames for paths
@@ -20,14 +26,14 @@ def main():
     # Options (uncomment to use):
     ## Evaluate single measurement
     option = 'single'
-    # ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
-    # option = 'series'
-    # ## Evaluate series of series (here only one series, named 'TS')
-    # option = 'complete'
-    # ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
-    # option = 'pack'
-    # ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
-    # option = 'pack-all'
+    ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
+    option = 'series'
+    ## Evaluate series of series (here only one series, named 'TS')
+    option = 'complete'
+    ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
+    option = 'pack'
+    ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
+    option = 'pack-all'
 
     # Example (Series='TS' and specimen designation='tl21x', see protocol table): 
     ser='TS'
@@ -49,12 +55,14 @@ def main():
     protpaths.loc['TS','path_main'] = main_path+"Series_Test\\"
     protpaths.loc['TS','name_prot'] = "TBT_Protocol_Series_Test.xlsx"
     ## Path extensions for all series
+    protpaths.loc[:,'name_opts']    = "com_eva_opts.json"
     protpaths.loc[:,'path_con']     = "meas\\conventional\\"
     protpaths.loc[:,'path_dic']     = "meas\\optical\\"
     protpaths.loc[:,'path_eva1']    = "eva\\"
     
     # Path builder 
     combpaths['prot'] = protpaths['path_main']+protpaths['name_prot']
+    combpaths['opts'] = protpaths['path_main']+protpaths['name_opts']
     combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
     combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']
@@ -63,8 +71,12 @@ def main():
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function
-    emetbt.Selector(option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
-                    var_suffix=var_suffix, ser=ser, des=des, out_path=out_path)
+    # emetbt.Selector(option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
+    #                 var_suffix=var_suffix, ser=ser, des=des, out_path=out_path)
+    eva.selector(eva_single_func=emetbt.TBT_single, 
+                 option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
+                 var_suffix=var_suffix, ser=ser, des=des, out_path=out_path,
+                 prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0))
 
 if __name__ == "__main__":
     main()

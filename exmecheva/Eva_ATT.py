@@ -24,32 +24,24 @@ Changelog:
     - 21-10-29: plastic strain shift -1 (zugehörig nun zu abgelaufenem Zyklus)
     - 23-10-13: - Ändern finale Spannungs-Dehnungskurve (6.6) mit Ermittlung
                 - Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.5%)
+    - 23-12-07: Resempling frequency standard 4.0 -> 10.0 
+                -> OPT_Determination_Distance [10,5] -> 25,13
 """
 
 #%% 0 Imports
-# import sys
-import os
-import traceback
 import pandas as pd
 import numpy as np
-# import scipy.integrate   as scint
-# import scipy.interpolate as scipo
-# import scipy.optimize    as scopt
-# import lmfit
 import matplotlib.pyplot as plt
-# from matplotlib import cm
-# import matplotlib.colors as colors
-# from mpl_toolkits.mplot3d import Axes3D
-# import vg
-# from datetime import datetime, timedelta
 from datetime import datetime
 import time
 import warnings
-import json
 
-# import Bending as Bend
-# import Eva_common as Evac
-import exmecheva.Eva_common as Evac #import Eva_common relative?
+import exmecheva.common as emec
+
+log_custom = emec.output.str_log
+log_cind = emec.output.str_indent
+
+plt_hsuf =  emec.plotting.plt_handle_suffix
 
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 warnings.filterwarnings('ignore',category=FutureWarning)
@@ -66,126 +58,24 @@ plt.rcParams['axes.grid']= True
 
 output_lvl= 1 # 0=none, 1=only text, 2=add_diagramms
 plt_Fig_dict={'tight':True, 'show':True, 
-              'save':True, 's_types':["pdf","png"], 
+              'save':True, 's_types':["pdf"], 
               'clear':True, 'close':True}
 MG_logopt={'logfp':None,'output_lvl':output_lvl,'logopt':True,'printopt':False}
 
-#%% 0.1 Add. modules
-def ATT_Option_reader(options):
-    for o in options.index:
-        if (o=='OPT_File_Meas') or (o=='OPT_File_Meas'):
-            if Evac.check_empty(options[o]):
-                options[o]='Test'
-            else:
-                options[o]=str(options[o])
-        elif (o=='OPT_Measurement_file'):
-            if Evac.check_empty(options[o]):
-                options[o]='{"header":48,"head_names":["Time","Trigger","F_WZ","L_PM","F_PM","L_IWA1","L_IWA2"], "used_names_dict":{"Time":"Time","Force":"F_WZ","Way":["L_IWA1","L_IWA2"]}}'
-            options[o]=json.loads(options[o])
-            
-        
-        elif (o=='OPT_End'):
-            if Evac.check_empty(options[o]):
-                options[o]=np.nan
-                
-        elif (o=='OPT_pre_load_cycles'):
-            if Evac.check_empty(options[o]):
-                options[o]=10
-            options[o]=int(options[o])
-        
-        elif (o=='OPT_Resampling'):
-            if Evac.check_empty(options[o]):
-                options[o]=True
-            else:
-                options[o]= Evac.str_to_bool(options[o])
-        elif (o=='OPT_Resampling_moveave'):
-            if Evac.check_empty(options[o]):
-                options[o]=True
-            else:
-                options[o]= Evac.str_to_bool(options[o])
-        elif (o=='OPT_Resampling_Frequency'):
-            if Evac.check_empty(options[o]):
-                options[o]=4.0
-                
-        
-        elif (o=='OPT_Springreduction'):
-            if Evac.check_empty(options[o]):
-                options[o]=True
-            else:
-                options[o]= Evac.str_to_bool(options[o])
-        elif (o=='OPT_Springreduction_K'):
-            if Evac.check_empty(options[o]):
-                options[o]=-0.116
-        elif (o=='OPT_LVDT_failure'):
-            if Evac.check_empty(options[o]):
-                options[o]=[False,0,' ']
-                # options[o]=[True,-1,'L_PM']
-            else:
-                options[o]=str(options[o]).replace('"','').split(',')
-            options[o][0]= Evac.str_to_bool(options[o][0])
-            options[o][1]=float(options[o][1])
-            options[o][2]=  str(options[o][2])
-                
-        elif (o=='OPT_Compression'):
-            if Evac.check_empty(options[o]):
-                options[o]=False
-            else:
-                options[o]= Evac.str_to_bool(options[o])
-                
-        
-        elif (o=='OPT_DIC'):
-            if Evac.check_empty(options[o]):
-                options[o]=False
-            else:
-                options[o]= Evac.str_to_bool(options[o])
-         
-
-        elif (o=='OPT_Determination_Distance'):
-            if Evac.check_empty(options[o]):
-                # options[o]=[100,100]
-                options[o]=[10,5]
-            else:
-                options[o]=str(options[o]).replace('"','').split(',')
-            options[o][0]=int(options[o][0])
-            options[o][1]=int(options[o][1])
-                
-        elif (o=='OPT_YM_Determination_range'):
-            if Evac.check_empty(options[o]):
-                # options[o]=[0.25,0.75,'U']
-                options[o]=[0.25,0.50,'U']
-            else:
-                options[o]=str(options[o]).replace('"','').split(',')
-            options[o][0]=float(options[o][0])
-            options[o][1]=float(options[o][1])
-        elif(o=='OPT_YM_Determination_refinement'):
-            if Evac.check_empty(options[o]):
-                # options[o]=[0.15,0.75,'U','opt_LG',True,8]
-                # options[o]=[0.05,0.75,'U','opt_LG',True,8]
-                # options[o]=[0.05,0.75,'Y','opt_LG',True,8] #bis 231025
-                options[o]=[0.10,0.75,'Y','opt_LG',True,8]
-                # options[o]=['S1',0.75,'U','opt_LG',True,8]
-                # options[o]=[0.05,0.75,'U','opt_LG',True,4]
-            else:
-                options[o]=str(options[o]).replace('"','').split(',')
-            if isinstance(options[o][0], str):
-                if options[o][0].startswith('S'):
-                    # options[o][0] = int(options[o][0][1:])
-                    options[o][0] = options[o][0]
-                else:
-                    options[o][0]=float(options[o][0])
-            options[o][1]=float(options[o][1])
-            options[o][4]= Evac.str_to_bool(options[o][4])
-            options[o][5]=  int(options[o][5])
-    return options
 
 #%% 1.0 Evaluation
 def ATT_single(prot_ser, paths, mfile_add=''):
-    # out_name = prot_ser['Donor']+'_'+prot_ser['Designation']
     out_name = prot_ser['Designation']+mfile_add
-    # out_name = prot_ser.name
     out_full = paths['out']+out_name
-    _opts = prot_ser[prot_ser.index.str.startswith('OPT_')]
-    _opts = ATT_Option_reader(_opts)
+    
+    _opts=emec.eva_opt_hand.option_reader_sel(
+        prot_ser=prot_ser, paths=paths, 
+        search_inds=['Number','Designation','name'], 
+        variant='',
+        option='JFile+Prot',
+        sheet_name="",
+        re_rkws=dict()
+        )
     
     path_meas = paths['meas']+_opts['OPT_File_Meas']+mfile_add+".xlsx"
     path_dic = paths['dic']+_opts['OPT_File_DIC']+mfile_add+".csv"
@@ -194,8 +84,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings=pd.Series([],dtype='float64')
     timings.loc[0.0]=time.perf_counter()
     
-    
-    rel_time_digs = Evac.sigdig(_opts['OPT_Resampling_Frequency'], 4)
+    # rel_time_digs = Evac.sigdig(_opts['OPT_Resampling_Frequency'], 4)
     rel_time_digs = 2
     
            
@@ -233,12 +122,12 @@ def ATT_single(prot_ser, paths, mfile_add=''):
           # ("   DIC-names of special points (l,r,head), = %s, %s, %s" %(*_opts['OPT_DIC_Points_TBT_device'],)),
           # ("   DIC-names of meas. points for fork (l,m,r), = %s, %s, %s" %(*_opts['OPT_DIC_Points_meas_fork'],)),
           # ("   DIC-maximal SD = %.3f mm and maximal displacement between steps %.1f mm" %(_opts['OPT_DIC_Tester'][0],_opts['OPT_DIC_Tester'][1])))
-    Evac.MG_strlog('\n'.join(ftxt),log_mg,output_lvl,printopt=False)
+    log_custom('\n'.join(ftxt),log_mg,output_lvl,printopt=False)
     # =============================================================================
     
     #%% 2 Geometry
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 2 Geometry ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 2 Geometry ###",log_mg,output_lvl,printopt=False)
     
     if prot_ser['Test_Shape'] == 'Belt':
         if prot_ser['CS_type'] == 'Rectangle':
@@ -253,10 +142,10 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     else:
         raise NotImplementedError("Test shape %s not implemented"%prot_ser['Test_Shape'])
     
-    Evac.MG_strlog("\n    Area   det=IN: %s (%.3f-%.3f)"%(Area==prot_ser['Area_CS'],
+    log_custom("\n    Area   det=IN: %s (%.3f-%.3f)"%(Area==prot_ser['Area_CS'],
                                                           Area,prot_ser['Area_CS']),
                    log_mg,output_lvl,printopt=True)    
-    Evac.MG_strlog("\n    Volume det=IN: %s (%.3f-%.3f)"%(Volume/1000==prot_ser['Volume'],
+    log_custom("\n    Volume det=IN: %s (%.3f-%.3f)"%(Volume/1000==prot_ser['Volume'],
                                                           Volume/1000,prot_ser['Volume']),
                    log_mg,output_lvl,printopt=True)
     # reset
@@ -267,17 +156,17 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # =============================================================================
     
     #%% 3 Read in measurements
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 3 Read in measurements ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 3 Read in measurements ###",log_mg,output_lvl,printopt=False)
     timings.loc[3.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     # =============================================================================
     
     #%%% 3.1 Read in conventional measurement data
     timings.loc[3.1]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     mess=pd.read_excel(path_meas, header=_opts['OPT_Measurement_file']['header'],
@@ -289,7 +178,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         mess['L_IWA']=pd.Series(mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']].mean(axis=1))
         _opts['OPT_Measurement_file']['used_names_dict']['Way'] ='L_IWA'
     if ('OPT_Force_measure_type' in _opts.index):
-        if not Evac.check_empty(_opts['OPT_Force_measure_type']):
+        if not emec.helper.check_empty(_opts['OPT_Force_measure_type']):
             _opts['OPT_Measurement_file']['used_names_dict']['Force'] ='F_'+_opts['OPT_Force_measure_type']
     if _opts['OPT_Springreduction']: 
         mess['F_IWA_red']=(mess.L_IWA)*_opts['OPT_Springreduction_K']
@@ -297,7 +186,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # # =============================================================================
     # #%%% 3.2 Specify used conventional measured force and way
     timings.loc[3.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     messu = pd.DataFrame({'Time': mess[_opts['OPT_Measurement_file']['used_names_dict']['Time']],
@@ -319,7 +208,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # =============================================================================
     #%%% 3.3 Read in optical measurement data
     timings.loc[3.3]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     if _opts['OPT_DIC']:
@@ -331,21 +220,21 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         
     # =============================================================================
     #%% 4 Merging measurements
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 4 Merging measurements ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 4 Merging measurements ###",log_mg,output_lvl,printopt=False)
     timings.loc[4.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     # =============================================================================
     #%%% 4.1 Determine time offset between conventional and optical measurement
     timings.loc[4.1]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     if _opts['OPT_DIC']:
         if _opts['OPT_pre_load_cycles'] > 0:
-            ri_Way,_,rich_Way=Evac.rise_curve(messu['Way'],True,4)
+            ri_Way,_,rich_Way=emec.mc_char.rise_curve(messu['Way'],True,4)
             ws = _opts['OPT_Determination_Distance'][0]
             we = rich_Way[(rich_Way == True) and (rich_Way.index >= _opts['OPT_Determination_Distance'][0])].index[0]
             mun_tmp = messu.loc[abs(messu.Way.loc[ws:we]-messu.Way.loc[ws:we].max()/8).idxmin():
@@ -382,11 +271,11 @@ def ATT_single(prot_ser, paths, mfile_add=''):
                   '$t_{S,DIC}$ = % 2.4f s '%(tsd))
             fig.text(0.95,0.15,'\n'.join(ftxt),
                      ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
-            Evac.plt_handle_suffix(fig,path=out_full+"-toff",**plt_Fig_dict)
+            plt_hsuf(fig,path=out_full+"-toff",**plt_Fig_dict)
             del xlin_tmp
         
-        Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-        Evac.MG_strlog("\n   Time offset between PM and DIC: %.3f s" %(toff),log_mg,output_lvl)
+        log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+        log_custom("\n   Time offset between PM and DIC: %.3f s" %(toff),log_mg,output_lvl)
     else:
         toff=0.0
         
@@ -395,7 +284,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # =============================================================================
     #%%% 4.2 Downsampling of conventional data
     timings.loc[4.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     mess_dt=messu.Time.diff().mean()
@@ -424,7 +313,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # =============================================================================
     #%%% 4.3 Merge optical to conventional data
     timings.loc[4.3]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     if _opts['OPT_DIC']:
@@ -441,16 +330,16 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         
     # =============================================================================
     #%% 5 Start and End
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 5 Start and End ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 5 Start and End ###",log_mg,output_lvl,printopt=False)
     timings.loc[5.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)                                                    
     # =============================================================================
     #%%% 5.1 Determine start and end of evaluation
     timings.loc[5.1]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     if np.isnan(_opts['OPT_End']):
@@ -460,7 +349,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         dic_to_mess_End=messu.loc[messu.Time<=_opts['OPT_End']].index[-1]
         
     mun_tmp=messu.loc[:min(dic_to_mess_End,messu.Force.idxmax()),'Force']
-    messu['driF'],messu['dcuF'],messu['driF_schg']=Evac.rise_curve(messu.loc[:dic_to_mess_End]['Force'],True,4)
+    messu['driF'],messu['dcuF'],messu['driF_schg']=emec.mc_char.rise_curve(messu.loc[:dic_to_mess_End]['Force'],True,4)
     
     for i in messu.index: # Startpunkt über Vorzeichenwechsel im Anstieg
         if messu.loc[i,'driF_schg']:
@@ -468,25 +357,25 @@ def ATT_single(prot_ser, paths, mfile_add=''):
                 messu_iS=i
                 break
     
-    messu_iS,_=Evac.find_SandE(messu.loc[messu_iS:messu_iS+_opts['OPT_Determination_Distance'][0],
+    messu_iS,_=emec.mc_char.find_SandE(messu.loc[messu_iS:messu_iS+_opts['OPT_Determination_Distance'][0],
                                          'driF'],abs(messu['driF']).quantile(0.5),"pgm_other",0.1)
 
     # _,messu_iE=Evac.find_SandE(messu['driF'],0,"qua_self",0.5) # changed 211022 (B5-sr09)
     try: # search after maximum Force
-        _,messu_iE=Evac.find_SandE(messu['driF'].loc[messu.Force.idxmax():],
+        _,messu_iE=emec.mc_char.find_SandE(messu['driF'].loc[messu.Force.idxmax():],
                                     messu['driF'],"qua_other",0.5)
     except IndexError:
         messu_iE=dic_to_mess_End
         
     messu_iE=min(messu_iE,dic_to_mess_End)
     
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n   Start of evaluation after %.3f seconds, corresponds to %.5f %% of max. force."
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n   Start of evaluation after %.3f seconds, corresponds to %.5f %% of max. force."
                    %(messu.Time[messu_iS],100*abs(messu.Force[messu_iS])/abs(messu.Force).max()),log_mg,output_lvl)
     
     messu=messu.loc[messu_iS:messu_iE]
     if _opts['OPT_DIC']:
-        step_range_dic = Evac.pd_combine_index(step_range_dic,messu.index)
+        step_range_dic = emec.pd_ext.pd_combine_index(step_range_dic,messu.index)
         
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Measuring'%plt_name)
@@ -517,12 +406,12 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         # ax2.plot(dic.Time, dic.DDisp_PM_c, 'm:', label='Way-DIC-P')
         # ax2.plot(dic.Time, dic.DDisp_PC_c, 'g:', label='Way-DIC-C')
     fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.9), ncol=1)
-    Evac.plt_handle_suffix(fig,path=out_full+"-meas",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-meas",**plt_Fig_dict)
     
     # =============================================================================
     #%%% 5.2 Resetting way
     timings.loc[5.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     # messu.Force=messu.Force-messu.Force.loc[messu_iS]
@@ -549,22 +438,22 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     if _opts['OPT_DIC']:
         ax2.plot(messu.Time, messu.Disp_opt_head, 'k:', label='Way-DIC')
     fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.9), ncol=1)
-    Evac.plt_handle_suffix(fig,path=out_full+"-meas_u",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-meas_u",**plt_Fig_dict)
     
     # =============================================================================
     #%% 6 Evaluation
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 6 Evaluation ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 6 Evaluation ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
     #%%% 6.2 Determine evaluation curves
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.2 Determine evaluation curves ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.2 Determine evaluation curves ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -572,25 +461,27 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     messu['Stress']=messu.Force/Area
 
     if _opts['OPT_DIC']:
-
-    #Test Anstieg
-        tmon=Evac.test_pdmon(messu,['Stress','Strain',
-                                    'Strain_opt_d_A','Strain_opt_d_S','Strain_opt_d_M',
-                                    'Strain_opt_c_A','Strain_opt_c_S','Strain_opt_c_M'],1,10)
+        tmon=emec.mc_char.test_pdmon(
+            messu,
+            ['Stress','Strain',
+             'Strain_opt_d_A','Strain_opt_d_S','Strain_opt_d_M',
+             'Strain_opt_c_A','Strain_opt_c_S','Strain_opt_c_M'],
+            1,10
+            )
     else:
-        tmon=Evac.test_pdmon(messu,['Stress','Strain'],1,10)
+        tmon=emec.mc_char.test_pdmon(messu,['Stress','Strain'],1,10)
     
-    Evac.MG_strlog("\n   Last 10 monoton increasing periods:\n    %s"
+    log_custom("\n   Last 10 monoton increasing periods:\n    %s"
                    %tmon.to_frame(name='Epoche').T.to_string().replace('\n','\n    '),log_mg,output_lvl)
     
     
     
     # =============================================================================
     #%%% 6.3 Determine points of interest
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.3 Determine points of interest ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.3 Determine points of interest ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.31]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     VIP_messu=pd.Series([],dtype='int64',name='VIP_messu')
@@ -619,9 +510,9 @@ def ATT_single(prot_ser, paths, mfile_add=''):
                 dt_drif_schg=dt_drif_schg*1.1
             drif_schg_counter=dt.dmin.loc[abs((dt.dmin-dt.dmin.iloc[1:-1].max())/dt.dmin.iloc[1:-1].max())<=dt_drif_schg]
             if i==20:
-                Evac.MG_strlog("\n  %d cykles, without result!\n    -> Using last %d as counter." %(i,drif_schg_counter.count()),log_mg,output_lvl,printopt=False)
+                log_custom("\n  %d cycles, without result!\n    -> Using last %d as counter." %(i,drif_schg_counter.count()),log_mg,output_lvl,printopt=False)
                 break
-        Evac.MG_strlog("\n  %d cykles, with result!\n    -> Using last %.3f s as delimiter." %(i,dt_drif_schg),log_mg,output_lvl,printopt=False)
+        log_custom("\n  %d cycles, with result!\n    -> Using last %.3f s as delimiter." %(i,dt_drif_schg),log_mg,output_lvl,printopt=False)
         
         zyklus=1
         VIP_PMf=pd.Series([],dtype='int64') #konventionell-Kraft
@@ -657,10 +548,10 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         VIP_mess_diffs=pd.DataFrame(data={'PM_Force':VIP_PMf,'PM_Way':VIP_PMw,'DIC_way':VIP_DICw,'Diff_PM':VIP_PMdiff,'Diff_PD':VIP_PDdiff})
         
         if output_lvl>=1:
-            Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-            Evac.MG_strlog("\n  Differenz Extremwertvergleich: \n  %s" %VIP_mess_diffs.to_string(),log_mg,output_lvl,printopt=False)
-            Evac.MG_strlog("\n  Differenz Kraft- zu Wegextreme-PM (MW):  %f" %VIP_PMdiff.mean(),log_mg,output_lvl,printopt=False)
-            Evac.MG_strlog("\n  Differenz Kraft- zu Wegextreme-DIC (MW): %f" %VIP_PDdiff.mean(),log_mg,output_lvl,printopt=False)      
+            log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+            log_custom("\n  Differenz Extremwertvergleich: \n  %s" %VIP_mess_diffs.to_string(),log_mg,output_lvl,printopt=False)
+            log_custom("\n  Differenz Kraft- zu Wegextreme-PM (MW):  %f" %VIP_PMdiff.mean(),log_mg,output_lvl,printopt=False)
+            log_custom("\n  Differenz Kraft- zu Wegextreme-DIC (MW): %f" %VIP_PDdiff.mean(),log_mg,output_lvl,printopt=False)      
 
     
     else:
@@ -676,7 +567,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         VIP_messu['Y']=mun_tmp.loc[mun_tmp.driF_schg==True].index[0]-1
     else:
         VIP_messu['Y']=VIP_messu['U']
-        Evac.MG_strlog('\n    Fy set on datapoint of Fu!',log_mg,output_lvl) 
+        log_custom('\n    Fy set on datapoint of Fu!',log_mg,output_lvl) 
         
     # mun_tmp = messu.loc[VIP_messu['U']:VIP_messu['E']-1]
     mun_tmp = messu.loc[VIP_messu['U']-1:VIP_messu['E']-1]
@@ -688,7 +579,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # if (mun_tmp['driF'].min()/mun_tmp['driF'].quantile(0.25))>=1.0:
     #     VIP_messu['B']=mun_tmp['driF'].idxmin()-1
     else:
-        Evac.MG_strlog('\n   Fb not reliably determinable!',log_mg,output_lvl)
+        log_custom('\n   Fb not reliably determinable!',log_mg,output_lvl)
             
     
     # ftmp=float(messu.Force.loc[VIP_messu[_opts['OPT_YM_Determination_range'][2]]]*_opts['OPT_YM_Determination_range'][0])
@@ -703,7 +594,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         # VIP_messu['F4']=VIP_messu['Y']
         # VIP_dicu['F2']=VIP_dicu['Y']
         # VIP_dicu['F4']=VIP_dicu['Y']
-        Evac.MG_strlog("\n   F2 set on Y (Force-rise between F1 and old F2)",log_mg,output_lvl)
+        log_custom("\n   F2 set on Y (Force-rise between F1 and old F2)",log_mg,output_lvl)
     
     
     VIP_messu=VIP_messu.sort_values()
@@ -713,7 +604,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     
     #%%%% 6.3.2 Improvement of evaluation range
     timings.loc[6.32]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -724,41 +615,17 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         iS='S'
     else:
         iS='F1'
-        
-    # ttmp = messu.Stress.loc[[VIP_messu[iS],VIP_messu[_opts['OPT_YM_Determination_refinement'][2]]]]
-    # ftmp=float(ttmp.iloc[0]+(ttmp.iloc[-1]-ttmp.iloc[0])*_opts['OPT_YM_Determination_refinement'][0])
-    # Lbord=abs(messu.Stress.loc[VIP_messu[iS]:VIP_messu[_opts['OPT_YM_Determination_refinement'][2]]]-ftmp).idxmin()
     
-    # DQcon=pd.concat(Evac.Diff_Quot(messu.loc[:,'Strain'],
-    #                               messu.loc[:,'Stress'],
-    #                               _opts['OPT_YM_Determination_refinement'][4],
-    #                               _opts['OPT_YM_Determination_refinement'][5]), axis=1)
-    #                               # True,4), axis=1)
-    # DQcon=messu.loc(axis=1)[['Strain','Stress']].join(DQcon,how='outer')
-    # DQcons=DQcon.loc[Lbord:VIP_messu[_opts['OPT_YM_Determination_refinement'][2]]]
-    # VIP_messu['FM']=DQcons.DQ1.idxmax()
-    # try:
-    #     VIP_messu['F3']=DQcons.loc[:VIP_messu['FM']].iloc[::-1].loc[(DQcons.DQ1/DQcons.DQ1.max())<_opts['OPT_YM_Determination_refinement'][1]].index[0]+1
-    #     # VIP_messu['F3']=DQcons.loc[:VIP_messu['FM']].iloc[::-1].loc[(DQcons.DQ1/DQcons.DQ1.max())<_opts['OPT_YM_Determination_refinement'][1]].index[0]
-    # except IndexError:
-    #     VIP_messu['F3']=DQcons.index[0]
-    # try: # Hinzugefügt am 16.09.2021
-    #     VIP_messu['F4']=DQcons.loc[VIP_messu['FM']:].loc[(DQcons.DQ1/DQcons.DQ1.max())<_opts['OPT_YM_Determination_refinement'][1]].index[0]-1
-    #     # VIP_messu['F4']=DQcons.loc[VIP_messu['FM']:].loc[(DQcons.DQ1/DQcons.DQ1.max())<_opts['OPT_YM_Determination_refinement'][1]].index[0]
-    # except IndexError:
-    #     VIP_messu['F4']=VIP_messu['FM']-1 #-1 könnte zu Problemen führen
-    # VIP_messu=VIP_messu.sort_values()
-    
-    VIP_messu, DQcons, txt = Evac.YM_eva_range_refine(m_df=messu, VIP=VIP_messu,
-                                                      n_strain='Strain', n_stress='Stress',
-                                                      n_loBo=iS, 
-                                                      n_upBo=_opts['OPT_YM_Determination_refinement'][2],
-                                                      d_loBo=_opts['OPT_YM_Determination_refinement'][0],
-                                                      d_max=_opts['OPT_YM_Determination_refinement'][1], 
-                                                      rise_det=_opts['OPT_YM_Determination_refinement'][-2:],
-                                                      n_Outlo='F3',n_Outmi='FM',n_Outhi='F4')
+    VIP_messu, DQcons, txt = emec.mc_char.YM_eva_range_refine(
+        m_df=messu, VIP=VIP_messu,
+        n_strain='Strain', n_stress='Stress',
+        n_loBo=iS, n_upBo=_opts['OPT_YM_Determination_refinement'][2],
+        d_loBo=_opts['OPT_YM_Determination_refinement'][0],
+        d_max=_opts['OPT_YM_Determination_refinement'][1], 
+        rise_det=_opts['OPT_YM_Determination_refinement'][-2:],
+        n_Outlo='F3',n_Outmi='FM',n_Outhi='F4')
         
-    Evac.MG_strlog(Evac.str_indent(txt),
+    log_custom(log_cind(txt),
                    log_mg,output_lvl,printopt=False)
     if True:
         # fig, (ax1,ax3) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
@@ -792,31 +659,31 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         ax2.set_yticks([-1,0,1])
         ax2.grid(which='major',axis='y',linestyle=':')
         fig.legend(loc='lower right', ncol=4)
-        Evac.plt_handle_suffix(fig,path=out_full+"-YMRange_Imp",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YMRange_Imp",**plt_Fig_dict)
     
     if _opts['OPT_DIC']:
         tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
              'opt F1-F2':VIP_dicu['F2']-VIP_dicu['F1'],
              'con F3-F4':VIP_messu['F4']-VIP_messu['F3'],
              'opt F3-F4':VIP_dicu['F4']-VIP_dicu['F3']}
-        Evac.MG_strlog("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
+        log_custom("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
                        %(*tmp.values(),),log_mg,output_lvl)
         for i in tmp.keys(): 
             if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
     else:
         tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
              'con F3-F4':VIP_messu['F4']-VIP_messu['F3']}
-        Evac.MG_strlog("\n   Datapoints (con) between F1-F2: %d and F3-F4: %d."
+        log_custom("\n   Datapoints (con) between F1-F2: %d and F3-F4: %d."
                        %(*tmp.values(),),log_mg,output_lvl)
         for i in tmp.keys(): 
             if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
 
     # =====================================================================================
     #%%% 6.4 Determine Youngs-Moduli
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.4 Determine Youngs-Moduli ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.4 Determine Youngs-Moduli ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.4]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
@@ -832,26 +699,26 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # -------------------------------------------------------------------------------------
     #%%%% 6.4.1 Method A
     timings.loc[6.41]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     
     
     
-    A0Al_ser = Evac.YM_eva_com_sel(stress_ser=d_stress_mid,
-                                   strain_ser=d_strain_mid,
-                                   comp=_opts['OPT_Compression'],
-                                   name='A0Al', 
-                                   det_opt='incremental')
+    A0Al_ser = emec.fitting.YM_eva_com_sel(
+        stress_ser=d_stress_mid,
+        strain_ser=d_strain_mid,
+        comp=_opts['OPT_Compression'],
+        name='A0Al', 
+        det_opt='incremental'
+        )
     E_A_df = pd.concat([A0Al_ser],axis=1)
-    # cols_con=E_A_df.columns.str.contains('0')
-    # E_A_con = Evac.pd_agg(E_A_df.loc[sr_eva_con,cols_con])
-    # E_A_opt = Evac.pd_agg(E_A_df.loc[sr_eva_dic,np.invert(cols_con)])
-    # E_A = pd.concat([E_A_con,E_A_opt],axis=1)
-    E_A = Evac.pd_agg(E_A_df.loc[sr_eva_con])
+    E_A = emec.stat_ext.pd_agg(E_A_df.loc[sr_eva_con])
 
     if True:
-        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
+        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
+                                      sharex=False, sharey=False, 
+                                      figsize = np.multiply(figsize,[1,2]))
         fig.suptitle('%s - Compare method A'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -878,27 +745,30 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         if _opts['OPT_DIC']:
             ax2.axvline(x=VIP_dicu['F3'], color='olive', linestyle=':')
             ax2.axvline(x=VIP_dicu['F4'], color='olive', linestyle='--')
-        Evac.plt_handle_suffix(fig,path=out_full+"-YM-Me_A",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YM-Me_A",**plt_Fig_dict)
         
     #least-square fit
-    E_lsq_F_A0Al = Evac.YM_eva_com_sel(stress_ser=messu.Stress,
-                                       strain_ser=messu.Strain,
-                                       comp=_opts['OPT_Compression'],
-                                       name='E_lsq_F_A0Al', 
-                                       det_opt='leastsq',
-                                       **{'ind_S':VIP_messu[Ind_YM_f[0]],
-                                          'ind_E':VIP_messu[Ind_YM_f[1]]})
+    E_lsq_F_A0Al = emec.fitting.YM_eva_com_sel(
+        stress_ser=messu.Stress,
+        strain_ser=messu.Strain,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_A0Al', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_messu[Ind_YM_f[0]],
+           'ind_E':VIP_messu[Ind_YM_f[1]]}
+        )
     E_lsq_F_A0Al = pd.Series(E_lsq_F_A0Al, index=['E','E_abs','Rquad','Fit_result'],
                             name='E_lsq_F_A0Al')
     
-    
-    E_lsq_R_A0Al = Evac.YM_eva_com_sel(stress_ser=messu.Stress,
-                                       strain_ser=messu.Strain,
-                                       comp=_opts['OPT_Compression'],
-                                       name='E_lsq_R_A0Al', 
-                                       det_opt='leastsq',
-                                       **{'ind_S':VIP_messu[Ind_YM_r[0]],
-                                          'ind_E':VIP_messu[Ind_YM_r[1]]})
+    E_lsq_R_A0Al = emec.fitting.YM_eva_com_sel(
+        stress_ser=messu.Stress,
+        strain_ser=messu.Strain,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_A0Al', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_messu[Ind_YM_r[0]],
+           'ind_E':VIP_messu[Ind_YM_r[1]]}
+        )
     E_lsq_R_A0Al = pd.Series(E_lsq_R_A0Al, index=['E','E_abs','Rquad','Fit_result'],
                             name='E_lsq_R_A0Al')
     
@@ -906,27 +776,33 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     
     for i in VIP_messu[VIP_messu.index.str.endswith('+')].index:
         j = VIP_messu.index[VIP_messu.index.get_indexer_for([i])[0]+1]
-        E_lsq_C_A0Al = Evac.YM_eva_com_sel(stress_ser=messu.Stress,
-                                       strain_ser=messu.Strain,
-                                       comp=_opts['OPT_Compression'],
-                                       name='E_lsq_%s_A0Al'%i, 
-                                       det_opt='leastsq',
-                                       **{'ind_S':VIP_messu[i],
-                                          'ind_E':VIP_messu[j]})
-        E_lsq_C_A0Al = pd.Series(E_lsq_C_A0Al, index=['E','E_abs','Rquad','Fit_result'],
-                                name='E_lsq_%s_A0Al'%i)
+        E_lsq_C_A0Al = emec.fitting.YM_eva_com_sel(
+            stress_ser=messu.Stress,
+            strain_ser=messu.Strain,
+            comp=_opts['OPT_Compression'],
+            name='E_lsq_%s_A0Al'%i, 
+            det_opt='leastsq',
+            **{'ind_S':VIP_messu[i],
+               'ind_E':VIP_messu[j]}
+            )
+        E_lsq_C_A0Al = pd.Series(E_lsq_C_A0Al, 
+                                 index=['E','E_abs','Rquad','Fit_result'],
+                                 name='E_lsq_%s_A0Al'%i)
         E_lsq_A = pd.concat([E_lsq_A, E_lsq_C_A0Al],axis=1)
         
         k = VIP_messu.index[VIP_messu.index.get_indexer_for([j])[0]+1]
-        E_lsq_C_A0Al = Evac.YM_eva_com_sel(stress_ser=messu.Stress,
-                                       strain_ser=messu.Strain,
-                                       comp=_opts['OPT_Compression'],
-                                       name='E_lsq_%s_A0Al'%j, 
-                                       det_opt='leastsq',
-                                       **{'ind_S':VIP_messu[j],
-                                          'ind_E':VIP_messu[k]})
-        E_lsq_C_A0Al = pd.Series(E_lsq_C_A0Al, index=['E','E_abs','Rquad','Fit_result'],
-                                name='E_lsq_%s_A0Al'%j)
+        E_lsq_C_A0Al = emec.fitting.YM_eva_com_sel(
+            stress_ser=messu.Stress,
+            strain_ser=messu.Strain,
+            comp=_opts['OPT_Compression'],
+            name='E_lsq_%s_A0Al'%j, 
+            det_opt='leastsq',
+            **{'ind_S':VIP_messu[j],
+               'ind_E':VIP_messu[k]}
+            )
+        E_lsq_C_A0Al = pd.Series(E_lsq_C_A0Al, 
+                                 index=['E','E_abs','Rquad','Fit_result'],
+                                 name='E_lsq_%s_A0Al'%j)
         E_lsq_A = pd.concat([E_lsq_A, E_lsq_C_A0Al],axis=1)
     
     
@@ -947,7 +823,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     
     #%%%% 6.4.8 Method compare
     timings.loc[6.48]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
 
@@ -955,7 +831,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     E_lsq=E_lsq_A
 
     E_Methods_df = E_A_df
-    E_agg_funcs = ['mean',Evac.meanwoso,'median','std','max','min']
+    E_agg_funcs = ['mean',emec.stat_ext.meanwoso,'median','std','max','min']
     
     E_inc_F_comp = E_Methods_df.loc[sf_eva_con].agg(E_agg_funcs)
     E_inc_F_comp.loc['stdn']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['mean'].abs()
@@ -966,16 +842,16 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['meanwoso'].abs()
     
         
-    Evac.MG_strlog("\n\n  Method comaparison:",log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog("\n  - least square fit",log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent('\n'+E_lsq.loc[['E','Rquad']].T.to_string()),
+    log_custom("\n\n  Method comaparison:",log_mg,output_lvl,printopt=True)
+    log_custom("\n  - least square fit",log_mg,output_lvl,printopt=True)
+    log_custom(log_cind('\n'+E_lsq.loc[['E','Rquad']].T.to_string()),
                    log_mg,output_lvl,printopt=True)
     
-    Evac.MG_strlog("\n\n  - incremental (F,R,S):",
+    log_custom("\n\n  - incremental (F,R,S):",
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent('\n'+E_inc_F_comp.T.to_string()),
+    log_custom(log_cind('\n'+E_inc_F_comp.T.to_string()),
                    log_mg,output_lvl,printopt=True)
-    Evac.MG_strlog(Evac.str_indent('\n'+E_inc_R_comp.T.to_string()),
+    log_custom(log_cind('\n'+E_inc_R_comp.T.to_string()),
                    log_mg,output_lvl,printopt=True)
     
     # set preffered Method
@@ -985,85 +861,62 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         if loc_Yd_tmp.startswith('E_lsq'):
             YM_pref_opt=E_lsq[loc_Yd_tmp]
         elif loc_Yd_tmp.startswith('E_inc_R'):
-            YM_pref_opt=Evac.Refit_YM_vals(m_df=messu, 
-                                           YM = E_inc_R_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
-                                           VIP=VIP_dicu,
-                                           n_strain=dic_used_Strain, n_stress='Stress',
-                                           n_loBo=['F3'], n_upBo=['F4'])
+            YM_pref_opt=emec.fitting.Refit_YM_vals(
+                m_df=messu, 
+                YM = E_inc_R_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
+                VIP=VIP_dicu,
+                n_strain=dic_used_Strain, n_stress='Stress',
+                n_loBo=['F3'], n_upBo=['F4']
+                )
         elif loc_Yd_tmp.startswith('E_inc_F'):
-            YM_pref_opt=Evac.Refit_YM_vals(m_df=messu, 
-                                           YM = E_inc_F_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
-                                           VIP=VIP_dicu,
-                                           n_strain=dic_used_Strain, n_stress='Stress',
-                                           n_loBo=['F1'], n_upBo=['F2'])
+            YM_pref_opt=emec.fitting.Refit_YM_vals(
+                m_df=messu, 
+                YM = E_inc_F_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
+                VIP=VIP_dicu,
+                n_strain=dic_used_Strain, n_stress='Stress',
+                n_loBo=['F1'], n_upBo=['F2']
+                )
         else:
             raise NotImplementedError('Prefered YM-method not selectable!')
     # --------------------------------------------------------------------------
     #%%% 6.5 Determine yield point
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.5 Determine yield point ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.5 Determine yield point ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.5]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     
-    # strain_osd = {'Y0':0.0,'Y':0.2/100,'Y1':0.5/100} #acc. Zhang et al. 2021, DOI: 10.1007/s10439-020-02719-2
-    # for i in strain_osd.keys():
-    #     if strain_osd[i]==0:
-    #         VIP_messu[i] = VIP_messu['F4']
-    #         if _opts['OPT_DIC']: VIP_dicu[i] = VIP_dicu['F4']
-    #     else:
-    #         VIP_messu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_messu,
-    #                                           n_strain='Strain', n_stress='Stress',
-    #                                           n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F4'],
-    #                                           # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], # <13.10.2023 
-    #                                           # n_loBo=['F4'], n_upBo=['U'], n_loBo_int=['F4'], 
-    #                                           YM     = E_lsq_A['E_lsq_R_A0Al']['E'],
-    #                                           YM_abs = E_lsq_A['E_lsq_R_A0Al']['E_abs'],
-    #                                           strain_offset=strain_osd[i],
-    #                                           rise_det=[True,4], n_yield=i)
-    #         Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
-                
-    #         if _opts['OPT_DIC']:    
-    #             Evac.MG_strlog("\n  Determination of yield strain-optical:",log_mg,output_lvl)
-    #             VIP_dicu,txt = Evac.Yield_redet(m_df=messu, VIP=VIP_dicu,
-    #                                             n_strain=dic_used_Strain, n_stress='Stress',
-    #                                             n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F4'],
-    #                                             # n_loBo=['F1','F3'], n_upBo=['U'], n_loBo_int=['F2','F4'], # <13.10.2023 
-    #                                             YM     = E_lsq_A[loc_Yd_tmp]['E'],
-    #                                             YM_abs = E_lsq_A[loc_Yd_tmp]['E_abs'],
-    #                                             strain_offset=strain_osd[i],
-    #                                             rise_det=[True,4], n_yield=i)
-    #             Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
-
     strain_osd = {'YK':0.0,'Y0':0.0,'Y1':0.1/100,'Y':0.2/100,'Y2':0.5/100} #acc. Zhang et al. 2021, DOI: 10.1007/s10439-020-02719-2
     strain_osdf={'YK':'F4'}
 
-    Evac.MG_strlog("\n  Determination of yield strain-conventional:",log_mg,output_lvl)
-    tmp=Evac.Yield_redet2_Multi(m_df=messu, VIP=VIP_messu,
-                                strain_osd=strain_osd, 
-                                strain_osdf=strain_osdf,
-                                n_strain='Strain', n_stress='Stress',
-                                n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
-                                YM     = YM_pref_con['E'],
-                                YM_abs = YM_pref_con['E_abs'],
-                                use_rd =True, rise_det=[True,4], 
-                                ywhere='n')
+    log_custom("\n  Determination of yield strain-conventional:",log_mg,output_lvl)
+    tmp=emec.mc_yield.Yield_redet2_Multi(
+        m_df=messu, VIP=VIP_messu,
+        strain_osd=strain_osd, strain_osdf=strain_osdf,
+        n_strain='Strain', n_stress='Stress',
+        n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
+        YM     = YM_pref_con['E'],
+        YM_abs = YM_pref_con['E_abs'],
+        use_rd =True, rise_det=[True,4], 
+        ywhere='n'
+        )
     VIP_messu, yield_df_con, txt = tmp
-    Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
+    log_custom(log_cind(txt,3), log_mg,output_lvl)
     if _opts['OPT_DIC']:
-        Evac.MG_strlog("\n  Determination of yield strain-optical:",log_mg,output_lvl)
-        tmp=Evac.Yield_redet2_Multi(m_df=messu, VIP=VIP_dicu,
-                               strain_osd=strain_osd, 
-                               strain_osdf=strain_osdf,
-                               n_strain=dic_used_Strain, n_stress='Stress',
-                               n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
-                               YM     = YM_pref_opt['E'],
-                               YM_abs = YM_pref_opt['E_abs'],
-                               use_rd =True, rise_det=[True,4], 
-                               ywhere='n')
+        log_custom("\n  Determination of yield strain-optical:",log_mg,output_lvl)
+        tmp=emec.mc_yield.Yield_redet2_Multi(
+            m_df=messu, VIP=VIP_dicu,
+            strain_osd=strain_osd, strain_osdf=strain_osdf,
+            n_strain=dic_used_Strain, n_stress='Stress',
+            n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
+            YM     = YM_pref_opt['E'],
+            YM_abs = YM_pref_opt['E_abs'],
+            use_rd =True, rise_det=[True,4], 
+            ywhere='n'
+            )
         VIP_dicu, yield_df_opt, txt = tmp
-        Evac.MG_strlog(Evac.str_indent(txt,3), log_mg,output_lvl)
+        log_custom(log_cind(txt,3), log_mg,output_lvl)
     
     fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
                                   sharex=False, sharey=False, 
@@ -1076,11 +929,16 @@ def ATT_single(prot_ser, paths, mfile_add=''):
              messu.loc[:VIP_messu['B']]['Stress'], 'r--',label='con')
     tmp=ax1.get_xlim(),ax1.get_ylim()
     for i in strain_osd.keys():
-        ax1.plot(Evac.strain_linfit([0,1000],
-                                    YM_pref_con['E'], 
-                                    YM_pref_con['E_abs'], 
-                                    strain_offset=strain_osd[i]),[0,1000],
-                 '-',label='$E_{off-%.3fp}$'%(strain_osd[i]*100))
+        ax1.plot(emec.fitting.strain_linfit(
+            [0,1000],
+            YM_pref_con['E'], 
+            YM_pref_con['E_abs'], 
+            strain_offset=strain_osd[i]
+            ),
+            [0,1000],
+            '-',
+            label='$E_{off-%.3fp}$'%(strain_osd[i]*100)
+            )
     ax1.set_xlim(tmp[0])
     ax1.set_ylim(tmp[1])
     a, b=messu.Strain[VIP_messu[:'B']],messu.Stress[VIP_messu[:'B']]
@@ -1102,11 +960,16 @@ def ATT_single(prot_ser, paths, mfile_add=''):
                  'r--',label='opt')
         tmp=ax2.get_xlim(),ax1.get_ylim()
         for i in strain_osd.keys():
-            ax2.plot(Evac.strain_linfit([0,1000],
-                                        YM_pref_opt['E'], 
-                                        YM_pref_opt['E_abs'], 
-                                        strain_offset=strain_osd[i]),[0,1000],
-                     '-',label='$E_{off-%.3fp}$'%(strain_osd[i]*100))
+            ax2.plot(emec.fitting.strain_linfit(
+                [0,1000],
+                YM_pref_opt['E'], 
+                YM_pref_opt['E_abs'], 
+                strain_offset=strain_osd[i]
+                ),
+                [0,1000],
+                '-',
+                label='$E_{off-%.3fp}$'%(strain_osd[i]*100)
+                )
         ax2.set_xlim(tmp[0])
         ax2.set_ylim(tmp[1])
         a, b=messu[dic_used_Strain][VIP_dicu[:'B']],messu.Stress[VIP_dicu[:'B']]
@@ -1119,14 +982,14 @@ def ATT_single(prot_ser, paths, mfile_add=''):
             ax2.annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), xycoords='data',
                           xytext=c, ha="center", va="center", textcoords='offset points')
         ax2.legend()
-    Evac.plt_handle_suffix(fig,path=out_full+"-sigeps_yielddet",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-sigeps_yielddet",**plt_Fig_dict)
     
     # =============================================================================
     #%%% 6.6 Determine final curve
-    Evac.MG_strlog("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### -6.6 Determine final stress-strain curve ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### -6.6 Determine final stress-strain curve ###",log_mg,output_lvl,printopt=False)
     timings.loc[6.6]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)
     if ('B' in VIP_messu.index) and (VIP_messu['B']>=VIP_messu['U']):
@@ -1137,26 +1000,30 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     
     FinSSC = True # finale kurve für werteermittlung auf Ym linearisieren an anfang
     if FinSSC:
-        messu_FP,linstrainos_con=Evac.DetFinSSC(mdf=messu, YM=YM_pref_con, 
-                                     iS=VIP_messu['F3'], iLE=None,
-                                     StressN='Stress', StrainN='Strain', 
-                                     addzero=True, izero=VIP_messu['S'])
+        messu_FP, linstrainos_con = emec.mc_man.DetFinSSC(
+            mdf=messu, YM=YM_pref_con, 
+            iS=VIP_messu['F3'], iLE=None,
+            StressN='Stress', StrainN='Strain', 
+            addzero=True, izero=VIP_messu['S']
+            )
         yield_df_con['Strain']=yield_df_con['Strain']-linstrainos_con
         yield_df_con['Force']=yield_df_con['Stress']*Area
         yield_df_con['Way']=yield_df_con['Strain']*Length
-        Evac.MG_strlog("\n   Strain offset about %.5f"%(linstrainos_con),log_mg,output_lvl,printopt=False)
+        log_custom("\n   Strain offset about %.5f"%(linstrainos_con),log_mg,output_lvl,printopt=False)
         if _opts['OPT_DIC']:
-            tmp,     linstrainos_opt=Evac.DetFinSSC(mdf=messu, YM=YM_pref_opt, 
-                                         iS=VIP_dicu['F3'], iLE=None,
-                                         StressN='Stress', StrainN=dic_used_Strain, 
-                                         addzero=True, izero=VIP_messu['S'])
+            tmp, linstrainos_opt = emec.mc_man.DetFinSSC(
+                mdf=messu, YM=YM_pref_opt, 
+                iS=VIP_dicu['F3'], iLE=None,
+                StressN='Stress', StrainN=dic_used_Strain, 
+                addzero=True, izero=VIP_messu['S']
+                )
             messu_FP=messu_FP.join(tmp, how='outer', lsuffix='', rsuffix='_opt')
             messu_FP['Stress'].fillna(messu_FP['Stress_opt'],inplace=True)
             yield_df_opt[dic_used_Strain]=yield_df_opt[dic_used_Strain]-linstrainos_opt
             del messu_FP['Stress_opt']
             yield_df_opt['Force']=yield_df_opt['Stress']*Area
             yield_df_opt[dic_used_Disp]=yield_df_opt[dic_used_Strain]*Length
-            Evac.MG_strlog("\n   Strain offset (optical) about %.5f"%(linstrainos_opt),log_mg,output_lvl,printopt=False)
+            log_custom("\n   Strain offset (optical) about %.5f"%(linstrainos_opt),log_mg,output_lvl,printopt=False)
     
         messu_FP['Force']=messu_FP['Stress']*Area # recalc Force (should match messu)
         messu_FP['Way']=messu_FP['Strain']*Length # recalc Way  
@@ -1165,20 +1032,20 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         messu_FP =  messu
         linstrainos_con = 0
         linstrainos_opt = 0
-        Evac.MG_strlog("\n   No linear start of final stress-strain-curve",log_mg,output_lvl,printopt=False)
+        log_custom("\n   No linear start of final stress-strain-curve",log_mg,output_lvl,printopt=False)
         
     # ============================================================================
     #%% 7 Outputs
-    Evac.MG_strlog("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n ### 7 Outputs ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n ### 7 Outputs ###",log_mg,output_lvl,printopt=False)
     timings.loc[7.0]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
     # ============================================================================
     #%%% 7.1 Prepare outputs
     timings.loc[7.1]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
 
@@ -1189,50 +1056,58 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     
     if _opts['OPT_DIC']:
         relVS = [*np.sort([*strain_osd.keys()]),'U','B']
-        tmp=Evac.Otvalgetter_Multi(messu_FP, Vs=relVS,
-                              datasep=['con','opt'], 
-                              VIPs={'con':VIP_messu,'opt':VIP_dicu}, 
-                              exacts={'con':yield_df_con,'opt':yield_df_opt}, 
-                              orders={'con':['f','e','U'],'opt':['e','U']}, 
-                              add_esufs={'con':'_con','opt':'_opt'},
-                              n_strains={'con':'Strain','opt':dic_used_Strain}, 
-                              n_stresss={'con':'Stress','opt':'Stress'},
-                              use_exacts=True)
+        tmp=emec.output.Otvalgetter_Multi(
+            messu_FP, Vs=relVS,
+            datasep=['con','opt'], 
+            VIPs={'con':VIP_messu,'opt':VIP_dicu}, 
+            exacts={'con':yield_df_con,'opt':yield_df_opt}, 
+            orders={'con':['f','e','U'],'opt':['e','U']}, 
+            add_esufs={'con':'_con','opt':'_opt'},
+            n_strains={'con':'Strain','opt':dic_used_Strain}, 
+            n_stresss={'con':'Stress','opt':'Stress'},
+            use_exacts=True
+            )
         tmp.name=prot_ser.name
         out_tab=out_tab.append(tmp)
-        tmp=Evac.Otvalgetter_Multi(messu_FP, Vs=relVS,
-                              datasep=['con','opt'], 
-                              VIPs={'con':VIP_messu,'opt':VIP_dicu}, 
-                              exacts={'con':yield_df_con,'opt':yield_df_opt}, 
-                              orders={'con':['F','s','W'],'opt':['s','W']}, 
-                              add_esufs={'con':'_con','opt':'_opt'},
-                              n_strains={'con':'Way','opt': dic_used_Disp}, 
-                              n_stresss={'con':'Force','opt':'Force'},
-                              use_exacts=True)
+        tmp=emec.output.Otvalgetter_Multi(
+            messu_FP, Vs=relVS,
+            datasep=['con','opt'], 
+            VIPs={'con':VIP_messu,'opt':VIP_dicu}, 
+            exacts={'con':yield_df_con,'opt':yield_df_opt}, 
+            orders={'con':['F','s','W'],'opt':['s','W']}, 
+            add_esufs={'con':'_con','opt':'_opt'},
+            n_strains={'con':'Way','opt': dic_used_Disp}, 
+            n_stresss={'con':'Force','opt':'Force'},
+            use_exacts=True
+            )
         tmp.name=prot_ser.name
         out_tab=out_tab.append(tmp)
     else:
         relVS = [*np.sort([*strain_osd.keys()]),'U','B']
-        tmp=Evac.Otvalgetter_Multi(messu_FP, Vs=relVS,
-                              datasep=['con'], 
-                              VIPs={'con':VIP_messu}, 
-                              exacts={'con':yield_df_con}, 
-                              orders={'con':['f','e','U']}, 
-                              add_esufs={'con':'_con'},
-                              n_strains={'con':'Strain'}, 
-                              n_stresss={'con':'Stress'},
-                              use_exacts=True)
+        tmp=emec.output.Otvalgetter_Multi(
+            messu_FP, Vs=relVS,
+            datasep=['con'], 
+            VIPs={'con':VIP_messu}, 
+            exacts={'con':yield_df_con}, 
+            orders={'con':['f','e','U']}, 
+            add_esufs={'con':'_con'},
+            n_strains={'con':'Strain'}, 
+            n_stresss={'con':'Stress'},
+            use_exacts=True
+            )
         tmp.name=prot_ser.name
         out_tab=out_tab.append(tmp)
-        tmp=Evac.Otvalgetter_Multi(messu_FP, Vs=relVS,
-                              datasep=['con'], 
-                              VIPs={'con':VIP_messu}, 
-                              exacts={'con':yield_df_con}, 
-                              orders={'con':['F','s','W']}, 
-                              add_esufs={'con':'_con'},
-                              n_strains={'con':'Way'}, 
-                              n_stresss={'con':'Force'},
-                              use_exacts=True)
+        tmp=emec.output.Otvalgetter_Multi(
+            messu_FP, Vs=relVS,
+            datasep=['con'], 
+            VIPs={'con':VIP_messu}, 
+            exacts={'con':yield_df_con}, 
+            orders={'con':['F','s','W']}, 
+            add_esufs={'con':'_con'},
+            n_strains={'con':'Way'}, 
+            n_stresss={'con':'Force'},
+            use_exacts=True
+            )
         tmp.name=prot_ser.name
         out_tab=out_tab.append(tmp)
         
@@ -1251,7 +1126,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # ============================================================================
     #%%% 7.2 Generate plots
     timings.loc[7.2]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
         
@@ -1279,7 +1154,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     ax2.plot(messu.Time, messu.dcuF, 'g:', label='Force-curve')
     ax2.tick_params(axis='y', labelcolor=color2)
     fig.legend(loc='lower right', bbox_to_anchor=(0.85, 0.15))
-    Evac.plt_handle_suffix(fig,path=out_full+"-Fdricu",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-Fdricu",**plt_Fig_dict)
     
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Stress vs. strain curve with labels'%plt_name)
@@ -1291,8 +1166,9 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     if _opts['OPT_DIC']:
         ax1.plot(messu.loc[:VIP_messu[ind_E]][dic_used_Strain],
                  messu.loc[:VIP_messu[ind_E]]['Stress'], 'm--',label='opt')
-    a,b = Evac.stress_linfit_plt(messu['Strain'], VIP_messu[['F3','F4']],
-                                 *YM_pref_con[['E','E_abs']])
+    a,b = emec.fitting.stress_linfit_plt(
+        messu['Strain'], VIP_messu[['F3','F4']], *YM_pref_con[['E','E_abs']]
+        )
     ax1.plot(a, b, 'g-',label='$E_{con}$')
     VIP_mwoC=VIP_messu[np.invert(VIP_messu.index.str.contains('C'))]
     a, b=messu.Strain[VIP_mwoC[:ind_E]],messu.Stress[VIP_mwoC[:ind_E]]
@@ -1308,16 +1184,26 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         a,b=messu.loc[VIP_dicu[:'SE'],dic_used_Strain],messu.Stress[VIP_dicu[:'SE']]
         j=np.int64(-1)
         ax1.plot(a, b, 'yx')
-        a,b = Evac.stress_linfit_plt(messu[dic_used_Strain], VIP_dicu[['F3','F4']],
-                                     *YM_pref_opt[['E','E_abs']])
+        a,b = emec.fitting.stress_linfit_plt(
+            messu[dic_used_Strain], VIP_dicu[['F3','F4']], *YM_pref_opt[['E','E_abs']]
+            )
         ax1.plot(a, b, 'b-',label='$E_{opt}$')
-    ftxt=('$f_{y}$ = % 6.3f MPa ($\epsilon_{y}$ = %4.3f %%)'%(out_tab['fy'],out_tab['ey_con']*100),
-          '$f_{u}$ = % 6.3f MPa ($\epsilon_{u}$ = %4.3f %%)'%(out_tab['fu'],out_tab['eu_con']*100),
-          '$E_{con}$ = % 8.3f MPa ($R²$ = %4.3f)'%(*YM_pref_con[['E','Rquad']],))    
+    ftxt=('$f_{y}$ = % 6.3f MPa ($\epsilon_{y}$ = %4.3f %%)'%(
+            out_tab['fy'],out_tab['ey_con']*100
+            ),
+          '$f_{u}$ = % 6.3f MPa ($\epsilon_{u}$ = %4.3f %%)'%(
+            out_tab['fu'],out_tab['eu_con']*100
+            ),
+          '$E_{con}$ = % 8.3f MPa ($R²$ = %4.3f)'%(
+            *YM_pref_con[['E','Rquad']],
+            )
+          )    
     fig.text(0.95,0.15,'\n'.join(ftxt),
-              ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
+              ha='right',va='bottom', 
+              bbox=dict(boxstyle='round', edgecolor='0.8', 
+                        facecolor='white', alpha=0.8))
     fig.legend(loc='upper left', bbox_to_anchor=(0.10, 0.91))
-    Evac.plt_handle_suffix(fig,path=out_full+"-sigeps_wl",**plt_Fig_dict)    
+    plt_hsuf(fig,path=out_full+"-sigeps_wl",**plt_Fig_dict)    
 
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Youngs-modulus and res. strain vs. cycles'%plt_name)
@@ -1339,15 +1225,16 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     ax1.grid(axis='x')
     labs=[l.get_label() for l in lns]
     ax2.legend(lns,labs,loc='center right',ncol=2)
-    Evac.plt_handle_suffix(fig,path=out_full+"-Eepszyk",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-Eepszyk",**plt_Fig_dict)
     
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Stress vs. strain curve, final part, with labels'%plt_name)
     ax1.set_xlabel('Strain [-]')
     ax1.set_ylabel('Stress [MPa]')
     ax1.plot(messu_FP['Strain'], messu_FP['Stress'], 'r--', label='meas. curve')
-    a,b = Evac.stress_linfit_plt(messu_FP['Strain'], VIP_messu[['F3','F4']],
-                                 YM_pref_con['E'],0)
+    a,b = emec.fitting.stress_linfit_plt(
+        messu_FP['Strain'], VIP_messu[['F3','F4']], YM_pref_con['E'],0
+        )
     ax1.plot(a, b, 'g-',label='$E_{con}$')
     # tmp=['g-','y-','m-']
     # j=0
@@ -1374,8 +1261,10 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         a,b=messu_FP.loc[tmp,dic_used_Strain],messu_FP.Stress[tmp]
         j=np.int64(-1)
         ax1.plot(a, b, 'yx')
-        a,b = Evac.stress_linfit_plt(messu_FP[dic_used_Strain], VIP_dicu[['F3','F4']],
-                                     YM_pref_opt['E'],0)
+        a,b = emec.fitting.stress_linfit_plt(
+            messu_FP[dic_used_Strain], VIP_dicu[['F3','F4']], 
+            YM_pref_opt['E'], 0
+            )
         ax1.plot(a, b, 'b-',label='$E_{opt}$')
     ftxt=('$f_{y}$ = %3.3f MPa ($\epsilon_{y}$ = %.3f %%)'%(out_tab['fy'],out_tab['ey_con']*100),
           '$f_{u}$ = %3.3f MPa ($\epsilon_{u}$ = %.3f %%)'%(out_tab['fu'],out_tab['eu_con']*100),
@@ -1383,12 +1272,12 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     fig.text(0.95,0.15,'\n'.join(ftxt),
              ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
     fig.legend(loc='upper left', bbox_to_anchor=(0.10, 0.91))
-    Evac.plt_handle_suffix(fig,path=out_full+"-sigeps_fin",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-sigeps_fin",**plt_Fig_dict)
 
     # =============================================================================
     #%%% 7.3 Generate outputs
     timings.loc[7.3]=time.perf_counter()
-    Evac.MG_strlog("\n   Timing %f: %.5f s"%(timings.index[-1],
+    log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    log_mg,output_lvl,printopt=False)    
 
@@ -1470,218 +1359,3 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     if output_lvl>=1: log_mg.close()
     
     return timings,cout
-
-#%% 9 Main
-def ATT_series(paths, no_stats_fc, var_suffix, prot_rkws):
-    prot = pd.read_excel(paths['prot'], **prot_rkws)
-    
-    logfp = paths['out'] + os.path.basename(paths['prot']).replace('.xlsx','.log')
-    if output_lvl>=1: log_mg=open(logfp,'w')
-        
-    prot.Failure_code  = Evac.list_cell_compiler(prot.Failure_code)
-    eva_b = Evac.list_interpreter(prot.Failure_code, no_stats_fc)
-    
-    Evac.MG_strlog("\n paths:",log_mg,output_lvl,printopt=False)
-    for path in paths.index:
-        Evac.MG_strlog("\n  %s: %s"%(path,paths[path]),
-                       log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n evaluation: %d / %d"%(prot.loc[eva_b].count()[0],prot.count()[0]),
-                            log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n%s"%prot.loc[eva_b].Designation.values,
-                            log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n not evaluated: %d / %d"%(prot.loc[eva_b==False].count()[0],prot.count()[0]),
-                            log_mg,output_lvl,printopt=False)
-    Evac.MG_strlog("\n%s"%prot.loc[eva_b==False].Designation.values,
-                            log_mg,output_lvl,printopt=False)
-
-    for eva in prot[eva_b].index:
-        for mfile_add in var_suffix:
-            Evac.MG_strlog("\n %s"%prot.loc[eva].Designation+mfile_add,
-                            log_mg,output_lvl,printopt=False)  
-            try:
-                cout = ATT_single(prot_ser = prot.loc[eva],
-                                  paths = paths, mfile_add=mfile_add)
-                Evac.MG_strlog("\n   Eva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]),
-                                log_mg,output_lvl,printopt=False)
-            except Exception:
-                txt = '\n   Exception:'
-                txt+=Evac.str_indent('\n{}'.format(traceback.format_exc()),5)
-                Evac.MG_strlog(txt, log_mg,output_lvl,printopt=False)  
-
-    if output_lvl>=1: log_mg.close()
-  
-
-def Selector(option, combpaths, no_stats_fc,
-             var_suffix=[""], ser='', des='', out_path='',
-             prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0)):
-    """
-    Selects suitable evaluation method acc. to choosen option.
-
-    Parameters
-    ----------
-    option : str
-        Evaluation option. Possible are:
-            - 'single': Evaluate single measurement
-            - 'series': Evaluate series of measurements (see protocol table)
-            - 'complete': Evaluate series of series
-            - 'pack': Pack all evaluations into single hdf-file (only results and evaluated measurement)
-            - 'pack-all': Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
-    combpaths : pandas.DataFrame
-        Combined paths for in- and output of evaluations.
-    no_stats_fc : list of str
-        Assessment codes for excluding from evaluation (searched in protocol variable "Failure_code").
-    var_suffix : list of str, optional
-        Suffix of variants of measurements (p.E. different moistures ["A","B",...]). 
-        The default is [""].
-    ser : str, optional
-        Accessor for series. Must be as index in combpaths. The default is ''.
-    des : str, optional
-        Accessor for/Designation of measurement/specimen. 
-        Must be as index in combpaths. The default is ''.
-    out_path : str or Path, optional
-        Additional outputpath for packed evaluation (hdf file). The default is ''.
-    prot_rkws : dict, optional
-        Dictionary for reading protocol. Must be keyword ind pandas.read_excel.
-        The default is dict(header=11, skiprows=range(12,13),index_col=0).
-
-    Raises
-    ------
-    NotImplementedError
-        Option not implemented.
-
-    Returns
-    -------
-    None.
-
-    """
-    if option == 'single':
-        mfile_add = var_suffix[0]
-        
-        prot=pd.read_excel(combpaths.loc[ser,'prot'],**prot_rkws)
-        _=ATT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
-                     paths=combpaths.loc[ser],
-                     mfile_add = mfile_add)
-        
-    elif option == 'series':
-        ATT_series(paths = combpaths.loc[ser],
-                   no_stats_fc = no_stats_fc,
-                   var_suffix = var_suffix,
-                   prot_rkws=prot_rkws)
-        
-    elif option == 'complete':
-        for ser in combpaths.index:
-            ATT_series(paths = combpaths.loc[ser],
-                       no_stats_fc = no_stats_fc,
-                       var_suffix = var_suffix,
-                       prot_rkws=prot_rkws)
-            
-    elif option == 'pack':
-        packpaths = combpaths[['prot','out']]
-        packpaths.columns=packpaths.columns.str.replace('out','hdf')
-        Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
-                      hdf_naming = 'Designation', var_suffix = var_suffix,
-                      h5_conc = 'Material_Parameters', h5_data = 'Measurement',
-                      opt_pd_out = False, opt_hdf_save = True)
-        print("Successfully created %s"%out_path)
-    elif option == 'pack-all':
-        packpaths = combpaths[['prot','out']]
-        packpaths.columns=packpaths.columns.str.replace('out','hdf')
-        Evac.pack_hdf_mul(in_paths=packpaths, out_path = out_path,
-                          hdf_naming = 'Designation', var_suffix = var_suffix,
-                          h5_conc = 'Material_Parameters',
-                          opt_pd_out = False, opt_hdf_save = True)
-        print("Successfully created %s"%out_path)
-        
-    else:
-        raise NotImplementedError('Option %s not implemented!'%option)
-
-# def main():
-       
-#     # option = 'single'
-#     # option = 'series'
-#     # option = 'complete'
-#     option = 'pack-complete'
-    
-#     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
-#                    'B01.1','B01.2','B01.3', 'B02.3',
-#                    'C01.1','C01.2','C01.3', 'C02.3',
-#                    'D01.1','D01.2','D01.3', 'D02.3',
-#                    'F01.1','F01.2','F01.3', 'F02.3']
-#     # var_suffix = ["A","B","C","D"] #Suffix of variants of measurements (p.E. diffferent moistures)
-#     var_suffix = [""] #Suffix of variants of measurements (p.E. diffferent moistures)
-        
-#     protpaths = pd.DataFrame([],dtype='string')
-#     combpaths = pd.DataFrame([],dtype='string')
-#     # protpaths.loc['ZR','path_main'] = "F:/Messung/002-190813-ZESBO_Rückenfaszien-ZZV/"
-#     # protpaths.loc['ZR','name_prot'] = "190813_ZESBO_ZZV_Protokoll_new.xlsx"
-#     # protpaths.loc['B1','path_main'] = "F:/Messung/003-190821-Becken1-ZZV/"
-#     # protpaths.loc['B1','name_prot'] = "190821_Becken1_ZZV_Protokoll_new.xlsx"
-#     # protpaths.loc['B2','path_main'] = "F:/Messung/004-200512-Becken2-AZV/"
-#     # protpaths.loc['B2','name_prot'] = "200512_Becken2_AZV_Protokoll_new.xlsx"
-#     protpaths.loc['B3','path_main'] = "F:/Messung/005-200721_Becken3-AZV/"
-#     protpaths.loc['B3','name_prot'] = "200721_Becken3-AZV_Protokoll_new.xlsx"
-#     protpaths.loc['B4','path_main'] = "F:/Messung/006-200910_Becken4-AZV/"
-#     protpaths.loc['B4','name_prot'] = "200910_Becken4-AZV_Protokoll_new.xlsx"
-#     protpaths.loc['B5','path_main'] = "F:/Messung/007-201009_Becken5-AZV/"
-#     protpaths.loc['B5','name_prot'] = "201009_Becken5-AZV_Protokoll_new.xlsx"
-#     protpaths.loc['B6','path_main'] = "F:/Messung/008-201117_Becken6-AZV/"
-#     protpaths.loc['B6','name_prot'] = "201117_Becken6-AZV_Protokoll_new.xlsx"
-#     protpaths.loc['B7','path_main'] = "F:/Messung/009-210114_Becken7-AZV/"
-#     protpaths.loc['B7','name_prot'] = "210114_Becken7-AZV_Protokoll_new.xlsx"
-
-#     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
-#     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
-#     protpaths.loc[:,'path_eva1']    = "Auswertung/"
-#     protpaths.loc[:,'path_eva2']    = "ExMechEva/"
-    
-#     # t=protpaths[['path_main','path_eva1','name_prot']].stack()
-#     # t.groupby(level=0).apply(lambda x: '{0}{1}{2}'.format(*x))
-#     combpaths['prot'] = protpaths['path_main']+protpaths['path_eva1']+protpaths['name_prot']
-#     combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
-#     combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
-#     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
-    
-#     # mfile_add="" # suffix für Feuchte
-    
-    
-#     if option == 'single':
-#         ser='B6'
-#         des='sr13'
-#         mfile_add = var_suffix[0] #Suffix of variants of measurements (p.E. diffferent moistures)
-        
-#         prot=pd.read_excel(combpaths.loc[ser,'prot'],
-#                            header=11, skiprows=range(12,13),
-#                            index_col=0)
-#         _=ATT_single(prot_ser=prot[prot.Designation==des].iloc[0], 
-#                      paths=combpaths.loc[ser],
-#                      mfile_add = mfile_add)
-        
-#     elif option == 'series':
-#         ser='B6'
-#         ATT_series(paths = combpaths.loc[ser],
-#                    no_stats_fc = no_stats_fc,
-#                    var_suffix = var_suffix)
-        
-#     elif option == 'complete':
-#         for ser in combpaths.index:
-#             ATT_series(paths = combpaths.loc[ser],
-#                        no_stats_fc = no_stats_fc,
-#                        var_suffix = var_suffix)
-            
-#     elif option == 'pack-complete':        
-#         # out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/230919/ATT/B3-B7_ATT-Summary"
-#         out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/231023/ATT/B3-B7_ATT-Summary"
-#         packpaths = combpaths[['prot','out']]
-#         packpaths.columns=packpaths.columns.str.replace('out','hdf')
-#         Evac.pack_hdf(in_paths=packpaths, out_path = out_path,
-#                       hdf_naming = 'Designation', var_suffix = var_suffix,
-#                       h5_conc = 'Material_Parameters', h5_data = 'Measurement',
-#                       opt_pd_out = False, opt_hdf_save = True)
-#         print("Successfully created %s"%out_path)
-        
-#     else:
-#         raise NotImplementedError('%s not implemented!'%option)
-        
-
-# if __name__ == "__main__":
-#     main()

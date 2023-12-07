@@ -10,27 +10,38 @@ import os
 import traceback
 import pandas as pd
 
-import common as emec
+import exmecheva.common as emec
 
 def series(eva_single_func, paths, no_stats_fc, var_suffix, 
            prot_rkws, output_lvl=1):
     """
-    
+    Evaluates a series of single evaluations (one after an other).
 
     Parameters
     ----------
-    eva_single_func : TYPE
-        DESCRIPTION.
-    paths : TYPE
-        DESCRIPTION.
-    no_stats_fc : TYPE
-        DESCRIPTION.
-    var_suffix : TYPE
-        DESCRIPTION.
-    prot_rkws : TYPE
-        DESCRIPTION.
-    output_lvl : TYPE, optional
-        DESCRIPTION. The default is 1.
+    eva_single_func : function
+        Function to perform single evaluation.
+    paths : pandas.Series
+        Paths for evaluation:
+            - 'prot': path to protocoll excel table
+            - 'opts': path to common options as json file
+            - 'meas': path to measurement (conventional) file location
+            - 'dic': path to measurement (optical) file location
+            - 'out': path for output files
+    no_stats_fc : list of strings
+        No evaluation if in protocoll.Failure_code. 
+        Example: no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
+                                'B01.1','B01.2','B01.3', 'B02.3',
+                                'C01.1','C01.2','C01.3', 'C02.3',
+                                'D01.1','D01.2','D01.3', 'D02.3',
+                                'F01.1','F01.2','F01.3', 'F02.3']
+    var_suffix : string
+        Suffix for variant of measurement (p.E. different moistures ["A","B",...]).
+    prot_rkws : dict
+        Dictionary for reading protocol. Must be keyword ind pandas.read_excel.
+    output_lvl : int, optional
+        Output level (0: no output, 1: only necessary, 2: all).
+        The default is 1.
 
     Returns
     -------

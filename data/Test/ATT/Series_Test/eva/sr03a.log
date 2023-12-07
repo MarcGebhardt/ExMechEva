@@ -1,14 +1,14 @@
   Parameters of Evaluation:
-   Evaluation start time:     2023-11-24 09:48:42
+   Evaluation start time:     2023-12-07 15:33:58
    Path protocol:             D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\ATT_Protocol_Series_Test.xlsx
    Path measurement:          D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\meas\conventional\WR03A.xlsx
    Path optical- measurement: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\meas\optical\WR03A.csv
-   Resampling = True (Frequency = 4 Hz, moving-average = True)
+   Resampling = True (Frequency = 10 Hz, moving-average = True)
    Compression = False
    LVDT failure = [False, 0.0, ' ']
    LVDT-spring-force-reduction = True (K_Fed = -0.116000 N/mm)
    Youngs Modulus determination between 0.250000 and 0.500000 of point U
-   Distance between points: 10 / 5 steps 
+   Distance between points: 25 / 13 steps 
    Improvment of Youngs-Modulus-determination between 0.1*Stress_max and point Y,
     with smoothing on difference-quotient (True, 8)
     with allowable deviation of 0.750000 * difference-quotient_max in determination range
@@ -20,109 +20,109 @@
     Volume det=IN: True (0.377-0.377)
  ====================================================================================================
  ### 3 Read in measurements ###
-   Timing 3.000000: 0.00467 s
-   Timing 3.100000: 0.00610 s
-   Timing 3.200000: 0.63698 s
-   Timing 3.300000: 0.63912 s
+   Timing 3.000000: 0.00841 s
+   Timing 3.100000: 0.01019 s
+   Timing 3.200000: 44.23422 s
+   Timing 3.300000: 44.24206 s
  ====================================================================================================
  ### 4 Merging measurements ###
-   Timing 4.000000: 0.63960 s
-   Timing 4.100000: 0.64043 s
-   Timing 4.200000: 0.64191 s
-   Timing 4.300000: 0.65143 s
+   Timing 4.000000: 44.24424 s
+   Timing 4.100000: 44.24592 s
+   Timing 4.200000: 44.24933 s
+   Timing 4.300000: 44.27119 s
  ====================================================================================================
  ### 5 Start and End ###
-   Timing 5.000000: 0.65199 s
-   Timing 5.100000: 0.65243 s
+   Timing 5.000000: 44.27280 s
+   Timing 5.100000: 44.27461 s
  ----------------------------------------------------------------------------------------------------
-   Start of evaluation after 3.500 seconds, corresponds to 0.03028 % of max. force.
-   Timing 5.200000: 1.18524 s
+   Start of evaluation after 3.600 seconds, corresponds to 0.04113 % of max. force.
+   Timing 5.200000: 45.80221 s
  ====================================================================================================
  ### 6 Evaluation ###
-   Timing 6.000000: 1.60330 s
+   Timing 6.000000: 47.21802 s
  ----------------------------------------------------------------------------------------------------
  ### -6.2 Determine evaluation curves ###
-   Timing 6.200000: 1.60460 s
+   Timing 6.200000: 47.21998 s
    Last 10 monoton increasing periods:
             Stress  Strain
-    Epoche     151     207
+    Epoche     380     515
  ----------------------------------------------------------------------------------------------------
  ### -6.3 Determine points of interest ###
-   Timing 6.310000: 1.72350 s
-  0 cykles, with result!
-    -> Using last 0.250 s as delimiter.
+   Timing 6.310000: 48.30920 s
+  0 cycles, with result!
+    -> Using last 0.100 s as delimiter.
  ----------------------------------------------------------------------------------------------------
   Differenz Extremwertvergleich: 
         PM_Force  PM_Way  DIC_way  Diff_PM  Diff_PD
-C1-         19      20      NaN       -1      NaN
-C2+         24      24      NaN        0      NaN
-C2-         29      29      NaN        0      NaN
-C3+         33      33      NaN        0      NaN
-C3-         38      38      NaN        0      NaN
-C4+         43      43      NaN        0      NaN
-C4-         47      47      NaN        0      NaN
-C5+         52      52      NaN        0      NaN
-C5-         57      57      NaN        0      NaN
-C6+         61      61      NaN        0      NaN
-C6-         66      66      NaN        0      NaN
-C7+         71      71      NaN        0      NaN
-C7-         75      75      NaN        0      NaN
-C8+         80      80      NaN        0      NaN
-C8-         85      85      NaN        0      NaN
-C9+         89      89      NaN        0      NaN
-C9-         94      94      NaN        0      NaN
-C10+        98      98      NaN        0      NaN
-C10-       103     103      NaN        0      NaN
-F1         107     107      NaN        0      NaN
-  Differenz Kraft- zu Wegextreme-PM (MW):  -0.050000
+C1-         50      51      NaN       -1      NaN
+C2+         61      62      NaN       -1      NaN
+C2-         73      73      NaN        0      NaN
+C3+         84      85      NaN       -1      NaN
+C3-         96      96      NaN        0      NaN
+C4+        108     108      NaN        0      NaN
+C4-        120     120      NaN        0      NaN
+C5+        131     131      NaN        0      NaN
+C5-        143     143      NaN        0      NaN
+C6+        155     155      NaN        0      NaN
+C6-        166     167      NaN       -1      NaN
+C7+        178     178      NaN        0      NaN
+C7-        190     190      NaN        0      NaN
+C8+        201     202      NaN       -1      NaN
+C8-        213     213      NaN        0      NaN
+C9+        225     225      NaN        0      NaN
+C9-        236     237      NaN       -1      NaN
+C10+       247     248      NaN       -1      NaN
+C10-       259     259      NaN        0      NaN
+F1         270     270      NaN        0      NaN
+  Differenz Kraft- zu Wegextreme-PM (MW):  -0.350000
   Differenz Kraft- zu Wegextreme-DIC (MW): nan
     Fy set on datapoint of Fu!
-   Timing 6.320000: 1.78379 s
+   Timing 6.320000: 48.55685 s
    F3 set to start of diff.-quot. determination 
-   Datapoints (con) between F1-F2: 4 and F3-F4: 7.
+   Datapoints (con) between F1-F2: 10 and F3-F4: 15.
  ----------------------------------------------------------------------------------------------------
  ### -6.4 Determine Youngs-Moduli ###
-   Timing 6.400000: 2.37713 s
-   Timing 6.410000: 2.37856 s
-   Timing 6.480000: 3.29736 s
+   Timing 6.400000: 50.06979 s
+   Timing 6.410000: 50.07336 s
+   Timing 6.480000: 52.81711 s
 
   Method comaparison:
   - least square fit
 
                              E     Rquad
-   E_lsq_F_A0Al     885.088044  0.999241
-   E_lsq_R_A0Al     746.595694  0.996147
-   E_lsq_C1+_A0Al   717.368078  0.999752
-   E_lsq_C1-_A0Al   912.266619  0.992839
-   E_lsq_C2+_A0Al   834.702229  0.997273
-   E_lsq_C2-_A0Al   873.070226  0.997979
-   E_lsq_C3+_A0Al   861.235436  0.998729
-   E_lsq_C3-_A0Al   871.601958  0.995783
-   E_lsq_C4+_A0Al   863.589683  0.999791
-   E_lsq_C4-_A0Al   886.357964  0.996051
-   E_lsq_C5+_A0Al    862.35477  0.999672
-   E_lsq_C5-_A0Al   884.652429  0.998146
-   E_lsq_C6+_A0Al    876.43993  0.999629
-   E_lsq_C6-_A0Al   879.765948  0.997462
-   E_lsq_C7+_A0Al   871.785987  0.999847
-   E_lsq_C7-_A0Al   890.418507  0.997925
-   E_lsq_C8+_A0Al   873.501905  0.999635
-   E_lsq_C8-_A0Al   886.407636  0.998188
-   E_lsq_C9+_A0Al   881.186257  0.999605
-   E_lsq_C9-_A0Al   897.608883  0.997927
-   E_lsq_C10+_A0Al  882.992325  0.999568
-   E_lsq_C10-_A0Al  896.017517  0.998097
+   E_lsq_F_A0Al      877.10038  0.999503
+   E_lsq_R_A0Al      761.12597  0.996829
+   E_lsq_C1+_A0Al   718.961356  0.999597
+   E_lsq_C1-_A0Al   903.107551  0.995439
+   E_lsq_C2+_A0Al   853.919203   0.99879
+   E_lsq_C2-_A0Al   883.664691   0.99686
+   E_lsq_C3+_A0Al   866.609139  0.999094
+   E_lsq_C3-_A0Al   886.927846  0.996512
+   E_lsq_C4+_A0Al    866.22617  0.999314
+   E_lsq_C4-_A0Al   881.540351  0.996852
+   E_lsq_C5+_A0Al   868.331014  0.999595
+   E_lsq_C5-_A0Al   886.172968  0.997785
+   E_lsq_C6+_A0Al   873.236376  0.999639
+   E_lsq_C6-_A0Al   890.418905  0.997676
+   E_lsq_C7+_A0Al   873.748663  0.999567
+   E_lsq_C7-_A0Al   889.425974  0.997768
+   E_lsq_C8+_A0Al   878.772637  0.999557
+   E_lsq_C8-_A0Al   887.722949  0.997802
+   E_lsq_C9+_A0Al   878.182167  0.999601
+   E_lsq_C9-_A0Al   897.466239  0.997725
+   E_lsq_C10+_A0Al  884.983014  0.999549
+   E_lsq_C10-_A0Al  887.458132  0.998064
 
   - incremental (F,R,S):
 
                mean    meanwoso      median         std          max         min     stdn  stdnwoso
-   A0Al  978.259943  870.341508  872.612117  271.848813  1462.624008  817.651182  0.27789  0.312347
+   A0Al  971.930282  866.766506  871.112416  324.361958  1946.354906  841.112858  0.33373  0.374221
 
                mean    meanwoso      median        std         max         min      stdn  stdnwoso
-   A0Al  762.815587  762.815587  770.632677  98.032515  872.612117  636.136171  0.128514  0.128514
+   A0Al  764.176098  764.176098  773.861092  93.469049  877.087727  585.323465  0.122313  0.122313
  ----------------------------------------------------------------------------------------------------
  ### -6.5 Determine yield point ###
-   Timing 6.500000: 3.31785 s
+   Timing 6.500000: 52.91343 s
   Determination of yield strain-conventional:
 
     YK set on F4 (fixed)
@@ -132,11 +132,11 @@ F1         107     107      NaN        0      NaN
     Y2 set on intersection with 0.500 % plastic strain (option=n)
  ----------------------------------------------------------------------------------------------------
  ### -6.6 Determine final stress-strain curve ###
-   Timing 6.600000: 4.42899 s
-   Strain offset about 0.00182
+   Timing 6.600000: 56.17650 s
+   Strain offset about 0.00202
  ====================================================================================================
  ### 7 Outputs ###
-   Timing 7.000000: 4.43387 s
-   Timing 7.100000: 4.43438 s
-   Timing 7.200000: 4.50750 s
-   Timing 7.300000: 7.03114 s
+   Timing 7.000000: 56.19509 s
+   Timing 7.100000: 56.19651 s
+   Timing 7.200000: 56.47259 s
+   Timing 7.300000: 63.89724 s

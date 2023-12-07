@@ -25,7 +25,8 @@ import dill
 from tqdm import tqdm
 
 # import Eva_common
-import exmecheva.Eva_common as Evac #import Eva_common relative?
+# import exmecheva.Eva_common as Evac #import Eva_common relative?
+import exmecheva.common as emec
 
 #%%Global Variables
 # set Parameter types, which are not marked as free for fit:
@@ -323,7 +324,9 @@ def Point_df_from_lin(x, steps, coords=['x','y'], coords_set='x',
         raise NotImplementedError("Column index type %s not implemented!"%col_type)
     if coords is None:
         # round float point division
-        mit = pd.Index(xt).map(lambda x: Evac.round_to_sigdig(x,_significant_digits_fpd))
+        mit = pd.Index(xt).map(lambda x: emec.helper.round_to_sigdig(
+            x, _significant_digits_fpd
+            ))
         dft = pd.DataFrame([],index=steps,columns=mit)
         if not coords_set is None: dft.loc(axis=1)[:]=x
     else:        
@@ -1532,20 +1535,6 @@ def params_dict_diff(params_dict_series, step_range, BFs,
             params_dict_res.loc[step] = np.nan
     return params_dict_res
 #%% Evaluation functions
-# def strain_from_curve(x,step,func_curve,params_curve,func_thick,
-#                       CS_type='Rectangle',evopt=1/2):
-#     if CS_type == 'Rectangle':
-#         func_strain = func_curve(x,params_curve.loc[step])*func_thick(x)*evopt
-#     else:
-#         raise NotImplementedError("Cross-section-type %s not implemented!"%CS_type)
-#     return func_strain
-# def strain_from_curve2(func_curve,func_thick,
-#                       CS_type='Rectangle',evopt=1/2):
-#     if CS_type == 'Rectangle':
-#         func_strain = lambda x,**kws: func_curve(x,**kws)*func_thick(x)*evopt
-#     else:
-#         raise NotImplementedError("Cross-section-type %s not implemented!"%CS_type)
-#     return func_strain
 def straindf_from_curve(x, func_curve, params_curve, func_thick, evopt=1/2):
     """Evaluates the combination of a curvature and thickness function to x
     on a thickness ratio. (Use only for bending)
@@ -1570,7 +1559,9 @@ def stress_perF(x, func_MoI, func_thick, xmin,xmax, evopt=1/2, Test_type='TPB'):
         return stress_pF_data
     else:
         # round float point division
-        ind=pd.Index(x).map(lambda x: Evac.round_to_sigdig(x,_significant_digits_fpd))
+        ind=pd.Index(x).map(lambda x: emec.helper.round_to_sigdig(
+            x, _significant_digits_fpd
+            ))
         stress_pF = pd.Series(stress_pF_data,index=ind)
         return stress_pF
 
@@ -1634,21 +1625,6 @@ def Weight_func(x, option='Triangle', c_func=None, **kwargs):
         raise NotImplementedError("Option %s not implemented!"%option)
     return eq
 
-# def YM_eva_method_A(stress_mid_ser,
-#                     strain_mid_ser,
-#                     comp=True, name='B', 
-#                     det_opt='incremental',**kws):
-#     step_range=Evac.pd_combine_index(stress_mid_ser, strain_mid_ser)
-#     stress_mid_ser = stress_mid_ser.loc[step_range]
-#     strain_mid_ser = strain_mid_ser.loc[step_range]
-#     if det_opt=="incremental":
-#         YM_ser = stress_mid_ser / strain_mid_ser
-#         YM_ser = pd.Series(YM_ser, name=name)
-#         return YM_ser
-#     elif det_opt=="leastsq":
-#         YM, YM_abs, YM_Rquad, YM_fit = Evac.YM_sigeps_lin(stress_mid_ser,
-#                                                                 strain_mid_ser, **kws)
-#         return YM, YM_abs, YM_Rquad, YM_fit
 def YM_eva_method_A(stress_mid_ser,
                     strain_mid_ser,
                     comp=True, name='A', 
@@ -1690,7 +1666,7 @@ def YM_eva_method_A(stress_mid_ser,
         YM_fit : lmfit.model.ModelResult
             Fitting result from lmfit (use with fit.fit_report() for report).
     """
-    YM = Evac.YM_eva_com_sel(stress_ser=stress_mid_ser,
+    YM = emec.fitting.YM_eva_com_sel(stress_ser=stress_mid_ser,
                                    strain_ser=strain_mid_ser,
                                    comp=comp, name=name,
                                    det_opt=det_opt, **kws)
@@ -1764,8 +1740,8 @@ def YM_eva_method_B(stress_mid_ser,
     if option == "Points":
         if (P_df is None) or (P_fork_names is None) or len(P_fork_names)!=3:
             raise ValueError("Please insert correct values for P_df and P_fork_names!")
-        # step_range=Evac.pd_combine_index(stress_mid_ser, P_df)
-        step_range=Evac.pd_combine_index(stress_mid_ser, P_df.index)
+        # step_range=emec.pd_ext.pd_combine_index(stress_mid_ser, P_df)
+        step_range=emec.pd_ext.pd_combine_index(stress_mid_ser, P_df.index)
         f_lr = Point_df_idx(P_df, steps=step_range,
                             points=[P_fork_names[0],P_fork_names[-1]],
                                coords=['y']).mean(axis=1)
@@ -1779,7 +1755,7 @@ def YM_eva_method_B(stress_mid_ser,
     elif option == "Fit":
         if (w_func is None) or (w_params is None) or (Length_det is None):
             raise ValueError("Please insert correct values w_func, w_params and Length_det!")
-        step_range=Evac.pd_combine_index(stress_mid_ser, w_params)
+        step_range=emec.pd_ext.pd_combine_index(stress_mid_ser, w_params)
         f_lr = w_func(np.array([-Length_det/2, Length_det/2]),
                       w_params.loc[step_range]).mean(axis=1)
         f_c = w_func(0.0, w_params.loc[step_range])
@@ -1798,7 +1774,9 @@ def YM_eva_method_B(stress_mid_ser,
         if stress_mid_ser.isna().all() or strain_ser.isna().all():
             YM, YM_abs, YM_Rquad, YM_fit = np.nan,np.nan,np.nan,np.nan
         else:
-            YM, YM_abs, YM_Rquad, YM_fit = Evac.YM_sigeps_lin(stress_mid_ser, strain_ser, **kws)
+            YM, YM_abs, YM_Rquad, YM_fit = emec.fitting.YM_sigeps_lin(
+                stress_mid_ser, strain_ser, **kws
+                )
         return YM, YM_abs, YM_Rquad, YM_fit, strain_ser
         
 
@@ -1883,7 +1861,7 @@ def YM_eva_method_E(Force_ser, length,
             
     # 26.10.22 - unload (negative force increment) added
     def MaxMinboSer(po,oths,k='Max',axis=1):
-        gax = Evac.pd_axischange(axis)
+        gax = emec.pd_ext.pd_axischange(axis)
         # po_sign   = po.apply(np.sign)
         oths_sign = oths.apply(np.sign)
         po_osign = po.mul(oths_sign,axis=gax)
@@ -1902,7 +1880,7 @@ def YM_eva_method_E(Force_ser, length,
     if not opt_det in ['all', 'stress', 'strain', 'range']:
         raise NotImplementedError("Option %s type not implemented!"%opt_det)
         
-    step_range=Evac.pd_combine_index(Force_ser, params_curve)
+    step_range=emec.pd_ext.pd_combine_index(Force_ser, params_curve)
     xlin = np.linspace(-length/2,length/2,n+1)
     
     stress_df = stress_df_from_lin(F=Force_ser, x=xlin,
@@ -1954,9 +1932,10 @@ def YM_eva_method_E(Force_ser, length,
 
     if opt_det in ['all', 'range']:
         if opt_g == 'length':
-            cols = Evac.pd_slice_index(E_to_x.columns,
-                                             [xlin.min()*opt_g_lim, 
-                                              xlin.max()*opt_g_lim])
+            cols = emec.pd_ext.pd_slice_index(
+                E_to_x.columns,
+                [xlin.min()*opt_g_lim, xlin.max()*opt_g_lim]
+                )
             E_to_x_g = E_to_x.loc(axis=1)[cols]
             E_to_x_g_mean = E_to_x.loc[step_range,cols].mean(axis=1)
         elif opt_g == 'strain':
@@ -1971,9 +1950,10 @@ def YM_eva_method_E(Force_ser, length,
             E_to_x_g = E_to_x.copy()[test]
             E_to_x_g_mean = E_to_x_g.mean(axis=1)
         elif opt_g == 'Moment_weighted':
-            cols = Evac.pd_slice_index(E_to_x.columns,
-                                             [xlin.min()*opt_g_lim,
-                                              xlin.max()*opt_g_lim])
+            cols = emec.pd_ext.pd_slice_index(
+                E_to_x.columns,
+                [xlin.min()*opt_g_lim, xlin.max()*opt_g_lim]
+                )
             E_to_x_g = E_to_x.loc(axis=1)[cols]
             kws={'xmin':cols.min(),'xmax':cols.max()}
             mask=np.isnan(E_to_x_g)
@@ -1985,9 +1965,10 @@ def YM_eva_method_E(Force_ser, length,
             #                            weights=Weight_func(x=cols,option='Triangle',**kws))
             E_to_x_g_mean = pd.Series(E_to_x_g_mean, index=E_to_x.index)
         elif opt_g == 'Custom_weighted':
-            cols = Evac.pd_slice_index(E_to_x.columns,
-                                             [xlin.min()*opt_g_lim,
-                                              xlin.max()*opt_g_lim])
+            cols = emec.pd_ext.pd_slice_index(
+                E_to_x.columns,
+                [xlin.min()*opt_g_lim, xlin.max()*opt_g_lim]
+                )
             E_to_x_g = E_to_x.loc(axis=1)[cols]
             mask=np.isnan(E_to_x_g)
             if (type(wkwargs) is pd.core.series.Series):
@@ -2076,7 +2057,7 @@ def YM_eva_method_G(Force_ser,
         Series of determined Young's Moduli.
 
     """
-    step_range = Evac.pd_combine_index(Force_ser, w_params)
+    step_range = emec.pd_ext.pd_combine_index(Force_ser, w_params)
     
     def W_ext(Force_ser, f_0, comp=True):
         W_ext = (-1 if comp else 1) * 1/2 * Force_ser * f_0
@@ -2157,7 +2138,7 @@ def YM_eva_method_F(c_func, c_params,
         YM = lambda s,x: Moment_perF_func(x, -Length/2, Length/2)*Force_ser.loc[s]/(c_func(x,c_params.loc[s])*I_func(x))
         return YM 
     
-    step_range = Evac.pd_combine_index(Force_ser, c_params)    
+    step_range = emec.pd_ext.pd_combine_index(Force_ser, c_params)    
     if pb_b: pb = tqdm(step_range, desc =name+": ", unit=' steps', ncols=100)
     E_YM_func = E_YM(c_func, c_params, func_I, Length)
     
@@ -2228,7 +2209,7 @@ def YM_eva_method_C(Force_ser, w_func, w_params,
         Series of determined Young's Moduli.
 
     """
-    step_range = Evac.pd_combine_index(Force_ser, w_params)
+    step_range = emec.pd_ext.pd_combine_index(Force_ser, w_params)
     func_AS = Shear_area(A_func, CS_type, kappa)
     F_Alpha = length**2/8*scint.quad(lambda x: (1-abs(x*2/length))**2/I_func(x),-length/2,length/2)[0]
     if option == "M+V":
@@ -2291,7 +2272,7 @@ def YM_eva_method_D_bend_df(Length, I_func, n=100, E=1, F=1):
     
     x = pd.Float64Index(np.linspace(0,Length/2,int(n/2)+1),name='x')
     _significant_digits_fpd=12
-    x=x.map(lambda x: Evac.round_to_sigdig(x,_significant_digits_fpd))
+    x=x.map(lambda x: emec.helper.round_to_sigdig(x, _significant_digits_fpd))
     m_l = sidewise_df(x, Length, F, E, I_func, side='l')
     m_r = sidewise_df(x, Length, F, E, I_func, side='r')
     
@@ -2453,16 +2434,16 @@ def YM_eva_method_D(P_df, Force_ser,
     # ignore NaN-multiply
     warnings.filterwarnings('ignore',category=RuntimeWarning)
     
-    # step_range = Evac.pd_combine_index(Force_ser, P_df)
-    step_range = Evac.pd_combine_index(Force_ser, 
+    # step_range = emec.pd_ext.pd_combine_index(Force_ser, P_df)
+    step_range = emec.pd_ext.pd_combine_index(Force_ser, 
                                        P_df.loc[np.invert(P_df.isna().all(axis=1))].index)
     
     if not rel_steps is None: 
-        step_range = Evac.pd_combine_index(rel_steps, step_range)
+        step_range = emec.pd_ext.pd_combine_index(rel_steps, step_range)
     
     if weighted:
         if (type(wkwargs) is pd.core.series.Series):
-             step_range = Evac.pd_combine_index(step_range,
+             step_range = emec.pd_ext.pd_combine_index(step_range,
                                                       wkwargs)
         
     YM_ser = pd.Series([],dtype='float64')
@@ -2513,7 +2494,7 @@ def YM_eva_method_D(P_df, Force_ser,
     return YM_ser, YM_df
 
 def YM_check_with_method_D(E, F, Length, I_func, w_vgl_df, pb_b=True, name='X'):
-    step_range = Evac.pd_combine_index(E, w_vgl_df)
+    step_range = emec.pd_ext.pd_combine_index(E, w_vgl_df)
     m = YM_eva_method_D_bend_df(Length=w_vgl_df.columns.max()-w_vgl_df.columns.min(),
                                  I_func=I_func,
                                  n=len(w_vgl_df.columns)-1,
@@ -2592,9 +2573,9 @@ def YM_check_many_with_method_D(E_dict, F, Length, I_func,
     """
     if pb_b: pb = tqdm(range(len(E_dict.keys())), desc ="check "+name+": ",
                        unit=' method', ncols=100)
-    step_range = Evac.pd_combine_index(F, w_params)
+    step_range = emec.pd_ext.pd_combine_index(F, w_params)
     if not rel_steps is None: 
-        step_range = Evac.pd_combine_index(rel_steps, step_range)
+        step_range = emec.pd_ext.pd_combine_index(rel_steps, step_range)
     xlin=np.linspace(-Length/2,Length/2,n+1)
     w_vgl_df = w_func(xlin, w_params.loc[step_range],
                       coords=None,coords_set=None,col_type='val')
