@@ -2695,28 +2695,40 @@ class Plotter:
                          title='', xlabel='', ylabel='',
                          Point_df=None,
                          cblabel='Step', cbtick=None,
-                         savefig=False, savefigname=None):
-        """Returns a matpltlib figure plot of a function with defined parameters in a range."""
+                         path=None,
+                         plt_Fig_dict={'tight':True, 'show':True, 
+                                       'save':True, 's_types':["pdf"], 
+                                       'clear':True, 'close':True}):
+                         # savefig=False, savefigname=None):
+        """Returns a matpltlib figure plot of a function with defined 
+        parameters in a range."""
          
         fig, ax1 = plt.subplots()
         Plotter.colplt_funcs_ax(x, func, params, step_range,
                                 title, xlabel, ylabel,
                                 Point_df, ax1,
                                 cblabel, cbtick)
-        fig.tight_layout()
-        if savefig:
-            fig.savefig(savefigname+'.pdf')
-            fig.savefig(savefigname+'.png')
-        plt.show()
-        fig.clf()
-        plt.close(fig)
+        emec.plotting.plt_handle_suffix(fig, path=path, **plt_Fig_dict)
+        # fig.tight_layout()
+        # if savefig:
+        #     fig.savefig(savefigname+'.pdf')
+        #     fig.savefig(savefigname+'.png')
+        # plt.show()
+        # fig.clf()
+        # plt.close(fig)
         
     def colplt_funcs_all(x, func_cohort, params, step_range=None,
                          title='', xlabel='',
                          Point_df=None,
                          cblabel='Step', cbtick=None,
-                         savefig=False, savefigname=None):
-        """Returns a matpltlib axis plot of a function cohort (function and theire first and second derivate) with defined parameters in a range."""
+                         path=None,
+                         plt_Fig_dict={'tight':True, 'show':True, 
+                                       'save':True, 's_types':["pdf"], 
+                                       'clear':True, 'close':True}):
+                         # savefig=False, savefigname=None):
+        """Returns a matpltlib axis plot of a function cohort 
+        (function and theire first and second derivate)
+        with defined parameters in a range."""
         fig, (ax1,ax2,ax3) = plt.subplots(nrows=3, ncols=1,
                                           sharex=False, sharey=False,
                                           figsize = (plt.rcParams['figure.figsize'][0],plt.rcParams['figure.figsize'][1]*3))
@@ -2739,10 +2751,11 @@ class Plotter:
                                 xlabel=xlabel, ylabel='Curvature / (1/mm)',
                                 Point_df=None, ax=ax3,
                                 cblabel=cblabel, cbtick=cbtick)
-        fig.tight_layout()
-        if savefig:
-            fig.savefig(savefigname+'.pdf')
-            fig.savefig(savefigname+'.png')
-        plt.show()
-        fig.clf()
-        plt.close(fig)
+        emec.plotting.plt_handle_suffix(fig, path=path, **plt_Fig_dict)
+        # fig.tight_layout()
+        # if savefig:
+        #     fig.savefig(savefigname+'.pdf')
+        #     fig.savefig(savefigname+'.png')
+        # plt.show()
+        # fig.clf()
+        # plt.close(fig)

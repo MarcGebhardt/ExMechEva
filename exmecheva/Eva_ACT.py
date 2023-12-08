@@ -28,30 +28,21 @@ import warnings
 
 import exmecheva.common as emec
 
+warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
+warnings.filterwarnings('ignore',category=FutureWarning)
+
 log_custom = emec.output.str_log
 log_cind = emec.output.str_indent
 
 plt_hsuf =  emec.plotting.plt_handle_suffix
+figsize = plt.rcParams['figure.figsize']
 
-warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
-warnings.filterwarnings('ignore',category=FutureWarning)
-
-figsize=[16.0/2.54, 9.0/2.54]
-plt.rcParams['figure.figsize'] = figsize
-plt.rcParams['figure.dpi'] = 150
-plt.rcParams['font.size']= 8.0
-plt.rcParams['lines.linewidth']= 1.0
-plt.rcParams['lines.markersize']= 4.0
-plt.rcParams['markers.fillstyle']= 'none'
-plt.rcParams['axes.grid']= True
-#pd.set_option('display.expand_frame_repr', False)
-
-output_lvl= 1 # 0=none, 1=only text, 2=add_diagramms
-plt_Fig_dict={'tight':True, 'show':True, 
+output_lvl = 1 # 0=none, 1=only text, 2=add_diagramms
+plt_Fig_dict = {'tight':True, 'show':True, 
               'save':True, 's_types':["pdf"], 
               'clear':True, 'close':True}
-MG_logopt={'logfp':None,'output_lvl':output_lvl,'logopt':True,'printopt':False}
-
+MG_logopt = {'logfp':None, 'output_lvl':output_lvl,
+             'logopt':True, 'printopt':False}
 
 #%% 1.0 Evaluation
 def ACT_single(prot_ser, paths, mfile_add=''):

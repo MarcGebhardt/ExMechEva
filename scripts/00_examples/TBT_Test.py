@@ -6,17 +6,25 @@ Simple example using data/TBT for showing evaluation acc. to "bla".
 
 import os 
 import sys
-import pandas as pd
 from pathlib import Path
+import pandas as pd
+import matplotlib.pyplot as plt
 
-# sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva')
 sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva')
 
 nwd = Path.cwd().resolve().parent.parent
 os.chdir(nwd)
 
-import exmecheva.Eva_TBT as emetbt
 import exmecheva.eva as eva
+import exmecheva.Eva_TBT as emetbt
+
+# Global settings
+plt.rcParams.update({
+    'figure.figsize':[16.0/2.54, 9.0/2.54], 'figure.dpi': 150,
+    'font.size': 8.0,
+    'lines.linewidth': 1.0, 'lines.markersize': 4.0, 'markers.fillstyle': 'none',
+    'axes.grid': True, "axes.axisbelow": True
+    })
 
 def main():
     # Set up new DataFrames for paths
@@ -26,14 +34,14 @@ def main():
     # Options (uncomment to use):
     ## Evaluate single measurement
     option = 'single'
-    ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
-    option = 'series'
-    ## Evaluate series of series (here only one series, named 'TS')
-    option = 'complete'
-    ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
-    option = 'pack'
-    ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
-    option = 'pack-all'
+    # ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
+    # option = 'series'
+    # ## Evaluate series of series (here only one series, named 'TS')
+    # option = 'complete'
+    # ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
+    # option = 'pack'
+    # ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
+    # option = 'pack-all'
 
     # Example (Series='TS' and specimen designation='tl21x', see protocol table): 
     ser='TS'
@@ -45,7 +53,7 @@ def main():
                    'C01.1','C01.2','C01.3', 'C02.3',
                    'D01.1','D01.2','D01.3', 'D02.3',
                    'F01.1','F01.2','F01.3', 'F02.3']
-    # Suffix of variants of measurements (p.E. diffferent moistures ["A","B",...])
+    # Suffix of variants of measurements (p.E. different moistures ["A","B",...])
     var_suffix = [""]
     
     # Path selection

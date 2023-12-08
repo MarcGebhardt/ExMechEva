@@ -77,7 +77,7 @@
   "OPT_Determination_Limit": null
  },
  "preset": {
-  "OPT_Testtype": "preload destructive",
+  "OPT_Testtype": "preload cyclic destructive",
   "OPT_File_Meas": null,
   "OPT_File_DIC": null,
   "OPT_Measurement_file": {

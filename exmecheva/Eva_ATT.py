@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Sep 28 10:29:49 2021
-
-@author: mgebhard
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Created on Wed Sep 22 11:40:20 2021
 
 @author: mgebhard
@@ -38,36 +31,34 @@ import warnings
 
 import exmecheva.common as emec
 
+warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
+warnings.filterwarnings('ignore',category=FutureWarning)
+
 log_custom = emec.output.str_log
 log_cind = emec.output.str_indent
 
 plt_hsuf =  emec.plotting.plt_handle_suffix
-
-warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
-warnings.filterwarnings('ignore',category=FutureWarning)
-
-figsize=[16.0/2.54, 9.0/2.54]
-plt.rcParams['figure.figsize'] = figsize
-plt.rcParams['figure.dpi'] = 150
-plt.rcParams['font.size']= 8.0
-plt.rcParams['lines.linewidth']= 1.0
-plt.rcParams['lines.markersize']= 4.0
-plt.rcParams['markers.fillstyle']= 'none'
-plt.rcParams['axes.grid']= True
-#pd.set_option('display.expand_frame_repr', False)
-
-output_lvl= 1 # 0=none, 1=only text, 2=add_diagramms
-plt_Fig_dict={'tight':True, 'show':True, 
-              'save':True, 's_types':["pdf"], 
-              'clear':True, 'close':True}
-MG_logopt={'logfp':None,'output_lvl':output_lvl,'logopt':True,'printopt':False}
-
+figsize = plt.rcParams['figure.figsize']
 
 #%% 1.0 Evaluation
-def ATT_single(prot_ser, paths, mfile_add=''):
+def ATT_single(prot_ser, paths, mfile_add='',
+               log_scopt={'logfp':None, 'output_lvl': 1,
+                          'logopt':True, 'printopt':False},
+               plt_scopt={'tight':True, 'show':True, 
+                          'save':True, 's_types':["pdf"], 
+                          'clear':True, 'close':True}):
+    
     out_name = prot_ser['Designation']+mfile_add
     out_full = paths['out']+out_name
-    
+    if log_scopt['output_lvl']>=1: 
+        if log_scopt['logfp'] is None:
+            log_scopt['logfp'] = out_full+'.log'
+        log_scopt['logfp']=open(log_scopt['logfp'],'w')
+    log_scoptf={'logfp':log_scopt['logfp'], 
+                'output_lvl': log_scopt['output_lvl'], 
+                'logopt':log_scopt['logopt'], 
+                'printopt':True}
+        
     _opts=emec.eva_opt_hand.option_reader_sel(
         prot_ser=prot_ser, paths=paths, 
         search_inds=['Number','Designation','name'], 
@@ -101,7 +92,6 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     loc_Yd_tmp = 'E_lsq_R_A%s%sl'%(tmp_md,tmp_in)
         
     cout =''
-    if output_lvl>=1: log_mg=open(out_full+'.log','w')
     ftxt=(("  Parameters of Evaluation:"),
           ("   Evaluation start time:     %s" %datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
           ("   Path protocol:             %s" %paths['prot']),
@@ -122,12 +112,12 @@ def ATT_single(prot_ser, paths, mfile_add=''):
           # ("   DIC-names of special points (l,r,head), = %s, %s, %s" %(*_opts['OPT_DIC_Points_TBT_device'],)),
           # ("   DIC-names of meas. points for fork (l,m,r), = %s, %s, %s" %(*_opts['OPT_DIC_Points_meas_fork'],)),
           # ("   DIC-maximal SD = %.3f mm and maximal displacement between steps %.1f mm" %(_opts['OPT_DIC_Tester'][0],_opts['OPT_DIC_Tester'][1])))
-    log_custom('\n'.join(ftxt),log_mg,output_lvl,printopt=False)
+    log_custom('\n'.join(ftxt), **log_scopt)
     # =============================================================================
     
     #%% 2 Geometry
-    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### 2 Geometry ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100, **log_scopt)
+    log_custom("\n ### 2 Geometry ###", **log_scoptf)
     
     if prot_ser['Test_Shape'] == 'Belt':
         if prot_ser['CS_type'] == 'Rectangle':
@@ -143,12 +133,12 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         raise NotImplementedError("Test shape %s not implemented"%prot_ser['Test_Shape'])
     
     log_custom("\n    Area   det=IN: %s (%.3f-%.3f)"%(Area==prot_ser['Area_CS'],
-                                                          Area,prot_ser['Area_CS']),
-                   log_mg,output_lvl,printopt=True)    
+                                                      Area,prot_ser['Area_CS']),
+               **log_scoptf)    
     log_custom("\n    Volume det=IN: %s (%.3f-%.3f)"%(Volume/1000==prot_ser['Volume'],
-                                                          Volume/1000,prot_ser['Volume']),
-                   log_mg,output_lvl,printopt=True)
-    # reset
+                                                      Volume/1000,prot_ser['Volume']),
+               **log_scoptf)
+    # reset to protocoll values
     Length = prot_ser['Length_test']
     Area   = prot_ser['Area_CS']
     Volume = prot_ser['Volume']
@@ -156,19 +146,19 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # =============================================================================
     
     #%% 3 Read in measurements
-    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### 3 Read in measurements ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100, **log_scopt)
+    log_custom("\n ### 3 Read in measurements ###", **log_scoptf)
     timings.loc[3.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     # =============================================================================
     
     #%%% 3.1 Read in conventional measurement data
     timings.loc[3.1]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     mess=pd.read_excel(path_meas, header=_opts['OPT_Measurement_file']['header'],
                        names=_opts['OPT_Measurement_file']['head_names'])
     
@@ -188,7 +178,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings.loc[3.2]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     messu = pd.DataFrame({'Time': mess[_opts['OPT_Measurement_file']['used_names_dict']['Time']],
                           'Force': mess[_opts['OPT_Measurement_file']['used_names_dict']['Force']],
                           'Way': mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']]})
@@ -210,7 +200,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings.loc[3.3]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     if _opts['OPT_DIC']:
         dic=None
         dicu=None
@@ -220,18 +210,18 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         
     # =============================================================================
     #%% 4 Merging measurements
-    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### 4 Merging measurements ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,**log_scopt)
+    log_custom("\n ### 4 Merging measurements ###",**log_scoptf)
     timings.loc[4.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     # =============================================================================
     #%%% 4.1 Determine time offset between conventional and optical measurement
     timings.loc[4.1]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     if _opts['OPT_DIC']:
         if _opts['OPT_pre_load_cycles'] > 0:
             ri_Way,_,rich_Way=emec.mc_char.rise_curve(messu['Way'],True,4)
@@ -270,12 +260,14 @@ def ATT_single(prot_ser, paths, mfile_add=''):
             ftxt=('$t_{S,PM}$  = % 2.4f s '%(tsm),
                   '$t_{S,DIC}$ = % 2.4f s '%(tsd))
             fig.text(0.95,0.15,'\n'.join(ftxt),
-                     ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
-            plt_hsuf(fig,path=out_full+"-toff",**plt_Fig_dict)
+                     ha='right',va='bottom', 
+                     bbox=dict(boxstyle='round', edgecolor='0.8', 
+                               facecolor='white', alpha=0.8))
+            plt_hsuf(fig,path=out_full+"-toff",**plt_scopt)
             del xlin_tmp
         
-        log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-        log_custom("\n   Time offset between PM and DIC: %.3f s" %(toff),log_mg,output_lvl)
+        log_custom("\n "+"-"*100,**log_scopt)
+        log_custom("\n   Time offset between PM and DIC: %.3f s" %(toff),**log_scoptf)
     else:
         toff=0.0
         
@@ -286,7 +278,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings.loc[4.2]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     mess_dt=messu.Time.diff().mean()
     mess_f=round((1/mess_dt),1)
     
@@ -315,7 +307,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings.loc[4.3]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     if _opts['OPT_DIC']:
         dicu.Time=dicu.Time.round(rel_time_digs)
         ind=pd.RangeIndex(dicu.loc[dicu.Time>=messu.Time.min()].index[0],
@@ -330,18 +322,18 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         
     # =============================================================================
     #%% 5 Start and End
-    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### 5 Start and End ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,**log_scopt)
+    log_custom("\n ### 5 Start and End ###",**log_scoptf)
     timings.loc[5.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)                                                    
+               **log_scopt)                                                    
     # =============================================================================
     #%%% 5.1 Determine start and end of evaluation
     timings.loc[5.1]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     if np.isnan(_opts['OPT_End']):
         dic_to_mess_End=messu.iloc[-1].name
     else:
@@ -369,9 +361,10 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         
     messu_iE=min(messu_iE,dic_to_mess_End)
     
-    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,**log_scopt)
     log_custom("\n   Start of evaluation after %.3f seconds, corresponds to %.5f %% of max. force."
-                   %(messu.Time[messu_iS],100*abs(messu.Force[messu_iS])/abs(messu.Force).max()),log_mg,output_lvl)
+               %(messu.Time[messu_iS],100*abs(messu.Force[messu_iS])/abs(messu.Force).max()),
+               **log_scoptf)
     
     messu=messu.loc[messu_iS:messu_iE]
     if _opts['OPT_DIC']:
@@ -406,14 +399,14 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         # ax2.plot(dic.Time, dic.DDisp_PM_c, 'm:', label='Way-DIC-P')
         # ax2.plot(dic.Time, dic.DDisp_PC_c, 'g:', label='Way-DIC-C')
     fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.9), ncol=1)
-    plt_hsuf(fig,path=out_full+"-meas",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-meas",**plt_scopt)
     
     # =============================================================================
     #%%% 5.2 Resetting way
     timings.loc[5.2]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
-                                       timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+                                         timings.iloc[-1]-timings.iloc[0]),
+               **log_scopt)
     # messu.Force=messu.Force-messu.Force.loc[messu_iS]
     messu.Way=messu.Way-messu.Way.loc[messu_iS]
     
@@ -438,24 +431,25 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     if _opts['OPT_DIC']:
         ax2.plot(messu.Time, messu.Disp_opt_head, 'k:', label='Way-DIC')
     fig.legend(loc='upper left', bbox_to_anchor=(0.1, 0.9), ncol=1)
-    plt_hsuf(fig,path=out_full+"-meas_u",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-meas_u",**plt_scopt)
     
     # =============================================================================
     #%% 6 Evaluation
-    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### 6 Evaluation ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,**log_scopt)
+    log_custom("\n ### 6 Evaluation ###",**log_scoptf)
     timings.loc[6.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     
     #%%% 6.2 Determine evaluation curves
-    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### -6.2 Determine evaluation curves ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,**log_scopt)
+    log_custom("\n ### -6.2 Determine evaluation curves ###",
+               **log_scopt)
     timings.loc[6.2]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     
     messu['Strain']=messu.Way/Length
     messu['Stress']=messu.Force/Area
@@ -472,18 +466,18 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         tmon=emec.mc_char.test_pdmon(messu,['Stress','Strain'],1,10)
     
     log_custom("\n   Last 10 monoton increasing periods:\n    %s"
-                   %tmon.to_frame(name='Epoche').T.to_string().replace('\n','\n    '),log_mg,output_lvl)
-    
-    
+               %tmon.to_frame(name='Epoche').T.to_string().replace('\n','\n    '),
+               **log_scoptf)
     
     # =============================================================================
     #%%% 6.3 Determine points of interest
-    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### -6.3 Determine points of interest ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,**log_scopt)
+    log_custom("\n ### -6.3 Determine points of interest ###",
+               **log_scopt)
     timings.loc[6.31]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     VIP_messu=pd.Series([],dtype='int64',name='VIP_messu')
     VIP_messu['S']=messu.driF.index[0]
     VIP_messu['E']=messu.driF.index[-1]
@@ -510,9 +504,11 @@ def ATT_single(prot_ser, paths, mfile_add=''):
                 dt_drif_schg=dt_drif_schg*1.1
             drif_schg_counter=dt.dmin.loc[abs((dt.dmin-dt.dmin.iloc[1:-1].max())/dt.dmin.iloc[1:-1].max())<=dt_drif_schg]
             if i==20:
-                log_custom("\n  %d cycles, without result!\n    -> Using last %d as counter." %(i,drif_schg_counter.count()),log_mg,output_lvl,printopt=False)
+                log_custom("\n  %d cycles, without result!\n    -> Using last %d as counter."
+                           %(i,drif_schg_counter.count()),**log_scopt)
                 break
-        log_custom("\n  %d cycles, with result!\n    -> Using last %.3f s as delimiter." %(i,dt_drif_schg),log_mg,output_lvl,printopt=False)
+        log_custom("\n  %d cycles, with result!\n    -> Using last %.3f s as delimiter."
+                   %(i,dt_drif_schg),**log_scopt)
         
         zyklus=1
         VIP_PMf=pd.Series([],dtype='int64') #konventionell-Kraft
@@ -547,14 +543,14 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         VIP_PDdiff=VIP_PMf-VIP_DICw
         VIP_mess_diffs=pd.DataFrame(data={'PM_Force':VIP_PMf,'PM_Way':VIP_PMw,'DIC_way':VIP_DICw,'Diff_PM':VIP_PMdiff,'Diff_PD':VIP_PDdiff})
         
-        if output_lvl>=1:
-            log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-            log_custom("\n  Differenz Extremwertvergleich: \n  %s" %VIP_mess_diffs.to_string(),log_mg,output_lvl,printopt=False)
-            log_custom("\n  Differenz Kraft- zu Wegextreme-PM (MW):  %f" %VIP_PMdiff.mean(),log_mg,output_lvl,printopt=False)
-            log_custom("\n  Differenz Kraft- zu Wegextreme-DIC (MW): %f" %VIP_PDdiff.mean(),log_mg,output_lvl,printopt=False)      
+        log_custom("\n "+"-"*100,**log_scopt)
+        log_custom("\n  Differenz Extremwertvergleich: \n  %s"
+                   %VIP_mess_diffs.to_string(),**log_scoptf)
+        log_custom("\n  Differenz Kraft- zu Wegextreme-PM (MW):  %f"
+                   %VIP_PMdiff.mean(),**log_scoptf)
+        log_custom("\n  Differenz Kraft- zu Wegextreme-DIC (MW): %f"
+                   %VIP_PDdiff.mean(),**log_scoptf)      
 
-    
-    else:
         VL_soll=_opts['OPT_YM_Determination_range'][0]*messu.Force.max() # VL_soll Krücke, da nan in Protokoll
         ZL_soll=_opts['OPT_YM_Determination_range'][1]*messu.Force.max() # ZL_soll Krücke, da nan in Protokoll
         VIP_messu['F1']=(abs(messu.Force.loc[VIP_messu['S']:VIP_messu[_opts['OPT_YM_Determination_range'][2]]]-VL_soll)).idxmin()
@@ -567,7 +563,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         VIP_messu['Y']=mun_tmp.loc[mun_tmp.driF_schg==True].index[0]-1
     else:
         VIP_messu['Y']=VIP_messu['U']
-        log_custom('\n    Fy set on datapoint of Fu!',log_mg,output_lvl) 
+        log_custom('\n    Fy set on datapoint of Fu!',**log_scoptf) 
         
     # mun_tmp = messu.loc[VIP_messu['U']:VIP_messu['E']-1]
     mun_tmp = messu.loc[VIP_messu['U']-1:VIP_messu['E']-1]
@@ -579,7 +575,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # if (mun_tmp['driF'].min()/mun_tmp['driF'].quantile(0.25))>=1.0:
     #     VIP_messu['B']=mun_tmp['driF'].idxmin()-1
     else:
-        log_custom('\n   Fb not reliably determinable!',log_mg,output_lvl)
+        log_custom('\n   Fb not reliably determinable!',**log_scoptf)
             
     
     # ftmp=float(messu.Force.loc[VIP_messu[_opts['OPT_YM_Determination_range'][2]]]*_opts['OPT_YM_Determination_range'][0])
@@ -587,14 +583,14 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     # ftmp=float(messu.Force.loc[VIP_messu[_opts['OPT_YM_Determination_range'][2]]]*_opts['OPT_YM_Determination_range'][1])
     # VIP_messu['F2']=abs(messu.Force.loc[:VIP_messu[_opts['OPT_YM_Determination_range'][2]]]-ftmp).idxmin()
     
-        
     
     if (VIP_messu['Y']>VIP_messu['F1']) and (VIP_messu['Y']<VIP_messu['F2']): # Test ob Streckgrenze zwischen F1 und F2 liegt
         VIP_messu['F2']=VIP_messu['Y']
         # VIP_messu['F4']=VIP_messu['Y']
         # VIP_dicu['F2']=VIP_dicu['Y']
         # VIP_dicu['F4']=VIP_dicu['Y']
-        log_custom("\n   F2 set on Y (Force-rise between F1 and old F2)",log_mg,output_lvl)
+        log_custom("\n   F2 set on Y (Force-rise between F1 and old F2)",
+                   **log_scoptf)
     
     
     VIP_messu=VIP_messu.sort_values()
@@ -606,9 +602,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings.loc[6.32]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
-    
-    
+               **log_scopt)
     
     # (siehe Keuerleber, M. (2006). Bestimmung des Elastizitätsmoduls von Kunststoffen bei hohen Dehnraten am Beispiel von PP. Von der Fakultät Maschinenbau der Universität Stuttgart zur Erlangung der Würde eines Doktor-Ingenieurs (Dr.-Ing.) genehmigte Abhandlung. Doktorarbeit. Universität Stuttgart, Stuttgart.)
     if _opts['OPT_pre_load_cycles'] == 0:
@@ -625,11 +619,11 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         rise_det=_opts['OPT_YM_Determination_refinement'][-2:],
         n_Outlo='F3',n_Outmi='FM',n_Outhi='F4')
         
-    log_custom(log_cind(txt),
-                   log_mg,output_lvl,printopt=False)
+    log_custom(log_cind(txt),**log_scopt)
     if True:
-        # fig, (ax1,ax3) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
-        fig, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=False, figsize = (6.3,1*3.54))
+        fig, (ax1) = plt.subplots(nrows=1, ncols=1, 
+                                  sharex=False, sharey=False, 
+                                  figsize = figsize)
         fig.suptitle('%s - Improvement of evaluation range for Youngs Modulus'%plt_name)
         ax1.set_title('Conventional measured strain')
         ax1.set_xlabel('Strain / -')
@@ -659,7 +653,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         ax2.set_yticks([-1,0,1])
         ax2.grid(which='major',axis='y',linestyle=':')
         fig.legend(loc='lower right', ncol=4)
-        plt_hsuf(fig,path=out_full+"-YMRange_Imp",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YMRange_Imp",**plt_scopt)
     
     if _opts['OPT_DIC']:
         tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
@@ -667,25 +661,25 @@ def ATT_single(prot_ser, paths, mfile_add=''):
              'con F3-F4':VIP_messu['F4']-VIP_messu['F3'],
              'opt F3-F4':VIP_dicu['F4']-VIP_dicu['F3']}
         log_custom("\n   Datapoints (con/opt) between F1-F2: %d/%d and F3-F4: %d/%d."
-                       %(*tmp.values(),),log_mg,output_lvl)
+                       %(*tmp.values(),),**log_scopt)
         for i in tmp.keys(): 
             if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
     else:
         tmp={'con F1-F2':VIP_messu['F2']-VIP_messu['F1'],
              'con F3-F4':VIP_messu['F4']-VIP_messu['F3']}
         log_custom("\n   Datapoints (con) between F1-F2: %d and F3-F4: %d."
-                       %(*tmp.values(),),log_mg,output_lvl)
+                       %(*tmp.values(),),**log_scopt)
         for i in tmp.keys(): 
             if tmp[i] < 3: cout+='%s:%d DPs, '%(i,tmp[i])
 
     # =====================================================================================
     #%%% 6.4 Determine Youngs-Moduli
-    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### -6.4 Determine Youngs-Moduli ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,**log_scopt)
+    log_custom("\n ### -6.4 Determine Youngs-Moduli ###",**log_scopt)
     timings.loc[6.4]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     
     d_stress_mid = messu.Stress.diff()
     d_strain_mid = messu.Strain.diff()
@@ -701,9 +695,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings.loc[6.41]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
-    
-    
+               **log_scopt)
     
     A0Al_ser = emec.fitting.YM_eva_com_sel(
         stress_ser=d_stress_mid,
@@ -745,7 +737,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         if _opts['OPT_DIC']:
             ax2.axvline(x=VIP_dicu['F3'], color='olive', linestyle=':')
             ax2.axvline(x=VIP_dicu['F4'], color='olive', linestyle='--')
-        plt_hsuf(fig,path=out_full+"-YM-Me_A",**plt_Fig_dict)
+        plt_hsuf(fig,path=out_full+"-YM-Me_A",**plt_scopt)
         
     #least-square fit
     E_lsq_F_A0Al = emec.fitting.YM_eva_com_sel(
@@ -825,8 +817,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings.loc[6.48]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)    
-
+               **log_scopt)    
 
     E_lsq=E_lsq_A
 
@@ -842,17 +833,14 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['meanwoso'].abs()
     
         
-    log_custom("\n\n  Method comaparison:",log_mg,output_lvl,printopt=True)
-    log_custom("\n  - least square fit",log_mg,output_lvl,printopt=True)
+    log_custom("\n\n  Method comaparison:",**log_scoptf)
+    log_custom("\n  - least square fit",**log_scoptf)
     log_custom(log_cind('\n'+E_lsq.loc[['E','Rquad']].T.to_string()),
-                   log_mg,output_lvl,printopt=True)
+               **log_scoptf)
     
-    log_custom("\n\n  - incremental (F,R,S):",
-                   log_mg,output_lvl,printopt=True)
-    log_custom(log_cind('\n'+E_inc_F_comp.T.to_string()),
-                   log_mg,output_lvl,printopt=True)
-    log_custom(log_cind('\n'+E_inc_R_comp.T.to_string()),
-                   log_mg,output_lvl,printopt=True)
+    log_custom("\n\n  - incremental (F,R):",**log_scoptf)
+    log_custom(log_cind('\n'+E_inc_F_comp.T.to_string()),**log_scoptf)
+    log_custom(log_cind('\n'+E_inc_R_comp.T.to_string()),**log_scoptf)
     
     # set preffered Method
     YM_pref_con=E_lsq_A['E_lsq_R_A0Al']
@@ -880,17 +868,17 @@ def ATT_single(prot_ser, paths, mfile_add=''):
             raise NotImplementedError('Prefered YM-method not selectable!')
     # --------------------------------------------------------------------------
     #%%% 6.5 Determine yield point
-    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### -6.5 Determine yield point ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,**log_scopt)
+    log_custom("\n ### -6.5 Determine yield point ###",**log_scopt)
     timings.loc[6.5]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)    
+               **log_scopt)    
     
     strain_osd = {'YK':0.0,'Y0':0.0,'Y1':0.1/100,'Y':0.2/100,'Y2':0.5/100} #acc. Zhang et al. 2021, DOI: 10.1007/s10439-020-02719-2
     strain_osdf={'YK':'F4'}
 
-    log_custom("\n  Determination of yield strain-conventional:",log_mg,output_lvl)
+    log_custom("\n  Determination of yield strain-conventional:",**log_scoptf)
     tmp=emec.mc_yield.Yield_redet2_Multi(
         m_df=messu, VIP=VIP_messu,
         strain_osd=strain_osd, strain_osdf=strain_osdf,
@@ -902,9 +890,9 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         ywhere='n'
         )
     VIP_messu, yield_df_con, txt = tmp
-    log_custom(log_cind(txt,3), log_mg,output_lvl)
+    log_custom(log_cind(txt,3), **log_scoptf)
     if _opts['OPT_DIC']:
-        log_custom("\n  Determination of yield strain-optical:",log_mg,output_lvl)
+        log_custom("\n  Determination of yield strain-optical:",**log_scoptf)
         tmp=emec.mc_yield.Yield_redet2_Multi(
             m_df=messu, VIP=VIP_dicu,
             strain_osd=strain_osd, strain_osdf=strain_osdf,
@@ -916,7 +904,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
             ywhere='n'
             )
         VIP_dicu, yield_df_opt, txt = tmp
-        log_custom(log_cind(txt,3), log_mg,output_lvl)
+        log_custom(log_cind(txt,3),**log_scoptf)
     
     fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
                                   sharex=False, sharey=False, 
@@ -982,16 +970,17 @@ def ATT_single(prot_ser, paths, mfile_add=''):
             ax2.annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), xycoords='data',
                           xytext=c, ha="center", va="center", textcoords='offset points')
         ax2.legend()
-    plt_hsuf(fig,path=out_full+"-sigeps_yielddet",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-sigeps_yielddet",**plt_scopt)
     
     # =============================================================================
     #%%% 6.6 Determine final curve
-    log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### -6.6 Determine final stress-strain curve ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"-"*100,**log_scopt)
+    log_custom("\n ### -6.6 Determine final stress-strain curve ###",
+               **log_scopt)
     timings.loc[6.6]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)
+               **log_scopt)
     if ('B' in VIP_messu.index) and (VIP_messu['B']>=VIP_messu['U']):
         FP_end='B'
     else:
@@ -1009,7 +998,8 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         yield_df_con['Strain']=yield_df_con['Strain']-linstrainos_con
         yield_df_con['Force']=yield_df_con['Stress']*Area
         yield_df_con['Way']=yield_df_con['Strain']*Length
-        log_custom("\n   Strain offset about %.5f"%(linstrainos_con),log_mg,output_lvl,printopt=False)
+        log_custom("\n   Strain offset about %.5f"%(linstrainos_con),
+                   **log_scopt)
         if _opts['OPT_DIC']:
             tmp, linstrainos_opt = emec.mc_man.DetFinSSC(
                 mdf=messu, YM=YM_pref_opt, 
@@ -1023,7 +1013,8 @@ def ATT_single(prot_ser, paths, mfile_add=''):
             del messu_FP['Stress_opt']
             yield_df_opt['Force']=yield_df_opt['Stress']*Area
             yield_df_opt[dic_used_Disp]=yield_df_opt[dic_used_Strain]*Length
-            log_custom("\n   Strain offset (optical) about %.5f"%(linstrainos_opt),log_mg,output_lvl,printopt=False)
+            log_custom("\n   Strain offset (optical) about %.5f"%(linstrainos_opt),
+                       **log_scopt)
     
         messu_FP['Force']=messu_FP['Stress']*Area # recalc Force (should match messu)
         messu_FP['Way']=messu_FP['Strain']*Length # recalc Way  
@@ -1032,22 +1023,23 @@ def ATT_single(prot_ser, paths, mfile_add=''):
         messu_FP =  messu
         linstrainos_con = 0
         linstrainos_opt = 0
-        log_custom("\n   No linear start of final stress-strain-curve",log_mg,output_lvl,printopt=False)
+        log_custom("\n   No linear start of final stress-strain-curve",
+                  **log_scopt)
         
     # ============================================================================
     #%% 7 Outputs
-    log_custom("\n "+"="*100,log_mg,output_lvl,printopt=False)
-    log_custom("\n ### 7 Outputs ###",log_mg,output_lvl,printopt=False)
+    log_custom("\n "+"="*100,**log_scopt)
+    log_custom("\n ### 7 Outputs ###",**log_scoptf)
     timings.loc[7.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)    
+               **log_scopt)    
     # ============================================================================
     #%%% 7.1 Prepare outputs
     timings.loc[7.1]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)    
+               **log_scopt)    
 
     out_tab               = pd.Series([],name=prot_ser.name,dtype='float64')
     out_tab['Date_eva']   = datetime.now().strftime('%d.%m.%Y')
@@ -1128,7 +1120,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     timings.loc[7.2]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)    
+               **log_scopt)    
         
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Analyzing meas. force'%plt_name)
@@ -1154,7 +1146,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     ax2.plot(messu.Time, messu.dcuF, 'g:', label='Force-curve')
     ax2.tick_params(axis='y', labelcolor=color2)
     fig.legend(loc='lower right', bbox_to_anchor=(0.85, 0.15))
-    plt_hsuf(fig,path=out_full+"-Fdricu",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-Fdricu",**plt_scopt)
     
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Stress vs. strain curve with labels'%plt_name)
@@ -1203,7 +1195,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
               bbox=dict(boxstyle='round', edgecolor='0.8', 
                         facecolor='white', alpha=0.8))
     fig.legend(loc='upper left', bbox_to_anchor=(0.10, 0.91))
-    plt_hsuf(fig,path=out_full+"-sigeps_wl",**plt_Fig_dict)    
+    plt_hsuf(fig,path=out_full+"-sigeps_wl",**plt_scopt)    
 
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Youngs-modulus and res. strain vs. cycles'%plt_name)
@@ -1225,7 +1217,7 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     ax1.grid(axis='x')
     labs=[l.get_label() for l in lns]
     ax2.legend(lns,labs,loc='center right',ncol=2)
-    plt_hsuf(fig,path=out_full+"-Eepszyk",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-Eepszyk",**plt_scopt)
     
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Stress vs. strain curve, final part, with labels'%plt_name)
@@ -1272,14 +1264,14 @@ def ATT_single(prot_ser, paths, mfile_add=''):
     fig.text(0.95,0.15,'\n'.join(ftxt),
              ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
     fig.legend(loc='upper left', bbox_to_anchor=(0.10, 0.91))
-    plt_hsuf(fig,path=out_full+"-sigeps_fin",**plt_Fig_dict)
+    plt_hsuf(fig,path=out_full+"-sigeps_fin",**plt_scopt)
 
     # =============================================================================
     #%%% 7.3 Generate outputs
     timings.loc[7.3]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
-                   log_mg,output_lvl,printopt=False)    
+               **log_scopt)    
 
     # Federsteifigkeit
     for i in E_lsq.loc(axis=1)[E_lsq.columns.str.contains('_F_|_R_')].columns:
@@ -1356,6 +1348,6 @@ def ATT_single(prot_ser, paths, mfile_add=''):
 
     
     timings.loc[10.0]=time.perf_counter()
-    if output_lvl>=1: log_mg.close()
+    if log_scopt['output_lvl']>=1: log_scopt['logfp'].close()
     
     return timings,cout

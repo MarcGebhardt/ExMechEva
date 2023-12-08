@@ -36,35 +36,24 @@ from datetime import datetime
 import time
 import warnings
 
-# import Bending as Bend
-# import Eva_common as Evac
-# import exmecheva.Eva_common as Evac #import Eva_common relative?
 import exmecheva.common as emec
 import exmecheva.Bending as Bend
+
+warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
+warnings.filterwarnings('ignore',category=FutureWarning)
 
 log_custom = emec.output.str_log
 log_cind = emec.output.str_indent
 
 plt_hsuf =  emec.plotting.plt_handle_suffix
+figsize = plt.rcParams['figure.figsize']
 
-warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
-warnings.filterwarnings('ignore',category=FutureWarning)
-
-figsize=[16.0/2.54, 9.0/2.54]
-plt.rcParams['figure.figsize'] = figsize
-plt.rcParams['figure.dpi'] = 150
-plt.rcParams['font.size']= 8.0
-plt.rcParams['lines.linewidth']= 1.0
-plt.rcParams['lines.markersize']= 4.0
-plt.rcParams['markers.fillstyle']= 'none'
-plt.rcParams['axes.grid']= True
-#pd.set_option('display.expand_frame_repr', False)
-
-output_lvl= 1 # 0=none, 1=only text, 2=add_diagramms
-plt_Fig_dict={'tight':True, 'show':True, 
+output_lvl = 1 # 0=none, 1=only text, 2=add_diagramms
+plt_Fig_dict = {'tight':True, 'show':True, 
               'save':True, 's_types':["pdf"], 
               'clear':True, 'close':True}
-MG_logopt={'logfp':None,'output_lvl':output_lvl,'logopt':True,'printopt':False}
+MG_logopt = {'logfp':None, 'output_lvl':output_lvl,
+             'logopt':True, 'printopt':False}
 
 #%% 1.0 Evaluation
 def TBT_single(prot_ser, paths, mfile_add=''):
@@ -162,7 +151,6 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     if True:
         fig, (ax1,ax3) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, 
                                       figsize = np.multiply(figsize,[1,2]))
-        
         ax1.set_title('%s - Width and Thickness'%plt_name)
         ax1.set_xlabel('x / mm')
         ax1.set_ylabel('Thickness / mm')
@@ -790,14 +778,24 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax1.set_title('%s - Fit-compare - Displacement for step %i'%(plt_name,step))
         ax1.set_xlabel('x / mm')
         ax1.set_ylabel('y displacement / mm')
-        ax1.plot(xlin, bl['w_A']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'r:', label='Org.')
-        ax1.plot(xlin, bl['w_I']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'g:', label='Ind.')
-        ax1.plot(xlin, bl['w_S']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'b:', label='Wo. ind.')
-        ax1.plot(xlin, bl['w_V']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'm--', label='V')
-        ax1.plot(xlin, bl['w_M_ima']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'g--', label='Imag. M')
-        ax1.plot(xlin, bl['w_M']['d0'](xlin,Bend_fit_df.loc[step,'Fit_params_dict']), 'r--', label='M')
-        ax1.plot(P_xcoord_ydisp_meas.loc[step].loc[:,'x'],P_xcoord_ydisp_meas.loc[step].loc[:,'y'], 'ko', label='org. P')
-        ax1.plot(P_xcoord_ydisp_meas_M.loc[step].loc[:,'x'],P_xcoord_ydisp_meas_M.loc[step].loc[:,'y'], 'go', label='M P')
+        ax1.plot(xlin, bl['w_A']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'r:', label='Org.')
+        ax1.plot(xlin, bl['w_I']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'g:', label='Ind.')
+        ax1.plot(xlin, bl['w_S']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'b:', label='Wo. ind.')
+        ax1.plot(xlin, bl['w_V']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'm--', label='V')
+        ax1.plot(xlin, bl['w_M_ima']['d0'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'g--', label='Imag. M')
+        ax1.plot(xlin, bl['w_M']['d0'](xlin,Bend_fit_df.loc[step,'Fit_params_dict']),
+                 'r--', label='M')
+        ax1.plot(P_xcoord_ydisp_meas.loc[step].loc[:,'x'],
+                 P_xcoord_ydisp_meas.loc[step].loc[:,'y'], 
+                 'ko', label='org. P')
+        ax1.plot(P_xcoord_ydisp_meas_M.loc[step].loc[:,'x'],
+                 P_xcoord_ydisp_meas_M.loc[step].loc[:,'y'], 
+                 'go', label='M P')
         ax1.legend()
         plt_hsuf(fig,path=out_full+"-DIC_fit-bl_U-d0",**plt_Fig_dict)
         
@@ -805,10 +803,14 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax1.set_title('%s - Fit-compare - Slope for step %i'%(plt_name,step))
         ax1.set_xlabel('x / mm')
         ax1.set_ylabel('slope / (mm/mm)')
-        ax1.plot(xlin, bl['w_A']['d1'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'r:', label='Org.')
-        ax1.plot(xlin, bl['w_S']['d1'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'b:', label='Wo. ind.')
-        ax1.plot(xlin, bl['w_V']['d1'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'm--', label='V')
-        ax1.plot(xlin, bl['w_M']['d1'](xlin,Bend_fit_df.loc[step,'Fit_params_dict']), 'r--', label='M')
+        ax1.plot(xlin, bl['w_A']['d1'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'r:', label='Org.')
+        ax1.plot(xlin, bl['w_S']['d1'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'b:', label='Wo. ind.')
+        ax1.plot(xlin, bl['w_V']['d1'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'm--', label='V')
+        ax1.plot(xlin, bl['w_M']['d1'](xlin,Bend_fit_df.loc[step,'Fit_params_dict']),
+                 'r--', label='M')
         ax1.legend()
         plt_hsuf(fig,path=out_full+"-DIC_fit-bl_U-d1",**plt_Fig_dict)
         
@@ -816,9 +818,12 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax1.set_title('%s - Fit-compare - Curvature for step %i'%(plt_name,step))
         ax1.set_xlabel('x / mm')
         ax1.set_ylabel('curvature / (1/mm)')
-        ax1.plot(xlin, bl['w_A']['d2'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'r:', label='Org.')
-        ax1.plot(xlin, bl['w_S']['d2'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']), 'b:', label='Wo. ind.')
-        ax1.plot(xlin, bl['w_M']['d2'](xlin,Bend_fit_df.loc[step,'Fit_params_dict']), 'r--', label='M')
+        ax1.plot(xlin, bl['w_A']['d2'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'r:', label='Org.')
+        ax1.plot(xlin, bl['w_S']['d2'](xlin,Pre_fit_df.loc[step,'Fit_params_dict']),
+                 'b:', label='Wo. ind.')
+        ax1.plot(xlin, bl['w_M']['d2'](xlin,Bend_fit_df.loc[step,'Fit_params_dict']),
+                 'r--', label='M')
         ax1.legend()
         plt_hsuf(fig,path=out_full+"-DIC_fit-bl_U-d2",**plt_Fig_dict)
         
@@ -826,56 +831,71 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         ax1.set_title('%s - Fit-compare-inc - Displacement for step %i'%(plt_name,step))
         ax1.set_xlabel('x / mm')
         ax1.set_ylabel('y displacement / mm')
-        ax1.plot(xlin, bl['w_A']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']), 'r:', label='Org.')
-        ax1.plot(xlin, bl['w_I']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']), 'g:', label='Ind.')
-        ax1.plot(xlin, bl['w_S']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']), 'b:', label='Wo. ind.')
-        ax1.plot(xlin, bl['w_V']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']), 'm--', label='V')
-        ax1.plot(xlin, bl['w_M_ima']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']), 'g--', label='Imag. M')
-        ax1.plot(xlin, bl['w_M']['d0'](xlin,Bend_inc_fit_df.loc[step,'Fit_params_dict']), 'r--', label='M')
-        ax1.plot(P_xcoord_ydiff_meas.loc[step].loc[:,'x'],P_xcoord_ydiff_meas.loc[step].loc[:,'y'], 'ko', label='org. P')
-        ax1.plot(P_xcoord_ydiff_meas_M.loc[step].loc[:,'x'],P_xcoord_ydiff_meas_M.loc[step].loc[:,'y'], 'go', label='M P')
+        ax1.plot(xlin, bl['w_A']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']), 
+                 'r:', label='Org.')
+        ax1.plot(xlin, bl['w_I']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']),
+                 'g:', label='Ind.')
+        ax1.plot(xlin, bl['w_S']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']),
+                 'b:', label='Wo. ind.')
+        ax1.plot(xlin, bl['w_V']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']),
+                 'm--', label='V')
+        ax1.plot(xlin, bl['w_M_ima']['d0'](xlin,Pre_inc_fit_df.loc[step,'Fit_params_dict']),
+                 'g--', label='Imag. M')
+        ax1.plot(xlin, bl['w_M']['d0'](xlin,Bend_inc_fit_df.loc[step,'Fit_params_dict']),
+                 'r--', label='M')
+        ax1.plot(P_xcoord_ydiff_meas.loc[step].loc[:,'x'],
+                 P_xcoord_ydiff_meas.loc[step].loc[:,'y'], 
+                 'ko', label='org. P')
+        ax1.plot(P_xcoord_ydiff_meas_M.loc[step].loc[:,'x'],
+                 P_xcoord_ydiff_meas_M.loc[step].loc[:,'y'], 
+                 'go', label='M P')
         ax1.legend()
         plt_hsuf(fig,path=out_full+"-INC_fit-bl_U-d0",**plt_Fig_dict)
         
         # Pre-Fit -----------------------------------------------------------------
-        Bend.Plotter.colplt_funcs_all(x=xlin, func_cohort=bl['w_A'],
-                                         params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
-                                         step_range=step_range_dic[1:], 
-                                         title=('%s - Fit-full'%plt_name),
-                                         xlabel='x  / mm',
-                                         Point_df=P_xcoord_ydisp_meas,
-                                         savefig=True,
-                                         savefigname=out_full+'-DIC_fit-A')
-                                         # cblabel='VIP', cbtick=cbtick)
+        Bend.Plotter.colplt_funcs_all(
+            x=xlin, func_cohort=bl['w_A'],
+            params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
+            step_range=step_range_dic[1:], 
+            title=('%s - Fit-full'%plt_name),
+            xlabel='x  / mm',
+            Point_df=P_xcoord_ydisp_meas,
+            path=out_full+'-DIC_fit-A',
+            plt_Fig_dict=plt_Fig_dict
+            )
         # Bending-Fit -------------------------------------------------------------
-        Bend.Plotter.colplt_funcs_all(x=xlin, func_cohort=bl['w_M'],
-                                         params=Bend_fit_df.loc(axis=1)['Fit_params_dict'],
-                                         step_range=step_range_dic[1:], 
-                                         title=('%s - Fit-Bending'%plt_name),
-                                         xlabel='x / mm',
-                                         Point_df=P_xcoord_ydisp_meas_M,
-                                         savefig=True,
-                                         savefigname=out_full+'-DIC_fit-M')
+        Bend.Plotter.colplt_funcs_all(
+            x=xlin, func_cohort=bl['w_M'],
+            params=Bend_fit_df.loc(axis=1)['Fit_params_dict'],
+            step_range=step_range_dic[1:], 
+            title=('%s - Fit-Bending'%plt_name),
+            xlabel='x / mm',
+            Point_df=P_xcoord_ydisp_meas_M,
+            path=out_full+'-DIC_fit-M',
+            plt_Fig_dict=plt_Fig_dict
+            )
         # Pre-Fit -----------------------------------------------------------------
-        Bend.Plotter.colplt_funcs_all(x=xlin, func_cohort=bl['w_A'],
-                                         params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                         step_range=step_range_dic_inc[1:], 
-                                         title=('%s - Incremental Fit-full'%plt_name),
-                                         xlabel='x / mm',
-                                         Point_df=P_xcoord_ydiff_meas,
-                                         savefig=True,
-                                         savefigname=out_full+'-INC_fit-A')
+        Bend.Plotter.colplt_funcs_all(
+            x=xlin, func_cohort=bl['w_A'],
+            params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+            step_range=step_range_dic_inc[1:], 
+            title=('%s - Incremental Fit-full'%plt_name),
+            xlabel='x / mm',
+            Point_df=P_xcoord_ydiff_meas,
+            path=out_full+'-INC_fit-A',
+            plt_Fig_dict=plt_Fig_dict
+            )
         # Bending-Fit -------------------------------------------------------------
-        Bend.Plotter.colplt_funcs_all(x=xlin, func_cohort=bl['w_M'],
-                                         params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                         step_range=step_range_dic_inc[1:], 
-                                         title=('%s - Incremental Fit-Bending'%plt_name),
-                                         xlabel='x / mm',
-                                         Point_df=P_xcoord_ydiff_meas_M,
-                                         savefig=True,
-                                         savefigname=out_full+'-INC_fit-M')
-
-    
+        Bend.Plotter.colplt_funcs_all(
+            x=xlin, func_cohort=bl['w_M'],
+            params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+            step_range=step_range_dic_inc[1:], 
+            title=('%s - Incremental Fit-Bending'%plt_name),
+            xlabel='x / mm',
+            Point_df=P_xcoord_ydiff_meas_M,
+            path=out_full+'-INC_fit-M', 
+            plt_Fig_dict=plt_Fig_dict
+            )
     
     #%%% 6.2 Determine evaluation curves
     log_custom("\n "+"-"*100,log_mg,output_lvl,printopt=False)
@@ -1222,7 +1242,9 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     E_A = pd.concat([E_A_con,E_A_opt],axis=1)
 
     if True:
-        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
+        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
+                                      sharex=False, sharey=False, 
+                                      figsize = np.multiply(figsize,[1,2]))
         fig.suptitle('%s - Compare method A'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -1463,7 +1485,9 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     E_B = emec.stat_ext.pd_agg(E_B_df.loc[sr_eva_dic])
     
     if True:
-        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
+        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
+                                      sharex=False, sharey=False, 
+                                      figsize = np.multiply(figsize,[1,2]))
         fig.suptitle('%s - Compare method B'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -1699,7 +1723,9 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     E_C = emec.stat_ext.pd_agg(E_C_df.loc[sr_eva_dic])
     
     if True:    
-        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
+        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
+                                      sharex=False, sharey=False, 
+                                      figsize = np.multiply(figsize,[1,2]))
         fig.suptitle('%s - Compare method C'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -1849,7 +1875,9 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     E_D = emec.stat_ext.pd_agg(E_D_df.loc[sr_eva_dic])
     
     if True:        
-        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, sharex=False, sharey=False, figsize = (6.3,2*3.54))
+        fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
+                                      sharex=False, sharey=False, 
+                                      figsize = np.multiply(figsize,[1,2]))
         fig.suptitle('%s - Compare method D'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -1921,7 +1949,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     if True:
         fig, (ax1,ax2,ax3) = plt.subplots(nrows=3, ncols=1, 
                                           sharex=False, sharey=False, 
-                                          figsize = (6.3,3*3.54))
+                                          figsize = np.multiply(figsize,[1,3]))
         fig.suptitle("%s - M - Stress, Strain, Youngs-Modulus to x-coordinate for F3 to F4"%(plt_name))
         ax1 = Bend.Plotter.colplt_common_ax(
             xdata=E4M_stress_df.columns,
@@ -1954,7 +1982,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         
         fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
                                       sharex=False, sharey=False, 
-                                      figsize = (6.3,2*3.54))
+                                      figsize = np.multiply(figsize,[1,2]))
         fig.suptitle('%s - Compare method E'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -2021,7 +2049,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
             'F4Mgha':'g:', 'F4Mgth':'g--'}
         fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
                                       sharex=False, sharey=False, 
-                                      figsize = (6.3,2*3.54))
+                                      figsize = np.multiply(figsize,[1,2]))
         fig.suptitle('%s - Compare method F'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -2110,7 +2138,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     if True:    
         fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
                                       sharex=False, sharey=False, 
-                                      figsize = (6.3,2*3.54))
+                                      figsize = np.multiply(figsize,[1,2]))
         fig.suptitle('%s - Compare method G'%(plt_name))
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
@@ -2320,7 +2348,7 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         
     fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
                                   sharex=False, sharey=False, 
-                                  figsize = (6.3,2*3.54))
+                                  figsize = np.multiply(figsize,[1,2]))
     fig.suptitle('%s - Stress vs. strain curve - yield point determination'%plt_name)
     ax1.set_title('Conventional strain')
     ax1.set_xlabel('Strain / -')
@@ -2548,58 +2576,69 @@ def TBT_single(prot_ser, paths, mfile_add=''):
         #          ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
         plt_hsuf(fig,path=out_full+"-sigeps_dicvgl",**plt_Fig_dict)
     
-            # Pre-Fit -----------------------------------------------------------------
+        # Pre-Fit -----------------------------------------------------------------
         plot_range_dic=messu.loc[VIP_dicu[(VIP_dicu[['F1','F3']]).idxmin()]:VIP_dicu[(VIP_dicu[['F2','F4']]).idxmax()]].index
         cbtick=VIP_dicu.to_dict()
-        Bend.Plotter.colplt_funcs_all(x=xlin, func_cohort=bl['w_A'],
-                                    params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
-                                    step_range=plot_range_dic, 
-                                    title=('%s - Fit-full - evaluation range'%plt_name),
-                                    xlabel='x / mm',
-                                    Point_df=P_xcoord_ydisp_meas,
-                                    savefig=True,
-                                    savefigname=out_full+'-DIC_fit-A-eva',
-                                    cblabel='VIP', cbtick=cbtick)
+        Bend.Plotter.colplt_funcs_all(
+            x=xlin, func_cohort=bl['w_A'],
+            params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
+            step_range=plot_range_dic, 
+            title=('%s - Fit-full - evaluation range'%plt_name),
+            xlabel='x / mm',
+            Point_df=P_xcoord_ydisp_meas,
+            cblabel='VIP', cbtick=cbtick,
+            path=out_full+'-DIC_fit-A-eva',
+            plt_Fig_dict=plt_Fig_dict
+            )
         # Bending-Fit -------------------------------------------------------------
-        Bend.Plotter.colplt_funcs_all(x=xlin, func_cohort=bl['w_M'],
-                                    params=Bend_fit_df.loc(axis=1)['Fit_params_dict'],
-                                    step_range=plot_range_dic, 
-                                    title=('%s - Fit-Bending - evaluation range'%plt_name),
-                                    xlabel='x / mm',
-                                    Point_df=P_xcoord_ydisp_meas_M,
-                                    savefig=True,
-                                    savefigname=out_full+'-DIC_fit-M-eva',
-                                    cblabel='VIP', cbtick=cbtick)
+        Bend.Plotter.colplt_funcs_all(
+            x=xlin, func_cohort=bl['w_M'],
+            params=Bend_fit_df.loc(axis=1)['Fit_params_dict'],
+            step_range=plot_range_dic, 
+            title=('%s - Fit-Bending - evaluation range'%plt_name),
+            xlabel='x / mm',
+            Point_df=P_xcoord_ydisp_meas_M,
+            cblabel='VIP', cbtick=cbtick,
+            path=out_full+'-DIC_fit-M-eva',
+            plt_Fig_dict=plt_Fig_dict
+            )
         # Pre-Fit -----------------------------------------------------------------
-        Bend.Plotter.colplt_funcs_all(x=xlin, func_cohort=bl['w_A'],
-                                    params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                    step_range=plot_range_dic, 
-                                    title=('%s - Incremental Fit-full - evaluation range'%plt_name),
-                                    xlabel='x / mm',
-                                    Point_df=P_xcoord_ydiff_meas,
-                                    savefig=True,
-                                    savefigname=out_full+'-INC_fit-A-eva',
-                                         cblabel='VIP', cbtick=cbtick)
+        Bend.Plotter.colplt_funcs_all(
+            x=xlin, func_cohort=bl['w_A'],
+            params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+            step_range=plot_range_dic, 
+            title=('%s - Incremental Fit-full - evaluation range'%plt_name),
+            xlabel='x / mm',
+            Point_df=P_xcoord_ydiff_meas,
+            cblabel='VIP', cbtick=cbtick,
+            path=out_full+'-INC_fit-A-eva',
+            plt_Fig_dict=plt_Fig_dict
+            )
         # Bending-Fit -------------------------------------------------------------
-        Bend.Plotter.colplt_funcs_all(x=xlin, func_cohort=bl['w_M'],
-                                    params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                    step_range=plot_range_dic, 
-                                    title=('%s - Incremental Fit-Bending - evaluation range'%plt_name),
-                                    xlabel='x / mm',
-                                    Point_df=P_xcoord_ydiff_meas_M,
-                                    savefig=True,
-                                    savefigname=out_full+'-INC_fit-M-eva',
-                                     cblabel='VIP', cbtick=cbtick)
-    
+        Bend.Plotter.colplt_funcs_all(
+            x=xlin, func_cohort=bl['w_M'],
+            params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+            step_range=plot_range_dic, 
+            title=('%s - Incremental Fit-Bending - evaluation range'%plt_name),
+            xlabel='x / mm',
+            Point_df=P_xcoord_ydiff_meas_M,
+            cblabel='VIP', cbtick=cbtick,
+            path=out_full+'-INC_fit-M-eva',
+            plt_Fig_dict=plt_Fig_dict
+            )
+
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Stress vs. strain curve with labels'%plt_name)
     ax1.set_xlabel('Strain / -')
     ax1.set_ylabel('Stress / MPa')
-    ax1.plot(messu.loc[:VIP_messu['B']]['Strain'], messu.loc[:VIP_messu['B']]['Stress'], 'r--',label='con')
+    ax1.plot(messu.loc[:VIP_messu['B']]['Strain'],
+             messu.loc[:VIP_messu['B']]['Stress'], 'r--',label='con')
     if _opts['OPT_DIC']:
-        ax1.plot(messu.loc[:VIP_messu['B']][dic_used_Strain], messu.loc[:VIP_messu['B']]['Stress'], 'm--',label='opt')
+        ax1.plot(messu.loc[:VIP_messu['B']][dic_used_Strain], 
+                 messu.loc[:VIP_messu['B']]['Stress'], 'm--',label='opt')
     t=messu.Strain.loc[[VIP_messu['F3'] , VIP_messu['F4']]].values
-    t=np.array([max(0,t[0]-0.1*(t[1]-t[0])),min(messu.Strain.max(),t[1]+0.1*(t[1]-t[0]))])
+    t=np.array([max(0,t[0]-0.1*(t[1]-t[0])),
+                min(messu.Strain.max(),t[1]+0.1*(t[1]-t[0]))])
     # ax1.plot(t, np.polyval(E2_pf_tmp[0][:],t), 'g-',label='$E_{con}$')
     # ax1.plot(t, E2_fit.eval(x=t), 'g-',label='$E_{con}$')
     ax1.plot(t, YM_pref_con['E']*t+YM_pref_con['E_abs'],
@@ -2642,8 +2681,8 @@ def TBT_single(prot_ser, paths, mfile_add=''):
     
     fig, ax1 = plt.subplots()
     ax1.set_title('%s - Stress vs. strain curve, final part, with labels'%plt_name)
-    ax1.set_xlabel('Strain [-]')
-    ax1.set_ylabel('Stress [MPa]')
+    ax1.set_xlabel('Strain / -')
+    ax1.set_ylabel('Stress / MPa')
     ax1.plot(messu_FP['Strain'], messu_FP['Stress'], 'r--', label='con')
     if _opts['OPT_DIC']:
         ax1.plot(messu_FP[dic_used_Strain], messu_FP['Stress'], 'm--',label='opt')

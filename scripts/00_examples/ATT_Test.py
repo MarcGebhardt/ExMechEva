@@ -7,16 +7,24 @@ Simple example using data/ATT for showing evaluation acc. to "bla".
 import os 
 import sys
 from pathlib import Path
+import pandas as pd
+import matplotlib.pyplot as plt
 
 sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva')
 
 nwd = Path.cwd().resolve().parent.parent
 os.chdir(nwd)
 
-import pandas as pd
-
 import exmecheva.eva as eva
 import exmecheva.Eva_ATT as emeatt
+
+# Global settings
+plt.rcParams.update({
+    'figure.figsize':[16.0/2.54, 9.0/2.54], 'figure.dpi': 150,
+    'font.size': 8.0,
+    'lines.linewidth': 1.0, 'lines.markersize': 4.0, 'markers.fillstyle': 'none',
+    'axes.grid': True, "axes.axisbelow": True
+    })
 
 def main():
     # Set up new DataFrames for paths

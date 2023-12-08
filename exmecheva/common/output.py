@@ -51,16 +51,23 @@ def str_log(s, logfp, output_lvl = 1, logopt=True, printopt=True):
     Parameters
     ----------
     s : string
-        DESCRIPTION.
+        String to write or print.
+    logfp : string or path
+        Open log file.
     output_lvl : positiv integer
-        DESCRIPTION.
-    logfp : string
-        DESCRIPTION.
+        Output level (0=none, 1=only text, 2=additional diagramms).
+        The default is 1.
+    logopt : bool
+        Wriet in log file (logfp). The default is True.
+    printopt : bool
+        Display on terminal. The default is True.
 
     """
     if output_lvl>=1:
-        if logopt:      logfp.write(s)
-        if printopt:    print(s, end='')
+        if logopt and not(logfp is None):
+            logfp.write(s)
+        if printopt:
+            print(s, end='')
 
 #%% output values
 def Outvalgetter(mdf, V, VIP, exacts=None, 
