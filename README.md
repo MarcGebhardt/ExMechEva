@@ -14,7 +14,7 @@ To install the development version:
 - make the modules available by adding the `exmecheva` directory to the `$PYTHONPATH` system variable or inside python with:  
 ```
 import sys
-sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva\exmecheva')
+sys.path.insert(-1,'Path\To\Project\ExMechEva')
 ```
 
 ## Getting started
@@ -31,9 +31,23 @@ To start, select evaluation option (by uncommenting):
 - 'pack': Pack all evaluations into single hdf-file (only results and evaluated measurement)
 - 'pack-all': Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
 
+## Contributing
+See [CONTRIBUTING](./CONTRIBUTING.md) for details on how to contribute to `exmecheva`.
+Please observe the [CODE OF CONDUCT](./CODE_OF_CONDUCT.md).
+Overview of news is given in [CHANGELOG](./CHANGELOG.md).
+
+## Development targets and ToDos
+It is planned to extend the use of this package and make it as easily available as possible for scientific purposes.
+Some important points should therefore be taken into account. These are in descending order of importance:
+- Improvement of documentation
+- Implementation of test routines in [TESTS](./tests/)
+- Development of a generally customizable routine that can be controlled with keywords. 
+  (p.e. please see: [TBT-MMCB](\scripts\02_MMCB\Eva_TBT_MMCB.py) and 
+   MCurve_Characterizer in [Measurement Curve Characteriszation](.\exmecheva\common\mc_char.py])
+- GUI development for easy, reliable and reproducable use
+
 ## Citation
 If you use this framework, please cite this paper:
-
 ```
 @article{GebhardtKurz_2024_ASCTE,
   author          = {Marc Gebhardt, Sascha Kurz, Fanny Grundmann, Thomas Klink, Volker Slowik, Christoph-Eckhard Heyde, Hanno Steinke},
