@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec  4 16:50:46 2023
+Plotting functionality.
 
 @author: MarcGebhardt
 """

@@ -3,8 +3,27 @@
 Three point bending test for cortical bone in project PARAFEMM.
 """
 
+import os 
+import sys
+from pathlib import Path
 import pandas as pd
+import matplotlib.pyplot as plt
+
+sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva')
+
+nwd = Path.cwd().resolve().parent.parent
+os.chdir(nwd)
+
+import exmecheva.eva as eva
 import exmecheva.Eva_TBT as emetbt
+
+# Global settings
+plt.rcParams.update({
+    'figure.figsize':[16.0/2.54, 9.0/2.54], 'figure.dpi': 150,
+    'font.size': 8.0,
+    'lines.linewidth': 1.0, 'lines.markersize': 4.0, 'markers.fillstyle': 'none',
+    'axes.grid': True, "axes.axisbelow": True
+    })
 
 def main():
     # Set up new DataFrames for paths
@@ -14,9 +33,9 @@ def main():
     # Options (uncomment to use):
     ## Evaluate single measurement
     option = 'single'
-    # ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
+    # ## Evaluate series of measurements (see protocol table)
     # option = 'series'
-    # ## Evaluate series of series (here only one series, named 'TS')
+    # ## Evaluate series of series
     # option = 'complete'
     # ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
     # option = 'pack'
@@ -69,8 +88,10 @@ def main():
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function
-    emetbt.Selector(option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
-                    var_suffix=var_suffix, ser=ser, des=des, out_path=out_path)
+    eva.selector(eva_single_func=emetbt.TBT_single, 
+                 option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
+                 var_suffix=var_suffix, ser=ser, des=des, out_path=out_path,
+                 prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0))
 
 if __name__ == "__main__":
     main()

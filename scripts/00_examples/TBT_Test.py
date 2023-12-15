@@ -79,8 +79,6 @@ def main():
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function
-    # emetbt.Selector(option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
-    #                 var_suffix=var_suffix, ser=ser, des=des, out_path=out_path)
     eva.selector(eva_single_func=emetbt.TBT_single, 
                  option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
                  var_suffix=var_suffix, ser=ser, des=des, out_path=out_path,
