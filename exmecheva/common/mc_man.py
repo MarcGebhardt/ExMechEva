@@ -7,6 +7,7 @@ Adds functionality to temporary manipulate measurement curves.
 import warnings
 import numpy as np
 import pandas as pd
+import scipy
 
 from .pd_ext import (pd_isSer)
 
@@ -97,6 +98,29 @@ def Extend_Series_Poly(y, n=3, polydeg=1, kind='fb'):
     return yout
 
 def Extend_Series_n_setter(ffunctype='Smooth', ffuncargs=(), ffunckwargs={}):
+    """
+    Sets window length for extending of series by given aspiired function.
+
+    Parameters
+    ----------
+    ffunctype : function, optional
+        Function to use after extension. The default is 'Smooth'.
+    ffuncargs : list, optional
+        Arguments for function. The default is ().
+    ffunckwargs : dict, optional
+        Keyword arguments for function. The default is {}.
+
+    Raises
+    ------
+    ValueError
+        No valid value found for extension length.
+
+    Returns
+    -------
+    ntmp : integer
+        Extension length.
+
+    """
     ntmp=None
     if ffunctype=='Smooth':
         idks=['window_length','size','box','box_pts']
@@ -192,7 +216,41 @@ def Retrim_Series(y, axis=0, n=0, kind='fb'):
     return yout
 
 def check_params(test_val, test_var='n', 
-                 func=Extend_Series_Poly, args=(), kwargs={'polydeg':1}):
+                 func=Extend_Series_Poly, 
+                 args=(), kwargs={'polydeg':1}):
+    """
+    Checkes if tested values merge with given function.
+
+    Parameters
+    ----------
+    test_val : TYPE
+        Variable value to test.
+    test_var : TYPE, optional
+        Variable name. The default is 'n'.
+    func : function, optional
+        Function to test. Implemented are:
+            - Extend_Series_Poly
+        The default is Extend_Series_Poly.
+    args : list, optional
+        Arguments for function. The default is ().
+    kwargs : dict, optional
+        Keyword arguments for function. The default is {'polydeg':1}.
+
+    Raises
+    ------
+    NotImplementedError
+        Function not implemented.
+
+    Returns
+    -------
+    leg_val : bool
+        Indicates if the input value is legitimate.
+    adj_val : TYPE
+        Adjusted value.
+    leg_str : TYPE
+        Output string.
+
+    """
     if func == Extend_Series_Poly:
         if test_var=='n' and test_val!=0:
             if 'polydeg' in kwargs.keys():
@@ -300,11 +358,41 @@ def Predict_apply_retrim(x, afunc=None, pfunc=Extend_Series_Poly,
     
     return xout
 
-
-
-
 def Diff_ext(x, periods=1, axis=0, pfunc=Extend_Series_Poly,
              pkwargs={}, shift_value=0, fill_value=None):
+    """
+    Calculates the difference of input values after extension and retrims.
+
+    Parameters
+    ----------
+    x : pd.Series or pd. DataFrame
+        Input values.
+    periods : int, optional
+        Periods to shift (see pandas diff). The default is 1.
+    axis : integer, optional
+        Axis to apply. The default is 0.
+    pfunc : function, optional
+        Extension function. The default is Extend_Series_Poly.
+    pkwargs : dict, optional
+        Keyword arguments passed to extening funtion (pfunc). 
+		The default is {}.
+    shift_value : int, optional
+        Value for shifting. The default is 0.
+    fill_value : int or None, optional
+        Value for filling free values after shifting. 
+		The default is None, which apply self.dtype.na_value.
+
+    Raises
+    ------
+    TypeError
+        DESCRIPTION.
+
+    Returns
+    -------
+    xout : pd.Series or pd. DataFrame
+        Output values.
+
+    """
     
     if isinstance(x, pd.core.base.ABCSeries):
         xt='1D'
@@ -329,7 +417,8 @@ def Diff_ext(x, periods=1, axis=0, pfunc=Extend_Series_Poly,
         pkwargs['n']=abs(periods)
         
     n_check = check_params(test_val=pkwargs['n'], test_var='n',
-                           func=Extend_Series_Poly, kwargs=pkwargs)
+                           # func=Extend_Series_Poly, kwargs=pkwargs)
+                           func=pfunc, kwargs=pkwargs)
     if not n_check[0]:
         warnings.warn('\n Automatic set extension within Smoothsel_ext too small'+n_check[2])
         pkwargs['n'] = n_check[1]
@@ -350,7 +439,359 @@ def Diff_ext(x, periods=1, axis=0, pfunc=Extend_Series_Poly,
                                     fill_value=fill_value)
     return xout
 
-#%% shifting
+#%% Smoothing
+def smooth(y, box_pts): 
+    """
+    Computes moving average of y about distance of box_pts.
+
+    Parameters
+    ----------
+    y : array of float
+        Input data.
+    box_pts : integer
+        Window length.
+
+    Returns
+    -------
+    y_smooth : array of float
+        Output data.
+
+    """
+    warnings.warn("Method will be replaced by Smoothsel", DeprecationWarning)
+    box = np.ones(box_pts)/box_pts 
+    y_smooth = np.convolve(y, box, mode='same') 
+    return y_smooth
+
+def Smoothsel(x, smooth_type='SMA',
+              # smooth_opts={'window_length':3, 'mode':'same'},
+              smooth_opts={'window_length':3, 'mode':'nearest'},
+              snip=False, conv_method='scipy'):
+    """
+    Computes a smoothed version of an input array, according to different 
+    smoothing types.
+
+    Parameters
+    ----------
+    x : array or pandas.Series of float
+        Input values.
+    smooth_type : string, case-sensitive, optional
+        Choosen smoothing type.
+        Optional. The defalut is 'SMA'.
+        Possible are:
+            - 'SMA': Simple moving average based on numpy.convolve.
+            - 'BMA': Moving average with binomial coefficents based on numpy.convolve.
+            - 'SMA_f1d': Simple moving average based scipy.ndimage.filters.uniform_filter1d.
+            - 'SavGol': Savitzky-Golay filter based on scipy.signal.savgol_filter.
+    smooth_opts : dict, optional
+        Keywords and values to pass to smoothing method. 
+        For further informations see smooth_type and linked methods.
+        Optional. The defalut is {'window_length':3, 'mode':'nearest'}.
+    snip : bool or integer, optional
+        Trimming of output. Either, if True with (window_length-1)//2 in smooth_opts,
+        none if False, or with inserted distance. 
+        The default is False.
+    conv_method : string, optional
+        Convolve method to use ('numpy' for numpy.convolve,
+                                'scipy' for scipy.ndimage.convolve1d)
+        The default is 'scipy'.
+
+    Raises
+    ------
+    TypeError
+        Type not expected.
+    NotImplementedError
+        Not implemented.
+
+    Returns
+    -------
+    out : array or pandas.Series of float
+        Output values.
+
+    """
+    if conv_method == 'numpy':
+        conmet = np.convolve
+        box_mode_std = 'same'
+    elif conv_method == 'scipy':
+        conmet = scipy.ndimage.convolve1d
+        box_mode_std = 'nearest'
+    elif conv_method == '2D':
+        conmet = scipy.signal.convolve2d
+        box_mode_std = 'same'
+        raise NotImplementedError("Convolving method %s not implemented!"%conv_method)
+    else:        
+        raise NotImplementedError("Convolving method %s not implemented!"%conv_method)
+        
+    if isinstance(x, pd.core.base.ABCSeries):
+        #x = x.dropna() #???
+        xa = x.values
+        xt='Series'
+        xi = x.index.values # nur für Kompatibilität USplineA
+    elif isinstance(x, np.ndarray):
+        xa = x
+        xt='Array'
+        xi = np.linspace(0,len(x),len(x)) # nur für Kompatibilität USplineA
+    else:
+        raise TypeError("Type %s not implemented!"%type(x))
+
+    if smooth_type=='SMA':
+        if isinstance(smooth_opts,int):
+            box_pts  = smooth_opts
+            box_mode = box_mode_std
+        elif isinstance(smooth_opts,dict):
+            box_pts  = smooth_opts['window_length']
+            if not 'mode' in smooth_opts.keys():
+                smooth_opts['mode'] = box_mode_std
+            box_mode = smooth_opts['mode']
+        else:
+            raise TypeError("Unexpected type of smooth option (%s)."%type(smooth_opts))
+        out=conmet(xa, np.ones(box_pts)/box_pts, mode=box_mode)
+    
+    elif smooth_type=='USplineA':
+        box_pts  = 2 # Kompatibilität
+        spline=scipy.interpolate.UnivariateSpline(xi, xa, **smooth_opts)
+        out=spline(xi)
+    
+    elif smooth_type=='BMA':
+        def binomcoeffs(n): 
+            return (np.poly1d([0.5, 0.5])**n).coeffs
+        if isinstance(smooth_opts,int):
+            box_pts  = smooth_opts
+            box_mode = box_mode_std
+        elif isinstance(smooth_opts,dict):
+            box_pts  = smooth_opts['window_length']
+            if not 'mode' in smooth_opts.keys():
+                smooth_opts['mode'] = box_mode_std
+            box_mode = smooth_opts['mode']
+        else:
+            raise TypeError("Unexpected type of smooth option (%s)."%type(smooth_opts))
+        out=conmet(xa, binomcoeffs(box_pts-1), mode=box_mode)
+        
+    elif smooth_type=='SMA_f1d':
+        if isinstance(smooth_opts,int):
+            box_pts  = smooth_opts
+            orig = -(smooth_opts//2)
+            box_mode = 'constant'
+            smooth_opts  = {'size': smooth_opts, 'mode': box_mode,
+                            'origin': orig}
+        elif isinstance(smooth_opts,dict):
+            box_pts  = smooth_opts['size']
+            if not 'origin' in smooth_opts.keys():
+                smooth_opts['origin'] = -(box_pts//2)
+            if not 'mode' in smooth_opts.keys():
+                smooth_opts['mode'] = 'constant'
+        else:
+            raise TypeError("Unexpected type of smooth option (%s)."%type(smooth_opts))
+        out = scipy.ndimage.filters.uniform_filter1d(xa, **smooth_opts)
+        
+    elif smooth_type=='SavGol':
+        box_pts  = smooth_opts['window_length']
+        out = scipy.signal.savgol_filter(xa,**smooth_opts)
+    else:
+        raise NotImplementedError("Smoothing type %s not implemented!"%smooth_type)
+        
+    if xt=='Series':
+        out = pd.Series(out, index=x.index, name=x.name)
+    if not snip is False:
+        if snip is True:
+            # out = out[:-(box_pts-1)]
+            out = out[:-(box_pts-1)//2]
+        else:
+            out = out[:-snip]
+    return out
+    
+def Smoothsel_ext(x, axis=0, smooth_type='SMA',
+                  smooth_opts={'window_length':3, 'mode':'nearest'},
+                  snip=False, conv_method='scipy',
+                  pfunc=Extend_Series_Poly,
+                  pkwargs={}, shift_value=0, fill_value=None,
+                  so_idks=['window_length','size','box','box_pts']):
+    """
+    Smoothes extended data and retrimes afterwards. 
+
+    Parameters
+    ----------
+    x : pd.Series or pd.DataFrame
+        Input data.
+    axis : int, optional
+        2D axis to apply. The default is 0.
+    smooth_type : string, case-sensitive, optional
+        Choosen smoothing type.
+        Optional. The defalut is 'SMA'.
+        Possible are:
+            - 'SMA': Simple moving average based on numpy.convolve.
+            - 'BMA': Moving average with binomial coefficents based on numpy.convolve.
+            - 'SMA_f1d': Simple moving average based scipy.ndimage.filters.uniform_filter1d.
+            - 'SavGol': Savitzky-Golay filter based on scipy.signal.savgol_filter.
+    smooth_opts : dict, optional
+        Keywords and values to pass to smoothing method. 
+        For further informations see smooth_type and linked methods.
+        Optional. The defalut is {'window_length':3, 'mode':'nearest'}.
+    snip : bool or integer, optional
+        Trimming of output. Either, if True with (window_length-1)//2 in smooth_opts,
+        none if False, or with inserted distance. 
+        The default is False.
+    conv_method : string, optional
+        Convolve method to use ('numpy' for numpy.convolve,
+                                'scipy' for scipy.ndimage.convolve1d)
+        The default is 'scipy'.
+    pfunc : function, optional
+        Function for extension. The default is Extend_Series_Poly.
+    pkwargs : dict, optional
+        Keywords for extension function (pfunc). The default is {}.
+    shift_value : int, optional
+        Value for shifting. The default is 0.
+    fill_value : int or None, optional
+        Value for filling free values after shifting. 
+		The default is None, which apply self.dtype.na_value.
+    so_idks : list of string, optional
+        Smoothing options Keywords to search for extension length. 
+        The default is ['window_length','size','box','box_pts'].
+
+    Raises
+    ------
+    TypeError
+        Input type error.
+    ValueError
+        No extension length found.
+
+    Returns
+    -------
+    xout : pd.Series or pd.DataFrame
+        Output data.
+
+    """
+    
+    akwargs = {'smooth_type':smooth_type, 'smooth_opts':smooth_opts,
+               'snip':snip, 'conv_method':conv_method}
+    
+    if isinstance(x, pd.core.base.ABCSeries):
+        xt='1D'
+    elif isinstance(x, pd.core.base.ABCDataFrame):
+        xt='2D'
+    elif isinstance(x, np.ndarray):
+        if len(x.shape) >1:
+            raise TypeError("Array with shape %d not implemented (only 1D)!"%len(x.shape))
+        else:
+            xt='1D'
+    else:
+        raise TypeError("Type %s not implemented!"%type(x))
+        
+    if not 'n' in pkwargs.keys():
+        if isinstance(smooth_opts,int):
+            ntmp=smooth_opts
+        elif isinstance(smooth_opts,dict):
+            for so_idk in so_idks:
+                if so_idk in smooth_opts.keys():
+                    ntmp=smooth_opts[so_idk]
+                else:
+                    raise ValueError('Extension length not specified and no valid key found in smoothing options!')
+        else:
+            raise TypeError("Type %s not implemented to calculate extension length!"%type(smooth_opts))
+        ntmp = (ntmp-1)//2
+        n_check = check_params(test_val=ntmp, test_var='n',
+                               # func=Extend_Series_Poly, kwargs=pkwargs)
+                               func=pfunc, kwargs=pkwargs)
+        if not n_check[0]:
+            warnings.warn('\n Automatic set extension within Smoothsel_ext too small'+n_check[2])
+            pkwargs['n'] = n_check[1]
+        else:
+            pkwargs['n']=ntmp
+        
+    if xt == '2D':
+        xout = x.apply(Predict_apply_retrim, axis=axis,
+                       **{'afunc':Smoothsel, 'pfunc':pfunc, 
+                          'aargs':[], 'akwargs':akwargs, 
+                          'pargs':[], 'pkwargs':pkwargs,
+                          'shift_value':shift_value, 
+                          'fill_value':fill_value})
+    else:
+        xout = Predict_apply_retrim(x, afunc=Smoothsel,
+                                    pfunc=pfunc, 
+                                    aargs=[], akwargs=akwargs, 
+                                    pargs=[], pkwargs=pkwargs,
+                                    shift_value=shift_value, 
+                                    fill_value=fill_value)
+                        
+    return xout
+
+#%% Resampling
+def mc_resampler(mdf, t_col='Time', 
+                 resample=True, res_frequ=4, 
+                 move_ave=True, ma_sampler='data_rf',
+                 rel_time_digs=2):
+    """
+    Resample measured data to aspired frequancy, with or without moving 
+    average.
+    Only tested with downsampling and integer frequency;
+    fixed time format 's' and 3 digits for resampling.
+    TODO: Implement mc_smoothing.Smoothsel_ext 
+          (extending, smoothing and retrimming).
+
+    Parameters
+    ----------
+    mdf : pd.DataFrame
+        Time depend measured data.
+    t_col : string, optional
+        Name of time column. The default is 'Time'.
+    resample : bool, optional
+        Resampling switch. The default is True.
+    res_frequ : int, optional
+        Aspired output frequency. The default is 4.
+    move_ave : bool, optional
+        Switch for moving average. The default is True.
+    ma_sampler : string or int, optional
+        Sampler for moving average. Can ether be option 'data_rf' 
+        (sampler derived from quotient of present to aspired frequency) or 
+        integer number. The default is 'data_rf'.
+    rel_time_digs : int, optional
+        Relevant digits for time variable. The default is 2.
+
+    Returns
+    -------
+    mdf : pd.DataFrame
+        Resampled measured data.
+
+    """
+    m_dt = mdf[t_col].diff().mean()
+    m_f = round((1/m_dt),1)
+    
+    if resample:
+        if move_ave: #TODO 
+            if ma_sampler == 'data_rf':
+                sampler = m_f/res_frequ
+            elif isinstance(ma_sampler, int):
+                sampler = ma_sampler
+            else:
+                raise ValueError("Moving average sampler must be ether 'data_rf' or integer!")
+            m1 = mdf.transform(
+                lambda x: np.convolve(
+                    x, np.ones(int(sampler))/sampler, mode='same'
+                    ))
+            m1[t_col]=mdf[t_col]
+            mdf=m1
+            
+        a = mdf[t_col].loc[
+            (np.mod(mdf[t_col],1/res_frequ)==0)&(mdf[t_col]>=0)
+            ].index[1]
+        ti = pd.TimedeltaIndex(
+            data=mdf[t_col][mdf[t_col]>=mdf[t_col].loc[a]],
+            unit='s',name='dictimedelta'
+            )
+        m2 = mdf[mdf[t_col]>=mdf[t_col].loc[a]].set_index(ti,drop=True)
+        m2 = m2.resample('%.3fS'%(1/res_frequ))
+        mdf = m2.interpolate(method='linear',limit_area='inside',limit=8)
+        mdf[t_col] = mdf[t_col].round(rel_time_digs)
+        mdf.index = pd.RangeIndex(0,mdf[t_col].count(),1)
+        mdf = mdf.iloc[:-1] # remove last step (wrong averaged)
+    
+    m_dt_a = mdf[t_col].diff().mean()
+    m_f_a = round((1/m_dt_a),1)
+    
+    return mdf, m_f, m_f_a
+
+
+
+#%% Shifting
 def DetFinSSC(mdf, YM, iS, iLE=None, 
               StressN='Stress', StrainN='Strain', 
               addzero=True, izero=None, option='YM'):

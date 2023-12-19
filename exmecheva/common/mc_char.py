@@ -11,8 +11,8 @@ import scipy
 
 from .analyze import (sign_n_change, sign_n_changeth, normalize, Inter_Lines)
 from .pd_ext import (pd_valid_index, Find_closest)
-from .mc_smoothing import (smooth, Smoothsel)
-from .mc_man import (Extend_Series_Poly, Extend_Series_n_setter, Retrim_Series)
+from .mc_man import (Extend_Series_Poly, Extend_Series_n_setter, Retrim_Series,
+                     smooth, Smoothsel)
 from .fitting import (YM_sigeps_lin)
 
 

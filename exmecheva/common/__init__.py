@@ -10,7 +10,7 @@ from . import analyze
 from . import pd_ext
 from . import mc_char
 from . import mc_man
-from . import mc_smoothing
+# from . import mc_smoothing
 from . import mc_yield
 
 from . import list_ops

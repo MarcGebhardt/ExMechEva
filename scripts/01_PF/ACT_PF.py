@@ -73,12 +73,14 @@ def main():
     protpaths.loc['B7','name_prot'] = "210119_Becken7-ADV_Protokoll_new.xlsx"
 
     ## Path extensions for all series
+    protpaths.loc[:,'name_opts']    = "ACT_com_eva_opts.json"
     protpaths.loc[:,'path_con']     = "Messdaten/Messkurven/"
     protpaths.loc[:,'path_dic']     = "Messdaten/DIC/"
     protpaths.loc[:,'path_eva1']    = "Auswertung/"
     protpaths.loc[:,'path_eva2']    = "ExMechEva/"
     
     # Path builder 
+    combpaths['opts'] = "F:/Messung/Eva_Options/"+protpaths['name_opts']
     combpaths['prot'] = protpaths['path_main']+protpaths['path_eva1']+protpaths['name_prot']
     combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
     combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']

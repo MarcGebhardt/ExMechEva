@@ -266,28 +266,15 @@ def ACT_single(prot_ser, paths, mfile_add='',
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                **log_scopt)
-    mess_dt=messu.Time.diff().mean()
-    mess_f=round((1/mess_dt),1)
     
-    if _opts['OPT_Resampling']:
-        if _opts['OPT_Resampling_moveave']:
-            sampler=mess_f/_opts['OPT_Resampling_Frequency']
-            m1=messu.transform(lambda x: np.convolve(x, np.ones(int(sampler))/sampler, mode='same'))
-            m1.Time=messu.Time
-            messu=m1
-            
-        a=messu.Time.loc[(np.mod(messu.Time,1/_opts['OPT_Resampling_Frequency'])==0)&(messu.Time>=0)].index[1]
-        ti=pd.TimedeltaIndex(data=messu.Time[messu.Time>=messu.Time.loc[a]],
-                             unit='s',name='dictimedelta')
-        m2=messu[messu.Time>=messu.Time.loc[a]].set_index(ti,drop=True)
-        m2=m2.resample('%.3fS'%(1/_opts['OPT_Resampling_Frequency']))
-        messu=m2.interpolate(method='linear',limit_area='inside',limit=8)
-        messu.Time=messu.Time.round(rel_time_digs)
-        messu.index=pd.RangeIndex(0,messu.Time.count(),1)
-        messu=messu.iloc[:-1] # letzen entfernen, da falsch gemittelt
-    
-    mess_dt=messu.Time.diff().mean()
-    mess_f=round((1/mess_dt),1)
+    messu, _, mess_f = emec.mc_man.mc_resampler(
+        mdf=messu, 
+        t_col=_opts['OPT_Measurement_file']['used_names_dict']['Time'], 
+        resample=_opts['OPT_Resampling'], 
+        res_frequ=_opts['OPT_Resampling_Frequency'], 
+        move_ave=_opts['OPT_Resampling_moveave'], 
+        ma_sampler='data_rf',
+        rel_time_digs=rel_time_digs) 
     
     # =============================================================================
     #%%% 4.3 Merge optical to conventional data
