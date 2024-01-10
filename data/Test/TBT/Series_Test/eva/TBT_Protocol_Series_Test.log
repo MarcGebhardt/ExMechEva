@@ -1,0 +1,13 @@
+
+ paths:
+  prot: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\TBT\Series_Test\TBT_Protocol_Series_Test.xlsx
+  opts: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\TBT\Series_Test\com_eva_opts.json
+  meas: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\TBT\Series_Test\meas\conventional\
+  dic: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\TBT\Series_Test\meas\optical\
+  out: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\TBT\Series_Test\eva\
+ evaluation: 1 / 1
+['cl12a']
+ not evaluated: 0 / 1
+[]
+ cl12a
+   Eva_time: 246.06608 s (Control: )
