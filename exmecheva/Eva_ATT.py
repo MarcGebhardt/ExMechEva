@@ -51,7 +51,7 @@ def ATT_single(prot_ser, paths, mfile_add='',
     out_name = prot_ser['Designation']+mfile_add
     out_full = paths['out']+out_name
     if log_scopt['output_lvl']>=1: 
-        if log_scopt['logfp'] is None:
+        if log_scopt['logfp'] is None or (not isinstance(log_scopt['logfp'],str)):
             log_scopt['logfp'] = out_full+'.log'
         log_scopt['logfp']=open(log_scopt['logfp'],'w')
     log_scoptf={'logfp':log_scopt['logfp'], 
@@ -94,20 +94,43 @@ def ATT_single(prot_ser, paths, mfile_add='',
     cout =''
     ftxt=(("  Parameters of Evaluation:"),
           ("   Evaluation start time:     %s" %datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+          ("   Evaluation options:        %s" %paths['opts']),
           ("   Path protocol:             %s" %paths['prot']),
           ("   Path measurement:          %s" %path_meas),
           ("   Path optical- measurement: %s" %path_dic),
-          ("   Resampling = %s (Frequency = %d Hz, moving-average = %s)" %(_opts['OPT_Resampling'],_opts['OPT_Resampling_Frequency'],_opts['OPT_Resampling_moveave'])),
+          ("   Resampling = %s (frequency = %d Hz, moving-average = %s)" %(
+              _opts['OPT_Resampling'],_opts['OPT_Resampling_Frequency'],
+              _opts['OPT_Resampling_moveave']
+              )),
           ("   Compression = %s" %(_opts['OPT_Compression'])),
           ("   LVDT failure = %s" %(_opts['OPT_LVDT_failure'])),
-          ("   LVDT-spring-force-reduction = %s (K_Fed = %f N/mm)" %(_opts['OPT_Springreduction'],_opts['OPT_Springreduction_K'])),
-          ("   Youngs Modulus determination between %f and %f of point %s" %(*_opts['OPT_YM_Determination_range'],)),
-          ("   Distance between points: %d / %d steps " %(*_opts['OPT_Determination_Distance'],)),
-          ("   Improvment of Youngs-Modulus-determination between %s*Stress_max and point %s," %(_opts['OPT_YM_Determination_refinement'][0],_opts['OPT_YM_Determination_refinement'][2])),
-          ("    with smoothing on difference-quotient (%s, %d)" %(_opts['OPT_YM_Determination_refinement'][4],_opts['OPT_YM_Determination_refinement'][5])),
-          ("    with allowable deviation of %f * difference-quotient_max in determination range" %(_opts['OPT_YM_Determination_refinement'][1])),
+          ("   LVDT-spring-force-reduction = %s (K_Fed = %f N/mm)" %(
+              _opts['OPT_Springreduction'],_opts['OPT_Springreduction_K']
+              )),
+          ("   Rise and curvature smoothing = %s (window = %d)" %(
+              _opts['OPT_Rise_Smoothing'][0],_opts['OPT_Rise_Smoothing'][1]
+              )),
+          ("   Youngs Modulus determination between %f and %f of point %s" %(
+              *_opts['OPT_YM_Determination_range'],
+              )),
+          ("   Distance between points: %d / %d steps " %(
+              *_opts['OPT_Determination_Distance'],
+              )),
+          ("   Improvment of Youngs-Modulus-determination between %s*Stress_max and point %s," %(
+              _opts['OPT_YM_Determination_refinement'][0],
+              _opts['OPT_YM_Determination_refinement'][2]
+              )),
+          ("    with smoothing on difference-quotient (%s, %d)" %(
+              _opts['OPT_YM_Determination_refinement'][4],
+              _opts['OPT_YM_Determination_refinement'][5]
+              )),
+          ("    with allowable deviation of %f * difference-quotient_max in determination range" %(
+              _opts['OPT_YM_Determination_refinement'][1]
+              )),
           ("   DIC-Measurement = %s" %(_opts['OPT_DIC'])),
-          ("   DIC-Strain-suffix for range refinement and plots = %s" %(_opts['OPT_YM_Determination_refinement'][3])))
+          ("   DIC-Strain-suffix for range refinement and plots = %s" %(
+              _opts['OPT_YM_Determination_refinement'][3]
+              )))
           # ("   DIC-minimal points (special / specimen) = %d / %d" %(_opts['OPT_DIC_Tester'][-2],_opts['OPT_DIC_Tester'][-1])),
           # ("   DIC-names of special points (l,r,head), = %s, %s, %s" %(*_opts['OPT_DIC_Points_TBT_device'],)),
           # ("   DIC-names of meas. points for fork (l,m,r), = %s, %s, %s" %(*_opts['OPT_DIC_Points_meas_fork'],)),
@@ -201,7 +224,7 @@ def ATT_single(prot_ser, paths, mfile_add='',
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                **log_scopt)
-    if _opts['OPT_DIC']:
+    if _opts['OPT_DIC']: #optical evaluation removed
         dic=None
         dicu=None
         dic_dt=None
@@ -224,38 +247,58 @@ def ATT_single(prot_ser, paths, mfile_add='',
                **log_scopt)
     if _opts['OPT_DIC']:
         if _opts['OPT_pre_load_cycles'] > 0:
-            ri_Way,_,rich_Way=emec.mc_char.rise_curve(messu['Way'],True,4)
+            ri_Way,_,rich_Way=emec.mc_char.rise_curve(
+                messu['Way'],
+                _opts['OPT_Rise_Smoothing'][0], _opts['OPT_Rise_Smoothing'][1]
+                )
             ws = _opts['OPT_Determination_Distance'][0]
             we = rich_Way[(rich_Way == True) and (rich_Way.index >= _opts['OPT_Determination_Distance'][0])].index[0]
-            mun_tmp = messu.loc[abs(messu.Way.loc[ws:we]-messu.Way.loc[ws:we].max()/8).idxmin():
-                                abs(messu.Way.loc[ws:we]-messu.Way.loc[ws:we].max()/4).idxmin()]
+            mun_tmp = messu.loc[
+                abs(messu.Way.loc[ws:we]-messu.Way.loc[ws:we].max()/8).idxmin():
+                abs(messu.Way.loc[ws:we]-messu.Way.loc[ws:we].max()/4).idxmin()
+                ]
             del ri_Way, rich_Way, ws, we
             print('Check pre load cycles implementation in time offset!')
         else:
-            mun_tmp = messu.loc[abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/8).idxmin():
-                                abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/4).idxmin()]
+            mun_tmp = messu.loc[
+                abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/8).idxmin():
+                abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/4).idxmin()
+                ]
         linvm   = np.polyfit(mun_tmp.loc[:,'Time'],mun_tmp.loc[:,'Way'],1)
         tsm     = -linvm[1]/linvm[0]
-        mun_tmp = dicu.loc[abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/8).idxmin():
-                           abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/4).idxmin()]
+        mun_tmp = dicu.loc[
+            abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/8).idxmin():
+            abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/4).idxmin()
+            ]
         linvd   = np.polyfit(mun_tmp.loc[:,'Time'],mun_tmp.loc[:,'Disp_opt_head'],1)
         tsd     = -linvd[1]/linvd[0]
         toff    = tsm-tsd
         
         if True:
-            maxt_tmp=max(messu.Time.loc[abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/4).idxmin()],dicu.Time.loc[abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/4).idxmin()])
+            maxt_tmp=max(
+                messu.Time.loc[abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/4).idxmin()],
+                dicu.Time.loc[abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/4).idxmin()]
+                )
             xlin_tmp=np.linspace(min(tsm,tsd),maxt_tmp,11)
             
             fig, ax1 = plt.subplots()
             ax1.set_title('%s - Way-measuring time difference'%plt_name)
             ax1.set_xlabel('Time / s')
             ax1.set_ylabel('Way / mm')
-            ax1.plot(messu.Time.loc[messu.Time<=maxt_tmp], messu.Way.loc[messu.Time<=maxt_tmp], 'r-', label='PM-way')
-            ax1.plot(dicu.Time.loc[dicu.Time<=maxt_tmp],   dicu.Disp_opt_head.loc[dicu.Time<=maxt_tmp], 'b-', label='DIC-way')
-            ax1.plot(xlin_tmp,np.polyval(linvm,xlin_tmp),'y:',label='PM-lin')
-            ax1.plot(xlin_tmp,np.polyval(linvd,xlin_tmp),'g:',label='DIC-lin')
-            ax1.axvline(x=tsm, color='red', linestyle=':', label='PM-way-start')
-            ax1.axvline(x=tsd, color='blue', linestyle=':', label='DIC-way-start')
+            ax1.plot(messu.Time.loc[messu.Time<=maxt_tmp], 
+                     messu.Way.loc[messu.Time<=maxt_tmp],
+                     'r-', label='PM-way')
+            ax1.plot(dicu.Time.loc[dicu.Time<=maxt_tmp],
+                     dicu.Disp_opt_head.loc[dicu.Time<=maxt_tmp], 
+                     'b-', label='DIC-way')
+            ax1.plot(xlin_tmp, np.polyval(linvm,xlin_tmp),
+                     'y:',label='PM-lin')
+            ax1.plot(xlin_tmp, np.polyval(linvd,xlin_tmp),
+                     'g:',label='DIC-lin')
+            ax1.axvline(x=tsm, color='red', 
+                        linestyle=':', label='PM-way-start')
+            ax1.axvline(x=tsd, color='blue', 
+                        linestyle=':', label='DIC-way-start')
             ax1.legend()
             ftxt=('$t_{S,PM}$  = % 2.4f s '%(tsm),
                   '$t_{S,DIC}$ = % 2.4f s '%(tsd))
@@ -324,20 +367,31 @@ def ATT_single(prot_ser, paths, mfile_add='',
     if np.isnan(_opts['OPT_End']):
         dic_to_mess_End=messu.iloc[-1].name
     else:
-        # dic_to_mess_End=messu.loc[messu.Time<=prot.loc[prot_lnr]['DIC_End']*1/f_vdm].index[-1]
         dic_to_mess_End=messu.loc[messu.Time<=_opts['OPT_End']].index[-1]
         
     mun_tmp=messu.loc[:min(dic_to_mess_End,messu.Force.idxmax()),'Force']
-    messu['driF'],messu['dcuF'],messu['driF_schg']=emec.mc_char.rise_curve(messu.loc[:dic_to_mess_End]['Force'],True,4)
+    messu['driF'],messu['dcuF'],messu['driF_schg']=emec.mc_char.rise_curve(
+        messu.loc[:dic_to_mess_End]['Force'],
+        _opts['OPT_Rise_Smoothing'][0], _opts['OPT_Rise_Smoothing'][1]
+        )
     
     for i in messu.index: # Startpunkt über Vorzeichenwechsel im Anstieg
         if messu.loc[i,'driF_schg']:
-            if not messu.loc[i+1:i+max(int(_opts['OPT_Determination_Distance'][0]/2),1),'driF_schg'].any():
+            if not messu.loc[
+                    i+1:i+max(int(_opts['OPT_Determination_Distance'][0]/2),1),
+                    'driF_schg'
+                    ].any():
                 messu_iS=i
                 break
     
-    messu_iS,_=emec.mc_char.find_SandE(messu.loc[messu_iS:messu_iS+_opts['OPT_Determination_Distance'][0],
-                                         'driF'],abs(messu['driF']).quantile(0.5),"pgm_other",0.1)
+    messu_iS,_=emec.mc_char.find_SandE(
+        messu.loc[
+            messu_iS:messu_iS+_opts['OPT_Determination_Distance'][0],
+            'driF'
+            ],
+        # abs(messu['driF']).quantile(0.5),
+        abs(messu['driF']).quantile(0.5),
+        "pgm_other", 0.1)
 
     # _,messu_iE=Evac.find_SandE(messu['driF'],0,"qua_self",0.5) # changed 211022 (B5-sr09)
     try: # search after maximum Force
@@ -465,70 +519,115 @@ def ATT_single(prot_ser, paths, mfile_add='',
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                **log_scopt)
+    
+    tmp_odd1=_opts['OPT_Determination_Distance'][1]
     VIP_messu=pd.Series([],dtype='int64',name='VIP_messu')
     VIP_messu['S']=messu.driF.index[0]
     VIP_messu['E']=messu.driF.index[-1]
     VIP_messu['U']=messu.Force.idxmax()
     
-    
-    
-    
     if _opts['OPT_pre_load_cycles']>0:
-        ### Zeitdifferenz zwischen Messverfahren und Zuordnung von Zyklen
-        dt_drif_schg=1/_opts['OPT_Resampling_Frequency']    
-        mun_tmp=messu.Time[messu.driF_schg].loc[(VIP_messu['S']+_opts['OPT_Determination_Distance'][1]):(VIP_messu['U']-_opts['OPT_Determination_Distance'][1])]
+        # Zeitdifferenz zwischen Messverfahren und Zuordnung von Zyklen
+        dt_drif_schg=1/_opts['OPT_Resampling_Frequency']
+        # mun_tmp=messu.Time[messu.driF_schg].loc[
+        #     (VIP_messu['S']+tmp_odd1):(VIP_messu['U']-tmp_odd1)
+        #     ]
+        _,_,driw_schg=emec.mc_char.rise_curve(
+            messu['Way'],False,4
+            ) # Using Way instead of force for pointing cycles
+        mun_tmp=messu.Time[driw_schg].loc[
+                    (VIP_messu['S']+tmp_odd1):(VIP_messu['U']-tmp_odd1)
+                    ]
         dt=pd.DataFrame(data={'d1':mun_tmp.diff(),'d2':-mun_tmp.diff(-1)})
         dt['dmin']=dt.loc(axis=1)['d1':'d2'].min(axis=1).round(10)
-        # drif_schg_counter=dt.dmin.loc[abs((dt.dmin-dt.dmin.max())/dt.dmin.max())<=dt_drif_schg]
-        drif_schg_counter=dt.dmin.loc[abs((dt.dmin-dt.dmin.iloc[1:-1].max())/dt.dmin.iloc[1:-1].max())<=dt_drif_schg]
+        drif_schg_counter=dt.dmin.loc[
+            abs((dt.dmin-dt.dmin.iloc[1:-1].max())
+                /dt.dmin.iloc[1:-1].max())
+            <=dt_drif_schg
+            ]
         
         i=0
         while (drif_schg_counter.count()!=_opts['OPT_pre_load_cycles']*2):
             i+=1
             if (drif_schg_counter.count()>_opts['OPT_pre_load_cycles']*2):
-                dt_drif_schg=dt_drif_schg/1.1
+                dt_drif_schg=dt_drif_schg/1.15
             else:
                 dt_drif_schg=dt_drif_schg*1.1
-            drif_schg_counter=dt.dmin.loc[abs((dt.dmin-dt.dmin.iloc[1:-1].max())/dt.dmin.iloc[1:-1].max())<=dt_drif_schg]
-            if i==20:
+            drif_schg_counter=dt.dmin.loc[
+                abs((dt.dmin-dt.dmin.iloc[1:-1].max())
+                    /dt.dmin.iloc[1:-1].max())
+                <=dt_drif_schg
+                ]
+            if i==50:
                 log_custom("\n  %d cycles, without result!\n    -> Using last %d as counter."
                            %(i,drif_schg_counter.count()),**log_scopt)
                 break
         log_custom("\n  %d cycles, with result!\n    -> Using last %.3f s as delimiter."
                    %(i,dt_drif_schg),**log_scopt)
         
+        
         zyklus=1
         VIP_PMf=pd.Series([],dtype='int64') #konventionell-Kraft
         VIP_PMw=pd.Series([],dtype='int64') #konventionell-Weg
         VIP_DICw=pd.Series([],dtype='int64') #Bildkorrelation-Weg
-    
+        
         for i in drif_schg_counter.index:
-            if (np.invert(i in VIP_messu)) and (_opts['OPT_pre_load_cycles']!=0):            #wenn Periode noch nicht benannt ist und keine zyk. Belastung
-                if zyklus<=_opts['OPT_pre_load_cycles'] and (i>VIP_messu['S']+_opts['OPT_Determination_Distance'][1]):
+            #if period not named and cyclic loading applied
+            if (np.invert(i in VIP_messu)) and (_opts['OPT_pre_load_cycles']!=0):
+                if zyklus<=_opts['OPT_pre_load_cycles'] and (i>VIP_messu['S']+tmp_odd1):
                     if np.sign(messu.dcuF.loc[i]) == -1.0:
-                        VIP_messu['C'+str(zyklus) + '-']=abs(messu.Force.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmax()
-                        VIP_PMf['C'+str(zyklus) + '-']  =abs(messu.Force.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmax()
-                        VIP_PMw['C'+str(zyklus) + '-']  =abs(messu.Way.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmax()
-                        if _opts['OPT_DIC']: VIP_DICw['C'+str(zyklus) + '-']=abs(messu.DWay.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmax()               
+                        VIP_messu['C'+str(zyklus) + '-'] = abs(
+                            messu.Force.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                            ).idxmax()
+                        VIP_PMf['C'+str(zyklus) + '-'] = abs(
+                            messu.Force.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                            ).idxmax()
+                        VIP_PMw['C'+str(zyklus) + '-']  =abs(
+                            messu.Way.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                            ).idxmax()
+                        if _opts['OPT_DIC']: 
+                            VIP_DICw['C'+str(zyklus) + '-']=abs(
+                                messu.DWay.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                                ).idxmax()               
                         zyklus += 1
                     else:
-                        VIP_messu['C'+str(zyklus) + '+']=abs(messu.Force.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmin()
-                        VIP_PMf['C'+str(zyklus) + '+']  =abs(messu.Force.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmin()
-                        VIP_PMw['C'+str(zyklus) + '+']  =abs(messu.Way.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmin()   
-                        if _opts['OPT_DIC']: VIP_DICw['C'+str(zyklus) + '+']=abs(messu.DWay.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmin()              
+                        VIP_messu['C'+str(zyklus) + '+'] = abs(
+                            messu.Force.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                            ).idxmin()
+                        VIP_PMf['C'+str(zyklus) + '+']  =abs(
+                            messu.Force.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                            ).idxmin()
+                        VIP_PMw['C'+str(zyklus) + '+'] = abs(
+                            messu.Way.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                            ).idxmin()   
+                        if _opts['OPT_DIC']: 
+                            VIP_DICw['C'+str(zyklus) + '+'] = abs(
+                                messu.DWay.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                                ).idxmin()              
                 elif zyklus==(_opts['OPT_pre_load_cycles']+1):
-                    VIP_messu['F1']=abs(messu.Force.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmin()
-                    VIP_PMf['F1']  =abs(messu.Force.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmin()
-                    VIP_PMw['F1']  =abs(messu.Way.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmin() 
-                    if _opts['OPT_DIC']: VIP_DICw['F1+']=abs(messu.DWay.loc[i-_opts['OPT_Determination_Distance'][1]/2:i+_opts['OPT_Determination_Distance'][1]/2+1]).idxmin()
+                    VIP_messu['F1'] = abs(
+                        messu.Force.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                        ).idxmin()
+                    VIP_PMf['F1'] = abs(
+                        messu.Force.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                        ).idxmin()
+                    VIP_PMw['F1'] = abs(
+                        messu.Way.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                        ).idxmin() 
+                    if _opts['OPT_DIC']: 
+                        VIP_DICw['F1'] = abs(
+                            messu.DWay.loc[i-tmp_odd1/2:i+tmp_odd1/2+1]
+                            ).idxmin()
                     zyklus += 1            
         VIP_messu['C1+']=(abs(messu.Force.loc[VIP_messu['S']:VIP_messu['C1-']]-messu.Force.loc[VIP_messu[VIP_messu.index.str.endswith('+')]].mean())).idxmin()
         VIP_messu['F2']=(abs(messu.Force.loc[VIP_messu['F1']:VIP_messu['U']]-messu.Force.loc[VIP_messu[VIP_messu.index.str.endswith('-')]].mean())).idxmin()
-
         
         VIP_PMdiff=VIP_PMf-VIP_PMw
         VIP_PDdiff=VIP_PMf-VIP_DICw
-        VIP_mess_diffs=pd.DataFrame(data={'PM_Force':VIP_PMf,'PM_Way':VIP_PMw,'DIC_way':VIP_DICw,'Diff_PM':VIP_PMdiff,'Diff_PD':VIP_PDdiff})
+        VIP_mess_diffs=pd.DataFrame(data={
+            'PM_Force':VIP_PMf, 'PM_Way':VIP_PMw,
+            'DIC_way':VIP_DICw,'Diff_PM':VIP_PMdiff,'Diff_PD':VIP_PDdiff
+            })
         
         log_custom("\n "+"-"*100,**log_scopt)
         log_custom("\n  Differenz Extremwertvergleich: \n  %s"
@@ -538,14 +637,15 @@ def ATT_single(prot_ser, paths, mfile_add='',
         log_custom("\n  Differenz Kraft- zu Wegextreme-DIC (MW): %f"
                    %VIP_PDdiff.mean(),**log_scoptf)      
 
+    else: #no cyclic preloading (fixed range set to determination range)
         VL_soll=_opts['OPT_YM_Determination_range'][0]*messu.Force.max() # VL_soll Krücke, da nan in Protokoll
         ZL_soll=_opts['OPT_YM_Determination_range'][1]*messu.Force.max() # ZL_soll Krücke, da nan in Protokoll
-        VIP_messu['F1']=(abs(messu.Force.loc[VIP_messu['S']:VIP_messu[_opts['OPT_YM_Determination_range'][2]]]-VL_soll)).idxmin()
-        VIP_messu['F2']=(abs(messu.Force.loc[VIP_messu['S']:VIP_messu[_opts['OPT_YM_Determination_range'][2]]]-ZL_soll)).idxmin()
-    
+        tmp_Fr=messu.Force.loc[VIP_messu['S']:VIP_messu[_opts['OPT_YM_Determination_range'][2]]]
+        VIP_messu['F1']=(abs(tmp_Fr-VL_soll)).idxmin()
+        VIP_messu['F2']=(abs(tmp_Fr-ZL_soll)).idxmin()    
 
     # B    
-    mun_tmp = messu.loc[VIP_messu['F1']+_opts['OPT_Determination_Distance'][1]:VIP_messu['U']-1]
+    mun_tmp = messu.loc[VIP_messu['F1']+tmp_odd1:VIP_messu['U']-1]
     if mun_tmp.driF_schg.any()==True: # 
         VIP_messu['Y']=mun_tmp.loc[mun_tmp.driF_schg==True].index[0]-1
     else:
@@ -556,7 +656,7 @@ def ATT_single(prot_ser, paths, mfile_add='',
     mun_tmp = messu.loc[VIP_messu['U']-1:VIP_messu['E']-1]
     if mun_tmp.driF_schg.any():
         i=mun_tmp.loc[mun_tmp.driF_schg].index[0]
-        VIP_messu['B']  =mun_tmp.driF.loc[i:i+_opts['OPT_Determination_Distance'][1]].idxmin()-2 # statt allgemeinem Minimum bei größtem Kraftabfall nahe Maximalkraft, -2 da differenz aussage über vorherigen punkt
+        VIP_messu['B']  =mun_tmp.driF.loc[i:i+tmp_odd1].idxmin()-2 # statt allgemeinem Minimum bei größtem Kraftabfall nahe Maximalkraft, -2 da differenz aussage über vorherigen punkt
         if VIP_messu['B']<VIP_messu['U']: VIP_messu['B']=VIP_messu['U']
     # # if (mun_tmp['driF'].min()/mun_tmp['driF'].quantile(0.25))>=2:
     # if (mun_tmp['driF'].min()/mun_tmp['driF'].quantile(0.25))>=1.0:
@@ -873,7 +973,10 @@ def ATT_single(prot_ser, paths, mfile_add='',
         n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
         YM     = YM_pref_con['E'],
         YM_abs = YM_pref_con['E_abs'],
-        use_rd =True, rise_det=[True,4], 
+        use_rd =True, 
+        rise_det=[
+            _opts['OPT_Rise_Smoothing'][0], _opts['OPT_Rise_Smoothing'][1]
+            ], 
         ywhere='n'
         )
     VIP_messu, yield_df_con, txt = tmp
@@ -887,7 +990,10 @@ def ATT_single(prot_ser, paths, mfile_add='',
             n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
             YM     = YM_pref_opt['E'],
             YM_abs = YM_pref_opt['E_abs'],
-            use_rd =True, rise_det=[True,4], 
+            use_rd =True,
+            rise_det=[
+                _opts['OPT_Rise_Smoothing'][0], _opts['OPT_Rise_Smoothing'][1]
+                ],  
             ywhere='n'
             )
         VIP_dicu, yield_df_opt, txt = tmp
@@ -1098,9 +1204,7 @@ def ATT_single(prot_ser, paths, mfile_add='',
     
         out_tab['cyc_comp_E_con_first']   = df_Ee.loc['F','E_asc']/df_Ee.loc['C1','E_asc']
         out_tab['cyc_comp_E_con_rest']    = df_Ee.loc['F','E_asc']/df_Ee['E_asc'].iloc[1:-1].mean()
-        # out_tab['cyc_comp_epl_con_first'] = df_Ee.loc['F','e_pl']/df_Ee.loc['C2','e_pl']
         out_tab['cyc_comp_epl_con_first'] = df_Ee.loc['C10','e_pl']/df_Ee.loc['C1','e_pl']
-        # out_tab['cyc_comp_epl_con_rest']  = df_Ee.loc['F','e_pl']/df_Ee['e_pl'].iloc[2:-1].mean()
         out_tab['cyc_comp_epl_con_rest']  = df_Ee.loc['C10','e_pl']/df_Ee['e_pl'].iloc[1:-2].mean()
     # ============================================================================
     #%%% 7.2 Generate plots
@@ -1332,9 +1436,10 @@ def ATT_single(prot_ser, paths, mfile_add='',
                                 E_inc_R_comp.add_prefix('E_inc_R_')],axis=1)
     
     HDFst.close()
-
     
     timings.loc[10.0]=time.perf_counter()
-    if log_scopt['output_lvl']>=1: log_scopt['logfp'].close()
-    
+    if log_scopt['output_lvl']>=1: 
+        log_scopt['logfp'].close()
+        log_scopt['logfp'] = None # workaround (Error _io.TextIOWrapper while series run)
+        
     return timings,cout

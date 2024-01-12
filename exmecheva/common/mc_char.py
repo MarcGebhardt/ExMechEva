@@ -8,6 +8,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import scipy
+import scipy.signal as scsig
 
 from .analyze import (sign_n_change, sign_n_changeth, normalize, Inter_Lines)
 from .pd_ext import (pd_valid_index, Find_closest)
@@ -558,7 +559,8 @@ def Peaky_Finder(df, cols='all', norm='absmax',
     #     raise NotImplementedError("Norming %s not implemented!"%norm)
     df2 = normalize(pdo=df2, axis=0, norm=norm)
     
-    o=df2.agg(scipy.signal.find_peaks,**fp_kwargs)
+    # o=df2.agg(scipy.signal.find_peaks,**fp_kwargs)
+    o=df2.agg(scsig.find_peaks,**fp_kwargs)
     if out_opt == 'complete-iloc':
         o = o
     elif out_opt == 'complete-loc':

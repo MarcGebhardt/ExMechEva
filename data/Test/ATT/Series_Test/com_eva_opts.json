@@ -16,6 +16,7 @@
   "OPT_LVDT_failure": "Array",
   "OPT_Compression": "Bool",
   "OPT_DIC": "Bool",
+  "OPT_Rise_Smoothing": "Array",
   "OPT_TimeOS": "String",
   "OPT_DIC_Points_device_prefix": "String",
   "OPT_DIC_Points_meas_prefix": "String",
@@ -47,6 +48,10 @@
   ],
   "OPT_Compression": null,
   "OPT_DIC": null,
+  "OPT_Rise_Smoothing": [
+   "Bool",
+   "Int"
+  ],
   "OPT_TimeOS": null,
   "OPT_DIC_Points_device_prefix": null,
   "OPT_DIC_Points_meas_prefix": null,
@@ -67,7 +72,7 @@
    "String"
   ],
   "OPT_YM_Determination_refinement": [
-   "Float",
+   "Float_String",
    "Float",
    "String",
    "String",
@@ -115,6 +120,10 @@
   ],
   "OPT_Compression": false,
   "OPT_DIC": false,
+  "OPT_Rise_Smoothing": [
+   true,
+   4
+  ],
   "OPT_YM_Determination_range": [
    0.25,
    0.5,

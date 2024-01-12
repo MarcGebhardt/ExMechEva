@@ -13,7 +13,12 @@ import pandas as pd
 import exmecheva.common as emec
 
 def series(eva_single_func, paths, no_stats_fc, var_suffix, 
-           prot_rkws, output_lvl=1):
+           prot_rkws, output_lvl=1,
+           log_scopt={'logfp':None, 'output_lvl': 1,
+                      'logopt':True, 'printopt':False},
+           plt_scopt={'tight':True, 'show':True, 
+                      'save':True, 's_types':["pdf"], 
+                      'clear':True, 'close':True}):
     """
     Evaluates a series of single evaluations (one after an other).
 
@@ -59,7 +64,7 @@ def series(eva_single_func, paths, no_stats_fc, var_suffix,
     emec.output.str_log("\n paths:",log_mg,output_lvl,printopt=False)
     for path in paths.index:
         emec.output.str_log("\n  %s: %s"%(path,paths[path]),
-                       log_mg,output_lvl,printopt=False)
+                            log_mg,output_lvl,printopt=False)
     emec.output.str_log("\n evaluation: %d / %d"%(prot.loc[eva_b].count()[0],prot.count()[0]),
                             log_mg,output_lvl,printopt=False)
     emec.output.str_log("\n%s"%prot.loc[eva_b].Designation.values,
@@ -72,10 +77,10 @@ def series(eva_single_func, paths, no_stats_fc, var_suffix,
     for eva in prot[eva_b].index:
         for mfile_add in var_suffix:
             emec.output.str_log("\n %s"%prot.loc[eva].Designation+mfile_add,
-                            log_mg,output_lvl,printopt=False)  
+                                log_mg,output_lvl,printopt=False)  
             try:
                 cout = eva_single_func(prot_ser = prot.loc[eva],
-                                     paths = paths, mfile_add=mfile_add)
+                                       paths = paths, mfile_add=mfile_add)
                 emec.output.str_log("\n   Eva_time: %.5f s (Control: %s)"%(cout[0].iloc[-1]-cout[0].iloc[0],cout[1]),
                                 log_mg,output_lvl,printopt=False)
             except Exception:
@@ -87,7 +92,12 @@ def series(eva_single_func, paths, no_stats_fc, var_suffix,
 
 def selector(eva_single_func, option, combpaths, no_stats_fc,
              var_suffix=[""], ser='', des='', out_path='',
-             prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0)):
+             prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0),
+             log_scopt={'logfp':None, 'output_lvl': 1,
+                        'logopt':True, 'printopt':False},
+             plt_scopt={'tight':True, 'show':True, 
+                        'save':True, 's_types':["pdf"], 
+                        'clear':True, 'close':True}):
     """
     Selects suitable evaluation method acc. to choosen option.
 
@@ -134,16 +144,32 @@ def selector(eva_single_func, option, combpaths, no_stats_fc,
         mfile_add = var_suffix[0]
         
         prot=pd.read_excel(combpaths.loc[ser,'prot'],**prot_rkws)
-        _=eva_single_func(prot_ser=prot[prot.Designation==des].iloc[0], 
-                          paths=combpaths.loc[ser],
-                          mfile_add = mfile_add)
+        # _=eva_single_func(prot_ser=prot[prot.Designation==des].iloc[0], 
+        #                   paths=combpaths.loc[ser],
+        #                   mfile_add = mfile_add,
+        #                   log_scopt=log_scopt,
+        #                   plt_scopt=plt_scopt)
+        
+        try:
+            _ = eva_single_func(prot_ser=prot[prot.Designation==des].iloc[0], 
+                                   paths=combpaths.loc[ser],
+                                   mfile_add = mfile_add,
+                                   log_scopt=log_scopt,
+                                   plt_scopt=plt_scopt)
+        except Exception:
+            txt = '\n   Exception:'
+            txt+=emec.output.str_indent('\n{}'.format(traceback.format_exc()),5)
+            emec.output.str_log(txt, None , output_lvl=1, 
+                                logopt=False, printopt=True)  
         
     elif option == 'series':
         series(eva_single_func=eva_single_func,
                paths = combpaths.loc[ser],
                no_stats_fc = no_stats_fc,
                var_suffix = var_suffix,
-               prot_rkws=prot_rkws)
+               prot_rkws=prot_rkws,
+               log_scopt=log_scopt,
+               plt_scopt=plt_scopt)
         
     elif option == 'complete':
         for ser in combpaths.index:
@@ -151,7 +177,9 @@ def selector(eva_single_func, option, combpaths, no_stats_fc,
                    paths = combpaths.loc[ser],
                    no_stats_fc = no_stats_fc,
                    var_suffix = var_suffix,
-                   prot_rkws=prot_rkws)
+                   prot_rkws=prot_rkws,
+                   log_scopt=log_scopt,
+                   plt_scopt=plt_scopt)
             
     elif option == 'pack':
         packpaths = combpaths[['prot','out']]

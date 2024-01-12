@@ -45,10 +45,11 @@ def ACT_single(prot_ser, paths, mfile_add='',
                plt_scopt={'tight':True, 'show':True, 
                           'save':True, 's_types':["pdf"], 
                           'clear':True, 'close':True}):
+    
     out_name = prot_ser['Designation']+mfile_add
     out_full = paths['out']+out_name
     if log_scopt['output_lvl']>=1: 
-        if log_scopt['logfp'] is None:
+        if log_scopt['logfp'] is None or (not isinstance(log_scopt['logfp'],str)):
             log_scopt['logfp'] = out_full+'.log'
         log_scopt['logfp']=open(log_scopt['logfp'],'w')
     log_scoptf={'logfp':log_scopt['logfp'], 
@@ -95,17 +96,39 @@ def ACT_single(prot_ser, paths, mfile_add='',
           ("   Path protocol:             %s" %paths['prot']),
           ("   Path measurement:          %s" %path_meas),
           ("   Path optical- measurement: %s" %path_dic),
-          ("   Resampling = %s (Frequency = %d Hz, moving-average = %s)" %(_opts['OPT_Resampling'],_opts['OPT_Resampling_Frequency'],_opts['OPT_Resampling_moveave'])),
+          ("   Resampling = %s (Frequency = %d Hz, moving-average = %s)" %(
+              _opts['OPT_Resampling'], _opts['OPT_Resampling_Frequency'],
+              _opts['OPT_Resampling_moveave']
+              )),
           ("   Compression = %s" %(_opts['OPT_Compression'])),
           ("   LVDT failure = %s" %(_opts['OPT_LVDT_failure'])),
-          ("   LVDT-spring-force-reduction = %s (K_Fed = %f N/mm)" %(_opts['OPT_Springreduction'],_opts['OPT_Springreduction_K'])),
-          ("   Youngs Modulus determination between %f and %f of point %s" %(*_opts['OPT_YM_Determination_range'],)),
-          ("   Distance between points: %d / %d steps " %(*_opts['OPT_Determination_Distance'],)),
-          ("   Improvment of Youngs-Modulus-determination between %f*Stress_max and point %s," %(_opts['OPT_YM_Determination_refinement'][0],_opts['OPT_YM_Determination_refinement'][2])),
-          ("    with smoothing on difference-quotient (%s, %d)" %(_opts['OPT_YM_Determination_refinement'][4],_opts['OPT_YM_Determination_refinement'][5])),
-          ("    with allowable deviation of %f * difference-quotient_max in determination range" %(_opts['OPT_YM_Determination_refinement'][1])),
+          ("   LVDT-spring-force-reduction = %s (K_Fed = %f N/mm)" %(
+              _opts['OPT_Springreduction'], _opts['OPT_Springreduction_K']
+              )),
+          ("   Rise and curvature smoothing = %s (window = %d)" %(
+              _opts['OPT_Rise_Smoothing'][0],_opts['OPT_Rise_Smoothing'][1]
+              )),
+          ("   Youngs Modulus determination between %f and %f of point %s" %(
+              *_opts['OPT_YM_Determination_range'],
+              )),
+          ("   Distance between points: %d / %d steps " %(
+              *_opts['OPT_Determination_Distance'],
+              )),
+          ("   Improvment of Youngs-Modulus-determination between %f*Stress_max and point %s," %(
+              _opts['OPT_YM_Determination_refinement'][0],
+              _opts['OPT_YM_Determination_refinement'][2]
+              )),
+          ("    with smoothing on difference-quotient (%s, %d)" %(
+              _opts['OPT_YM_Determination_refinement'][4],
+              _opts['OPT_YM_Determination_refinement'][5]
+              )),
+          ("    with allowable deviation of %f * difference-quotient_max in determination range" %(
+              _opts['OPT_YM_Determination_refinement'][1]
+              )),
           ("   DIC-Measurement = %s" %(_opts['OPT_DIC'])),
-          ("   DIC-Strain-suffix for range refinement and plots = %s" %(_opts['OPT_YM_Determination_refinement'][3])))
+          ("   DIC-Strain-suffix for range refinement and plots = %s" %(
+              _opts['OPT_YM_Determination_refinement'][3]
+              )))
           # ("   DIC-minimal points (special / specimen) = %d / %d" %(_opts['OPT_DIC_Tester'][-2],_opts['OPT_DIC_Tester'][-1])),
           # ("   DIC-names of special points (l,r,head), = %s, %s, %s" %(*_opts['OPT_DIC_Points_TBT_device'],)),
           # ("   DIC-names of meas. points for fork (l,m,r), = %s, %s, %s" %(*_opts['OPT_DIC_Points_meas_fork'],)),
@@ -315,7 +338,10 @@ def ACT_single(prot_ser, paths, mfile_add='',
         dic_to_mess_End=messu.loc[messu.Time<=_opts['OPT_End']].index[-1]
         
     mun_tmp=messu.loc[:min(dic_to_mess_End,messu.Force.idxmax()),'Force']
-    messu['driF'],messu['dcuF'],messu['driF_schg']=emec.mc_char.rise_curve(messu.loc[:dic_to_mess_End]['Force'],True,4)
+    messu['driF'],messu['dcuF'],messu['driF_schg']=emec.mc_char.rise_curve(
+        messu.loc[:dic_to_mess_End]['Force'],
+        _opts['OPT_Rise_Smoothing'][0], _opts['OPT_Rise_Smoothing'][1]
+        )
     
     for i in messu.index: # Startpunkt über Vorzeichenwechsel im Anstieg
         if messu.loc[i,'driF_schg']:
@@ -862,7 +888,10 @@ def ACT_single(prot_ser, paths, mfile_add='',
         n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
         YM     = YM_pref_con['E'],
         YM_abs = YM_pref_con['E_abs'],
-        use_rd =True, rise_det=[True,4], 
+        use_rd =True, rise_det=[
+            _opts['OPT_Rise_Smoothing'][0], 
+            _opts['OPT_Rise_Smoothing'][1]
+            ], 
         ywhere='n'
         )
     VIP_messu, yield_df_con, txt = tmp
@@ -879,7 +908,10 @@ def ACT_single(prot_ser, paths, mfile_add='',
             n_loBo=['S3'], n_upBo=['SU'], n_loBo_int=['S3'],
             YM     = YM_pref_conS['E'],
             YM_abs = YM_pref_conS['E_abs'],
-            use_rd =True, rise_det=[True,4], 
+            use_rd =True, rise_det=[
+                _opts['OPT_Rise_Smoothing'][0],
+                _opts['OPT_Rise_Smoothing'][1]
+                ], 
             ywhere='n'
             )
         VIP_messu, yield_df_conS, txt = tmp
@@ -1209,9 +1241,10 @@ def ACT_single(prot_ser, paths, mfile_add='',
         HDFst['Exact_VIP_con']=yield_df_con
     
     HDFst.close()
-
     
     timings.loc[10.0]=time.perf_counter()
-    if log_scopt['output_lvl']>=1: log_scopt['logfp'].close()
+    if log_scopt['output_lvl']>=1: 
+        log_scopt['logfp'].close()
+        log_scopt['logfp'] = None # workaround (Error _io.TextIOWrapper while series run)
     
     return timings, cout

@@ -24,6 +24,10 @@ plt.rcParams.update({
     'lines.linewidth': 1.0, 'lines.markersize': 4.0, 'markers.fillstyle': 'none',
     'axes.grid': True, "axes.axisbelow": True
     })
+log_options={'logfp':None, 'output_lvl':1, 'logopt':True, 'printopt':False}
+plt_options={'tight':True, 'show':True, 
+             'save':True, 's_types':["pdf"], 
+             'clear':True, 'close':True}
 
 def main():
     # Set up new DataFrames for paths
@@ -33,17 +37,17 @@ def main():
     # Options (uncomment to use):
     ## Evaluate single measurement
     option = 'single'
-    # ## Evaluate series of measurements (see protocol table)
-    # option = 'series'
-    # ## Evaluate series of series
-    # option = 'complete'
+    ## Evaluate series of measurements (see protocol table)
+    option = 'series'
+    ## Evaluate series of series
+    option = 'complete'
     # ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
     # option = 'pack'
     # ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
     # option = 'pack-all'
     
     #PF:
-    ser='B5'
+    ser='PT5'
     des='cm31a'
     
     # No Evaluation for list of Assessment Codes
@@ -56,20 +60,20 @@ def main():
     var_suffix = [""]
          
     # Path selection
-    # protpaths.loc['B1','path_main'] = "F:/Messung/003-190822-Becken1-DBV/"
-    # protpaths.loc['B1','name_prot'] = "190822_Becken1_DBV_Protokoll.xlsx"
-    # protpaths.loc['B2','path_main'] = "F:/Messung/004-200515-Becken2-DBV/"
-    # protpaths.loc['B2','name_prot'] = "200515_Becken2_DBV_Protokoll_new.xlsx"
-    protpaths.loc['B3','path_main'] = "F:/Messung/005-200724_Becken3-DBV/"
-    protpaths.loc['B3','name_prot'] = "200724_Becken3-DBV_Protokoll_new.xlsx"
-    protpaths.loc['B4','path_main'] = "F:/Messung/006-200917_Becken4-DBV/"
-    protpaths.loc['B4','name_prot'] = "200917_Becken4-DBV_Protokoll_new.xlsx"
-    protpaths.loc['B5','path_main'] = "F:/Messung/007-201014_Becken5-DBV/"
-    protpaths.loc['B5','name_prot'] = "201014_Becken5-DBV_Protokoll_new.xlsx"
-    protpaths.loc['B6','path_main'] = "F:/Messung/008-201125_Becken6-DBV/"
-    protpaths.loc['B6','name_prot'] = "201125_Becken6-DBV_Protokoll_new.xlsx"
-    protpaths.loc['B7','path_main'] = "F:/Messung/009-210120_Becken7-DBV/"
-    protpaths.loc['B7','name_prot'] = "210120_Becken7-DBV_Protokoll_new.xlsx"
+    # protpaths.loc['PT1','path_main'] = "F:/Messung/003-190822-Becken1-DBV/"
+    # protpaths.loc['PT1','name_prot'] = "190822_Becken1_DBV_Protokoll.xlsx"
+    # protpaths.loc['PT2','path_main'] = "F:/Messung/004-200515-Becken2-DBV/"
+    # protpaths.loc['PT2','name_prot'] = "200515_Becken2_DBV_Protokoll_new.xlsx"
+    protpaths.loc['PT3','path_main'] = "F:/Messung/005-200724_Becken3-DBV/"
+    protpaths.loc['PT3','name_prot'] = "200724_Becken3-DBV_Protokoll_new.xlsx"
+    protpaths.loc['PT4','path_main'] = "F:/Messung/006-200917_Becken4-DBV/"
+    protpaths.loc['PT4','name_prot'] = "200917_Becken4-DBV_Protokoll_new.xlsx"
+    protpaths.loc['PT5','path_main'] = "F:/Messung/007-201014_Becken5-DBV/"
+    protpaths.loc['PT5','name_prot'] = "201014_Becken5-DBV_Protokoll_new.xlsx"
+    protpaths.loc['PT6','path_main'] = "F:/Messung/008-201125_Becken6-DBV/"
+    protpaths.loc['PT6','name_prot'] = "201125_Becken6-DBV_Protokoll_new.xlsx"
+    protpaths.loc['PT7','path_main'] = "F:/Messung/009-210120_Becken7-DBV/"
+    protpaths.loc['PT7','name_prot'] = "210120_Becken7-DBV_Protokoll_new.xlsx"
 
     ## Path extensions for all series
     protpaths.loc[:,'name_opts']    = "TBT_com_eva_opts.json"
@@ -86,14 +90,15 @@ def main():
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
         
     # Additional path for hdf-packing 
-    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/XXX/TBT/B3-B7_TBT-Summary"
+    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240110/TBT/B3-B7_TBT-Summary"
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function
     eva.selector(eva_single_func=emetbt.TBT_single, 
                  option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
                  var_suffix=var_suffix, ser=ser, des=des, out_path=out_path,
-                 prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0))
+                 prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0),
+                 log_scopt=log_options, plt_scopt=plt_options)
 
 if __name__ == "__main__":
     main()

@@ -76,6 +76,7 @@ def set_type_by_string(o,t):
             - "Float": Float precision object
             - "Json": Json object (uses json.loads)
             - "Free": No conversion
+            - Combination of formantioned, split by '_' in descending order
 
     Raises
     ------
@@ -100,6 +101,20 @@ def set_type_by_string(o,t):
         o=json.loads(o)
     elif t=="Free":
         o=o
+    # elif t=="Float_String":
+    #     try: 
+    #         o=float(o)
+    #     except ValueError:
+    #         o=str(o)
+    elif '_' in t: #Following code may be bad practice
+        for d in t.split('_'):
+            try: 
+                b=set_type_by_string(o,d)
+            except ValueError:
+                pass
+            else: 
+                o=b
+                break
     else:
         raise NotImplementedError("Type %s not implemented!"%t)
     return o

@@ -24,6 +24,10 @@ plt.rcParams.update({
     'lines.linewidth': 1.0, 'lines.markersize': 4.0, 'markers.fillstyle': 'none',
     'axes.grid': True, "axes.axisbelow": True
     })
+log_options={'logfp':None, 'output_lvl':1, 'logopt':True, 'printopt':False}
+plt_options={'tight':True, 'show':True, 
+             'save':True, 's_types':["pdf"], 
+             'clear':True, 'close':True}
 
 def main():
     # Set up new DataFrames for paths
@@ -43,8 +47,8 @@ def main():
     # option = 'pack-all'
     
     #PF:
-    ser='B7'
-    des='tm41x'
+    ser='PT5'
+    des='tr21y'
     
     # No Evaluation for list of Assessment Codes
     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
@@ -57,20 +61,20 @@ def main():
          
     # Path selection
     ## Series dependend paths or file names
-    # protpaths.loc['B1','path_main'] = "F:/Messung/003-190822-Becken1-ZDV/"
-    # protpaths.loc['B1','name_prot'] = "190822_Becken1_ZDV_Protokoll_new.xlsx"
-    # protpaths.loc['B2','path_main'] = "F:/Messung/004-200514-Becken2-ADV/"
-    # protpaths.loc['B2','name_prot'] = "200514_Becken2_ADV_Protokoll_new.xlsx"
-    protpaths.loc['B3','path_main'] = "F:/Messung/005-200723_Becken3-ADV/"
-    protpaths.loc['B3','name_prot'] = "200723_Becken3-ADV_Protokoll_new.xlsx"
-    protpaths.loc['B4','path_main'] = "F:/Messung/006-200916_Becken4-ADV/"
-    protpaths.loc['B4','name_prot'] = "200916_Becken4-ADV_Protokoll_new.xlsx"
-    protpaths.loc['B5','path_main'] = "F:/Messung/007-201013_Becken5-ADV/"
-    protpaths.loc['B5','name_prot'] = "201013_Becken5-ADV_Protokoll_new.xlsx"
-    protpaths.loc['B6','path_main'] = "F:/Messung/008-201124_Becken6-ADV/"
-    protpaths.loc['B6','name_prot'] = "201124_Becken6-ADV_Protokoll_new.xlsx"
-    protpaths.loc['B7','path_main'] = "F:/Messung/009-210119_Becken7-ADV/"
-    protpaths.loc['B7','name_prot'] = "210119_Becken7-ADV_Protokoll_new.xlsx"
+    # protpaths.loc['PT1','path_main'] = "F:/Messung/003-190822-Becken1-ZDV/"
+    # protpaths.loc['PT1','name_prot'] = "190822_Becken1_ZDV_Protokoll_new.xlsx"
+    # protpaths.loc['PT2','path_main'] = "F:/Messung/004-200514-Becken2-ADV/"
+    # protpaths.loc['PT2','name_prot'] = "200514_Becken2_ADV_Protokoll_new.xlsx"
+    protpaths.loc['PT3','path_main'] = "F:/Messung/005-200723_Becken3-ADV/"
+    protpaths.loc['PT3','name_prot'] = "200723_Becken3-ADV_Protokoll_new.xlsx"
+    protpaths.loc['PT4','path_main'] = "F:/Messung/006-200916_Becken4-ADV/"
+    protpaths.loc['PT4','name_prot'] = "200916_Becken4-ADV_Protokoll_new.xlsx"
+    protpaths.loc['PT5','path_main'] = "F:/Messung/007-201013_Becken5-ADV/"
+    protpaths.loc['PT5','name_prot'] = "201013_Becken5-ADV_Protokoll_new.xlsx"
+    protpaths.loc['PT6','path_main'] = "F:/Messung/008-201124_Becken6-ADV/"
+    protpaths.loc['PT6','name_prot'] = "201124_Becken6-ADV_Protokoll_new.xlsx"
+    protpaths.loc['PT7','path_main'] = "F:/Messung/009-210119_Becken7-ADV/"
+    protpaths.loc['PT7','name_prot'] = "210119_Becken7-ADV_Protokoll_new.xlsx"
 
     ## Path extensions for all series
     protpaths.loc[:,'name_opts']    = "ACT_com_eva_opts.json"
@@ -87,14 +91,15 @@ def main():
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
         
     # Additional path for hdf-packing
-    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/XXX/ACT/B3-B7_ACT-Summary"  
+    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240110/ACT/B3-B7_ACT-Summary"  
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function
     eva.selector(eva_single_func=emeact.ACT_single, 
                  option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
                  var_suffix=var_suffix, ser=ser, des=des, out_path=out_path,
-                 prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0))
+                 prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0),
+                 log_scopt=log_options, plt_scopt=plt_options)
 
 if __name__ == "__main__":
     main()

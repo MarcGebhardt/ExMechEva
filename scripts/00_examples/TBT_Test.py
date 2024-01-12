@@ -25,6 +25,10 @@ plt.rcParams.update({
     'lines.linewidth': 1.0, 'lines.markersize': 4.0, 'markers.fillstyle': 'none',
     'axes.grid': True, "axes.axisbelow": True
     })
+log_options={'logfp':None, 'output_lvl':1, 'logopt':True, 'printopt':False}
+plt_options={'tight':True, 'show':True, 
+             'save':True, 's_types':["pdf"], 
+             'clear':True, 'close':True}
 
 def main():
     # Set up new DataFrames for paths
@@ -82,7 +86,8 @@ def main():
     eva.selector(eva_single_func=emetbt.TBT_single, 
                  option=option, combpaths=combpaths, no_stats_fc=no_stats_fc,
                  var_suffix=var_suffix, ser=ser, des=des, out_path=out_path,
-                 prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0))
+                 prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0),
+                 log_scopt=log_options, plt_scopt=plt_options)
 
 if __name__ == "__main__":
     main()

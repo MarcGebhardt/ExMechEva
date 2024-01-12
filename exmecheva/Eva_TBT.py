@@ -59,7 +59,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
     out_name = prot_ser['Designation']+mfile_add
     out_full = paths['out']+out_name
     if log_scopt['output_lvl']>=1: 
-        if log_scopt['logfp'] is None:
+        if log_scopt['logfp'] is None or (not isinstance(log_scopt['logfp'],str)):
             log_scopt['logfp'] = out_full+'.log'
         log_scopt['logfp']=open(log_scopt['logfp'],'w')
     log_scoptf={'logfp':log_scopt['logfp'], 
@@ -117,25 +117,55 @@ def TBT_single(prot_ser, paths, mfile_add='',
     cout =''
     ftxt=(("  Parameters of Evaluation:"),
           ("   Evaluation start time:     %s" %datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+          ("   Evaluation options:        %s" %paths['opts']),
           ("   Path protocol:             %s" %paths['prot']),
           ("   Path measurement:          %s" %path_meas),
           ("   Path optical- measurement: %s" %path_dic),
-          ("   Resampling = %s (Frequency = %d Hz, moving-average = %s)" %(_opts['OPT_Resampling'],_opts['OPT_Resampling_Frequency'],_opts['OPT_Resampling_moveave'])),
+          ("   Resampling = %s (Frequency = %d Hz, moving-average = %s)" %(
+              _opts['OPT_Resampling'],_opts['OPT_Resampling_Frequency'],
+              _opts['OPT_Resampling_moveave']
+              )),
           ("   Compression = %s" %(_opts['OPT_Compression'])),
           ("   LVDT failure = %s" %(_opts['OPT_LVDT_failure'])),
-          ("   LVDT-spring-force-reduction = %s (K_Fed = %f N/mm)" %(_opts['OPT_Springreduction'],_opts['OPT_Springreduction_K'])),
-          ("   Youngs Modulus determination between %f and %f of point %s" %(*_opts['OPT_YM_Determination_range'],)),
+          ("   LVDT-spring-force-reduction = %s (K_Fed = %f N/mm)" %(
+              _opts['OPT_Springreduction'],_opts['OPT_Springreduction_K']
+              )),
+          ("   Rise and curvature smoothing = %s (window = %d)" %(
+              _opts['OPT_Rise_Smoothing'][0],_opts['OPT_Rise_Smoothing'][1]
+              )),
+          ("   Youngs Modulus determination between %f and %f of point %s" %(
+              *_opts['OPT_YM_Determination_range'],
+              )),
           ("   Distance between points: %d steps " %_opts['OPT_Determination_Distance']),
-          ("   Improvment of Youngs-Modulus-determination between %f*Stress_max and point %s," %(_opts['OPT_YM_Determination_refinement'][0],_opts['OPT_YM_Determination_refinement'][2])),
-          ("    with smoothing on difference-quotient (%s, %d)" %(_opts['OPT_YM_Determination_refinement'][4],_opts['OPT_YM_Determination_refinement'][5])),
-          ("    with allowable deviation of %f * difference-quotient_max in determination range" %(_opts['OPT_YM_Determination_refinement'][1])),
+          ("   Improvment of Youngs-Modulus-determination between %f*Stress_max and point %s," %(
+              _opts['OPT_YM_Determination_refinement'][0],
+              _opts['OPT_YM_Determination_refinement'][2]
+              )),
+          ("    with smoothing on difference-quotient (%s, %d)" %(
+              _opts['OPT_YM_Determination_refinement'][4],
+              _opts['OPT_YM_Determination_refinement'][5]
+              )),
+          ("    with allowable deviation of %f * difference-quotient_max in determination range" %(
+              _opts['OPT_YM_Determination_refinement'][1]
+              )),
           ("   DIC-Measurement = %s" %(_opts['OPT_DIC'])),
-          ("   DIC-Strain-suffix for range refinement and plots = %s" %(_opts['OPT_YM_Determination_refinement'][3])),
-          ("   DIC-minimal points (special / specimen) = %d / %d" %(_opts['OPT_DIC_Tester'][-2],_opts['OPT_DIC_Tester'][-1])),
-          ("   DIC-names of special points (l,r,head), = %s, %s, %s" %(*_opts['OPT_DIC_Points_TBT_device'],)),
-          ("   DIC-names of meas. points for fork (l,m,r), = %s, %s, %s" %(*_opts['OPT_DIC_Points_meas_fork'],)),
-          ("   DIC-maximal SD = %.3f mm and maximal displacement between steps %.1f mm" %(_opts['OPT_DIC_Tester'][0],_opts['OPT_DIC_Tester'][1])))
+          ("   DIC-Strain-suffix for range refinement and plots = %s" %(
+              _opts['OPT_YM_Determination_refinement'][3]
+              )),
+          ("   DIC-minimal points (special / specimen) = %d / %d" %(
+              _opts['OPT_DIC_Tester'][-2],_opts['OPT_DIC_Tester'][-1]
+              )),
+          ("   DIC-names of special points (l,r,head), = %s, %s, %s" %(
+              *_opts['OPT_DIC_Points_TBT_device'],
+              )),
+          ("   DIC-names of meas. points for fork (l,m,r), = %s, %s, %s" %(
+              *_opts['OPT_DIC_Points_meas_fork'],
+              )),
+          ("   DIC-maximal SD = %.3f mm and maximal displacement between steps %.1f mm" %(
+              _opts['OPT_DIC_Tester'][0],_opts['OPT_DIC_Tester'][1]
+              )))
     log_custom('\n'.join(ftxt),**log_scopt)
+    
     #%% 2 Geometry
     log_custom("\n "+"="*100,**log_scopt)
     log_custom("\n ### 2 Geometry ###",**log_scopt)
@@ -420,35 +450,52 @@ def TBT_single(prot_ser, paths, mfile_add='',
                                        timings.iloc[-1]-timings.iloc[0]),
                    **log_scopt)
     if _opts['OPT_DIC']:
-        mun_tmp = messu.loc[abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/8).idxmin():
-                            abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/4).idxmin()]
+        mun_tmp = messu.loc[
+            abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/8).idxmin():
+            abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/4).idxmin()
+            ]
         linvm   = np.polyfit(mun_tmp.loc[:,'Time'],mun_tmp.loc[:,'Way'],1)
         tsm     = -linvm[1]/linvm[0]
-        mun_tmp = dicu.loc[abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/8).idxmin():
-                           abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/4).idxmin()]
+        mun_tmp = dicu.loc[
+            abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/8).idxmin():
+            abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/4).idxmin()
+            ]
         linvd   = np.polyfit(mun_tmp.loc[:,'Time'],mun_tmp.loc[:,'Disp_opt_head'],1)
         tsd     = -linvd[1]/linvd[0]
         toff    = tsm-tsd
         
         if True:
-            maxt_tmp=max(messu.Time.loc[abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/4).idxmin()],dicu.Time.loc[abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/4).idxmin()])
+            maxt_tmp=max(
+                messu.Time.loc[abs(messu.Way.loc[:(messu.Way.idxmax())]-messu.Way.max()/4).idxmin()],
+                dicu.Time.loc[abs(dicu.Disp_opt_head.loc[:(dicu.Disp_opt_head.idxmax())]-dicu.Disp_opt_head.max()/4).idxmin()]
+                )
             xlin_tmp=np.linspace(min(tsm,tsd),maxt_tmp,11)
             
             fig, ax1 = plt.subplots()
             ax1.set_title('%s - Way-measuring time difference'%plt_name)
             ax1.set_xlabel('Time / s')
             ax1.set_ylabel('Way / mm')
-            ax1.plot(messu.Time.loc[messu.Time<=maxt_tmp], messu.Way.loc[messu.Time<=maxt_tmp], 'r-', label='PM-way')
-            ax1.plot(dicu.Time.loc[dicu.Time<=maxt_tmp],   dicu.Disp_opt_head.loc[dicu.Time<=maxt_tmp], 'b-', label='DIC-way')
-            ax1.plot(xlin_tmp,np.polyval(linvm,xlin_tmp),'y:',label='PM-lin')
-            ax1.plot(xlin_tmp,np.polyval(linvd,xlin_tmp),'g:',label='DIC-lin')
-            ax1.axvline(x=tsm, color='red', linestyle=':', label='PM-way-start')
-            ax1.axvline(x=tsd, color='blue', linestyle=':', label='DIC-way-start')
+            ax1.plot(messu.Time.loc[messu.Time<=maxt_tmp], 
+                     messu.Way.loc[messu.Time<=maxt_tmp], 
+                     'r-', label='PM-way')
+            ax1.plot(dicu.Time.loc[dicu.Time<=maxt_tmp],
+                     dicu.Disp_opt_head.loc[dicu.Time<=maxt_tmp],
+                     'b-', label='DIC-way')
+            ax1.plot(xlin_tmp,np.polyval(linvm,xlin_tmp),
+                     'y:',label='PM-lin')
+            ax1.plot(xlin_tmp,np.polyval(linvd,xlin_tmp),
+                     'g:',label='DIC-lin')
+            ax1.axvline(x=tsm, color='red', 
+                        linestyle=':', label='PM-way-start')
+            ax1.axvline(x=tsd, color='blue', 
+                        linestyle=':', label='DIC-way-start')
             ax1.legend()
             ftxt=('$t_{S,PM}$  = % 2.4f s '%(tsm),
                   '$t_{S,DIC}$ = % 2.4f s '%(tsd))
             fig.text(0.95,0.15,'\n'.join(ftxt),
-                     ha='right',va='bottom', bbox=dict(boxstyle='round', edgecolor='0.8', facecolor='white', alpha=0.8))
+                     ha='right',va='bottom', 
+                     bbox=dict(boxstyle='round', edgecolor='0.8', 
+                               facecolor='white', alpha=0.8))
             plt_hsuf(fig,path=out_full+"-toff",**plt_scopt)
             del xlin_tmp
         
@@ -516,8 +563,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
     mun_tmp=messu.loc[:min(dic_to_mess_End,messu.Force.idxmax()),'Force']
     messu['driF'],messu['dcuF'],messu['driF_schg']=emec.mc_char.rise_curve(
         messu.loc[:dic_to_mess_End]['Force'],
-        True,
-        2
+        _opts['OPT_Rise_Smoothing'][0], _opts['OPT_Rise_Smoothing'][1]
         )
     
     for i in messu.index: # Startpunkt über Vorzeichenwechsel im Anstieg
@@ -2342,7 +2388,11 @@ def TBT_single(prot_ser, paths, mfile_add='',
         n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
         YM     = YM_pref_con['E'],
         YM_abs = YM_pref_con['E_abs'],
-        use_rd =True, rise_det=[True,2], 
+        use_rd =True, 
+        rise_det=[
+            _opts['OPT_Rise_Smoothing'][0],
+            _opts['OPT_Rise_Smoothing'][1]
+            ], 
         ywhere='n'
         )
     VIP_messu, yield_df_con, txt = tmp
@@ -2356,7 +2406,11 @@ def TBT_single(prot_ser, paths, mfile_add='',
             n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
             YM     = YM_pref_opt['E'],
             YM_abs = YM_pref_opt['E_abs'],
-            use_rd =True, rise_det=[True,2], 
+            use_rd =True, 
+            rise_det=[
+                _opts['OPT_Rise_Smoothing'][0],
+                _opts['OPT_Rise_Smoothing'][1]
+                ], 
             ywhere='n'
             )
         VIP_dicu, yield_df_opt, txt = tmp
@@ -2585,12 +2639,24 @@ def TBT_single(prot_ser, paths, mfile_add='',
         ax1.set_title('%s - Stress vs. strain curve of different opt. strain calculations'%plt_name)
         ax1.set_xlabel('Strain / -')
         ax1.set_ylabel('Stress / MPa')
-        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_d_A'], messu.loc[:VIP_messu['B']]['Stress'], 'r:',label='displacement A')
-        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_d_S'], messu.loc[:VIP_messu['B']]['Stress'], 'b:',label='displacement S')
-        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_d_M'], messu.loc[:VIP_messu['B']]['Stress'], 'g:',label='displacement M')
-        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_c_A'], messu.loc[:VIP_messu['B']]['Stress'], 'r--',label='curvature A')
-        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_c_S'], messu.loc[:VIP_messu['B']]['Stress'], 'b--',label='curvature S')
-        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_c_M'], messu.loc[:VIP_messu['B']]['Stress'], 'g--',label='curvature M')
+        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_d_A'], 
+                 messu.loc[:VIP_messu['B']]['Stress'], 
+                 'r:',label='displacement A')
+        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_d_S'], 
+                 messu.loc[:VIP_messu['B']]['Stress'], 
+                 'b:',label='displacement S')
+        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_d_M'],
+                 messu.loc[:VIP_messu['B']]['Stress'],
+                 'g:',label='displacement M')
+        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_c_A'],
+                 messu.loc[:VIP_messu['B']]['Stress'],
+                 'r--',label='curvature A')
+        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_c_S'],
+                 messu.loc[:VIP_messu['B']]['Stress'],
+                 'b--',label='curvature S')
+        ax1.plot(messu.loc[:VIP_messu['B']]['Strain_opt_c_M'],
+                 messu.loc[:VIP_messu['B']]['Stress'],
+                 'g--',label='curvature M')
         fig.legend(loc=[0.45, 0.135])
         # ftxt=('$E_{curve}$ = % 8.3f MPa '%(ED2_vgl1),
         #       '$E_{fork-C}$ = % 8.3f MPa '%(ED2_vgl2),
@@ -2601,7 +2667,9 @@ def TBT_single(prot_ser, paths, mfile_add='',
         plt_hsuf(fig,path=out_full+"-sigeps_dicvgl",**plt_scopt)
     
         # Pre-Fit -----------------------------------------------------------------
-        plot_range_dic=messu.loc[VIP_dicu[(VIP_dicu[['F1','F3']]).idxmin()]:VIP_dicu[(VIP_dicu[['F2','F4']]).idxmax()]].index
+        plot_range_dic=messu.loc[
+            VIP_dicu[(VIP_dicu[['F1','F3']]).idxmin()]:VIP_dicu[(VIP_dicu[['F2','F4']]).idxmax()]
+            ].index
         cbtick=VIP_dicu.to_dict()
         emeb.plotting.colplt_funcs_all(
             x=xlin, func_cohort=bl['w_A'],
@@ -2681,7 +2749,10 @@ def TBT_single(prot_ser, paths, mfile_add='',
         j=np.int64(-1)
         ax1.plot(a, b, 'yx')
         t=messu.loc[[VIP_dicu['F3'] , VIP_dicu['F4']],dic_used_Strain].values
-        t=np.array([max(0,t[0]-0.1*(t[1]-t[0])),min(messu.loc[:,dic_used_Strain].max(),t[1]+0.1*(t[1]-t[0]))])
+        t=np.array([
+            max(0,t[0]-0.1*(t[1]-t[0])),
+            min(messu.loc[:,dic_used_Strain].max(),t[1]+0.1*(t[1]-t[0]))
+            ])
         # ax1.plot(t, np.polyval(ED2_pf_tmp[0][:],t), 'b-',label='$E_{opt}$')
         # ax1.plot(t, ED2_fit.eval(x=t), 'b-',label='$E_{opt}$')
         ax1.plot(t, YM_pref_opt['E']*t+YM_pref_opt['E_abs'],
@@ -2872,7 +2943,10 @@ def TBT_single(prot_ser, paths, mfile_add='',
     HDFst['Measurement'] = messu
     HDFst['Measurement_FP'] = messu_FP
     HDFst['Material_Parameters'] = out_tab
-    HDFst['Geometrie_functions'] = pd.Series({'func_t': func_t,'func_w': func_w, 'func_A': func_A, 'func_I': func_I})
+    HDFst['Geometrie_functions'] = pd.Series({
+        'func_t': func_t,'func_w': func_w, 
+        'func_A': func_A, 'func_I': func_I
+        })
     HDFst['Timings'] = timings
     
     # HDFst['Bending_Legion'] = bl
@@ -2908,6 +2982,8 @@ def TBT_single(prot_ser, paths, mfile_add='',
     HDFst.close()
     
     timings.loc[10.0]=time.perf_counter()
-    if log_scopt['output_lvl']>=1: log_scopt['logfp'].close()
+    if log_scopt['output_lvl']>=1:
+        log_scopt['logfp'].close()
+        log_scopt['logfp'] = None # workaround (Error _io.TextIOWrapper while series run)
     
     return timings, cout

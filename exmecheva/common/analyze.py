@@ -7,16 +7,8 @@ Analyzing functionality.
 import warnings
 import numpy as np
 import pandas as pd
-import scipy
-# import scipy.signal as scsig
-# import scipy.interpolate as scint
-# import scipy.ndimage.filters as ndif
-# import scipy.ndimage as scnd
 
 from .helper import (check_empty)
-# from .pd_ext import (pd_isSer,pd_limit, pd_valid_index, Find_closest)
-# from .fitting import (YM_sigeps_lin, strain_linfit)
-
 
 #%% core analysing
 def sign_n_change(y):
@@ -41,8 +33,6 @@ def sign_n_change(y):
     y_sign       = pd.Series(y_sign,index=y.index)
     y_signchange = pd.Series(y_signchange,index=y.index)
     return (y_sign,y_signchange)
-
-
 
 def normalize(pdo, axis=0, norm='absmax', normadd=0.5, pdo_n=None,
               warn_excl=['x_sc','dx_sc']):
