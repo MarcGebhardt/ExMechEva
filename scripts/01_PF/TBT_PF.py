@@ -41,8 +41,8 @@ def main():
     option = 'series'
     ## Evaluate series of series
     option = 'complete'
-    # ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
-    # option = 'pack'
+    ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
+    option = 'pack'
     # ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
     # option = 'pack-all'
     

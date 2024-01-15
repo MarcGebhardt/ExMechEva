@@ -221,9 +221,9 @@ def boxplt_ext(pdf, var, ytxt,
 #%% Einlesen und auswählen
 #%%% Main
 Version="240110"
-# ptype="TBT"
+ptype="TBT"
 # ptype="ACT"
-ptype="ATT"
+# ptype="ATT"
 
 no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
                'B01.1','B01.2','B01.3', 'B02.3',

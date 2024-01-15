@@ -74,12 +74,12 @@ if option == 'Series':
 #%% Complete (hdf) comparision
 elif option == 'Complete':
     path_main="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/"
-    # #TBT:
-    # path1=path_main+"230920/TBT/B3-B7_TBT-Summary.h5"
-    # path2=path_main+"231023/TBT/B3-B7_TBT-Summary.h5"
-    #ACT:
-    path1=path_main+"231023/ACT/B3-B7_ACT-Summary.h5"
-    path2=path_main+"240110/ACT/B3-B7_ACT-Summary.h5"
+    #TBT:
+    path1=path_main+"231023/TBT/B3-B7_TBT-Summary.h5"
+    path2=path_main+"240110/TBT/B3-B7_TBT-Summary.h5"
+    # #ACT:
+    # path1=path_main+"231023/ACT/B3-B7_ACT-Summary.h5"
+    # path2=path_main+"240110/ACT/B3-B7_ACT-Summary.h5"
     # #ATT:
     # path1=path_main+"231023/ATT/B3-B7_ATT-Summary.h5"
     # path2=path_main+"240110/ATT/B3-B7_ATT-Summary.h5"

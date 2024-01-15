@@ -168,7 +168,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
     
     #%% 2 Geometry
     log_custom("\n "+"="*100,**log_scopt)
-    log_custom("\n ### 2 Geometry ###",**log_scopt)
+    log_custom("\n ### 2 Geometry ###",**log_scoptf)
     timings.loc[2.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
@@ -225,7 +225,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
     # =============================================================================
     #%% 3 Read in measurements
     log_custom("\n "+"="*100,**log_scopt)
-    log_custom("\n ### 3 Read in measurements ###",**log_scopt)
+    log_custom("\n ### 3 Read in measurements ###",**log_scoptf)
     timings.loc[3.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
@@ -438,7 +438,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
     # =============================================================================
     #%% 4 Merging measurements
     log_custom("\n "+"="*100,**log_scopt)
-    log_custom("\n ### 4 Merging measurements ###",**log_scopt)
+    log_custom("\n ### 4 Merging measurements ###",**log_scoptf)
     timings.loc[4.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
@@ -543,7 +543,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
     # =============================================================================
     #%% 5 Start and End
     log_custom("\n "+"="*100,**log_scopt)
-    log_custom("\n ### 5 Start and End ###",**log_scopt)
+    log_custom("\n ### 5 Start and End ###",**log_scoptf)
     timings.loc[5.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
@@ -670,7 +670,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
     # =============================================================================
     #%% 6 Evaluation
     log_custom("\n "+"="*100,**log_scopt)
-    log_custom("\n ### 6 Evaluation ###",**log_scopt)
+    log_custom("\n ### 6 Evaluation ###",**log_scoptf)
     timings.loc[6.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
@@ -2527,7 +2527,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
     # ============================================================================
     #%% 7 Outputs
     log_custom("\n "+"="*100,**log_scopt)
-    log_custom("\n ### 7 Outputs ###",**log_scopt)
+    log_custom("\n ### 7 Outputs ###",**log_scoptf)
     timings.loc[7.0]=time.perf_counter()
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
