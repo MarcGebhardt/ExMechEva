@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Sep 19 11:54:02 2023
+Conclusion of axial tensile (ATT), axial compression (ACT) and three point 
+bending tests (TBT) for soft tissue, cancellous bone and cortical bone in 
+project PARAFEMM. (Material parameters of the human lumbopelvic complex.)
 
-@author: mgebhard
+@author: MarcGebhardt
 """
 
 #%% Imports
@@ -25,11 +27,9 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
-# import Eva_common as Evac
 from pathlib import Path
 nwd = Path.cwd().resolve().parent.parent
 os.chdir(nwd)
-# import exmecheva.Eva_common as Evac
 import exmecheva.common as emec
 
 sns.set_theme(context="paper",style="whitegrid",

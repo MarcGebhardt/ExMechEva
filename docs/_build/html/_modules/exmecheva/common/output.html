@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.common.output &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.common.output</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.common.output</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions for output data generation.</span>
+
+<span class="sd">@author: MarcGebhardt</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">.pd_ext</span> <span class="kn">import</span> <span class="n">pd_trapz</span>
+
+<span class="c1">#%% logging</span>
+<div class="viewcode-block" id="str_indent"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.output.str_indent">[docs]</a><span class="k">def</span> <span class="nf">str_indent</span><span class="p">(</span><span class="n">po</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adds indentation to str at each new line.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    po : string or str callable</span>
+<span class="sd">        String to manipulate.</span>
+<span class="sd">    indent : int, optional</span>
+<span class="sd">        Number of spaces for indentation. The default is 3.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    poo : string</span>
+<span class="sd">        Output string with indentation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># if isinstance(&#39;s&#39;,str):</span>
+    <span class="c1">#     pos = po</span>
+    <span class="c1"># elif isinstance(po, pd.core.base.ABCSeries):</span>
+    <span class="c1">#     pos = po.to_string()</span>
+    <span class="c1"># elif isinstance(po, pd.core.base.ABCDataFrame):</span>
+    <span class="c1">#     pos = po.to_string()</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     raise NotImplementedError(&quot;Type %s not implemented!&quot;%type(po))</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">po</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pos</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">indent</span><span class="o">*</span><span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">pos</span>
+        <span class="c1"># pos = &quot;\n&quot; + pos</span>
+    <span class="n">poo</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="n">pos</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span><span class="n">indent</span><span class="o">*</span><span class="s2">&quot; &quot;</span><span class="p">))</span>
+    <span class="c1"># poo = (pos.replace(&quot;\n&quot;,&quot;\n&quot;+indent*&quot; &quot;))</span>
+    <span class="k">return</span> <span class="n">poo</span></div>
+
+<div class="viewcode-block" id="str_log"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.output.str_log">[docs]</a><span class="k">def</span> <span class="nf">str_log</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">logfp</span><span class="p">,</span> <span class="n">output_lvl</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">logopt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">printopt</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write lines to log and/or console.</span>
+<span class="sd">    TODO: add functionality for different backends! (Console/window object)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : string</span>
+<span class="sd">        String to write or print.</span>
+<span class="sd">    logfp : string or path</span>
+<span class="sd">        Open log file.</span>
+<span class="sd">    output_lvl : positiv integer</span>
+<span class="sd">        Output level (0=none, 1=only text, 2=additional diagramms).</span>
+<span class="sd">        The default is 1.</span>
+<span class="sd">    logopt : bool</span>
+<span class="sd">        Wriet in log file (logfp). The default is True.</span>
+<span class="sd">    printopt : bool</span>
+<span class="sd">        Display on terminal. The default is True.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">output_lvl</span><span class="o">&gt;=</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">logopt</span> <span class="ow">and</span> <span class="ow">not</span><span class="p">(</span><span class="n">logfp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">logfp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">printopt</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></div>
+
+<span class="c1">#%% output values</span>
+<div class="viewcode-block" id="Outvalgetter"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.output.Outvalgetter">[docs]</a><span class="k">def</span> <span class="nf">Outvalgetter</span><span class="p">(</span><span class="n">mdf</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">VIP</span><span class="p">,</span> <span class="n">exacts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">order</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;U&#39;</span><span class="p">],</span> <span class="n">add_esuf</span><span class="o">=</span><span class="s1">&#39;_con&#39;</span><span class="p">,</span>
+                 <span class="n">n_strain</span><span class="o">=</span><span class="s1">&#39;Strain&#39;</span><span class="p">,</span> <span class="n">n_stress</span><span class="o">=</span><span class="s1">&#39;Stress&#39;</span><span class="p">,</span>
+                 <span class="n">use_exacts</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get output values from given data and options.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mdf : pd.DataFrame</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    V : string</span>
+<span class="sd">        Relevant VIP (have to be in VIP).</span>
+<span class="sd">    VIP : list of string</span>
+<span class="sd">        &#39;Very important point&#39;.</span>
+<span class="sd">    exacts : pd.DataFrame, optional</span>
+<span class="sd">        Exact values (p.e. for yield point). </span>
+<span class="sd">        Need to have special format (see common.analyze.Yield_redet2_Multi):</span>
+<span class="sd">            - index: VIP</span>
+<span class="sd">            - columns: [&#39;strain_os&#39;,&#39;ind&#39;,&#39;ind_ex&#39;,n_strain,n_stress]</span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    order : list of string, optional</span>
+<span class="sd">        Output order. Implemented are:</span>
+<span class="sd">            - &#39;f&#39;: stress (no suffix)</span>
+<span class="sd">            - &#39;F&#39;: force (no suffix)</span>
+<span class="sd">            - &#39;e&#39;: strain</span>
+<span class="sd">            - &#39;s&#39;: displacement</span>
+<span class="sd">            - &#39;U&#39;: strain energy / -density</span>
+<span class="sd">            - &#39;W&#39;: deformation energy</span>
+<span class="sd">        The default is [&#39;f&#39;,&#39;e&#39;,&#39;U&#39;].</span>
+<span class="sd">    add_esuf : string, optional</span>
+<span class="sd">        Suffix for strain/displacement relation acc. to measurement method.</span>
+<span class="sd">        The default is &#39;_con&#39;.</span>
+<span class="sd">    n_strain : string, optional</span>
+<span class="sd">        Column name in mdf for strain values. The default is &#39;Strain&#39;.</span>
+<span class="sd">    n_stress : string, optional</span>
+<span class="sd">        Column name in mdf for stress values. The default is &#39;Stress&#39;.</span>
+<span class="sd">    use_exacts : bool, optional</span>
+<span class="sd">        Switch to use exact values if applicable. The default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : pd.Series</span>
+<span class="sd">        Evaluated values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">exacts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">use_exacts</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">out</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;F&#39;</span><span class="p">]:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="n">V</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">use_exacts</span> <span class="ow">and</span> <span class="p">(</span><span class="n">V</span> <span class="ow">in</span> <span class="n">exacts</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">exacts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">V</span><span class="p">,</span><span class="n">n_stress</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">V</span> <span class="ow">in</span> <span class="n">VIP</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">mdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">VIP</span><span class="p">[</span><span class="n">V</span><span class="p">],</span><span class="n">n_stress</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">elif</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;s&#39;</span><span class="p">]:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="n">V</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">+</span><span class="n">add_esuf</span>
+            <span class="k">if</span> <span class="n">use_exacts</span> <span class="ow">and</span> <span class="p">(</span><span class="n">V</span> <span class="ow">in</span> <span class="n">exacts</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">exacts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">V</span><span class="p">,</span><span class="n">n_strain</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">V</span> <span class="ow">in</span> <span class="n">VIP</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">mdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">VIP</span><span class="p">[</span><span class="n">V</span><span class="p">],</span><span class="n">n_strain</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">elif</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">,</span><span class="s1">&#39;W&#39;</span><span class="p">]:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="n">V</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">+</span><span class="n">add_esuf</span>
+            <span class="k">if</span> <span class="n">use_exacts</span> <span class="ow">and</span> <span class="p">(</span><span class="n">V</span> <span class="ow">in</span> <span class="n">exacts</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">exacts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">V</span><span class="p">,[</span><span class="n">n_strain</span><span class="p">,</span><span class="n">n_stress</span><span class="p">]]</span>
+                <span class="n">tmp</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">exacts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">V</span><span class="p">,</span><span class="s1">&#39;ind_ex&#39;</span><span class="p">]</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">mdf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">pd_trapz</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">loc</span><span class="p">[:</span><span class="n">exacts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">V</span><span class="p">,</span><span class="s1">&#39;ind_ex&#39;</span><span class="p">]],</span>
+                                        <span class="n">y</span><span class="o">=</span><span class="n">n_stress</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">n_strain</span><span class="p">,</span>
+                                        <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">V</span> <span class="ow">in</span> <span class="n">VIP</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">pd_trapz</span><span class="p">(</span><span class="n">mdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[:</span><span class="n">VIP</span><span class="p">[</span><span class="n">V</span><span class="p">]],</span>
+                                        <span class="n">y</span><span class="o">=</span><span class="n">n_stress</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">n_strain</span><span class="p">,</span>
+                                        <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Otvalgetter_Multi"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.output.Otvalgetter_Multi">[docs]</a><span class="k">def</span> <span class="nf">Otvalgetter_Multi</span><span class="p">(</span><span class="n">mdf</span><span class="p">,</span> <span class="n">Vs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span><span class="s1">&#39;YK&#39;</span><span class="p">,</span><span class="s1">&#39;Y0&#39;</span><span class="p">,</span><span class="s1">&#39;Y1&#39;</span><span class="p">,</span><span class="s1">&#39;U&#39;</span><span class="p">,</span><span class="s1">&#39;B&#39;</span><span class="p">],</span>
+                      <span class="n">datasep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;con&#39;</span><span class="p">,</span><span class="s1">&#39;opt&#39;</span><span class="p">],</span> <span class="n">VIPs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;con&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span><span class="s1">&#39;opt&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">},</span> 
+                      <span class="n">exacts</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;con&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span><span class="s1">&#39;opt&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">},</span> 
+                      <span class="n">orders</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;con&#39;</span><span class="p">:[</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;U&#39;</span><span class="p">],</span><span class="s1">&#39;opt&#39;</span><span class="p">:[</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;U&#39;</span><span class="p">]},</span> 
+                      <span class="n">add_esufs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;con&#39;</span><span class="p">:</span><span class="s1">&#39;_con&#39;</span><span class="p">,</span><span class="s1">&#39;opt&#39;</span><span class="p">:</span><span class="s1">&#39;_opt&#39;</span><span class="p">},</span>
+                      <span class="n">n_strains</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;con&#39;</span><span class="p">:</span><span class="s1">&#39;Strain&#39;</span><span class="p">,</span><span class="s1">&#39;opt&#39;</span><span class="p">:</span><span class="s1">&#39;DStrain&#39;</span><span class="p">},</span> 
+                      <span class="n">n_stresss</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;con&#39;</span><span class="p">:</span><span class="s1">&#39;Stress&#39;</span><span class="p">,</span><span class="s1">&#39;opt&#39;</span><span class="p">:</span><span class="s1">&#39;Stress&#39;</span><span class="p">},</span>
+                      <span class="n">use_exacts</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for Outvalgetter.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mdf : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    Vs : list of strings, optional</span>
+<span class="sd">        Relevant VIPs (have to be in VIP). </span>
+<span class="sd">        The default is [&#39;Y&#39;,&#39;YK&#39;,&#39;Y0&#39;,&#39;Y1&#39;,&#39;U&#39;,&#39;B&#39;].</span>
+<span class="sd">    datasep : list of strings, optional</span>
+<span class="sd">        Data seperation by strain/displacement relation. </span>
+<span class="sd">        The default is [&#39;con&#39;,&#39;opt&#39;].</span>
+<span class="sd">    VIPs : dict, optional</span>
+<span class="sd">        &#39;Very important points&#39;. The default is {&#39;con&#39;:None,&#39;opt&#39;:None}.</span>
+<span class="sd">    exacts : dict of pd.DataFrame, optional</span>
+<span class="sd">        Exact values (p.e. for yield point) seperated by strain/displacement relation. </span>
+<span class="sd">        Need to have special format (see common.analyze.Yield_redet2_Multi):</span>
+<span class="sd">            - index: VIP</span>
+<span class="sd">            - columns: [&#39;strain_os&#39;,&#39;ind&#39;,&#39;ind_ex&#39;,n_strain,n_stress]</span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    orders : dict of lists of strings, optional</span>
+<span class="sd">        Output order seperated to datasep. Implemented are:</span>
+<span class="sd">            - &#39;f&#39;: stress</span>
+<span class="sd">            - &#39;F&#39;: force</span>
+<span class="sd">            - &#39;e&#39;: strain</span>
+<span class="sd">            - &#39;s&#39;: displacement</span>
+<span class="sd">            - &#39;U&#39;: strain energy / -density</span>
+<span class="sd">            - &#39;W&#39;: deformation energy</span>
+<span class="sd">        The default is {&#39;con&#39;:[&#39;f&#39;,&#39;e&#39;,&#39;U&#39;],&#39;opt&#39;:[&#39;e&#39;,&#39;U&#39;]}.</span>
+<span class="sd">    add_esufs : dict of strings, optional</span>
+<span class="sd">        Suffixes for strain/displacement relation acc. to measurement method.</span>
+<span class="sd">        The default is {&#39;con&#39;:&#39;_con&#39;,&#39;opt&#39;:&#39;_opt&#39;}.</span>
+<span class="sd">    n_strains : dict of strings, optional</span>
+<span class="sd">        Column name in mdf for strain values.</span>
+<span class="sd">        The default is {&#39;con&#39;:&#39;Strain&#39;,&#39;opt&#39;:&#39;DStrain&#39;}.</span>
+<span class="sd">    n_stresss : TYPE, optional</span>
+<span class="sd">        Column name in mdf for stress values.</span>
+<span class="sd">        The default is {&#39;con&#39;:&#39;Stress&#39;,&#39;opt&#39;:&#39;Stress&#39;}.</span>
+<span class="sd">    use_exacts : bool, optional</span>
+<span class="sd">        Switch to use exact values if applicable. The default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : pd.Series</span>
+<span class="sd">        Evaluated values.</span>
+<span class="sd">        </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Otvalgetter_Multi(messu_FP, Vs=relVS,</span>
+<span class="sd">                      datasep=[&#39;con&#39;,&#39;opt&#39;], </span>
+<span class="sd">                      VIPs={&#39;con&#39;:VIP_messu,&#39;opt&#39;:VIP_dicu}, </span>
+<span class="sd">                      exacts={&#39;con&#39;:yield_df_con,&#39;opt&#39;:yield_df_opt}, </span>
+<span class="sd">                      orders={&#39;con&#39;:[&#39;f&#39;,&#39;e&#39;,&#39;U&#39;],&#39;opt&#39;:[&#39;e&#39;,&#39;U&#39;]}, </span>
+<span class="sd">                      add_esufs={&#39;con&#39;:&#39;_con&#39;,&#39;opt&#39;:&#39;_opt&#39;},</span>
+<span class="sd">                      n_strains={&#39;con&#39;:&#39;Strain&#39;,&#39;opt&#39;:dic_used_Strain}, </span>
+<span class="sd">                      n_stresss={&#39;con&#39;:&#39;Stress&#39;,&#39;opt&#39;:&#39;Stress&#39;},</span>
+<span class="sd">                      use_exacts=True)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">V</span> <span class="ow">in</span> <span class="n">Vs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="n">datasep</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Outvalgetter</span><span class="p">(</span><span class="n">mdf</span><span class="o">=</span><span class="n">mdf</span><span class="p">,</span> <span class="n">V</span><span class="o">=</span><span class="n">V</span><span class="p">,</span> <span class="n">VIP</span><span class="o">=</span><span class="n">VIPs</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">exacts</span><span class="o">=</span><span class="n">exacts</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> 
+                                    <span class="n">order</span><span class="o">=</span><span class="n">orders</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">add_esuf</span><span class="o">=</span><span class="n">add_esufs</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                                    <span class="n">n_strain</span><span class="o">=</span><span class="n">n_strains</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span> <span class="n">n_stress</span><span class="o">=</span><span class="n">n_stresss</span><span class="p">[</span><span class="n">ds</span><span class="p">],</span>
+                                    <span class="n">use_exacts</span><span class="o">=</span><span class="n">use_exacts</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

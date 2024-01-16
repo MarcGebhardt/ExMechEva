@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.bending.bfunc_class &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.bending.bfunc_class</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.bending.bfunc_class</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Classes for bending functions.</span>
+
+<span class="sd">@author: MarcGebhardt</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sy</span>
+<span class="c1"># import dill # saving banding func legion does not work</span>
+
+<span class="kn">from</span> <span class="nn">.opt_mps</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Point_df_from_lin</span><span class="p">,</span> <span class="n">Points_eval_func</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.bfunc_fse</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FSE_4sin_wlin_d0</span><span class="p">,</span> <span class="n">FSE_4sin_wlin_d1</span><span class="p">,</span> <span class="n">FSE_4sin_wlin_d2</span><span class="p">,</span>
+    <span class="n">FSE_4sin_lin_func_d0</span><span class="p">,</span> <span class="n">FSE_4sin_lin_func_d1</span><span class="p">,</span> <span class="n">FSE_4sin_lin_func_d2</span><span class="p">,</span>
+    <span class="n">FSE_4sin_d0</span><span class="p">,</span> <span class="n">FSE_4sin_d1</span><span class="p">,</span> <span class="n">FSE_4sin_d2</span><span class="p">,</span>
+    <span class="n">FSE_SF_func_d0</span><span class="p">,</span> <span class="n">FSE_SF_func_d1</span><span class="p">,</span> <span class="n">FSE_SF_func_d2</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="Bend_func_sub"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_sub">[docs]</a><span class="k">class</span> <span class="nc">Bend_func_sub</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lowest element which provides necessary function informations.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">sy_expr</span><span class="p">,</span> <span class="n">sy_string</span><span class="p">,</span>
+                 <span class="n">independent_vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">param_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">param_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subfunction takes callable function and additional informations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : callable</span>
+<span class="sd">            Function.</span>
+<span class="sd">        sy_expr : sympy expression</span>
+<span class="sd">            Sympy expression.</span>
+<span class="sd">        sy_string : string expression</span>
+<span class="sd">            Expression string.</span>
+<span class="sd">        independent_vars : array of string | string, optional</span>
+<span class="sd">            Arguments to `func` that are independent variables. The default is None.</span>
+<span class="sd">        param_names : array of string, optional</span>
+<span class="sd">            Names of arguments to `func` that are to be made into</span>
+<span class="sd">            parameters. The default is None.</span>
+<span class="sd">        name : string, optional</span>
+<span class="sd">            Name of function. The default is None.</span>
+<span class="sd">        **kws : TYPE</span>
+<span class="sd">            Additional keyword arguments to pass.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="o">=</span><span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sy_expr</span><span class="o">=</span><span class="n">sy_expr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sy_string</span><span class="o">=</span><span class="n">sy_string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">independent_vars</span><span class="o">=</span><span class="n">independent_vars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="o">=</span><span class="n">param_names</span>
+        <span class="c1"># self.param_types=param_types</span>
+        <span class="c1"># self.param_types=Bend_func_sub._set_free_type(self)</span>
+        <span class="n">_param_types</span><span class="o">=</span><span class="n">Bend_func_sub</span><span class="o">.</span><span class="n">_set_free_type</span><span class="p">(</span><span class="n">param_names</span><span class="p">,</span><span class="n">param_types</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_types</span><span class="o">=</span><span class="n">_param_types</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span> <span class="o">=</span> <span class="n">kws</span>
+    
+<div class="viewcode-block" id="Bend_func_sub.__call__"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_sub.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">kws</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call and evaluate underlayed function.</span>
+<span class="sd">        If x is an array of float and kws is a OrderedDict, result will be an array of float.</span>
+<span class="sd">        If x is a Dataframe or float and kws is a Series, evaluates each index in kws.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : array of float | Dataframe of type Points</span>
+<span class="sd">            Independet variables to evaluate function.</span>
+<span class="sd">        **kws : OrderedDict | Series of OrderedDicts</span>
+<span class="sd">            Additional keyword arguments to pass to func</span>
+<span class="sd">            (p.e. parameter value dictionary).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array of float</span>
+<span class="sd">            Evaluation values of function to x and kws.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">kws</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Points_eval_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">fit_params</span><span class="o">=</span><span class="n">kws</span><span class="p">,</span> <span class="n">pointdf</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">kws</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">kws</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="c1"># xt=&#39;L&#39;+pd.Series(x).index.map(str)</span>
+            <span class="c1"># mit=pd.MultiIndex.from_product([xt,[&#39;y&#39;]],names=[&#39;Points&#39;,&#39;Vars&#39;])</span>
+            <span class="c1"># # dft=pd.DataFrame([],index=kws.index,columns=mit)</span>
+            <span class="c1"># # dft.loc[:]=x</span>
+            <span class="c1"># # return Points_eval_func(self.func, fit_params=kws, pointdf=dft, steps=kws.index)</span>
+            <span class="n">dfs</span><span class="o">=</span><span class="n">kws</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">b</span><span class="p">))</span>
+            <span class="n">dft</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dfs</span><span class="p">)</span>
+            <span class="n">dft</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">kws</span><span class="o">.</span><span class="n">index</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;coords&#39;</span>       <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span> <span class="n">opts</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;coords&#39;</span><span class="p">:</span>      <span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]})</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;coords_set&#39;</span>   <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span> <span class="n">opts</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;coords_set&#39;</span><span class="p">:</span>   <span class="kc">None</span><span class="p">})</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;col_type&#39;</span>     <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span> <span class="n">opts</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;col_type&#39;</span><span class="p">:</span>    <span class="s1">&#39;str&#39;</span><span class="p">})</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;Point_prefix&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span> <span class="n">opts</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;Point_prefix&#39;</span><span class="p">:</span><span class="s1">&#39;L&#39;</span>  <span class="p">})</span>
+            <span class="n">mit</span><span class="o">=</span><span class="n">Point_df_from_lin</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+            <span class="n">dft</span><span class="o">.</span><span class="n">columns</span><span class="o">=</span><span class="n">mit</span>
+            <span class="k">return</span> <span class="n">dft</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">numeric</span><span class="o">.</span><span class="n">Float64Index</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">kws</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="n">dfs</span><span class="o">=</span><span class="n">kws</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span><span class="o">**</span><span class="n">b</span><span class="p">))</span>
+            <span class="n">dft</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dfs</span><span class="p">)</span>
+            <span class="n">dft</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">kws</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">dft</span><span class="o">.</span><span class="n">columns</span><span class="o">=</span><span class="n">x</span>
+            <span class="k">return</span> <span class="n">dft</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span> <span class="n">x</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">kws</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="n">dfs</span><span class="o">=</span><span class="n">kws</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">b</span><span class="p">))</span>
+            <span class="n">dfs</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;&gt;&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">dfs</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">kws</span><span class="p">)</span></div>
+    
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">obj</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sy_string</span>
+    
+    <span class="c1"># def _set_free_type(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;Set all remaining parameter types, not specified in types to &#39;free&#39;.&quot;&quot;&quot;</span>
+    <span class="c1">#     self.param_types = {i: (self.param_types[i] if i in self.param_types.keys() else &#39;free&#39;) </span>
+    <span class="c1">#                         for i in self.param_names}</span>
+    <span class="k">def</span> <span class="nf">_set_free_type</span><span class="p">(</span><span class="n">pnames</span><span class="p">,</span><span class="n">ptypes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set all remaining parameter types, not specified in types to &#39;free&#39;.&quot;&quot;&quot;</span>
+        <span class="n">param_types</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="n">ptypes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ptypes</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="s1">&#39;free&#39;</span><span class="p">)</span> 
+                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">pnames</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">param_types</span></div>
+    
+<span class="c1"># # Test für bessere zuordnung    </span>
+<span class="c1"># class Bend_func_sub_FSE_4sin_wlin_d0(Bend_func_sub):</span>
+<span class="c1">#     def __init__(self, name=None, **kws):</span>
+<span class="c1">#         def FSE_4sin_wlin_d0(x, xmin,xmax,FP, b1,b2,b3,b4,c,d, f_V_0=None):</span>
+<span class="c1">#             eq=b1*np.sin(FP*(x-xmin))+b2*np.sin(2*FP*(x-xmin))+b3*np.sin(3*FP*(x-xmin))+b4*np.sin(4*FP*(x-xmin))+c*(x-xmin)+d</span>
+<span class="c1">#             return eq</span>
+<span class="c1">#         f  = FSE_4sin_wlin_d0</span>
+<span class="c1">#         ss = &#39;b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))+c*(x-xmin)+d&#39;</span>
+<span class="c1">#         se = sy.parse_expr(ss)</span>
+<span class="c1">#         param_names = np.array([&#39;x&#39;,&#39;xmin&#39;,&#39;xmax&#39;,&#39;FP&#39;,&#39;b1&#39;,&#39;b2&#39;,&#39;b3&#39;,&#39;b4&#39;,&#39;c&#39;,&#39;d&#39;,&#39;f_V_0&#39;])</span>
+<span class="c1">#         super().__init__(func=f, sy_expr=se, sy_string=ss,</span>
+<span class="c1">#                          independent_vars=&#39;x&#39;, param_names=param_names,</span>
+<span class="c1">#                          name=name, **kws)</span>
+
+
+<div class="viewcode-block" id="Bend_func_cohort"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_cohort">[docs]</a><span class="k">class</span> <span class="nc">Bend_func_cohort</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function collection of Subfunctions (Bend_func_sub)&quot;&quot;&quot;</span>
+    
+    <span class="c1"># @property</span>
+    <span class="c1"># def _constructor(self) -&gt; type[Bend_func_cohort]:</span>
+    <span class="c1">#     return Bend_func_cohort</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">d1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">d2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+        <span class="c1"># self.d0=Bend_func_sub.d0</span>
+        <span class="c1"># self.d1=Bend_func_sub.d1</span>
+        <span class="c1"># self.d2=Bend_func_sub.d2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">=</span><span class="n">kws</span>
+            
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">obj</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Bend_func_cohort.Init_fandds"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_cohort.Init_fandds">[docs]</a>    <span class="k">def</span> <span class="nf">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr_d0</span><span class="p">,</span> <span class="n">var_names</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">var_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">option</span><span class="o">=</span><span class="s1">&#39;d0_str_to_all&#39;</span><span class="p">,</span>
+                    <span class="n">expr_d1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expr_d2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">func_d0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">func_d1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">func_d2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return Sympy expressions and associated lambdified functions, depending on option-string.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        expr_d0 : string or sympy.expression</span>
+<span class="sd">            String or expression, which determine function.</span>
+<span class="sd">        var_names : TYPE</span>
+<span class="sd">            Variable names for parsing.</span>
+<span class="sd">        var : TYPE, optional</span>
+<span class="sd">            Variable name for derivation. The default is &#39;x&#39;.</span>
+<span class="sd">        option : string, optional</span>
+<span class="sd">            Option of function generation, in form of which(d0/each)_type(str/expr)_to_what(d0/all). The default is &#39;d0_str_to_all&#39;.</span>
+<span class="sd">        expr_d1 : string or sympy.expression, optional</span>
+<span class="sd">            String or expression, which determine 1st derivate of function. The default is None.</span>
+<span class="sd">        expr_d2 : string or sympy.expression, optional</span>
+<span class="sd">            String or expression, which determine 2nd derivate of function. The default is None.</span>
+<span class="sd">    </span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            Error for not implemented option.</span>
+<span class="sd">    </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        func_package : Bend_func_cohort</span>
+<span class="sd">            A function collection of all generated sympy expressions</span>
+<span class="sd">            and associated lambdified functions and their 1st and 2nd derivates.</span>
+<span class="sd">    </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;func_to_all&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d0</span><span class="o">=</span><span class="n">Bend_func_sub</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">func_d0</span><span class="p">,</span> <span class="n">sy_expr</span><span class="o">=</span><span class="n">sy</span><span class="o">.</span><span class="n">parse_expr</span><span class="p">(</span><span class="n">expr_d0</span><span class="p">),</span> <span class="n">sy_string</span><span class="o">=</span><span class="n">expr_d0</span><span class="p">,</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_d0&#39;</span><span class="p">,</span> <span class="n">independent_vars</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+                                  <span class="n">param_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span> <span class="n">param_types</span><span class="o">=</span><span class="n">var_types</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d1</span><span class="o">=</span><span class="n">Bend_func_sub</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">func_d1</span><span class="p">,</span> <span class="n">sy_expr</span><span class="o">=</span><span class="n">sy</span><span class="o">.</span><span class="n">parse_expr</span><span class="p">(</span><span class="n">expr_d1</span><span class="p">),</span> <span class="n">sy_string</span><span class="o">=</span><span class="n">expr_d1</span><span class="p">,</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_d1&#39;</span><span class="p">,</span> <span class="n">independent_vars</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+                                  <span class="n">param_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span> <span class="n">param_types</span><span class="o">=</span><span class="n">var_types</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="o">=</span><span class="n">Bend_func_sub</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">func_d2</span><span class="p">,</span> <span class="n">sy_expr</span><span class="o">=</span><span class="n">sy</span><span class="o">.</span><span class="n">parse_expr</span><span class="p">(</span><span class="n">expr_d2</span><span class="p">),</span> <span class="n">sy_string</span><span class="o">=</span><span class="n">expr_d2</span><span class="p">,</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_d2&#39;</span><span class="p">,</span> <span class="n">independent_vars</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+                                  <span class="n">param_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span> <span class="n">param_types</span><span class="o">=</span><span class="n">var_types</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>            
+            <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;d0_str_to_all&#39;</span><span class="p">:</span>
+                    <span class="n">d0</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">parse_expr</span><span class="p">(</span><span class="n">expr_d0</span><span class="p">)</span>
+                    <span class="n">d1</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">d0</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+                    <span class="n">d2</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;d0_expr_to_all&#39;</span><span class="p">:</span>
+                    <span class="n">d0</span> <span class="o">=</span> <span class="n">expr_d0</span>
+                    <span class="n">d1</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">d0</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+                    <span class="n">d2</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">option</span><span class="o">==</span> <span class="s1">&#39;each_str_to_all&#39;</span><span class="p">:</span>
+                    <span class="n">d0</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">parse_expr</span><span class="p">(</span><span class="n">expr_d0</span><span class="p">)</span>
+                    <span class="n">d1</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">parse_expr</span><span class="p">(</span><span class="n">expr_d1</span><span class="p">)</span>
+                    <span class="n">d2</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">parse_expr</span><span class="p">(</span><span class="n">expr_d2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">option</span><span class="o">==</span> <span class="s1">&#39;each_expr_to_all&#39;</span><span class="p">:</span>
+                    <span class="n">d0</span> <span class="o">=</span> <span class="n">expr_d0</span>
+                    <span class="n">d1</span> <span class="o">=</span> <span class="n">expr_d1</span>
+                    <span class="n">d2</span> <span class="o">=</span> <span class="n">expr_d2</span>
+            <span class="k">elif</span> <span class="n">option</span><span class="o">==</span> <span class="s1">&#39;d0_str_to_d0&#39;</span><span class="p">:</span>
+                    <span class="n">d0</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">parse_expr</span><span class="p">(</span><span class="n">expr_d0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">option</span><span class="o">==</span> <span class="s1">&#39;d0_expr_to_d0&#39;</span><span class="p">:</span>
+                    <span class="n">d0</span> <span class="o">=</span> <span class="n">expr_d0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Option not implemented!&quot;</span><span class="p">)</span>
+                
+            
+            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;to_all&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">option</span><span class="p">:</span>
+                <span class="n">d0_func</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">lambdify</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span> <span class="n">d0</span><span class="p">)</span>
+                <span class="n">d1_func</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">lambdify</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span> <span class="n">d1</span><span class="p">)</span>
+                <span class="n">d2_func</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">lambdify</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span> <span class="n">d2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">d0</span><span class="o">=</span><span class="n">Bend_func_sub</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">d0_func</span><span class="p">,</span> <span class="n">sy_expr</span><span class="o">=</span><span class="n">d0</span><span class="p">,</span> <span class="n">sy_string</span><span class="o">=</span><span class="n">expr_d0</span><span class="o">.</span><span class="fm">__str__</span><span class="p">(),</span>
+                                             <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_d0&#39;</span><span class="p">,</span> <span class="n">independent_vars</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+                                             <span class="n">param_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span> <span class="n">param_types</span><span class="o">=</span><span class="n">var_types</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">d1</span><span class="o">=</span><span class="n">Bend_func_sub</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">d1_func</span><span class="p">,</span> <span class="n">sy_expr</span><span class="o">=</span><span class="n">d1</span><span class="p">,</span> <span class="n">sy_string</span><span class="o">=</span><span class="n">d1</span><span class="o">.</span><span class="fm">__str__</span><span class="p">(),</span>
+                                             <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_d1&#39;</span><span class="p">,</span> <span class="n">independent_vars</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+                                             <span class="n">param_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span> <span class="n">param_types</span><span class="o">=</span><span class="n">var_types</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="o">=</span><span class="n">Bend_func_sub</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">d2_func</span><span class="p">,</span> <span class="n">sy_expr</span><span class="o">=</span><span class="n">d2</span><span class="p">,</span> <span class="n">sy_string</span><span class="o">=</span><span class="n">d2</span><span class="o">.</span><span class="fm">__str__</span><span class="p">(),</span>
+                                             <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_d2&#39;</span><span class="p">,</span> <span class="n">independent_vars</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+                                             <span class="n">param_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span> <span class="n">param_types</span><span class="o">=</span><span class="n">var_types</span><span class="p">)</span>
+    
+            <span class="k">elif</span> <span class="p">(</span><span class="s1">&#39;to_d0&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">option</span><span class="p">:</span>
+                <span class="n">d0_func</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">lambdify</span><span class="p">(</span><span class="n">var_names</span><span class="p">,</span> <span class="n">d0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">d0</span><span class="o">=</span><span class="n">Bend_func_sub</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">d0_func</span><span class="p">,</span> <span class="n">sy_expr</span><span class="o">=</span><span class="n">d0</span><span class="p">,</span> <span class="n">sy_string</span><span class="o">=</span><span class="n">expr_d0</span><span class="p">,</span>
+                                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;_d0&#39;</span><span class="p">,</span> <span class="n">independent_vars</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+                                             <span class="n">param_names</span><span class="o">=</span><span class="n">var_names</span><span class="p">,</span> <span class="n">param_types</span><span class="o">=</span><span class="n">var_types</span><span class="p">)</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Option not implemented!&quot;</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="Bend_func_legion"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_legion">[docs]</a><span class="k">class</span> <span class="nc">Bend_func_legion</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bend line describing functions and their 1st and 2nd derivates</span>
+<span class="sd">       Example:</span>
+<span class="sd">        bl=Bend_func_legion(name=&#39;FSE fit&#39;)</span>
+<span class="sd">        bl.Builder(option=&#39;FSE&#39;)&quot;&quot;&quot;</span>
+    <span class="c1"># @property</span>
+    <span class="c1"># def _constructor(self) -&gt; type[Bend_func_cohort]:</span>
+    <span class="c1">#     return Bend_func_cohort</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inital properties setter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : string, optional</span>
+<span class="sd">            Name of bend func legion. The default is None.</span>
+<span class="sd">        description : TYPE, optional</span>
+<span class="sd">            Description of bend func legion. The default is None.</span>
+<span class="sd">        **kws : dict</span>
+<span class="sd">            Dictionary of keyword arguments.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># self.d0=Bend_func_sub.d0</span>
+        <span class="c1"># self.d1=Bend_func_sub.d1</span>
+        <span class="c1"># self.d2=Bend_func_sub.d2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="o">=</span><span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">=</span><span class="n">kws</span>
+        
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">obj</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="Bend_func_legion.Builder"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_legion.Builder">[docs]</a>    <span class="k">def</span> <span class="nf">Builder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;FSE&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build an instance of Bend per option to prepare fit of measured bend line.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        option : string, optional</span>
+<span class="sd">            Kind of . The default is &#39;FSE&#39;.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            Building option not implemented.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;FSE&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Bend line as lambdified Fourier series expansion&#39;</span>
+    
+            <span class="n">w_A_d0_str</span><span class="o">=</span><span class="s1">&#39;b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))+c*(x-xmin)+d&#39;</span>
+            <span class="c1"># w_variables_names=np.array([&#39;x&#39;,&#39;xmin&#39;,&#39;xmax&#39;,&#39;FP&#39;,&#39;b1&#39;,&#39;b2&#39;,&#39;b3&#39;,&#39;b4&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+            <span class="n">w_variables_names</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;xmin&#39;</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">,</span><span class="s1">&#39;FP&#39;</span><span class="p">,</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span><span class="s1">&#39;b2&#39;</span><span class="p">,</span><span class="s1">&#39;b3&#39;</span><span class="p">,</span><span class="s1">&#39;b4&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="s1">&#39;f_V_0&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_A_d0_str</span><span class="p">,</span>
+                                         <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                         <span class="n">option</span><span class="o">=</span><span class="s1">&#39;d0_str_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_I_d0_str</span> <span class="o">=</span> <span class="s1">&#39;c*(x-xmin)+d&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_I</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_I</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_I_d0_str</span><span class="p">,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;d0_str_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_S_d0_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_I</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;S&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_S_d0_exp</span><span class="p">,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;d0_expr_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="c1"># w_variables_names_V=np.append(w_variables_names,&#39;f_V_0&#39;)</span>
+            <span class="n">w_V_d0_str</span> <span class="o">=</span> <span class="s1">&#39;f_V_0*(1-2*abs(x)/(xmax-xmin))&#39;</span>
+            <span class="n">w_V_d1_str</span> <span class="o">=</span> <span class="s1">&#39;f_V_0*(-2*sign(x)/(xmax-xmin))&#39;</span>
+            <span class="n">w_V_d2_str</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_V_d0_str</span><span class="p">,</span>
+                                     <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_V_d1_str</span><span class="p">,</span> <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_V_d2_str</span><span class="p">,</span>
+                                     <span class="c1"># var_names=w_variables_names_V,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;each_str_to_all&#39;</span><span class="p">)</span>
+    
+            <span class="n">w_Mima_d0_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="n">w_Mima_d1_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">.</span><span class="n">d1</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">.</span><span class="n">d1</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="n">w_Mima_d2_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">.</span><span class="n">d2</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">.</span><span class="n">d2</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_M_ima</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;M imaginary&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_M_ima</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_Mima_d0_exp</span><span class="p">,</span>
+                                     <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_Mima_d1_exp</span><span class="p">,</span> <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_Mima_d2_exp</span><span class="p">,</span>
+                                     <span class="c1"># var_names=w_variables_names_V,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;each_expr_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_M_d0_str</span><span class="o">=</span><span class="s1">&#39;b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))&#39;</span>
+            <span class="n">w_variables_names_M</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;xmin&#39;</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">,</span><span class="s1">&#39;FP&#39;</span><span class="p">,</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span><span class="s1">&#39;b2&#39;</span><span class="p">,</span><span class="s1">&#39;b3&#39;</span><span class="p">,</span><span class="s1">&#39;b4&#39;</span><span class="p">])</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_M</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;M&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_M</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_M_d0_str</span><span class="p">,</span>
+                                         <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names_M</span><span class="p">,</span>
+                                         <span class="c1"># var_names=w_variables_names,</span>
+                                         <span class="n">option</span><span class="o">=</span><span class="s1">&#39;d0_str_to_all&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;FSE_fixed&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Bend line as Fourier series expansion&#39;</span>
+    
+            <span class="n">w_A_d0_str</span><span class="o">=</span><span class="s1">&#39;b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))+c*(x-xmin)+d&#39;</span>
+            <span class="n">w_A_d1_str</span><span class="o">=</span><span class="s1">&#39;FP*b1*cos(FP*(x - xmin)) + 2*FP*b2*cos(2*FP*(x - xmin)) + 3*FP*b3*cos(3*FP*(x - xmin)) + 4*FP*b4*cos(4*FP*(x - xmin)) + c&#39;</span>
+            <span class="n">w_A_d2_str</span><span class="o">=</span><span class="s1">&#39;-FP**2*(b1*sin(FP*(x - xmin)) + 4*b2*sin(2*FP*(x - xmin)) + 9*b3*sin(3*FP*(x - xmin)) + 16*b4*sin(4*FP*(x - xmin)))&#39;</span>
+            <span class="n">w_A_d0_func</span><span class="o">=</span><span class="n">FSE_4sin_wlin_d0</span>
+            <span class="n">w_A_d1_func</span><span class="o">=</span><span class="n">FSE_4sin_wlin_d1</span>
+            <span class="n">w_A_d2_func</span><span class="o">=</span><span class="n">FSE_4sin_wlin_d2</span>
+            <span class="n">w_variables_names</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;xmin&#39;</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">,</span><span class="s1">&#39;FP&#39;</span><span class="p">,</span>
+                                        <span class="s1">&#39;b1&#39;</span><span class="p">,</span><span class="s1">&#39;b2&#39;</span><span class="p">,</span><span class="s1">&#39;b3&#39;</span><span class="p">,</span><span class="s1">&#39;b4&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">,</span>
+                                        <span class="s1">&#39;f_V_0&#39;</span><span class="p">])</span>
+            <span class="n">w_variables_types</span><span class="o">=</span><span class="nb">dict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="s1">&#39;independent&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;xmin&#39;</span><span class="p">:</span><span class="s1">&#39;fixed&#39;</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">:</span><span class="s1">&#39;fixed&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;FP&#39;</span><span class="p">:</span><span class="s1">&#39;expr&#39;</span><span class="p">,</span><span class="s1">&#39;f_V_0&#39;</span><span class="p">:</span><span class="s1">&#39;post&#39;</span><span class="p">})</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="p">,</span> 
+                                         <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_A_d0_str</span><span class="p">,</span> <span class="n">func_d0</span><span class="o">=</span><span class="n">w_A_d0_func</span><span class="p">,</span>
+                                         <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_A_d1_str</span><span class="p">,</span> <span class="n">func_d1</span><span class="o">=</span><span class="n">w_A_d1_func</span><span class="p">,</span>
+                                         <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_A_d2_str</span><span class="p">,</span> <span class="n">func_d2</span><span class="o">=</span><span class="n">w_A_d2_func</span><span class="p">,</span>
+                                         <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                         <span class="n">var_types</span><span class="o">=</span><span class="n">w_variables_types</span><span class="p">,</span>
+                                         <span class="n">option</span><span class="o">=</span><span class="s1">&#39;func_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_I_d0_str</span> <span class="o">=</span> <span class="s1">&#39;c*(x-xmin)+d&#39;</span>
+            <span class="n">w_I_d1_str</span> <span class="o">=</span> <span class="s1">&#39;c&#39;</span>
+            <span class="n">w_I_d2_str</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>
+            <span class="n">w_I_d0_func</span><span class="o">=</span><span class="n">FSE_4sin_lin_func_d0</span>
+            <span class="n">w_I_d1_func</span><span class="o">=</span><span class="n">FSE_4sin_lin_func_d1</span>
+            <span class="n">w_I_d2_func</span><span class="o">=</span><span class="n">FSE_4sin_lin_func_d2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_I</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_I</span><span class="p">,</span>
+                                         <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_I_d0_str</span><span class="p">,</span> <span class="n">func_d0</span><span class="o">=</span><span class="n">w_I_d0_func</span><span class="p">,</span>
+                                         <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_I_d1_str</span><span class="p">,</span> <span class="n">func_d1</span><span class="o">=</span><span class="n">w_I_d1_func</span><span class="p">,</span>
+                                         <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_I_d2_str</span><span class="p">,</span> <span class="n">func_d2</span><span class="o">=</span><span class="n">w_I_d2_func</span><span class="p">,</span>
+                                         <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                         <span class="n">var_types</span><span class="o">=</span><span class="n">w_variables_types</span><span class="p">,</span>
+                                         <span class="n">option</span><span class="o">=</span><span class="s1">&#39;func_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_S_d0_str</span> <span class="o">=</span> <span class="s1">&#39;b1*sin(FP*(x - xmin)) + b2*sin(2*FP*(x - xmin)) + b3*sin(3*FP*(x - xmin)) + b4*sin(4*FP*(x - xmin))&#39;</span>
+            <span class="n">w_S_d1_str</span> <span class="o">=</span> <span class="s1">&#39;FP*(b1*cos(FP*(x - xmin)) + 2*b2*cos(2*FP*(x - xmin)) + 3*b3*cos(3*FP*(x - xmin)) + 4*b4*cos(4*FP*(x - xmin)))&#39;</span>
+            <span class="n">w_S_d2_str</span> <span class="o">=</span> <span class="s1">&#39;-FP**2*(b1*sin(FP*(x - xmin)) + 4*b2*sin(2*FP*(x - xmin)) + 9*b3*sin(3*FP*(x - xmin)) + 16*b4*sin(4*FP*(x - xmin)))&#39;</span>
+            <span class="n">w_S_d0_func</span><span class="o">=</span><span class="n">FSE_4sin_d0</span>
+            <span class="n">w_S_d1_func</span><span class="o">=</span><span class="n">FSE_4sin_d1</span>
+            <span class="n">w_S_d2_func</span><span class="o">=</span><span class="n">FSE_4sin_d2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;S&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="p">,</span>
+                                         <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_S_d0_str</span><span class="p">,</span> <span class="n">func_d0</span><span class="o">=</span><span class="n">w_S_d0_func</span><span class="p">,</span>
+                                         <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_S_d1_str</span><span class="p">,</span> <span class="n">func_d1</span><span class="o">=</span><span class="n">w_S_d1_func</span><span class="p">,</span>
+                                         <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_S_d2_str</span><span class="p">,</span> <span class="n">func_d2</span><span class="o">=</span><span class="n">w_S_d2_func</span><span class="p">,</span>
+                                         <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                         <span class="n">var_types</span><span class="o">=</span><span class="n">w_variables_types</span><span class="p">,</span>
+                                         <span class="n">option</span><span class="o">=</span><span class="s1">&#39;func_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_V_d0_str</span> <span class="o">=</span> <span class="s1">&#39;f_V_0*(1-2*abs(x)/(xmax-xmin))&#39;</span>
+            <span class="n">w_V_d1_str</span> <span class="o">=</span> <span class="s1">&#39;f_V_0*(-2*sign(x)/(xmax-xmin))&#39;</span>
+            <span class="n">w_V_d2_str</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>
+            <span class="n">w_V_d0_func</span><span class="o">=</span><span class="n">FSE_SF_func_d0</span>
+            <span class="n">w_V_d1_func</span><span class="o">=</span><span class="n">FSE_SF_func_d1</span>
+            <span class="n">w_V_d2_func</span><span class="o">=</span><span class="n">FSE_SF_func_d2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="p">,</span>
+                                         <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_V_d0_str</span><span class="p">,</span> <span class="n">func_d0</span><span class="o">=</span><span class="n">w_V_d0_func</span><span class="p">,</span>
+                                         <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_V_d1_str</span><span class="p">,</span> <span class="n">func_d1</span><span class="o">=</span><span class="n">w_V_d1_func</span><span class="p">,</span>
+                                         <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_V_d2_str</span><span class="p">,</span> <span class="n">func_d2</span><span class="o">=</span><span class="n">w_V_d2_func</span><span class="p">,</span>
+                                         <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                         <span class="n">var_types</span><span class="o">=</span><span class="n">w_variables_types</span><span class="p">,</span>
+                                         <span class="n">option</span><span class="o">=</span><span class="s1">&#39;func_to_all&#39;</span><span class="p">)</span>
+    
+            <span class="n">w_Mima_d0_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="n">w_Mima_d1_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">.</span><span class="n">d1</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">.</span><span class="n">d1</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="n">w_Mima_d2_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">.</span><span class="n">d2</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">.</span><span class="n">d2</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_M_ima</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;M imaginary&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_M_ima</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_Mima_d0_exp</span><span class="p">,</span>
+                                     <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_Mima_d1_exp</span><span class="p">,</span> <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_Mima_d2_exp</span><span class="p">,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">var_types</span><span class="o">=</span><span class="n">w_variables_types</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;each_expr_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_M_d0_str</span> <span class="o">=</span><span class="s1">&#39;b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))&#39;</span>
+            <span class="n">w_M_d1_str</span> <span class="o">=</span> <span class="s1">&#39;FP*(b1*cos(FP*(x - xmin)) + 2*b2*cos(2*FP*(x - xmin)) + 3*b3*cos(3*FP*(x - xmin)) + 4*b4*cos(4*FP*(x - xmin)))&#39;</span>
+            <span class="n">w_M_d2_str</span> <span class="o">=</span> <span class="s1">&#39;-FP**2*(b1*sin(FP*(x - xmin)) + 4*b2*sin(2*FP*(x - xmin)) + 9*b3*sin(3*FP*(x - xmin)) + 16*b4*sin(4*FP*(x - xmin)))&#39;</span>
+            <span class="n">w_M_d0_func</span><span class="o">=</span><span class="n">FSE_4sin_d0</span>
+            <span class="n">w_M_d1_func</span><span class="o">=</span><span class="n">FSE_4sin_d1</span>
+            <span class="n">w_M_d2_func</span><span class="o">=</span><span class="n">FSE_4sin_d2</span>
+            <span class="n">w_variables_names_M</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;xmin&#39;</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">,</span><span class="s1">&#39;FP&#39;</span><span class="p">,</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span><span class="s1">&#39;b2&#39;</span><span class="p">,</span><span class="s1">&#39;b3&#39;</span><span class="p">,</span><span class="s1">&#39;b4&#39;</span><span class="p">])</span>
+            <span class="n">w_variables_types_M</span><span class="o">=</span><span class="nb">dict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="s1">&#39;independent&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;xmin&#39;</span><span class="p">:</span><span class="s1">&#39;fixed&#39;</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">:</span><span class="s1">&#39;fixed&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;FP&#39;</span><span class="p">:</span><span class="s1">&#39;expr&#39;</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_M</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;M&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_M</span><span class="p">,</span>
+                                         <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_M_d0_str</span><span class="p">,</span> <span class="n">func_d0</span><span class="o">=</span><span class="n">w_M_d0_func</span><span class="p">,</span>
+                                         <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_M_d1_str</span><span class="p">,</span> <span class="n">func_d1</span><span class="o">=</span><span class="n">w_M_d1_func</span><span class="p">,</span>
+                                         <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_M_d2_str</span><span class="p">,</span> <span class="n">func_d2</span><span class="o">=</span><span class="n">w_M_d2_func</span><span class="p">,</span>
+                                         <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names_M</span><span class="p">,</span>
+                                         <span class="n">var_types</span><span class="o">=</span><span class="n">w_variables_types_M</span><span class="p">,</span>
+                                         <span class="n">option</span><span class="o">=</span><span class="s1">&#39;func_to_all&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;P4O&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Bend line as 4th order polynom&#39;</span>
+            
+            <span class="n">w_A_d0_str</span><span class="o">=</span><span class="s1">&#39;a*x**4+b*x**3+c*x**2+d*x+e&#39;</span>
+            <span class="n">w_variables_names</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;xmin&#39;</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">,</span><span class="s1">&#39;f_V_0&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_A_d0_str</span><span class="p">,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;d0_str_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_I_d0_str</span> <span class="o">=</span> <span class="s1">&#39;((a*(xmax)**4+b*(xmax)**3+c*(xmax)**2+d*(xmax)+e)-(a*(xmin)**4+b*(xmin)**3+c*(xmin)**2+d*(xmin)+e))/(xmax-xmin)*x+((a*(xmax)**4+b*(xmax)**3+c*(xmax)**2+d*(xmax)+e)+(a*(xmin)**4+b*(xmin)**3+c*(xmin)**2+d*(xmin)+e))/2&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_I</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_I</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_I_d0_str</span><span class="p">,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;d0_str_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_S_d0_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_I</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;S&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_S_d0_exp</span><span class="p">,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;d0_expr_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="c1"># w_variables_names_V=np.append(w_variables_names,&#39;f_V_0&#39;)</span>
+            <span class="n">w_V_d0_str</span> <span class="o">=</span> <span class="s1">&#39;f_V_0*(1-2*abs(x)/(xmax-xmin))&#39;</span>
+            <span class="n">w_V_d1_str</span> <span class="o">=</span> <span class="s1">&#39;f_V_0*(-2*sign(x)/(xmax-xmin))&#39;</span>
+            <span class="n">w_V_d2_str</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_V_d0_str</span><span class="p">,</span>
+                                     <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_V_d1_str</span><span class="p">,</span> <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_V_d2_str</span><span class="p">,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;each_str_to_all&#39;</span><span class="p">)</span>
+    
+            <span class="n">w_Mima_d0_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">.</span><span class="n">d0</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="n">w_Mima_d1_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">.</span><span class="n">d1</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">.</span><span class="n">d1</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="n">w_Mima_d2_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_S</span><span class="o">.</span><span class="n">d2</span><span class="o">.</span><span class="n">sy_expr</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_V</span><span class="o">.</span><span class="n">d2</span><span class="o">.</span><span class="n">sy_expr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_M_ima</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;M imaginary&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_M_ima</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_Mima_d0_exp</span><span class="p">,</span>
+                                     <span class="n">expr_d1</span><span class="o">=</span><span class="n">w_Mima_d1_exp</span><span class="p">,</span> <span class="n">expr_d2</span><span class="o">=</span><span class="n">w_Mima_d2_exp</span><span class="p">,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;each_expr_to_all&#39;</span><span class="p">)</span>
+            
+            <span class="n">w_M_d0_str</span> <span class="o">=</span> <span class="s1">&#39;a*x**4+b*x**3+c*x**2+d*x+e&#39;</span>
+            <span class="n">w_variables_names_M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;xmin&#39;</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="s1">&#39;e&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_M</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;M&#39;</span><span class="p">)</span>
+            <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_M</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_M_d0_str</span><span class="p">,</span>
+                                     <span class="n">var_names</span><span class="o">=</span><span class="n">w_variables_names_M</span><span class="p">,</span>
+                                     <span class="n">option</span><span class="o">=</span><span class="s1">&#39;d0_str_to_all&#39;</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Option </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">option</span><span class="p">)</span></div></div>
+            
+    <span class="c1"># def save_dill(self,filename):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Save builded Bend_func legion</span>
+    <span class="c1">#     Does not work!!!</span>
+        
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     dill.dump(self, open(filename, &quot;wb&quot;))</span>
+    <span class="c1">#     raise NotImplementedError(&quot;Not implemented successfully!&quot;)</span>
+        
+    <span class="c1"># def load_dill(self,filename):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Load builded Bend_func legion</span>
+    <span class="c1">#     Does not work!!!</span>
+        
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     dill.load(self, open(filename, &quot;rb&quot;))</span>
+    <span class="c1">#     raise NotImplementedError(&quot;Not implemented successfully!&quot;)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

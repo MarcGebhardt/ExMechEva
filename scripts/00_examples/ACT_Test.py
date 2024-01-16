@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Axial compression test for cancellous bone.
-Simple example using data/ACT for showing evaluation acc. to "bla".
+Simple example using data/ACT for showing evaluation.
 """
 
 import os 

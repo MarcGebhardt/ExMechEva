@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Three point bending test for cortical bone.
-Simple example using data/TBT for showing evaluation acc. to "bla".
+Simple example using data/TBT for showing evaluation.
 """
 
 import os 

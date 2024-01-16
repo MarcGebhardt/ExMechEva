@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.common.loadnsave &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.common.loadnsave</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.common.loadnsave</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Contains functionality for loading and saving files.</span>
+
+<span class="sd">@author: MarcGebhardt</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<div class="viewcode-block" id="file_namer"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.loadnsave.file_namer">[docs]</a><span class="k">def</span> <span class="nf">file_namer</span><span class="p">(</span><span class="n">fstr</span><span class="p">,</span> <span class="n">svars</span><span class="o">=</span><span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="n">svare</span><span class="o">=</span><span class="s1">&#39;&lt;&#39;</span><span class="p">,</span> <span class="n">sform</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Names a file according given string (sub module of File_namer_interpreter).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fstr : string</span>
+<span class="sd">        String with replaceable tokens.</span>
+<span class="sd">    svars : string, optional</span>
+<span class="sd">        Start character for token. The default is &#39;&gt;&#39;.</span>
+<span class="sd">    svare : string, optional</span>
+<span class="sd">        End character for token. The default is &#39;&lt;&#39;.</span>
+<span class="sd">    sform : string, optional</span>
+<span class="sd">        Form determinator at end of token. The default is &#39;#&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vardf : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">        </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    - &gt;Number#02&lt;&gt;Variant&lt;.xlsx:</span>
+<span class="sd">        with Number = 05 (from protocol) and Variant = C (from call) </span>
+<span class="sd">        -&gt; 05C.xlsx</span>
+<span class="sd">    - &gt;Designation&lt;_&gt;Variant&lt;_foo.csv:</span>
+<span class="sd">        with (from protocol) Designation = Test_1 and Variant = B </span>
+<span class="sd">        -&gt; Test_1_B_foo.csv</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">fstr</span><span class="p">:</span>
+        <span class="n">fstr</span><span class="p">,</span><span class="n">fdend</span><span class="o">=</span><span class="n">fstr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">fdend</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="o">+</span><span class="n">fdend</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fdend</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+    <span class="n">vardf</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Value&#39;</span><span class="p">,</span><span class="s1">&#39;IsVar&#39;</span><span class="p">,</span><span class="s1">&#39;HasForm&#39;</span><span class="p">,</span><span class="s1">&#39;Form&#39;</span><span class="p">,</span><span class="s1">&#39;IsEnd&#39;</span><span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;O&#39;</span><span class="p">)</span>
+    <span class="n">j</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">if</span> <span class="n">svars</span> <span class="ow">in</span> <span class="n">fstr</span><span class="p">:</span>
+        <span class="n">fstr</span> <span class="o">=</span> <span class="n">fstr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">svars</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">fsub</span> <span class="ow">in</span> <span class="n">fstr</span><span class="p">:</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">fsub</span>
+            <span class="n">isvar</span><span class="o">=</span><span class="kc">False</span>
+            <span class="n">hasform</span><span class="o">=</span><span class="kc">False</span>
+            <span class="n">form</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+            <span class="k">if</span> <span class="n">fsub</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">svare</span><span class="p">):</span>
+                <span class="n">isvar</span><span class="o">=</span><span class="kc">True</span>
+                <span class="k">if</span> <span class="s1">&#39;#&#39;</span> <span class="ow">in</span> <span class="n">fsub</span><span class="p">:</span>
+                    <span class="n">hasform</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="n">value</span><span class="p">,</span><span class="n">form</span><span class="o">=</span><span class="n">fsub</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)</span>
+                    <span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">svare</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">value</span><span class="o">=</span><span class="n">fsub</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">svare</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">vardf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="s1">&#39;Value&#39;</span><span class="p">:</span><span class="n">value</span><span class="p">,</span><span class="s1">&#39;IsVar&#39;</span><span class="p">:</span><span class="n">isvar</span><span class="p">,</span>
+                                    <span class="s1">&#39;HasForm&#39;</span><span class="p">:</span><span class="n">hasform</span><span class="p">,</span><span class="s1">&#39;Form&#39;</span><span class="p">:</span><span class="n">form</span><span class="p">,</span><span class="s1">&#39;IsEnd&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">})</span>
+            <span class="n">j</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">vardf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="s1">&#39;Value&#39;</span><span class="p">:</span><span class="n">fstr</span><span class="p">,</span><span class="s1">&#39;IsVar&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+                                <span class="s1">&#39;HasForm&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;Form&#39;</span><span class="p">:</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="s1">&#39;IsEnd&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">})</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fdend</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">vardf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="s1">&#39;Value&#39;</span><span class="p">:</span><span class="n">fdend</span><span class="p">,</span><span class="s1">&#39;IsVar&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+                                  <span class="s1">&#39;HasForm&#39;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span><span class="s1">&#39;Form&#39;</span><span class="p">:</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="s1">&#39;IsEnd&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">vardf</span></div>
+
+<div class="viewcode-block" id="file_namer_interpreter"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.loadnsave.file_namer_interpreter">[docs]</a><span class="k">def</span> <span class="nf">file_namer_interpreter</span><span class="p">(</span><span class="n">fstr</span><span class="p">,</span> <span class="n">prot_ser</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                           <span class="n">expext</span><span class="o">=</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">,</span> <span class="n">svars</span><span class="o">=</span><span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="n">svare</span><span class="o">=</span><span class="s1">&#39;&lt;&#39;</span><span class="p">,</span> <span class="n">sform</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Builds a file location according given string (with repleacable tokens).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fstr : string</span>
+<span class="sd">        String with replaceable tokens.</span>
+<span class="sd">    prot_ser : pd.Series</span>
+<span class="sd">        Series form protocoll dataframe with tokens as index.</span>
+<span class="sd">    path : string</span>
+<span class="sd">        Path addendum (will be added before adjusted filename).</span>
+<span class="sd">    variant : string, optional</span>
+<span class="sd">        Variant (special string for token &#39;Variant&#39;). The default is &#39;&#39;.</span>
+<span class="sd">    expext : string, optional</span>
+<span class="sd">        Expected extension of file. The default is &#39;.xlsx&#39;.</span>
+<span class="sd">    svars : string, optional</span>
+<span class="sd">        Start character for token. The default is &#39;&gt;&#39;.</span>
+<span class="sd">    svare : string, optional</span>
+<span class="sd">        End character for token. The default is &#39;&lt;&#39;.</span>
+<span class="sd">    sform : string, optional</span>
+<span class="sd">        Form determinator at end of token. The default is &#39;#&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Token not found in protocoll.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fname : string</span>
+<span class="sd">        Adjusted file name.</span>
+<span class="sd">        </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    - &gt;Number#02&lt;&gt;Variant&lt;.xlsx:</span>
+<span class="sd">        with Number = 05 (from protocol) and Variant = C (from call) </span>
+<span class="sd">        -&gt; 05C.xlsx</span>
+<span class="sd">    - &gt;Designation&lt;_&gt;Variant&lt;_foo.csv:</span>
+<span class="sd">        with (from protocol) Designation = Test_1 and Variant = B </span>
+<span class="sd">        -&gt; Test_1_B_foo.csv</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">var_df</span><span class="o">=</span><span class="n">file_namer</span><span class="p">(</span><span class="n">fstr</span><span class="o">=</span><span class="n">fstr</span><span class="p">,</span><span class="n">svars</span><span class="o">=</span><span class="n">svars</span><span class="p">,</span><span class="n">svare</span><span class="o">=</span><span class="n">svare</span><span class="p">,</span><span class="n">sform</span><span class="o">=</span><span class="n">sform</span><span class="p">)</span>
+    <span class="n">fname</span><span class="o">=</span><span class="n">path</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">var_df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;IsEnd&#39;</span><span class="p">]:</span> 
+            <span class="n">fdend</span><span class="o">=</span><span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Value&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fdend</span><span class="o">=</span><span class="n">expext</span>
+        <span class="k">if</span> <span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;IsVar&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Value&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">prot_ser</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+                <span class="n">val</span><span class="o">=</span><span class="n">prot_ser</span><span class="p">[</span><span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Value&#39;</span><span class="p">]]</span>
+                <span class="k">if</span> <span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;HasForm&#39;</span><span class="p">]:</span>
+                    <span class="n">fname</span><span class="o">+=</span><span class="p">(</span><span class="s2">&quot;{:</span><span class="si">%s</span><span class="s2">}&quot;</span><span class="o">%</span><span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Form&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">fname</span><span class="o">+=</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Value&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Variant&#39;</span><span class="p">:</span>
+                <span class="n">val</span><span class="o">=</span><span class="n">variant</span>
+                <span class="k">if</span> <span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;HasForm&#39;</span><span class="p">]:</span>
+                    <span class="n">fname</span><span class="o">+=</span><span class="p">(</span><span class="s2">&quot;{:</span><span class="si">%s</span><span class="s2">}&quot;</span><span class="o">%</span><span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Form&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">fname</span><span class="o">+=</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not in protocol!&quot;</span><span class="o">%</span><span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Value&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;IsEnd&#39;</span><span class="p">]:</span>
+            <span class="n">fname</span><span class="o">+=</span><span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Value&#39;</span><span class="p">]</span>
+    <span class="n">fname</span><span class="o">+=</span><span class="n">fdend</span>
+    <span class="k">return</span> <span class="n">fname</span></div>
+
+<span class="c1">#%%% HDF</span>
+<div class="viewcode-block" id="pack_hdf"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.loadnsave.pack_hdf">[docs]</a><span class="k">def</span> <span class="nf">pack_hdf</span><span class="p">(</span><span class="n">in_paths</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> 
+             <span class="n">hdf_naming</span> <span class="o">=</span> <span class="s1">&#39;Designation&#39;</span><span class="p">,</span> <span class="n">var_suffix</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+             <span class="n">h5_conc</span> <span class="o">=</span> <span class="s1">&#39;Material_Parameters&#39;</span><span class="p">,</span> <span class="n">h5_data</span> <span class="o">=</span> <span class="s1">&#39;Measurement&#39;</span><span class="p">,</span>
+             <span class="n">opt_pd_out</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">opt_hdf_save</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    
+    <span class="n">dfc</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="n">dfd</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">in_paths</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="n">prot</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;prot&#39;</span><span class="p">],</span>
+                           <span class="n">header</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">),</span>
+                           <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ms</span> <span class="ow">in</span> <span class="n">var_suffix</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">())]:</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;hdf&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="n">ms</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+                    <span class="n">data_read</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;hdf&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="n">ms</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+                    <span class="n">df1</span> <span class="o">=</span> <span class="n">data_read</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">h5_conc</span><span class="p">)</span>
+                    <span class="n">df2</span> <span class="o">=</span> <span class="n">data_read</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">h5_data</span><span class="p">)</span>
+                    <span class="n">data_read</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                    <span class="n">dfp</span><span class="o">=</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">==</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
+                    <span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="n">ms</span>
+                    <span class="n">df1</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">dfp</span><span class="p">,</span><span class="n">df1</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">dfc</span> <span class="o">=</span> <span class="n">dfc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df1</span><span class="p">)</span>
+                    <span class="c1"># dfd = dfd.append(df2)</span>
+                    <span class="n">dfd</span><span class="p">[</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">==</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">ms</span><span class="p">]</span> <span class="o">=</span> <span class="n">df2</span>
+                    <span class="k">del</span> <span class="n">df1</span><span class="p">,</span><span class="n">df2</span>
+                <span class="k">else</span><span class="p">:</span> <span class="c1"># added 211028</span>
+                    <span class="n">dfp</span><span class="o">=</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">==</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
+                    <span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="n">ms</span>
+                    <span class="n">dfc</span> <span class="o">=</span> <span class="n">dfc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dfp</span><span class="p">)</span>
+                    
+            
+    <span class="k">if</span> <span class="n">opt_hdf_save</span><span class="p">:</span>
+        <span class="n">HDFst</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">)</span>
+        <span class="n">HDFst</span><span class="p">[</span><span class="s1">&#39;Summary&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfc</span>
+        <span class="n">HDFst</span><span class="p">[</span><span class="s1">&#39;Test_Data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfd</span>
+        <span class="n">HDFst</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">opt_pd_out</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dfc</span><span class="p">,</span> <span class="n">dfd</span></div>
+    
+<div class="viewcode-block" id="pack_hdf_mul"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.loadnsave.pack_hdf_mul">[docs]</a><span class="k">def</span> <span class="nf">pack_hdf_mul</span><span class="p">(</span><span class="n">in_paths</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> 
+                 <span class="n">hdf_naming</span> <span class="o">=</span> <span class="s1">&#39;Designation&#39;</span><span class="p">,</span> <span class="n">var_suffix</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
+                 <span class="n">h5_conc</span> <span class="o">=</span> <span class="s1">&#39;Material_Parameters&#39;</span><span class="p">,</span> <span class="n">h5_data</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
+                 <span class="n">opt_pd_out</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">opt_hdf_save</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    
+    <span class="n">dfc</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="n">dfd</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
+    <span class="c1"># dfd={}</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">in_paths</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="n">prot</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;prot&#39;</span><span class="p">],</span>
+                           <span class="n">header</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">),</span>
+                           <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ms</span> <span class="ow">in</span> <span class="n">var_suffix</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">())]:</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;hdf&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="n">ms</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+                    <span class="n">data_read</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;hdf&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="n">ms</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+                    <span class="n">df1</span> <span class="o">=</span> <span class="n">data_read</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">h5_conc</span><span class="p">)</span>
+                    <span class="n">didks</span><span class="o">=</span><span class="n">data_read</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">didks</span><span class="p">:</span>
+                        <span class="n">df2</span> <span class="o">=</span> <span class="n">data_read</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dfd</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="n">dfd</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
+                        <span class="n">dfd</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">==</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">ms</span><span class="p">]</span><span class="o">=</span><span class="n">df2</span>
+                        <span class="k">del</span> <span class="n">df2</span>
+                    <span class="n">data_read</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                    <span class="n">dfp</span><span class="o">=</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">==</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
+                    <span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="n">ms</span>
+                    <span class="n">df1</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">dfp</span><span class="p">,</span><span class="n">df1</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">dfc</span> <span class="o">=</span> <span class="n">dfc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df1</span><span class="p">)</span>
+                    <span class="c1"># dfd = dfd.append(df2)</span>
+                    <span class="c1"># dfd[prot.loc[prot[hdf_naming]==i].index[0]+ms] = df2</span>
+                    <span class="k">del</span> <span class="n">df1</span>
+                <span class="k">else</span><span class="p">:</span> <span class="c1"># added 211028</span>
+                    <span class="n">dfp</span><span class="o">=</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">==</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
+                    <span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="n">ms</span>
+                    <span class="n">dfc</span> <span class="o">=</span> <span class="n">dfc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dfp</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">opt_hdf_save</span><span class="p">:</span>
+        <span class="n">HDFst</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">HDFst</span><span class="p">[</span><span class="s1">&#39;Summary&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfc</span>
+        <span class="c1"># HDFst[&#39;Data&#39;] = dfd</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dfd</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">HDFst</span><span class="p">[</span><span class="s1">&#39;Add_&#39;</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfd</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">HDFst</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">opt_pd_out</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dfc</span><span class="p">,</span> <span class="n">dfd</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.bending.fitting &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.bending.fitting</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.bending.fitting</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Dec 15 11:40:57 2023</span>
+
+<span class="sd">@author: mgebhard</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">lmfit</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="c1"># from .bfunc_class import (Bend_func_sub) # Bend_func_sub changed to bfs (redefinition)</span>
+<span class="kn">from</span> <span class="nn">.attr_bgl</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_param_types_not_free</span><span class="p">,</span> <span class="n">_param_types_fit_or_set</span><span class="p">)</span>
+
+<span class="c1">#%% lmfit personalization</span>
+<div class="viewcode-block" id="lmfit_modelize"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.lmfit_modelize">[docs]</a><span class="k">def</span> <span class="nf">lmfit_modelize</span><span class="p">(</span><span class="n">bfs</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;init&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a lmfit.model defined by Bend function sub.&quot;&quot;&quot;</span>
+    <span class="n">mo</span><span class="o">=</span><span class="n">lmfit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">bfs</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">independent_vars</span><span class="o">=</span><span class="n">bfs</span><span class="o">.</span><span class="n">independent_vars</span><span class="p">)</span>
+    <span class="n">mo</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">bfs</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_fit&#39;</span>
+    <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;init&#39;</span><span class="p">:</span>
+        <span class="n">par</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">make_params</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Option </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">option</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mo</span><span class="p">,</span><span class="n">par</span></div>
+
+<div class="viewcode-block" id="lmfit_param_adder"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.lmfit_param_adder">[docs]</a><span class="k">def</span> <span class="nf">lmfit_param_adder</span><span class="p">(</span><span class="n">par_df</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns lmfit Parameterset defined by pandas Dataframe.&quot;&quot;&quot;</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">lmfit</span><span class="o">.</span><span class="n">Parameters</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">par_df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;typ&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;independent&#39;</span><span class="p">:</span>
+            <span class="k">pass</span>
+            <span class="c1"># params.add(i, value = None, vary = False)</span>
+        <span class="k">elif</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;typ&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fixed&#39;</span><span class="p">:</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;val&#39;</span><span class="p">],</span> <span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;typ&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;expr&#39;</span><span class="p">:</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">expr</span> <span class="o">=</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;val&#39;</span><span class="p">],</span> <span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;typ&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;post&#39;</span><span class="p">:</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;typ&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;free&#39;</span><span class="p">:</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;val&#39;</span><span class="p">],</span> <span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                       <span class="nb">min</span> <span class="o">=</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;min&#39;</span><span class="p">],</span> <span class="nb">max</span> <span class="o">=</span> <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;max&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Variable type not implemented!&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">params</span></div>
+            
+<div class="viewcode-block" id="lmfit_free_val_setter"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.lmfit_free_val_setter">[docs]</a><span class="k">def</span> <span class="nf">lmfit_free_val_setter</span><span class="p">(</span><span class="n">bfs</span><span class="p">,</span> <span class="n">param_val</span><span class="o">=</span><span class="p">{},</span> <span class="n">default_val</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preset free values/parameters for lmfit.&quot;&quot;&quot;</span>
+    <span class="n">pts</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">bfs</span><span class="o">.</span><span class="n">param_types</span><span class="p">)</span>
+    <span class="n">pval_guess</span><span class="o">=</span><span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="n">param_val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">param_val</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="n">default_val</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">pts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pts</span><span class="o">==</span><span class="s1">&#39;free&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">pval_guess</span></div>
+
+<div class="viewcode-block" id="lmfit_param_key_checker"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.lmfit_param_key_checker">[docs]</a><span class="k">def</span> <span class="nf">lmfit_param_key_checker</span><span class="p">(</span><span class="n">bfs</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check parameters of lmfit with Bend_func_sub.&quot;&quot;&quot;</span>
+    <span class="n">param_dict</span><span class="o">=</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">param_dict</span><span class="p">)</span>
+    <span class="n">t</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">bfs</span><span class="o">.</span><span class="n">param_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span>        
+        <span class="n">param_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">param_dict</span></div>
+
+<div class="viewcode-block" id="lmfit_param_prep"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.lmfit_param_prep">[docs]</a><span class="k">def</span> <span class="nf">lmfit_param_prep</span><span class="p">(</span><span class="n">option</span><span class="p">,</span>
+                     <span class="n">param_name</span><span class="p">,</span> <span class="n">param_val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">param_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                     <span class="n">param_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">param_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepare fit parameters for fitting.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;1st_build&#39;</span><span class="p">:</span>
+        <span class="c1"># w_variables_df=pd.DataFrame(np.full(len(w_variables_names),4,None),</span>
+        <span class="c1">#                             index=w_variables_names,</span>
+        <span class="c1">#                             columns=[&#39;type&#39;,&#39;val&#39;,&#39;min&#39;,&#39;max&#39;])</span>
+        <span class="n">par_typ</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">param_type</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">param_name</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;string&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;typ&#39;</span><span class="p">)</span>
+        <span class="n">par_val</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">param_val</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">param_name</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;O&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;val&#39;</span><span class="p">)</span>
+        <span class="n">par_min</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">param_min</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">param_name</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;O&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">)</span>
+        <span class="n">par_max</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">param_max</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">param_name</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;O&#39;</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">)</span>
+        <span class="n">par_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">par_typ</span><span class="p">,</span><span class="n">par_val</span><span class="p">,</span><span class="n">par_min</span><span class="p">,</span><span class="n">par_max</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">lmfit_param_adder</span><span class="p">(</span><span class="n">par_df</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;1st_build_Bfs&#39;</span><span class="p">:</span>
+        <span class="n">par_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">param_name</span><span class="o">.</span><span class="n">param_names</span><span class="p">),</span><span class="mi">4</span><span class="p">),</span><span class="kc">None</span><span class="p">),</span>
+                              <span class="n">index</span><span class="o">=</span><span class="n">param_name</span><span class="o">.</span><span class="n">param_names</span><span class="p">,</span>
+                              <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;typ&#39;</span><span class="p">,</span><span class="s1">&#39;val&#39;</span><span class="p">,</span><span class="s1">&#39;min&#39;</span><span class="p">,</span><span class="s1">&#39;max&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">param_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">par_typ</span> <span class="o">=</span> <span class="n">param_name</span><span class="o">.</span><span class="n">param_types</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">par_typ</span> <span class="o">=</span> <span class="n">param_type</span>
+        <span class="k">if</span> <span class="n">param_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># par_val = param_name.param_vals</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Set at least fixed and expression parameter values!&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">par_val</span> <span class="o">=</span> <span class="n">param_val</span>
+            <span class="n">par_val</span> <span class="o">=</span> <span class="n">lmfit_param_key_checker</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">par_val</span><span class="p">)</span>
+            <span class="n">par_val</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">lmfit_free_val_setter</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span><span class="n">par_val</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">param_min</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># par_min = param_name.param_mins</span>
+            <span class="n">par_min</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">param_name</span><span class="o">.</span><span class="n">param_names</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">par_min</span> <span class="o">=</span> <span class="n">param_min</span>
+            <span class="n">par_min</span> <span class="o">=</span> <span class="n">lmfit_param_key_checker</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">par_min</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">param_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># par_max = param_name.param_maxs</span>
+            <span class="n">par_max</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">param_name</span><span class="o">.</span><span class="n">param_names</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">par_max</span> <span class="o">=</span> <span class="n">param_max</span>
+            <span class="n">par_max</span> <span class="o">=</span> <span class="n">lmfit_param_key_checker</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">par_max</span><span class="p">)</span>
+            
+        <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">par_typ</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="s1">&#39;typ&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">par_typ</span>
+        <span class="n">par_df</span><span class="o">.</span><span class="n">typ</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">par_df</span><span class="o">.</span><span class="n">typ</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">_param_types_not_free</span><span class="p">))]</span><span class="o">=</span><span class="s1">&#39;free&#39;</span>    
+        <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">par_val</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="s1">&#39;val&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">par_val</span>
+        <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">par_min</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="s1">&#39;min&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">par_min</span>
+        <span class="n">par_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">par_max</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="s1">&#39;max&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">par_max</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">lmfit_param_adder</span><span class="p">(</span><span class="n">par_df</span><span class="p">)</span>
+        
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;old_result&#39;</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">param_name</span>
+    
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;old_dict&#39;</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">lmfit</span><span class="o">.</span><span class="n">Parameters</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Option not implemented!&quot;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">params</span></div>
+
+<span class="c1">#%% Array shape helper </span>
+<span class="c1"># TODO: move to common</span>
+<div class="viewcode-block" id="shaped_array_fill_fandl"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.shaped_array_fill_fandl">[docs]</a><span class="k">def</span> <span class="nf">shaped_array_fill_fandl</span><span class="p">(</span><span class="n">ShapeAr</span><span class="p">,</span> <span class="n">fElemV</span><span class="p">,</span> <span class="n">lElemV</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an 1D numpy array with shape of input array and filled with ones.</span>
+<span class="sd">    First and last element replaced with input data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ShapeAr : numpy.array</span>
+<span class="sd">        Input array wich determine shape of output array.</span>
+<span class="sd">    fElemV : float64</span>
+<span class="sd">        Value of first element passed to output array.</span>
+<span class="sd">    lElemV : float64</span>
+<span class="sd">        Value of last element passed to output array.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    OutAr : numpy array</span>
+<span class="sd">        1D numpy array with shape of input array and filled with ones.</span>
+<span class="sd">        First and last element replaced with input data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">OutAr</span>     <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ShapeAr</span><span class="p">),))</span>
+    <span class="n">OutAr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="o">=</span> <span class="n">fElemV</span>
+    <span class="n">OutAr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">lElemV</span>
+    <span class="k">return</span> <span class="n">OutAr</span></div>
+
+<span class="c1">#%% Fitting</span>
+<div class="viewcode-block" id="res_multi_const_weighted"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.res_multi_const_weighted">[docs]</a><span class="k">def</span> <span class="nf">res_multi_const_weighted</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">func_d2</span><span class="p">,</span>
+                             <span class="n">x_lB</span><span class="p">,</span> <span class="n">x_rB</span><span class="p">,</span> <span class="n">func_err_weight</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">],</span> 
+                             <span class="n">load_dir</span><span class="o">=</span><span class="s1">&#39;-y&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns weighted error sum according to different constraints between </span>
+<span class="sd">    input values and function values.</span>
+<span class="sd">    Constraints:</span>
+<span class="sd">        0. error between data and function value</span>
+<span class="sd">        1. error between function value of left and right bound to zero</span>
+<span class="sd">        2. error between negative/positive value of second derivate of function and zero (depends on load direction)</span>
+<span class="sd">        3. error between value of second derivate of function of left and right bound to zero</span>
+<span class="sd">    </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    params : OrderedDict / dict / array</span>
+<span class="sd">        Parameters to be used in functions.</span>
+<span class="sd">    x : array of float</span>
+<span class="sd">        Cartesian coordinate in x-direction.</span>
+<span class="sd">    func : lamopdified function</span>
+<span class="sd">        Input function.</span>
+<span class="sd">    func_d2 : lamopdified function</span>
+<span class="sd">        Second derivate (curvature) of input function.</span>
+<span class="sd">    x_lB : float</span>
+<span class="sd">        Cartesian coordinate in x-direction of start of function (curvature=0, p.e. left bearing).</span>
+<span class="sd">    x_rB : float</span>
+<span class="sd">        Cartesian coordinate in x-direction of end of function (curvature=0, p.e. right bearing).</span>
+<span class="sd">    func_err_weight : array of float, optional</span>
+<span class="sd">        Error weights assigned to constraints. </span>
+<span class="sd">        Enter [1,0,0,0] for standard residual fit on displacement.</span>
+<span class="sd">        The default is [1,10,100,100].</span>
+<span class="sd">    load_dir : string, optional</span>
+<span class="sd">        Direction of displacement application.</span>
+<span class="sd">        Possible are:</span>
+<span class="sd">            - &quot;-y&quot;: application in negative y-direction (standard, curvature positve(err2))</span>
+<span class="sd">            - &quot;+y&quot;: application in negative y-direction (curvature negative(err2))</span>
+<span class="sd">    data : array of float, optional</span>
+<span class="sd">        Cartesian coordinate in y-direction. The default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    err: numpy array</span>
+<span class="sd">        Weighted multi constraint error sum.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">func_err_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">func_err_weight</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+        
+    <span class="n">ew</span><span class="o">=</span><span class="n">func_err_weight</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">func_err_weight</span><span class="p">)</span>
+    
+    <span class="c1"># Error on displacement</span>
+    <span class="n">err0</span><span class="o">=</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">params</span><span class="p">)</span> <span class="o">-</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">func_err_weight</span> <span class="o">==</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">err0</span>
+    <span class="c1"># Error on displacement on left end right border in aspect to 0</span>
+    <span class="n">err1</span><span class="o">=</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="n">shaped_array_fill_fandl</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">x_lB</span><span class="p">,</span><span class="n">x_rB</span><span class="p">),</span><span class="o">**</span><span class="n">params</span><span class="p">)</span><span class="o">-</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">shaped_array_fill_fandl</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Error on curvature (have to be positive/negative for loading in -y/+y)</span>
+    <span class="k">if</span> <span class="n">load_dir</span> <span class="o">==</span> <span class="s1">&#39;-y&#39;</span><span class="p">:</span>
+        <span class="n">err2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">func_d2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">params</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="n">func_d2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">params</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">load_dir</span> <span class="o">==</span> <span class="s1">&#39;+y&#39;</span><span class="p">:</span>
+        <span class="n">err2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">func_d2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">params</span><span class="p">)</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="n">func_d2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">params</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Loading direction </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">load_dir</span><span class="p">)</span>
+    <span class="c1"># Error on curvature on left end right border in aspect to 0</span>
+    <span class="n">err3</span><span class="o">=</span><span class="p">(</span><span class="n">func_d2</span><span class="p">(</span><span class="n">shaped_array_fill_fandl</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">x_lB</span><span class="p">,</span><span class="n">x_rB</span><span class="p">),</span><span class="o">**</span><span class="n">params</span><span class="p">)</span><span class="o">-</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">shaped_array_fill_fandl</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">err</span><span class="o">=</span><span class="p">((</span><span class="n">err0</span><span class="o">*</span><span class="n">ew</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="n">err1</span><span class="o">*</span><span class="n">ew</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="n">err2</span><span class="o">*</span><span class="n">ew</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="n">err3</span><span class="o">*</span><span class="n">ew</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+    <span class="k">return</span> <span class="n">err</span></div>
+
+<div class="viewcode-block" id="lmfit_bound_checker"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.lmfit_bound_checker">[docs]</a><span class="k">def</span> <span class="nf">lmfit_bound_checker</span><span class="p">(</span><span class="n">Fit_Result</span><span class="p">,</span> <span class="n">BFs</span><span class="p">,</span> <span class="n">param_check_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;free&#39;</span><span class="p">],</span><span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if lmfit Fit Result excides or hits bounds.&quot;&quot;&quot;</span>
+    <span class="n">msg</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+    <span class="n">ub_bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">lb_bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Fit_Result</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">BFs</span><span class="o">.</span><span class="n">param_types</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="ow">in</span> <span class="n">param_check_types</span><span class="p">:</span>
+            <span class="n">tv</span>  <span class="o">=</span> <span class="n">Fit_Result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">tub</span> <span class="o">=</span> <span class="n">Fit_Result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">max</span>
+            <span class="n">tlb</span> <span class="o">=</span> <span class="n">Fit_Result</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">min</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">tv</span> <span class="o">&gt;=</span> <span class="n">tub</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">tv</span> <span class="o">&lt;=</span> <span class="n">tlb</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">tv</span> <span class="o">&gt;=</span> <span class="n">tub</span><span class="p">:</span>
+                    <span class="n">ub_bool</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="n">msg</span><span class="o">+=</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Parameter </span><span class="si">%s</span><span class="s1"> with value </span><span class="si">%e</span><span class="s1"> excides maximum of </span><span class="si">%e</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">tv</span><span class="p">,</span><span class="n">tub</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">tv</span> <span class="o">&lt;=</span> <span class="n">tlb</span><span class="p">:</span>
+                    <span class="n">lb_bool</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="n">msg</span><span class="o">+=</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Parameter </span><span class="si">%s</span><span class="s1"> with value </span><span class="si">%e</span><span class="s1"> excides minimum of </span><span class="si">%e</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">tv</span><span class="p">,</span><span class="n">tlb</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span><span class="o">+=</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Parameter </span><span class="si">%s</span><span class="s1"> with value </span><span class="si">%e</span><span class="s1"> is inside bounds [</span><span class="si">%e</span><span class="s1">,</span><span class="si">%e</span><span class="s1">]&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">tv</span><span class="p">,</span><span class="n">tlb</span><span class="p">,</span><span class="n">tub</span><span class="p">))</span>
+    <span class="n">bound_bool</span><span class="o">=</span><span class="n">ub_bool</span><span class="o">|</span><span class="n">lb_bool</span>
+    <span class="k">return</span> <span class="n">bound_bool</span><span class="p">,</span> <span class="n">ub_bool</span><span class="p">,</span> <span class="n">lb_bool</span><span class="p">,</span> <span class="n">msg</span></div>
+
+<div class="viewcode-block" id="Multi_minimize"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.Multi_minimize">[docs]</a><span class="k">def</span> <span class="nf">Multi_minimize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">func_d0</span><span class="p">,</span> <span class="n">func_d2</span><span class="p">,</span> 
+                   <span class="n">max_nfev</span><span class="p">,</span> <span class="n">nan_policy</span><span class="p">,</span> <span class="n">err_weights</span><span class="p">,</span> <span class="n">x_lB</span><span class="p">,</span> <span class="n">x_rB</span><span class="p">,</span> <span class="n">load_dir</span><span class="o">=</span><span class="s1">&#39;-y&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs a weighted multiconstraint least-square-fit, based on lmfit.minimize.</span>
+<span class="sd">    Returns lmfit-result, parameter-dict, Coefficient of determination for multi-errors and only displacement as well.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array of float</span>
+<span class="sd">        Cartesian coordinate in x-direction.</span>
+<span class="sd">    data : array of float, optional</span>
+<span class="sd">        Cartesian coordinate in y-direction. The default is None.</span>
+<span class="sd">    params : OrderedDict / dict / array</span>
+<span class="sd">        Parameters to be used in functions.</span>
+<span class="sd">    func_d0 : lamopdified function</span>
+<span class="sd">        Input function.</span>
+<span class="sd">    func_d2 : lamopdified function</span>
+<span class="sd">        Second derivate (curvature) of input function.</span>
+<span class="sd">    max_nfev : int</span>
+<span class="sd">        Maximum number of function evaluations.</span>
+<span class="sd">    err_weights :  array of float, optional</span>
+<span class="sd">        Error weights assigned to constraints. </span>
+<span class="sd">        Enter [1,0,0,0] for standard residual fit on displacement.</span>
+<span class="sd">        The default is [1,10,100,100].</span>
+<span class="sd">    x_lB : float</span>
+<span class="sd">        Cartesian coordinate in x-direction of start of function (curvature=0, p.e. left bearing).</span>
+<span class="sd">    x_rB : float</span>
+<span class="sd">        Cartesian coordinate in x-direction of end of function (curvature=0, p.e. right bearing).</span>
+<span class="sd">    load_dir : string, optional</span>
+<span class="sd">        Direction of displacement application.</span>
+<span class="sd">        Possible are:</span>
+<span class="sd">            - &quot;-y&quot;: application in negative y-direction (standard, curvature positve(err2))</span>
+<span class="sd">            - &quot;+y&quot;: application in negative y-direction (curvature negative(err2))</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MG_multi_minimize_Dict : dict</span>
+<span class="sd">        Fit result dictionary (lmfit-result, parameter-dict, Coefficient of determination for multi-errors and only displacement as well.).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fit_Result</span> <span class="o">=</span> <span class="n">lmfit</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">res_multi_const_weighted</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span>
+                                <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,),</span> <span class="n">kws</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;func&#39;</span><span class="p">:</span><span class="n">func_d0</span><span class="p">,</span><span class="s1">&#39;func_d2&#39;</span><span class="p">:</span><span class="n">func_d2</span><span class="p">,</span>
+                                                <span class="s1">&#39;x_lB&#39;</span><span class="p">:</span><span class="n">x_lB</span><span class="p">,</span> <span class="s1">&#39;x_rB&#39;</span><span class="p">:</span><span class="n">x_rB</span><span class="p">,</span>
+                                                <span class="s1">&#39;func_err_weight&#39;</span><span class="p">:</span> <span class="n">err_weights</span><span class="p">,</span> 
+                                                <span class="s1">&#39;load_dir&#39;</span><span class="p">:</span> <span class="n">load_dir</span><span class="p">,</span>
+                                                <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">},</span>
+                                <span class="n">scale_covar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_nfev</span><span class="o">=</span><span class="n">max_nfev</span><span class="p">,</span>
+                                <span class="n">nan_policy</span><span class="o">=</span><span class="n">nan_policy</span><span class="p">)</span>
+    <span class="n">fit_params_dict</span> <span class="o">=</span> <span class="n">fit_Result</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">valuesdict</span><span class="p">()</span>
+    <span class="c1"># Rquad_multi = 1 - fit_Result.residual.var() / np.var(data)</span>
+    <span class="n">Rquad_multi</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">fit_Result</span><span class="o">.</span><span class="n">residual</span><span class="o">.</span><span class="n">var</span><span class="p">()</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanvar</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">res_disp</span> <span class="o">=</span> <span class="n">res_multi_const_weighted</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">fit_params_dict</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+                                        <span class="n">func</span><span class="o">=</span><span class="n">func_d0</span><span class="p">,</span> <span class="n">func_d2</span><span class="o">=</span><span class="n">func_d2</span><span class="p">,</span>
+                                        <span class="n">x_lB</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_rB</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">func_err_weight</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> 
+                                        <span class="n">load_dir</span><span class="o">=</span><span class="n">load_dir</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+    <span class="c1"># Rquad_disp = 1 - res_disp.var() / np.var(data)</span>
+    <span class="n">Rquad_disp</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanvar</span><span class="p">(</span><span class="n">res_disp</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanvar</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">Multi_minimize_Dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">({</span><span class="s1">&#39;Fit_Result&#39;</span><span class="p">:</span> <span class="n">fit_Result</span><span class="p">,</span> <span class="s1">&#39;Fit_params_dict&#39;</span><span class="p">:</span> <span class="n">fit_params_dict</span><span class="p">,</span>
+                                <span class="s1">&#39;Rquad_multi&#39;</span><span class="p">:</span> <span class="n">Rquad_multi</span><span class="p">,</span> <span class="s1">&#39;Rquad_disp&#39;</span><span class="p">:</span> <span class="n">Rquad_disp</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">Multi_minimize_Dict</span></div>
+
+<div class="viewcode-block" id="Perform_Fit"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.fitting.Perform_Fit">[docs]</a><span class="k">def</span> <span class="nf">Perform_Fit</span><span class="p">(</span><span class="n">BFL</span><span class="p">,</span> <span class="n">Fit_func_key</span><span class="p">,</span> <span class="n">P_df</span><span class="p">,</span>
+                <span class="n">lB</span><span class="p">,</span> <span class="n">rB</span><span class="p">,</span> <span class="n">s_range</span><span class="p">,</span> 
+                <span class="c1"># Shear_func_key=None, t_mean=None, poisson=0.3, </span>
+                <span class="n">Shear_func_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gamma_V</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">err_weights</span><span class="o">=</span><span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span> <span class="n">max_nfev</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span>
+                <span class="n">option</span><span class="o">=</span><span class="s1">&#39;Pre&#39;</span><span class="p">,</span> <span class="n">ldoption</span><span class="o">=</span><span class="s1">&#39;fixed-y&#39;</span><span class="p">,</span> <span class="n">ldoptionadd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">pb_b</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="o">**</span><span class="n">pwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs a weighted multiconstraint least-square-fit, based on lmfit.minimize.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    BFL : Bend_func_legion</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    Fit_func_key : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    P_df : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    lB : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    rB : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    s_range : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    # Shear_func_key : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is None.</span>
+<span class="sd">    t_mean : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is None.</span>
+<span class="sd">    poisson : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is 0.3.</span>
+<span class="sd">    Shear_func_key : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is None.</span>
+<span class="sd">    gamma_V : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is None.</span>
+<span class="sd">    err_weights : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is [ 1, 10, 1000, 100].</span>
+<span class="sd">    max_nfev : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is 500.</span>
+<span class="sd">    nan_policy : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is &#39;raise&#39;.</span>
+<span class="sd">    option : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is &#39;Pre&#39;.</span>
+<span class="sd">    ldoption : string, optional</span>
+<span class="sd">        Load direction automatism.</span>
+<span class="sd">        possible are:</span>
+<span class="sd">            - &#39;fixed-y&#39;: Load application in -y-direction (default).</span>
+<span class="sd">            - &#39;fixed+y&#39;: Load application in +y-direction.</span>
+<span class="sd">            - &#39;auto-dispser&#39;: Load application direction automaticly determined by a series of displacements (applied as ldoptionadd, index have to match with s_range/P_df).</span>
+<span class="sd">            - &#39;auto-Pcoorddisp&#39;: Load application direction automaticly determined by a Points dataframe and specified point name and coordinate (applied as ldoptionadd, index have to match with s_range/P_df)</span>
+<span class="sd">        The default is &#39;fixed-y&#39;.</span>
+<span class="sd">    ldoptionadd : Series or array of [Dataframe, string, string], optional</span>
+<span class="sd">        Addendum for ldoption.</span>
+<span class="sd">        Have to match to ldoption:</span>
+<span class="sd">            - &#39;auto-dispser&#39;: Series of displacements (index have to match with s_range/P_df).</span>
+<span class="sd">            - &#39;auto-Pcoorddisp&#39;: Points dataframe and specified point name and coordinate ([Points as Dataframe, point name as string, coordinate as string],index have to match with s_range/P_df)            </span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    pb_b : bool, optional</span>
+<span class="sd">        Switch for showing progressbar. The default is True.</span>
+<span class="sd">    **pwargs : dict or pandas.Series</span>
+<span class="sd">        Parameter keyword arguments for function.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        DESCRIPTION.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Fit_res_df : pandas.DatFrame</span>
+<span class="sd">        Data of fit results.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">option</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Pre&#39;</span><span class="p">,</span><span class="s1">&#39;Bend&#39;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Option </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">option</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ldoption</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;fixed-y&#39;</span><span class="p">,</span><span class="s1">&#39;fixed+y&#39;</span><span class="p">,</span><span class="s1">&#39;auto-dispser&#39;</span><span class="p">,</span><span class="s1">&#39;auto-Pcoorddisp&#39;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Option for load direction </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">ldoption</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">pb_b</span><span class="p">:</span> <span class="n">pb</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">s_range</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span><span class="n">option</span><span class="o">+</span><span class="s2">&quot; fit: &quot;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39; steps&#39;</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+    <span class="n">Fit_model</span><span class="p">,</span> <span class="n">Fit_params</span> <span class="o">=</span> <span class="n">lmfit_modelize</span><span class="p">(</span><span class="n">BFL</span><span class="p">[</span><span class="n">Fit_func_key</span><span class="p">][</span><span class="s1">&#39;d0&#39;</span><span class="p">],</span>
+                                           <span class="n">option</span><span class="o">=</span><span class="s1">&#39;init&#39;</span><span class="p">)</span>
+    <span class="n">Fit_res_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span><span class="n">index</span><span class="o">=</span><span class="n">s_range</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Fit_Result&#39;</span><span class="p">,</span><span class="s1">&#39;Fit_params_dict&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;Rquad_multi&#39;</span><span class="p">,</span><span class="s1">&#39;Rquad_disp&#39;</span><span class="p">],</span>
+                              <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">s_range</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="n">s_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1"># Fit_params.add(&#39;xmin&#39;, value=lB, vary = False)</span>
+            <span class="c1"># Fit_params.add(&#39;xmax&#39;, value=rB, vary = False)</span>
+            <span class="c1"># if BFL.name==&#39;FSE fit&#39;:</span>
+            <span class="c1">#     Fit_params.add(&#39;FP&#39;, expr=&#39;pi/(xmax-xmin)&#39;, vary = False)</span>
+            <span class="c1">#     Fit_params.add(&#39;b1&#39;, value=1.0)</span>
+            <span class="c1">#     Fit_params.add(&#39;b2&#39;, value=1.0)</span>
+            <span class="c1">#     Fit_params.add(&#39;b3&#39;, value=1.0)</span>
+            <span class="c1">#     Fit_params.add(&#39;b4&#39;, value=1.0)</span>
+            <span class="c1">#     if option == &#39;Pre&#39;:</span>
+            <span class="c1">#         Fit_params.add(&#39;c&#39;,  value=1.0)</span>
+            <span class="c1">#         Fit_params.add(&#39;d&#39;,  value=1.0)</span>
+            <span class="c1"># elif BFL.name==&#39;P4O fit&#39;:</span>
+            <span class="c1">#     Fit_params.add(&#39;a&#39;, value=1.0)</span>
+            <span class="c1">#     Fit_params.add(&#39;b&#39;, value=1.0)</span>
+            <span class="c1">#     Fit_params.add(&#39;c&#39;, value=1.0)</span>
+            <span class="c1">#     Fit_params.add(&#39;d&#39;, value=1.0)</span>
+            <span class="c1">#     Fit_params.add(&#39;e&#39;, value=1.0)</span>
+            <span class="c1"># else:</span>
+            <span class="c1">#     raise NotImplementedError(&quot;Fit type not implemented!&quot;)</span>
+            <span class="c1"># if option == &#39;Pre&#39;: Fit_params.add(&#39;f_V_0&#39;,  value=None, vary = False)</span>
+            <span class="k">if</span> <span class="n">BFL</span><span class="o">.</span><span class="n">name</span><span class="o">==</span><span class="s1">&#39;FSE fit&#39;</span><span class="p">:</span>
+                <span class="c1"># if &#39;pval&#39; in pwargs.keys():</span>
+                <span class="c1">#     pval=pwargs[&#39;pval&#39;]</span>
+                <span class="c1"># else:</span>
+                <span class="c1">#     pval = {&#39;xmin&#39;:lB,&#39;xmax&#39;:rB,&#39;FP&#39;:&#39;pi/(xmax-xmin)&#39;}</span>
+                <span class="c1"># Fit_params=lmfit_param_prep(&#39;1st_build_Bfs&#39;,</span>
+                <span class="c1">#                             BFL[Fit_func_key][&#39;d0&#39;], pval)</span>
+                <span class="k">if</span> <span class="s1">&#39;param_val&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">pwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;param_val&#39;</span><span class="p">:{</span><span class="s1">&#39;xmin&#39;</span><span class="p">:</span><span class="n">lB</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">:</span><span class="n">rB</span><span class="p">,</span><span class="s1">&#39;FP&#39;</span><span class="p">:</span><span class="s1">&#39;pi/(xmax-xmin)&#39;</span><span class="p">}})</span>
+                <span class="n">Fit_params</span><span class="o">=</span><span class="n">lmfit_param_prep</span><span class="p">(</span><span class="s1">&#39;1st_build_Bfs&#39;</span><span class="p">,</span>
+                                            <span class="n">BFL</span><span class="p">[</span><span class="n">Fit_func_key</span><span class="p">][</span><span class="s1">&#39;d0&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">pwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">BFL</span><span class="o">.</span><span class="n">name</span><span class="o">==</span><span class="s1">&#39;P4O fit&#39;</span><span class="p">:</span>
+                    <span class="n">Fit_params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;xmin&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">lB</span><span class="p">,</span> <span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+                    <span class="n">Fit_params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;xmax&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">rB</span><span class="p">,</span> <span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+                    <span class="n">Fit_params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+                    <span class="n">Fit_params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+                    <span class="n">Fit_params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+                    <span class="n">Fit_params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+                    <span class="n">Fit_params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Fit type not implemented!&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;Pre&#39;</span><span class="p">:</span> <span class="n">Fit_params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;f_V_0&#39;</span><span class="p">,</span>  <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># changed 21-09-07 (doesn&#39;t work with gaps in s_range)</span>
+            <span class="n">step_bf</span> <span class="o">=</span> <span class="n">s_range</span><span class="p">[</span><span class="n">s_range</span><span class="o">.</span><span class="n">get_indexer_for</span><span class="p">([</span><span class="n">step</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># step_bf = Evac.pd_slice_index(s_range,step-1,option=&#39;list&#39;)</span>
+            <span class="c1"># Fit_params = Fit_res_df.loc[step_bf,&#39;Fit_Result&#39;].params</span>
+            <span class="n">Fit_params</span><span class="o">=</span><span class="n">lmfit_param_prep</span><span class="p">(</span><span class="s1">&#39;old_result&#39;</span><span class="p">,</span>
+                                        <span class="n">Fit_res_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step_bf</span><span class="p">,</span><span class="s1">&#39;Fit_Result&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">ldoption</span> <span class="o">==</span> <span class="s1">&#39;fixed-y&#39;</span><span class="p">:</span>
+            <span class="n">load_dir</span> <span class="o">=</span> <span class="s1">&#39;-y&#39;</span>
+        <span class="k">elif</span> <span class="n">ldoption</span> <span class="o">==</span> <span class="s1">&#39;fixed+y&#39;</span><span class="p">:</span>
+            <span class="n">load_dir</span> <span class="o">=</span> <span class="s1">&#39;+y&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ldoption</span> <span class="o">==</span> <span class="s1">&#39;auto-dispser&#39;</span><span class="p">:</span>
+                <span class="n">load_dir_set</span> <span class="o">=</span> <span class="n">ldoptionadd</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">ldoption</span> <span class="o">==</span> <span class="s1">&#39;auto-Pcoorddisp&#39;</span><span class="p">:</span>
+                <span class="n">load_dir_set</span> <span class="o">=</span> <span class="n">ldoptionadd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ldoptionadd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">ldoptionadd</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+            <span class="n">load_dir</span> <span class="o">=</span> <span class="s1">&#39;-y&#39;</span> <span class="k">if</span> <span class="n">load_dir_set</span><span class="o">&lt;=</span><span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;+y&#39;</span>
+        
+        <span class="n">x_data</span> <span class="o">=</span> <span class="n">P_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">y_data</span> <span class="o">=</span> <span class="n">P_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s1">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">f_tmp</span> <span class="o">=</span> <span class="n">Multi_minimize</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x_data</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">y_data</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">Fit_params</span><span class="p">,</span>
+                               <span class="n">func_d0</span><span class="o">=</span><span class="n">BFL</span><span class="p">[</span><span class="n">Fit_func_key</span><span class="p">][</span><span class="s1">&#39;d0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">func</span><span class="p">,</span>
+                               <span class="n">func_d2</span><span class="o">=</span><span class="n">BFL</span><span class="p">[</span><span class="n">Fit_func_key</span><span class="p">][</span><span class="s1">&#39;d2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">func</span><span class="p">,</span>
+                               <span class="n">max_nfev</span><span class="o">=</span><span class="n">max_nfev</span><span class="p">,</span>  <span class="n">nan_policy</span><span class="o">=</span><span class="n">nan_policy</span><span class="p">,</span>
+                               <span class="n">err_weights</span><span class="o">=</span><span class="n">err_weights</span><span class="p">,</span>
+                               <span class="n">x_lB</span><span class="o">=</span><span class="n">lB</span><span class="p">,</span> <span class="n">x_rB</span><span class="o">=</span><span class="n">rB</span><span class="p">,</span> <span class="n">load_dir</span><span class="o">=</span><span class="n">load_dir</span><span class="p">)</span>
+        <span class="n">Fit_res_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_tmp</span>
+        <span class="c1"># Check boundaries for free paramters</span>
+        <span class="n">bccheck</span> <span class="o">=</span> <span class="n">lmfit_bound_checker</span><span class="p">(</span><span class="n">f_tmp</span><span class="p">[</span><span class="s1">&#39;Fit_Result&#39;</span><span class="p">],</span><span class="n">BFL</span><span class="p">[</span><span class="n">Fit_func_key</span><span class="p">][</span><span class="s1">&#39;d0&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">bccheck</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">(</span><span class="n">bccheck</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">pb_b</span><span class="p">:</span> <span class="n">pb</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">pb_b</span><span class="p">:</span> <span class="n">pb</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">option</span> <span class="o">==</span><span class="s1">&#39;Pre&#39;</span><span class="p">:</span>    
+    <span class="c1"># Shear-force-deformation ratio</span>
+        <span class="n">f_S_0</span> <span class="o">=</span> <span class="n">BFL</span><span class="p">[</span><span class="s1">&#39;w_S&#39;</span><span class="p">][</span><span class="s1">&#39;d0&#39;</span><span class="p">](</span><span class="mf">0.0</span><span class="p">,</span><span class="n">Fit_res_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s1">&#39;Fit_params_dict&#39;</span><span class="p">])</span>
+        <span class="c1"># Length = lB-rB</span>
+        <span class="c1"># gamma_V = 2.4*(1+poisson)*t_mean**2/Length**2</span>
+        <span class="n">f_V_0</span> <span class="o">=</span> <span class="n">f_S_0</span><span class="o">*</span><span class="n">gamma_V</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">gamma_V</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">s_range</span><span class="p">:</span>
+            <span class="n">Fit_res_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step</span><span class="p">,</span><span class="s1">&#39;Fit_params_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;f_V_0&#39;</span><span class="p">:</span><span class="n">f_V_0</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step</span><span class="p">]})</span>
+            
+    <span class="k">return</span> <span class="n">Fit_res_df</span></div>
+
+<span class="c1"># #%% Fitting parameters</span>
+<span class="c1"># def params_dict_sub(params_dict, step, dif_step, BFs,</span>
+<span class="c1">#                     param_types_dif=_param_types_fit_or_set):</span>
+<span class="c1">#     &quot;&quot;&quot;Performs a substraction of parameter values</span>
+<span class="c1">#     with specified type in a parameter dictionary.</span>
+<span class="c1">#     Warning: Seems to be not accurate!&quot;&quot;&quot;</span>
+<span class="c1">#     a = params_dict.loc[dif_step]</span>
+<span class="c1">#     b = params_dict.loc[step]</span>
+<span class="c1">#     params_dict_res = copy.deepcopy(b)</span>
+<span class="c1">#     for key in b:</span>
+<span class="c1">#         # if key in [&#39;b1&#39;,&#39;b2&#39;,&#39;b3&#39;,&#39;b4&#39;,&#39;c&#39;,&#39;d&#39;,&#39;f_V_0&#39;]:</span>
+<span class="c1">#         if BFs.param_types[key] in param_types_dif:</span>
+<span class="c1">#             params_dict_res[key]=b[key]-a[key]</span>
+<span class="c1">#     return params_dict_res</span>
+
+<span class="c1"># def params_dict_diff(params_dict_series, step_range, BFs,</span>
+<span class="c1">#                     param_types_dif=_param_types_fit_or_set,</span>
+<span class="c1">#                     option=&#39;Fill_NaN&#39;):</span>
+<span class="c1">#     &quot;&quot;&quot;Performs a differencation of a series of parameter values</span>
+<span class="c1">#     with specified type in a parameter dictionary.</span>
+<span class="c1">#     Warning: Seems to be not accurate!&quot;&quot;&quot;</span>
+<span class="c1">#     params_dict_res=pd.Series([],dtype=&#39;O&#39;)</span>
+<span class="c1">#     for step in step_range:        </span>
+<span class="c1">#         step_bf = step_range[step_range.get_indexer_for([step])[0]-1]</span>
+<span class="c1">#         if step_bf == (step-1):</span>
+<span class="c1">#             params_dict_res.loc[step] = params_dict_sub(params_dict_series, step, step_bf,</span>
+<span class="c1">#                                                         BFs, param_types_dif)</span>
+<span class="c1">#         elif option == &#39;Next&#39; and step_bf &lt; step:</span>
+<span class="c1">#             params_dict_res.loc[step] = params_dict_sub(params_dict_series, step, step_bf,</span>
+<span class="c1">#                                                         BFs, param_types_dif)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             params_dict_res.loc[step] = np.nan</span>
+<span class="c1">#     return params_dict_res</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.common.analyze &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.common.analyze</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.common.analyze</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Analyzing functionality.</span>
+
+<span class="sd">@author: MarcGebhardt</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">check_empty</span><span class="p">)</span>
+
+<span class="c1">#%% core analysing</span>
+<div class="viewcode-block" id="sign_n_change"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.sign_n_change">[docs]</a><span class="k">def</span> <span class="nf">sign_n_change</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes sign and sign change of an array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y : pandas.Series of float</span>
+<span class="sd">        Array which should analyzed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    y_sign : pandas.Series of integer</span>
+<span class="sd">        Signs of y.</span>
+<span class="sd">    y_signchange : pandas.Series of boolean</span>
+<span class="sd">        Sign changes of y.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y_sign</span>       <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">y_signchange</span> <span class="o">=</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">y_sign</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-</span> <span class="n">y_sign</span><span class="p">)</span> <span class="o">!=</span> <span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">y_sign</span>       <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_sign</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">y_signchange</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_signchange</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">y_sign</span><span class="p">,</span><span class="n">y_signchange</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="normalize"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.normalize">[docs]</a><span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">normadd</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">pdo_n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">warn_excl</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x_sc&#39;</span><span class="p">,</span><span class="s1">&#39;dx_sc&#39;</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalize an array in respect to given option.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pdo : pandas.Series or pandas.DataFrame</span>
+<span class="sd">        Input values.</span>
+<span class="sd">    axis : {0 or ‘index’, 1 or ‘columns’},, optional</span>
+<span class="sd">        Axis to apply normalizing. The default is 0.</span>
+<span class="sd">    norm : string, optional</span>
+<span class="sd">        Apllied option for normalizing.</span>
+<span class="sd">        Possible are:</span>
+<span class="sd">            - &#39;absmax&#39;: Normalize to maximum of absolut input values.</span>
+<span class="sd">            - &#39;absmin&#39;: Normalize to minimum of absolut input values.</span>
+<span class="sd">            - &#39;absqua&#39;: Normalize to Quantile of absolut input values (specified with normadd).</span>
+<span class="sd">            - &#39;max&#39;: Normalize to maximum of input values.</span>
+<span class="sd">            - &#39;min&#39;: Normalize to minimum of input values.</span>
+<span class="sd">            - &#39;qua&#39;: Normalize to Quantile of input values (specified with normadd).</span>
+<span class="sd">            - &#39;val&#39;: Normalize to given value (specified with normadd).</span>
+<span class="sd">            - None: No normalization (return input values).</span>
+<span class="sd">        The default is &#39;absmax&#39;.</span>
+<span class="sd">    normadd : int or float, optional</span>
+<span class="sd">        Additional parameter for option &#39;qua&#39;(to set quantile value), </span>
+<span class="sd">        or &#39;val&#39;(to set norm parameter directly).</span>
+<span class="sd">        The default is 0.5.</span>
+<span class="sd">    pdo_n : pandas.Series or pandas.DataFrame or None, optional</span>
+<span class="sd">        Additional values to get normalizing parameter.</span>
+<span class="sd">        If None use input values. If type is Dataframe, same shape required.</span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    warn_excl : list</span>
+<span class="sd">        Defines exclusions of ZeroDivisionError-prevention-warnings.</span>
+<span class="sd">        The default is [&#39;x_sc&#39;,&#39;dx_sc&#39;].</span>
+<span class="sd">    </span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Option not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    o : pandas.Series or pandas.DataFrame</span>
+<span class="sd">        Normalized output values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">axis</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">norm</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;absmeanwoso&#39;</span><span class="p">,</span><span class="s1">&#39;meanwoso&#39;</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Axis </span><span class="si">%s</span><span class="s2"> and norm </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span><span class="n">norm</span><span class="p">))</span>
+        
+    <span class="k">if</span> <span class="n">pdo_n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pdo_n</span> <span class="o">=</span> <span class="n">pdo</span>
+        
+    <span class="k">if</span>   <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;absmax&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;absmin&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;absmean&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;absmeanwoso&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">)</span><span class="o">.</span><span class="n">meanwoso</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;absmed&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">)</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;absqua&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCSeries</span><span class="p">):</span>
+            <span class="n">npar</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">)</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">normadd</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">npar</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">)</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">normadd</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+            
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;max&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="n">pdo_n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;min&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="n">pdo_n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="n">pdo_n</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;meanwoso&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="n">pdo_n</span><span class="o">.</span><span class="n">meanwoso</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;med&#39;</span><span class="p">:</span>
+        <span class="n">npar</span> <span class="o">=</span> <span class="n">pdo_n</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;qua&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCSeries</span><span class="p">):</span>
+            <span class="n">npar</span> <span class="o">=</span> <span class="n">pdo_n</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">normadd</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">npar</span> <span class="o">=</span> <span class="n">pdo_n</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">normadd</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+            
+    <span class="k">elif</span> <span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;val&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCDataFrame</span><span class="p">):</span>
+            <span class="n">npar</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">normadd</span><span class="p">,]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">pdo_n</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span>
+                             <span class="n">index</span><span class="o">=</span><span class="n">pdo_n</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">npar</span> <span class="o">=</span> <span class="n">normadd</span>
+    <span class="k">elif</span> <span class="n">norm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCDataFrame</span><span class="p">):</span>
+            <span class="n">npar</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mi">1</span><span class="p">,]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">pdo_n</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span>
+                             <span class="n">index</span><span class="o">=</span><span class="n">pdo_n</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">npar</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Norming </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">norm</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pdo_n</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCSeries</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">npar</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">npar</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">npar_0</span> <span class="o">=</span> <span class="n">pdo_n</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">npar_0</span> <span class="ow">in</span> <span class="n">warn_excl</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;ZeroDivisionError prevented by setting norming to 1 for variable: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">npar_0</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">npar</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">npar</span><span class="p">[</span><span class="n">npar</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># npar_0 = npar[npar == 0].index.values</span>
+        <span class="n">test</span><span class="o">=</span><span class="n">npar</span><span class="p">[</span><span class="n">npar</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">warn_excl</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">test</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">npar_0</span><span class="o">=</span><span class="n">npar</span><span class="p">[</span><span class="n">npar</span><span class="o">==</span><span class="mi">0</span><span class="p">][</span><span class="n">test</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;ZeroDivisionError prevented by setting norming to 1 for variables: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">npar_0</span><span class="p">))</span>
+    <span class="n">o</span> <span class="o">=</span> <span class="n">pdo</span><span class="o">/</span><span class="n">npar</span>
+    <span class="k">return</span> <span class="n">o</span></div>
+
+<div class="viewcode-block" id="threshhold_setter"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.threshhold_setter">[docs]</a><span class="k">def</span> <span class="nf">threshhold_setter</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">th</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span> <span class="n">set_val</span><span class="o">=</span><span class="s1">&#39;th&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">set_val</span> <span class="o">==</span> <span class="s1">&#39;th&#39;</span><span class="p">:</span>
+        <span class="n">set_val</span> <span class="o">=</span> <span class="n">th</span>
+    <span class="k">if</span> <span class="n">th</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pdo</span>
+    <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;abs&#39;</span><span class="p">:</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">pdo</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pdo</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">th</span><span class="p">,</span> <span class="n">set_val</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;lower&#39;</span><span class="p">:</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">pdo</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pdo</span>       <span class="o">&gt;</span> <span class="n">th</span><span class="p">,</span> <span class="n">set_val</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;higher&#39;</span><span class="p">:</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">pdo</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pdo</span>       <span class="o">&lt;</span> <span class="n">th</span><span class="p">,</span> <span class="n">set_val</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Option </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">option</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">o</span></div>
+
+<div class="viewcode-block" id="normalize_th"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.normalize_th">[docs]</a><span class="k">def</span> <span class="nf">normalize_th</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pdo_n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">normadd</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                 <span class="n">th</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">th_option</span><span class="o">=</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span> <span class="n">th_set_val</span><span class="o">=</span><span class="s1">&#39;th&#39;</span><span class="p">,</span>
+                 <span class="n">warn_excl</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x_sc&#39;</span><span class="p">,</span><span class="s1">&#39;dx_sc&#39;</span><span class="p">]):</span>
+    <span class="n">pds</span><span class="o">=</span><span class="n">normalize</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">normadd</span><span class="o">=</span><span class="n">normadd</span><span class="p">,</span> <span class="n">pdo_n</span><span class="o">=</span><span class="n">pdo_n</span><span class="p">,</span>
+                  <span class="n">warn_excl</span><span class="o">=</span><span class="n">warn_excl</span><span class="p">)</span>
+    <span class="n">pdt</span><span class="o">=</span><span class="n">threshhold_setter</span><span class="p">(</span><span class="n">pds</span><span class="p">,</span> <span class="n">th</span><span class="o">=</span><span class="n">th</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">th_option</span><span class="p">,</span> <span class="n">set_val</span><span class="o">=</span><span class="n">th_set_val</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pdt</span></div>
+
+<div class="viewcode-block" id="sign_n_changeth"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.sign_n_changeth">[docs]</a><span class="k">def</span> <span class="nf">sign_n_changeth</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normadd</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                    <span class="n">th</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">th_option</span><span class="o">=</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span> <span class="n">th_set_val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">rename</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">opt_out</span><span class="o">=</span><span class="s1">&#39;Tuple&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes sign and sign change of an array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y : pandas.Series of float</span>
+<span class="sd">        Array which should analyzed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    y_sign : pandas.Series of integer</span>
+<span class="sd">        Signs of y.</span>
+<span class="sd">    y_signchange : pandas.Series of boolean</span>
+<span class="sd">        Sign changes of y.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">sign_tmp</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="p">:</span>
+            <span class="n">o</span><span class="o">=</span><span class="n">x</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">o</span><span class="o">=</span><span class="n">x</span> <span class="o">//</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">o</span>
+    <span class="k">def</span> <span class="nf">sign_ch_detect</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">std_val</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">o</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">check_empty</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="n">o</span> <span class="o">=</span> <span class="n">std_val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">o</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">o</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="n">y</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">pdo</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">normadd</span><span class="o">=</span><span class="n">normadd</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">threshhold_setter</span><span class="p">(</span><span class="n">pdo</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">th</span><span class="o">=</span><span class="n">th</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">th_option</span><span class="p">,</span> <span class="n">set_val</span><span class="o">=</span><span class="n">th_set_val</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCSeries</span><span class="p">):</span>
+        <span class="n">y_sign</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">sign_tmp</span><span class="p">)</span>
+        <span class="n">y_signchange</span> <span class="o">=</span> <span class="n">y_sign</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">sign_ch_detect</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y_sign</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">applymap</span><span class="p">(</span><span class="n">sign_tmp</span><span class="p">)</span>
+        <span class="n">y_signchange</span> <span class="o">=</span> <span class="n">y_sign</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span><span class="o">.</span><span class="n">applymap</span><span class="p">(</span><span class="n">sign_ch_detect</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">rename</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCSeries</span><span class="p">):</span>
+            <span class="n">y_sign</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">y_sign</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_si&#39;</span>
+            <span class="n">y_signchange</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">y_signchange</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_sc&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">axis</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">y_sign</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">y_sign</span><span class="o">.</span><span class="n">columns</span><span class="o">+</span><span class="s1">&#39;_si&#39;</span>
+                <span class="n">y_signchange</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">y_signchange</span><span class="o">.</span><span class="n">columns</span><span class="o">+</span><span class="s1">&#39;_sc&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">y_sign</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">y_sign</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="s1">&#39;_si&#39;</span>
+                <span class="n">y_signchange</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">y_signchange</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="s1">&#39;_sc&#39;</span>
+    <span class="k">if</span> <span class="n">opt_out</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;DF&#39;</span><span class="p">,</span><span class="s1">&#39;DataFrame&#39;</span><span class="p">,</span><span class="s1">&#39;Dataframe&#39;</span><span class="p">]:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">y_sign</span><span class="p">,</span><span class="n">y_signchange</span><span class="p">],</span> 
+                        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="n">axis</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+    <span class="k">elif</span> <span class="n">opt_out</span><span class="o">==</span><span class="s1">&#39;Tuple&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">y_sign</span><span class="p">,</span> <span class="n">y_signchange</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Output option </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">opt_out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_sign</span><span class="p">,</span> <span class="n">y_signchange</span></div>
+
+<div class="viewcode-block" id="Inter_Lines"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.Inter_Lines">[docs]</a><span class="k">def</span> <span class="nf">Inter_Lines</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span><span class="n">c1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span><span class="n">c2</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine intersection point of two lines.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r1 : float</span>
+<span class="sd">        Rise of first line.</span>
+<span class="sd">    c1 : float</span>
+<span class="sd">        Constant part of first line.</span>
+<span class="sd">    r2 : float</span>
+<span class="sd">        Rise of second line.</span>
+<span class="sd">    c2 : float</span>
+<span class="sd">        Constant part of second line.</span>
+<span class="sd">    out : string, optional</span>
+<span class="sd">        Option for output (&#39;x&#39;, &#39;y&#39;, or &#39;xy&#39;). The default is &#39;x&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float or tuple of float</span>
+<span class="sd">        Output values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># if r1 == r2:</span>
+    <span class="c1">#     raise ValueError(&quot;Lines are parallel (no intersection)!&quot;)</span>
+    <span class="c1">#     return None</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">c2</span><span class="o">-</span><span class="n">c1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">r1</span><span class="o">-</span><span class="n">r2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="o">==</span> <span class="s1">&#39;x&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">else</span><span class="p">:</span> 
+        <span class="n">y</span> <span class="o">=</span> <span class="n">r1</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">c1</span>
+        <span class="k">if</span> <span class="n">out</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+        <span class="k">elif</span> <span class="n">out</span> <span class="o">==</span> <span class="s1">&#39;xy&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+    
+<div class="viewcode-block" id="Line_from2P"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.Line_from2P">[docs]</a><span class="k">def</span> <span class="nf">Line_from2P</span><span class="p">(</span><span class="n">P1</span><span class="p">,</span> <span class="n">P2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determine line from two points (1st argument is x)&quot;&quot;&quot;</span>
+    <span class="n">slope</span> <span class="o">=</span> <span class="p">(</span><span class="n">P2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">P1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">P2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">P1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">constant</span> <span class="o">=</span> <span class="n">P1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">P1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">slope</span><span class="p">,</span> <span class="n">constant</span></div>
+
+<span class="c1">#%% Circle and radius/curvature from 3 points</span>
+<div class="viewcode-block" id="TP_circle"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.TP_circle">[docs]</a><span class="k">def</span> <span class="nf">TP_circle</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">p3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the center and radius of the circle passing the given 3 points.</span>
+<span class="sd">    In case the 3 points form a line, returns (None, infinity).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">p2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">p2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">p2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">p2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">bc</span> <span class="o">=</span> <span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">p1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">p1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">p1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">temp</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">cd</span> <span class="o">=</span> <span class="p">(</span><span class="n">temp</span> <span class="o">-</span> <span class="n">p3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">p3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p3</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">p3</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">det</span> <span class="o">=</span> <span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">p2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p3</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="n">p2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">det</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.0e-6</span><span class="p">:</span>
+        <span class="c1"># return (None, np.inf)</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+    <span class="c1"># Center of circle</span>
+    <span class="n">cx</span> <span class="o">=</span> <span class="p">(</span><span class="n">bc</span><span class="o">*</span><span class="p">(</span><span class="n">p2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p3</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">cd</span><span class="o">*</span><span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p2</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">/</span> <span class="n">det</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="p">((</span><span class="n">p1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">cd</span> <span class="o">-</span> <span class="p">(</span><span class="n">p2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">bc</span><span class="p">)</span> <span class="o">/</span> <span class="n">det</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">cx</span> <span class="o">-</span> <span class="n">p1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">cy</span> <span class="o">-</span> <span class="n">p1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">),</span> <span class="n">radius</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TP_radius"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.TP_radius">[docs]</a><span class="k">def</span> <span class="nf">TP_radius</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">outopt</span><span class="o">=</span><span class="s1">&#39;signed_curvature&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines the radius or curvature of a circle through three points.</span>
+<span class="sd">    The sign indicates the direction (positve=left turn/curvature downwards).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pts : np.array or pd.DataFrame of shape (2=[x,y],3=[left,mid,right])</span>
+<span class="sd">        Array of point coordinates.</span>
+<span class="sd">    outopt : string, optional</span>
+<span class="sd">        Option for output. </span>
+<span class="sd">        Possible are: </span>
+<span class="sd">            - [&#39;signed_radius&#39;,&#39;sr&#39;]: signed radius</span>
+<span class="sd">            - [&#39;signed_curvature&#39;,&#39;sc&#39;]: signed curvature</span>
+<span class="sd">            - ...: all values (Center of circle, radius, sign, quadrant to mid)</span>
+<span class="sd">        The default is &#39;signed_curvature&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float or tuple</span>
+<span class="sd">        Radius, curvature or all outputs.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c</span><span class="p">,</span><span class="n">r</span><span class="o">=</span><span class="n">TP_circle</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">r</span><span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+        <span class="n">m</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">m</span><span class="o">=</span><span class="n">c</span><span class="o">-</span><span class="n">pts</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1"># quadrant to determine sign of radius</span>
+        <span class="n">q</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span> <span class="k">else</span> <span class="mi">4</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">==-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">q</span><span class="o">=</span><span class="mi">2</span> <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span> <span class="k">else</span> <span class="mi">3</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">q</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span> <span class="k">else</span> <span class="mi">2</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="n">q</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span> <span class="c1"># sign is positive if center is above mid</span>
+    <span class="k">if</span> <span class="n">outopt</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;signed_radius&#39;</span><span class="p">,</span><span class="s1">&#39;sr&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">*</span><span class="n">s</span>
+    <span class="k">elif</span> <span class="n">outopt</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;signed_curvature&#39;</span><span class="p">,</span><span class="s1">&#39;sc&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">r</span><span class="o">*</span><span class="n">s</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">q</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Geo_curve_TBC"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.analyze.Geo_curve_TBC">[docs]</a><span class="k">def</span> <span class="nf">Geo_curve_TBC</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">outopt</span><span class="o">=</span><span class="s1">&#39;signed_curvature&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines the radius or curvature of a circle through three points.</span>
+<span class="sd">    The sign indicates the direction (positve=left turn/curvature downwards).    </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    func : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    params : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    length : TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    outopt : string, optional</span>
+<span class="sd">        Option for output. </span>
+<span class="sd">        Possible are: </span>
+<span class="sd">            - [&#39;signed_radius&#39;,&#39;sr&#39;]: signed radius</span>
+<span class="sd">            - [&#39;signed_curvature&#39;,&#39;sc&#39;]: signed curvature</span>
+<span class="sd">            - ...: all values (Center of circle, radius, sign, quadrant to mid)</span>
+<span class="sd">        The default is &#39;signed_curvature&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r : float or tuple</span>
+<span class="sd">        Radius, curvature or all outputs.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ptx</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">pty</span><span class="o">=</span><span class="n">func</span><span class="p">(</span><span class="n">ptx</span><span class="p">,</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">pts</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">ptx</span><span class="p">,</span><span class="n">pty</span><span class="p">],</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">])</span>
+    <span class="n">r</span><span class="o">=</span><span class="n">TP_radius</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">outopt</span><span class="o">=</span><span class="n">outopt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">r</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

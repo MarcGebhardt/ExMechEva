@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva package &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exmecheva.bending package" href="exmecheva.bending.html" />
+    <link rel="prev" title="ExMechEva" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">ExMechEva</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">exmecheva package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exmecheva.bending.html">exmecheva.bending package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exmecheva.common.html">exmecheva.common package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-exmecheva.Eva_ACT">exmecheva.Eva_ACT module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#exmecheva.Eva_ACT.ACT_single"><code class="docutils literal notranslate"><span class="pre">ACT_single()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-exmecheva.Eva_ATT">exmecheva.Eva_ATT module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#exmecheva.Eva_ATT.ATT_single"><code class="docutils literal notranslate"><span class="pre">ATT_single()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-exmecheva.Eva_TBT">exmecheva.Eva_TBT module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#exmecheva.Eva_TBT.TBT_single"><code class="docutils literal notranslate"><span class="pre">TBT_single()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-exmecheva.eva">exmecheva.eva module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#exmecheva.eva.selector"><code class="docutils literal notranslate"><span class="pre">selector()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#exmecheva.eva.series"><code class="docutils literal notranslate"><span class="pre">series()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-exmecheva">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">ExMechEva</a></li>
+      <li class="breadcrumb-item active">exmecheva package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exmecheva.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="exmecheva-package">
+<h1>exmecheva package<a class="headerlink" href="#exmecheva-package" title="Permalink to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exmecheva.bending.html">exmecheva.bending package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#module-exmecheva.bending.attr_bgl">exmecheva.bending.attr_bgl module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#module-exmecheva.bending.bfunc_class">exmecheva.bending.bfunc_class module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_cohort"><code class="docutils literal notranslate"><span class="pre">Bend_func_cohort</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_cohort.Init_fandds"><code class="docutils literal notranslate"><span class="pre">Bend_func_cohort.Init_fandds()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_legion"><code class="docutils literal notranslate"><span class="pre">Bend_func_legion</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_legion.Builder"><code class="docutils literal notranslate"><span class="pre">Bend_func_legion.Builder()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_sub"><code class="docutils literal notranslate"><span class="pre">Bend_func_sub</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_sub.__call__"><code class="docutils literal notranslate"><span class="pre">Bend_func_sub.__call__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#module-exmecheva.bending.bfunc_com">exmecheva.bending.bfunc_com module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_com.Shear_area"><code class="docutils literal notranslate"><span class="pre">Shear_area()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_com.gamma_V_det"><code class="docutils literal notranslate"><span class="pre">gamma_V_det()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_com.triangle_func_d0"><code class="docutils literal notranslate"><span class="pre">triangle_func_d0()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_com.triangle_func_d1"><code class="docutils literal notranslate"><span class="pre">triangle_func_d1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_com.triangle_func_d2"><code class="docutils literal notranslate"><span class="pre">triangle_func_d2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#module-exmecheva.bending.bfunc_fse">exmecheva.bending.bfunc_fse module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_d0"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_d0()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_d1"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_d1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_d2"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_d2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_lin_func_d0"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_lin_func_d0()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_lin_func_d1"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_lin_func_d1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_lin_func_d2"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_lin_func_d2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_wlin_d0"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_wlin_d0()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_wlin_d1"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_wlin_d1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_wlin_d2"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_wlin_d2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_SF_func_d0"><code class="docutils literal notranslate"><span class="pre">FSE_SF_func_d0()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_SF_func_d1"><code class="docutils literal notranslate"><span class="pre">FSE_SF_func_d1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_SF_func_d2"><code class="docutils literal notranslate"><span class="pre">FSE_SF_func_d2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#module-exmecheva.bending.evaluation">exmecheva.bending.evaluation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.Moment_perF_func"><code class="docutils literal notranslate"><span class="pre">Moment_perF_func()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.Weight_func"><code class="docutils literal notranslate"><span class="pre">Weight_func()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_check_many_with_method_D"><code class="docutils literal notranslate"><span class="pre">YM_check_many_with_method_D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_check_with_method_D"><code class="docutils literal notranslate"><span class="pre">YM_check_with_method_D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_A"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_A()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_B"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_B()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_C"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_C()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_D"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_D_bend_df"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D_bend_df()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_D_bend_df_add"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D_bend_df_add()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_D_num"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D_num()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_D_res"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D_res()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_E"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_E()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_F"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_F()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.YM_eva_method_G"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_G()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.coord_df_depo"><code class="docutils literal notranslate"><span class="pre">coord_df_depo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.coord_df_mean"><code class="docutils literal notranslate"><span class="pre">coord_df_mean()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.straindf_from_curve"><code class="docutils literal notranslate"><span class="pre">straindf_from_curve()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.stress_df_from_lin"><code class="docutils literal notranslate"><span class="pre">stress_df_from_lin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.evaluation.stress_perF"><code class="docutils literal notranslate"><span class="pre">stress_perF()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#module-exmecheva.bending.fitting">exmecheva.bending.fitting module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.Multi_minimize"><code class="docutils literal notranslate"><span class="pre">Multi_minimize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.Perform_Fit"><code class="docutils literal notranslate"><span class="pre">Perform_Fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.lmfit_bound_checker"><code class="docutils literal notranslate"><span class="pre">lmfit_bound_checker()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.lmfit_free_val_setter"><code class="docutils literal notranslate"><span class="pre">lmfit_free_val_setter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.lmfit_modelize"><code class="docutils literal notranslate"><span class="pre">lmfit_modelize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.lmfit_param_adder"><code class="docutils literal notranslate"><span class="pre">lmfit_param_adder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.lmfit_param_key_checker"><code class="docutils literal notranslate"><span class="pre">lmfit_param_key_checker()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.lmfit_param_prep"><code class="docutils literal notranslate"><span class="pre">lmfit_param_prep()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.res_multi_const_weighted"><code class="docutils literal notranslate"><span class="pre">res_multi_const_weighted()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.fitting.shaped_array_fill_fandl"><code class="docutils literal notranslate"><span class="pre">shaped_array_fill_fandl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#module-exmecheva.bending.opt_mps">exmecheva.bending.opt_mps module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.Point_df_combine"><code class="docutils literal notranslate"><span class="pre">Point_df_combine()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.Point_df_from_lin"><code class="docutils literal notranslate"><span class="pre">Point_df_from_lin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.Point_df_idx"><code class="docutils literal notranslate"><span class="pre">Point_df_idx()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.Point_df_transform"><code class="docutils literal notranslate"><span class="pre">Point_df_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.Points_add_step"><code class="docutils literal notranslate"><span class="pre">Points_add_step()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.Points_dif_step"><code class="docutils literal notranslate"><span class="pre">Points_dif_step()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.Points_diff"><code class="docutils literal notranslate"><span class="pre">Points_diff()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.Points_eval_func"><code class="docutils literal notranslate"><span class="pre">Points_eval_func()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.v_Ctrans"><code class="docutils literal notranslate"><span class="pre">v_Ctrans()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.opt_mps.v_length"><code class="docutils literal notranslate"><span class="pre">v_length()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#module-exmecheva.bending.plotting">exmecheva.bending.plotting module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.plotting.colplt_common_ax"><code class="docutils literal notranslate"><span class="pre">colplt_common_ax()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.plotting.colplt_df_ax"><code class="docutils literal notranslate"><span class="pre">colplt_df_ax()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.plotting.colplt_funcs_all"><code class="docutils literal notranslate"><span class="pre">colplt_funcs_all()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.plotting.colplt_funcs_ax"><code class="docutils literal notranslate"><span class="pre">colplt_funcs_ax()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.bending.html#exmecheva.bending.plotting.colplt_funcs_one"><code class="docutils literal notranslate"><span class="pre">colplt_funcs_one()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.bending.html#module-exmecheva.bending">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exmecheva.common.html">exmecheva.common package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.analyze">exmecheva.common.analyze module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.Geo_curve_TBC"><code class="docutils literal notranslate"><span class="pre">Geo_curve_TBC()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.Inter_Lines"><code class="docutils literal notranslate"><span class="pre">Inter_Lines()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.Line_from2P"><code class="docutils literal notranslate"><span class="pre">Line_from2P()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.TP_circle"><code class="docutils literal notranslate"><span class="pre">TP_circle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.TP_radius"><code class="docutils literal notranslate"><span class="pre">TP_radius()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.normalize"><code class="docutils literal notranslate"><span class="pre">normalize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.normalize_th"><code class="docutils literal notranslate"><span class="pre">normalize_th()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.sign_n_change"><code class="docutils literal notranslate"><span class="pre">sign_n_change()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.sign_n_changeth"><code class="docutils literal notranslate"><span class="pre">sign_n_changeth()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.analyze.threshhold_setter"><code class="docutils literal notranslate"><span class="pre">threshhold_setter()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.eva_opt_hand">exmecheva.common.eva_opt_hand module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.eva_opt_hand.com_option_file_read"><code class="docutils literal notranslate"><span class="pre">com_option_file_read()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.eva_opt_hand.com_option_file_write"><code class="docutils literal notranslate"><span class="pre">com_option_file_write()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.eva_opt_hand.option_presetter"><code class="docutils literal notranslate"><span class="pre">option_presetter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.eva_opt_hand.option_reader"><code class="docutils literal notranslate"><span class="pre">option_reader()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.eva_opt_hand.option_reader_sel"><code class="docutils literal notranslate"><span class="pre">option_reader_sel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.eva_opt_hand.set_type_by_string"><code class="docutils literal notranslate"><span class="pre">set_type_by_string()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.fitting">exmecheva.common.fitting module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.Refit_YM_vals"><code class="docutils literal notranslate"><span class="pre">Refit_YM_vals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.Rquad"><code class="docutils literal notranslate"><span class="pre">Rquad()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.YM_eva_com_sel"><code class="docutils literal notranslate"><span class="pre">YM_eva_com_sel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.YM_sigeps_lin"><code class="docutils literal notranslate"><span class="pre">YM_sigeps_lin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.fit_report_adder"><code class="docutils literal notranslate"><span class="pre">fit_report_adder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.strain_linfit"><code class="docutils literal notranslate"><span class="pre">strain_linfit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.stress_linfit"><code class="docutils literal notranslate"><span class="pre">stress_linfit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.stress_linfit_plt"><code class="docutils literal notranslate"><span class="pre">stress_linfit_plt()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.helper">exmecheva.common.helper module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.helper.check_empty"><code class="docutils literal notranslate"><span class="pre">check_empty()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.helper.round_to_sigdig"><code class="docutils literal notranslate"><span class="pre">round_to_sigdig()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.helper.sigdig"><code class="docutils literal notranslate"><span class="pre">sigdig()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.helper.str_to_bool"><code class="docutils literal notranslate"><span class="pre">str_to_bool()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.list_ops">exmecheva.common.list_ops module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.Failure_code_bool_df"><code class="docutils literal notranslate"><span class="pre">Failure_code_bool_df()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.Failure_code_checker"><code class="docutils literal notranslate"><span class="pre">Failure_code_checker()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.Failure_code_format"><code class="docutils literal notranslate"><span class="pre">Failure_code_format()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.Failure_code_lister"><code class="docutils literal notranslate"><span class="pre">Failure_code_lister()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.ICD_bool_df"><code class="docutils literal notranslate"><span class="pre">ICD_bool_df()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.ICD_lister"><code class="docutils literal notranslate"><span class="pre">ICD_lister()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.list_boolean_df"><code class="docutils literal notranslate"><span class="pre">list_boolean_df()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.list_cell_compiler"><code class="docutils literal notranslate"><span class="pre">list_cell_compiler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.list_interpreter"><code class="docutils literal notranslate"><span class="pre">list_interpreter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.list_ops.list_ser_to_1D"><code class="docutils literal notranslate"><span class="pre">list_ser_to_1D()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.loadnsave">exmecheva.common.loadnsave module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.loadnsave.file_namer"><code class="docutils literal notranslate"><span class="pre">file_namer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.loadnsave.file_namer_interpreter"><code class="docutils literal notranslate"><span class="pre">file_namer_interpreter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.loadnsave.pack_hdf"><code class="docutils literal notranslate"><span class="pre">pack_hdf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.loadnsave.pack_hdf_mul"><code class="docutils literal notranslate"><span class="pre">pack_hdf_mul()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.mc_char">exmecheva.common.mc_char module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.Curvecar_Refine"><code class="docutils literal notranslate"><span class="pre">Curvecar_Refine()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.Curvecar_Section"><code class="docutils literal notranslate"><span class="pre">Curvecar_Section()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.Diff_Quot"><code class="docutils literal notranslate"><span class="pre">Diff_Quot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.Diff_Quot2"><code class="docutils literal notranslate"><span class="pre">Diff_Quot2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.Diff_Quot3"><code class="docutils literal notranslate"><span class="pre">Diff_Quot3()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.MCurve_Characterizer"><code class="docutils literal notranslate"><span class="pre">MCurve_Characterizer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.MCurve_merger"><code class="docutils literal notranslate"><span class="pre">MCurve_merger()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.Peaky_Finder"><code class="docutils literal notranslate"><span class="pre">Peaky_Finder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.Peaky_Finder_MM"><code class="docutils literal notranslate"><span class="pre">Peaky_Finder_MM()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.YM_eva_range_refine"><code class="docutils literal notranslate"><span class="pre">YM_eva_range_refine()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.find_SandE"><code class="docutils literal notranslate"><span class="pre">find_SandE()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.rise_curve"><code class="docutils literal notranslate"><span class="pre">rise_curve()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_char.test_pdmon"><code class="docutils literal notranslate"><span class="pre">test_pdmon()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.mc_man">exmecheva.common.mc_man module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.DetFinSSC"><code class="docutils literal notranslate"><span class="pre">DetFinSSC()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.Diff_ext"><code class="docutils literal notranslate"><span class="pre">Diff_ext()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.Extend_Series_Poly"><code class="docutils literal notranslate"><span class="pre">Extend_Series_Poly()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.Extend_Series_n_setter"><code class="docutils literal notranslate"><span class="pre">Extend_Series_n_setter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.Predict_apply_retrim"><code class="docutils literal notranslate"><span class="pre">Predict_apply_retrim()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.Retrim_Series"><code class="docutils literal notranslate"><span class="pre">Retrim_Series()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.Smoothsel"><code class="docutils literal notranslate"><span class="pre">Smoothsel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.Smoothsel_ext"><code class="docutils literal notranslate"><span class="pre">Smoothsel_ext()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.check_params"><code class="docutils literal notranslate"><span class="pre">check_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.mc_resampler"><code class="docutils literal notranslate"><span class="pre">mc_resampler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_man.smooth"><code class="docutils literal notranslate"><span class="pre">smooth()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.mc_yield">exmecheva.common.mc_yield module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_yield.Find_intg2p"><code class="docutils literal notranslate"><span class="pre">Find_intg2p()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_yield.YM_eva_range_refine"><code class="docutils literal notranslate"><span class="pre">YM_eva_range_refine()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_yield.Yield_redet"><code class="docutils literal notranslate"><span class="pre">Yield_redet()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_yield.Yield_redet2"><code class="docutils literal notranslate"><span class="pre">Yield_redet2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.mc_yield.Yield_redet2_Multi"><code class="docutils literal notranslate"><span class="pre">Yield_redet2_Multi()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.output">exmecheva.common.output module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.output.Otvalgetter_Multi"><code class="docutils literal notranslate"><span class="pre">Otvalgetter_Multi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.output.Outvalgetter"><code class="docutils literal notranslate"><span class="pre">Outvalgetter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.output.str_indent"><code class="docutils literal notranslate"><span class="pre">str_indent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.output.str_log"><code class="docutils literal notranslate"><span class="pre">str_log()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.pd_ext">exmecheva.common.pd_ext module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.Find_closest"><code class="docutils literal notranslate"><span class="pre">Find_closest()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.Find_closest_perc"><code class="docutils literal notranslate"><span class="pre">Find_closest_perc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.Find_closestv"><code class="docutils literal notranslate"><span class="pre">Find_closestv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.Find_first_sc"><code class="docutils literal notranslate"><span class="pre">Find_first_sc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.deal_dupl_index"><code class="docutils literal notranslate"><span class="pre">deal_dupl_index()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_axischange"><code class="docutils literal notranslate"><span class="pre">pd_axischange()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_combine_index"><code class="docutils literal notranslate"><span class="pre">pd_combine_index()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_exclnan"><code class="docutils literal notranslate"><span class="pre">pd_exclnan()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_find_index"><code class="docutils literal notranslate"><span class="pre">pd_find_index()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_isDF"><code class="docutils literal notranslate"><span class="pre">pd_isDF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_isSer"><code class="docutils literal notranslate"><span class="pre">pd_isSer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_limit"><code class="docutils literal notranslate"><span class="pre">pd_limit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_nan_handler"><code class="docutils literal notranslate"><span class="pre">pd_nan_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_outsort"><code class="docutils literal notranslate"><span class="pre">pd_outsort()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_slice_index"><code class="docutils literal notranslate"><span class="pre">pd_slice_index()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_trapz"><code class="docutils literal notranslate"><span class="pre">pd_trapz()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_valid_index"><code class="docutils literal notranslate"><span class="pre">pd_valid_index()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.pd_ext.pd_vec_length"><code class="docutils literal notranslate"><span class="pre">pd_vec_length()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.plotting">exmecheva.common.plotting module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.MCurve_Char_Plotter"><code class="docutils literal notranslate"><span class="pre">MCurve_Char_Plotter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.plt_add_DaAnno"><code class="docutils literal notranslate"><span class="pre">plt_add_DaAnno()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.plt_handle_suffix"><code class="docutils literal notranslate"><span class="pre">plt_handle_suffix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.sns_pointplot_MMeb"><code class="docutils literal notranslate"><span class="pre">sns_pointplot_MMeb()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.tick_label_inserter"><code class="docutils literal notranslate"><span class="pre">tick_label_inserter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.tick_label_renamer"><code class="docutils literal notranslate"><span class="pre">tick_label_renamer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.tick_legend_renamer"><code class="docutils literal notranslate"><span class="pre">tick_legend_renamer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.stat_ext">exmecheva.common.stat_ext module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.CD_rep"><code class="docutils literal notranslate"><span class="pre">CD_rep()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.CD_test_multi"><code class="docutils literal notranslate"><span class="pre">CD_test_multi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.CImax"><code class="docutils literal notranslate"><span class="pre">CImax()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.CImin"><code class="docutils literal notranslate"><span class="pre">CImin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.Corr_ext"><code class="docutils literal notranslate"><span class="pre">Corr_ext()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.Dist_test"><code class="docutils literal notranslate"><span class="pre">Dist_test()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.Dist_test_multi"><code class="docutils literal notranslate"><span class="pre">Dist_test_multi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.Hypo_test"><code class="docutils literal notranslate"><span class="pre">Hypo_test()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.Hypo_test_multi"><code class="docutils literal notranslate"><span class="pre">Hypo_test_multi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.MComp_interpreter"><code class="docutils literal notranslate"><span class="pre">MComp_interpreter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.Multi_conc"><code class="docutils literal notranslate"><span class="pre">Multi_conc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.NaN_stat_outliers"><code class="docutils literal notranslate"><span class="pre">NaN_stat_outliers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.agg_add_ci"><code class="docutils literal notranslate"><span class="pre">agg_add_ci()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.coefficient_of_variation"><code class="docutils literal notranslate"><span class="pre">coefficient_of_variation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.coefficient_of_variation_woso"><code class="docutils literal notranslate"><span class="pre">coefficient_of_variation_woso()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.confidence_interval"><code class="docutils literal notranslate"><span class="pre">confidence_interval()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.group_ANOVA_MComp"><code class="docutils literal notranslate"><span class="pre">group_ANOVA_MComp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.group_ANOVA_MComp_multi"><code class="docutils literal notranslate"><span class="pre">group_ANOVA_MComp_multi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.group_Anova"><code class="docutils literal notranslate"><span class="pre">group_Anova()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.meanwoso"><code class="docutils literal notranslate"><span class="pre">meanwoso()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.pd_agg"><code class="docutils literal notranslate"><span class="pre">pd_agg()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.pd_agg_custom"><code class="docutils literal notranslate"><span class="pre">pd_agg_custom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.stat_box_vals"><code class="docutils literal notranslate"><span class="pre">stat_box_vals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.stat_outliers"><code class="docutils literal notranslate"><span class="pre">stat_outliers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.stdwoso"><code class="docutils literal notranslate"><span class="pre">stdwoso()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-exmecheva.Eva_ACT">
+<span id="exmecheva-eva-act-module"></span><h2>exmecheva.Eva_ACT module<a class="headerlink" href="#module-exmecheva.Eva_ACT" title="Permalink to this heading"></a></h2>
+<p>Created on Wed Sep 22 11:40:20 2021</p>
+<p>&#64;author: mgebhard
+.. todo:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">opt</span><span class="o">-</span><span class="n">DIC</span> <span class="n">Funktionalität</span>
+<span class="o">-</span> <span class="n">Implementierung</span> <span class="n">genutze</span> <span class="n">Dehnung</span> <span class="n">aus</span> <span class="n">Methoden</span> <span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+<span class="o">-</span> <span class="n">Dehnung</span> <span class="n">für</span> <span class="n">Ausgabe</span> <span class="n">auf</span> <span class="n">E</span><span class="o">-</span><span class="n">Modul</span> <span class="n">beziehen</span> <span class="p">(</span><span class="n">relevant</span><span class="p">,</span> <span class="n">wenn</span> <span class="n">Auflagereindrückung</span> <span class="n">nicht</span> <span class="n">eliminiert</span><span class="p">)</span>
+<span class="o">-</span> <span class="n">Automatik</span> <span class="n">Compression</span> <span class="o">/</span> <span class="n">Anstiegswechsel</span> <span class="p">(</span><span class="n">Be</span><span class="o">-</span><span class="n">Entlasten</span><span class="p">)</span>
+    <span class="o">-</span> <span class="n">VIP</span><span class="o">-</span><span class="n">Bestimmung</span>
+    <span class="o">-</span> <span class="n">E</span><span class="o">-</span><span class="n">Methoden</span> <span class="p">(</span><span class="n">Spannungs</span><span class="o">-/</span><span class="n">Dehnungsmaximum</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Changelog:</dt><dd><ul class="simple">
+<li><p>21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)</p></li>
+<li><dl class="simple">
+<dt>23-10-13: - Hinzufügen finale Spannungs-Dehnungskurve (6.6) mit Ermittlung</dt><dd><ul>
+<li><p>Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.05%), siehe DOI: 10.1007/s10439-020-02719-2</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>23-10-20: Bending connection replaced (Bend.YM_eva_method_A child of Evac.YM_eva_com_sel)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.Eva_ACT.ACT_single">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.Eva_ACT.</span></span><span class="sig-name descname"><span class="pre">ACT_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prot_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mfile_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'logfp':</span> <span class="pre">None,</span> <span class="pre">'logopt':</span> <span class="pre">True,</span> <span class="pre">'output_lvl':</span> <span class="pre">1,</span> <span class="pre">'printopt':</span> <span class="pre">False}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'clear':</span> <span class="pre">True,</span> <span class="pre">'close':</span> <span class="pre">True,</span> <span class="pre">'s_types':</span> <span class="pre">['pdf'],</span> <span class="pre">'save':</span> <span class="pre">True,</span> <span class="pre">'show':</span> <span class="pre">True,</span> <span class="pre">'tight':</span> <span class="pre">True}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/Eva_ACT.html#ACT_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.Eva_ACT.ACT_single" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-exmecheva.Eva_ATT">
+<span id="exmecheva-eva-att-module"></span><h2>exmecheva.Eva_ATT module<a class="headerlink" href="#module-exmecheva.Eva_ATT" title="Permalink to this heading"></a></h2>
+<p>Created on Wed Sep 22 11:40:20 2021</p>
+<p>&#64;author: mgebhard
+.. todo:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">opt</span><span class="o">-</span><span class="n">DIC</span> <span class="n">Funktionalität</span>
+<span class="o">-</span> <span class="n">Implementierung</span> <span class="n">genutze</span> <span class="n">Dehnung</span> <span class="n">aus</span> <span class="n">Methoden</span> <span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+<span class="o">-</span> <span class="n">Dehnung</span> <span class="n">für</span> <span class="n">Ausgabe</span> <span class="n">auf</span> <span class="n">E</span><span class="o">-</span><span class="n">Modul</span> <span class="n">beziehen</span> <span class="p">(</span><span class="n">relevant</span><span class="p">,</span> <span class="n">wenn</span> <span class="n">Auflagereindrückung</span> <span class="n">nicht</span> <span class="n">eliminiert</span><span class="p">)</span>
+<span class="o">-</span> <span class="n">Automatik</span> <span class="n">Compression</span> <span class="o">/</span> <span class="n">Anstiegswechsel</span> <span class="p">(</span><span class="n">Be</span><span class="o">-</span><span class="n">Entlasten</span><span class="p">)</span>
+    <span class="o">-</span> <span class="n">VIP</span><span class="o">-</span><span class="n">Bestimmung</span>
+    <span class="o">-</span> <span class="n">E</span><span class="o">-</span><span class="n">Methoden</span> <span class="p">(</span><span class="n">Spannungs</span><span class="o">-/</span><span class="n">Dehnungsmaximum</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Changelog:</dt><dd><ul class="simple">
+<li><p>21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)</p></li>
+<li><p>21-10-21: Ende Auswertung erst nach maximaler Kraft</p></li>
+<li><p>21-10-29: plastic strain shift -1 (zugehörig nun zu abgelaufenem Zyklus)</p></li>
+<li><dl class="simple">
+<dt>23-10-13: - Ändern finale Spannungs-Dehnungskurve (6.6) mit Ermittlung</dt><dd><ul>
+<li><p>Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.5%)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>23-12-07: Resempling frequency standard 4.0 -&gt; 10.0</dt><dd><p>-&gt; OPT_Determination_Distance [10,5] -&gt; 25,13</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.Eva_ATT.ATT_single">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.Eva_ATT.</span></span><span class="sig-name descname"><span class="pre">ATT_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prot_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mfile_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'logfp':</span> <span class="pre">None,</span> <span class="pre">'logopt':</span> <span class="pre">True,</span> <span class="pre">'output_lvl':</span> <span class="pre">1,</span> <span class="pre">'printopt':</span> <span class="pre">False}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'clear':</span> <span class="pre">True,</span> <span class="pre">'close':</span> <span class="pre">True,</span> <span class="pre">'s_types':</span> <span class="pre">['pdf'],</span> <span class="pre">'save':</span> <span class="pre">True,</span> <span class="pre">'show':</span> <span class="pre">True,</span> <span class="pre">'tight':</span> <span class="pre">True}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/Eva_ATT.html#ATT_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.Eva_ATT.ATT_single" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-exmecheva.Eva_TBT">
+<span id="exmecheva-eva-tbt-module"></span><h2>exmecheva.Eva_TBT module<a class="headerlink" href="#module-exmecheva.Eva_TBT" title="Permalink to this heading"></a></h2>
+<p>Created on Thu Sep  2 13:44:49 2021</p>
+<p>&#64;author: mgebhard</p>
+<dl class="simple">
+<dt>Changelog:</dt><dd><ul class="simple">
+<li><p>21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)</p></li>
+<li><p>21-10-25: Ende Auswertung erst nach maximaler Kraft</p></li>
+<li><p>21-12-03: Methodenumbenennung (C:E, D:G, E:F, F:C, G:D)</p></li>
+<li><p>21-12-17: Variantenanpassung Methoden (C2Al, C2Sl, C2Cl; E4A*; F4Ag**M G3Ag, G3Mg, G3Cg)</p></li>
+<li><p>21-12-17: Korrektur stdnwoso über hinzufügen stdwoso</p></li>
+<li><dl class="simple">
+<dt>23-10-13: - Hinzufügen finale Spannungs-Dehnungskurve (6.6) mit Ermittlung</dt><dd><ul>
+<li><p>Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.007%), siehe DOI: 10.1007/s10439-020-02719-2</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.Eva_TBT.TBT_single">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.Eva_TBT.</span></span><span class="sig-name descname"><span class="pre">TBT_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prot_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mfile_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'logfp':</span> <span class="pre">None,</span> <span class="pre">'logopt':</span> <span class="pre">True,</span> <span class="pre">'output_lvl':</span> <span class="pre">1,</span> <span class="pre">'printopt':</span> <span class="pre">False}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'clear':</span> <span class="pre">True,</span> <span class="pre">'close':</span> <span class="pre">True,</span> <span class="pre">'s_types':</span> <span class="pre">['pdf'],</span> <span class="pre">'save':</span> <span class="pre">True,</span> <span class="pre">'show':</span> <span class="pre">True,</span> <span class="pre">'tight':</span> <span class="pre">True}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/Eva_TBT.html#TBT_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.Eva_TBT.TBT_single" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-exmecheva.eva">
+<span id="exmecheva-eva-module"></span><h2>exmecheva.eva module<a class="headerlink" href="#module-exmecheva.eva" title="Permalink to this heading"></a></h2>
+<p>Created on Wed Nov 29 12:23:31 2023</p>
+<p>&#64;author: MarcGebhardt
+.. todo:: - series only work with output_lvl&gt;=1</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.eva.selector">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.eva.</span></span><span class="sig-name descname"><span class="pre">selector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eva_single_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combpaths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_stats_fc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">des</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prot_rkws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'header':</span> <span class="pre">11,</span> <span class="pre">'index_col':</span> <span class="pre">0,</span> <span class="pre">'skiprows':</span> <span class="pre">range(12,</span> <span class="pre">13)}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'logfp':</span> <span class="pre">None,</span> <span class="pre">'logopt':</span> <span class="pre">True,</span> <span class="pre">'output_lvl':</span> <span class="pre">1,</span> <span class="pre">'printopt':</span> <span class="pre">False}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'clear':</span> <span class="pre">True,</span> <span class="pre">'close':</span> <span class="pre">True,</span> <span class="pre">'s_types':</span> <span class="pre">['pdf'],</span> <span class="pre">'save':</span> <span class="pre">True,</span> <span class="pre">'show':</span> <span class="pre">True,</span> <span class="pre">'tight':</span> <span class="pre">True}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/eva.html#selector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.eva.selector" title="Permalink to this definition"></a></dt>
+<dd><p>Selects suitable evaluation method acc. to choosen option.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>eva_single_func</strong> (<em>function</em>) – Function to perform single evaluation.</p></li>
+<li><p><strong>option</strong> (<em>str</em>) – <dl class="simple">
+<dt>Evaluation option. Possible are:</dt><dd><ul>
+<li><p>’single’: Evaluate single measurement</p></li>
+<li><p>’series’: Evaluate series of measurements (see protocol table)</p></li>
+<li><p>’complete’: Evaluate series of series</p></li>
+<li><p>’pack’: Pack all evaluations into single hdf-file (only results and evaluated measurement)</p></li>
+<li><p>’pack-all’: Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)</p></li>
+</ul>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>combpaths</strong> (<em>pandas.DataFrame</em>) – Combined paths for in- and output of evaluations.</p></li>
+<li><p><strong>no_stats_fc</strong> (<em>list</em><em> of </em><em>str</em>) – Assessment codes for excluding from evaluation (searched in protocol variable “Failure_code”).</p></li>
+<li><p><strong>var_suffix</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – Suffix of variants of measurements (p.E. different moistures [“A”,”B”,…]).
+The default is [“”].</p></li>
+<li><p><strong>ser</strong> (<em>str</em><em>, </em><em>optional</em>) – Accessor for series. Must be as index in combpaths. The default is ‘’.</p></li>
+<li><p><strong>des</strong> (<em>str</em><em>, </em><em>optional</em>) – Accessor for/Designation of measurement/specimen.
+Must be as index in combpaths. The default is ‘’.</p></li>
+<li><p><strong>out_path</strong> (<em>str</em><em> or </em><em>Path</em><em>, </em><em>optional</em>) – Additional outputpath for packed evaluation (hdf file). The default is ‘’.</p></li>
+<li><p><strong>prot_rkws</strong> (<em>dict</em><em>, </em><em>optional</em>) – Dictionary for reading protocol. Must be keyword ind pandas.read_excel.
+The default is dict(header=11, skiprows=range(12,13),index_col=0).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – Option not implemented.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.eva.series">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.eva.</span></span><span class="sig-name descname"><span class="pre">series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eva_single_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_stats_fc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_suffix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prot_rkws</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_lvl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'logfp':</span> <span class="pre">None,</span> <span class="pre">'logopt':</span> <span class="pre">True,</span> <span class="pre">'output_lvl':</span> <span class="pre">1,</span> <span class="pre">'printopt':</span> <span class="pre">False}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'clear':</span> <span class="pre">True,</span> <span class="pre">'close':</span> <span class="pre">True,</span> <span class="pre">'s_types':</span> <span class="pre">['pdf'],</span> <span class="pre">'save':</span> <span class="pre">True,</span> <span class="pre">'show':</span> <span class="pre">True,</span> <span class="pre">'tight':</span> <span class="pre">True}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/eva.html#series"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.eva.series" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluates a series of single evaluations (one after an other).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>eva_single_func</strong> (<em>function</em>) – Function to perform single evaluation.</p></li>
+<li><p><strong>paths</strong> (<em>pandas.Series</em>) – <dl class="simple">
+<dt>Paths for evaluation:</dt><dd><ul>
+<li><p>’prot’: path to protocoll excel table</p></li>
+<li><p>’opts’: path to common options as json file</p></li>
+<li><p>’meas’: path to measurement (conventional) file location</p></li>
+<li><p>’dic’: path to measurement (optical) file location</p></li>
+<li><p>’out’: path for output files</p></li>
+</ul>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>no_stats_fc</strong> (<em>list</em><em> of </em><em>strings</em>) – <p>No evaluation if in protocoll.Failure_code.
+Example: no_stats_fc = [‘A01.1’,’A01.2’,’A01.3’, ‘A02.3’,</p>
+<blockquote>
+<div><p>’B01.1’,’B01.2’,’B01.3’, ‘B02.3’,
+‘C01.1’,’C01.2’,’C01.3’, ‘C02.3’,
+‘D01.1’,’D01.2’,’D01.3’, ‘D02.3’,
+‘F01.1’,’F01.2’,’F01.3’, ‘F02.3’]</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>var_suffix</strong> (<em>string</em>) – Suffix for variant of measurement (p.E. different moistures [“A”,”B”,…]).</p></li>
+<li><p><strong>prot_rkws</strong> (<em>dict</em>) – Dictionary for reading protocol. Must be keyword ind pandas.read_excel.</p></li>
+<li><p><strong>output_lvl</strong> (<em>int</em><em>, </em><em>optional</em>) – Output level (0: no output, 1: only necessary, 2: all).
+The default is 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-exmecheva">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-exmecheva" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="ExMechEva" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exmecheva.bending.html" class="btn btn-neutral float-right" title="exmecheva.bending package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

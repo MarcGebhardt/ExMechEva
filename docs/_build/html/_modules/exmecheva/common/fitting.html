@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.common.fitting &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.common.fitting</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.common.fitting</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Dec  4 17:43:14 2023</span>
+
+<span class="sd">@author: mgebhard</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">lmfit</span>
+
+<span class="kn">from</span> <span class="nn">.pd_ext</span> <span class="kn">import</span> <span class="p">(</span><span class="n">pd_combine_index</span><span class="p">)</span>
+
+<div class="viewcode-block" id="YM_sigeps_lin"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.YM_sigeps_lin">[docs]</a><span class="k">def</span> <span class="nf">YM_sigeps_lin</span><span class="p">(</span><span class="n">stress_ser</span><span class="p">,</span> <span class="n">strain_ser</span><span class="p">,</span> 
+                  <span class="n">method</span><span class="o">=</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">,</span>
+                  <span class="n">ind_S</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ind_E</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Youngs Modulus of a stress-strain-curve with linear approach using non linear least squares curve fitting.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    strain_col : pd.Series</span>
+<span class="sd">        Strain curve.</span>
+<span class="sd">    stress_col : pd.Series</span>
+<span class="sd">        Stress_curve.</span>
+<span class="sd">    ind_S : integer</span>
+<span class="sd">        First used index in df.</span>
+<span class="sd">    ind_E : integer</span>
+<span class="sd">        Last used index in df.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    E : float</span>
+<span class="sd">        Youngs Modulus (corresponds to slope of linear fit).</span>
+<span class="sd">    Eabs : float</span>
+<span class="sd">        Stress value on strain origin (corresponds to interception of linear fit).</span>
+<span class="sd">    Rquad : float</span>
+<span class="sd">        Coefficient of determination.</span>
+<span class="sd">    fit : lmfit.model.ModelResult</span>
+<span class="sd">        Fitting result from lmfit (use with fit.fit_report() for report).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ind_S</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">stress_ser</span> <span class="o">=</span> <span class="n">stress_ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ind_S</span><span class="p">:]</span>
+        <span class="n">strain_ser</span> <span class="o">=</span> <span class="n">strain_ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ind_S</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ind_E</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">stress_ser</span> <span class="o">=</span> <span class="n">stress_ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[:</span><span class="n">ind_E</span><span class="p">]</span>
+        <span class="n">strain_ser</span> <span class="o">=</span> <span class="n">strain_ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[:</span><span class="n">ind_E</span><span class="p">]</span>
+        
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">m</span>       <span class="o">=</span> <span class="n">lmfit</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">LinearModel</span><span class="p">()</span>
+        <span class="c1"># guess doesn&#39;t work with NaN&#39;s</span>
+        <span class="c1"># pg      = m.guess(stress_ser, x=strain_ser)</span>
+        <span class="c1"># fit     = m.fit(stress_ser, pg, x=strain_ser,</span>
+        <span class="c1">#                 method=method, nan_policy=nan_policy)</span>
+        <span class="n">fit</span>     <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">stress_ser</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">strain_ser</span><span class="p">,</span>
+                        <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="n">nan_policy</span><span class="p">)</span>
+        <span class="n">E</span>       <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">valuesdict</span><span class="p">()[</span><span class="s1">&#39;slope&#39;</span><span class="p">]</span>
+        <span class="n">Eabs</span>    <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">valuesdict</span><span class="p">()[</span><span class="s1">&#39;intercept&#39;</span><span class="p">]</span>
+        <span class="c1"># Rquad    = 1 - fit.residual.var() / np.var(stress_ser)</span>
+        <span class="n">Rquad</span>    <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">fit</span><span class="o">.</span><span class="n">residual</span><span class="o">.</span><span class="n">var</span><span class="p">()</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanvar</span><span class="p">(</span><span class="n">stress_ser</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;SVD did not converge in Linear Least Squares, all values set to NaN.&quot;</span><span class="p">)</span>
+        <span class="n">E</span><span class="p">,</span> <span class="n">Eabs</span><span class="p">,</span> <span class="n">Rquad</span><span class="p">,</span> <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span><span class="s1">&#39;SVD-Error&#39;</span>
+    <span class="k">return</span> <span class="n">E</span><span class="p">,</span> <span class="n">Eabs</span><span class="p">,</span> <span class="n">Rquad</span><span class="p">,</span> <span class="n">fit</span></div>
+
+<div class="viewcode-block" id="fit_report_adder"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.fit_report_adder">[docs]</a><span class="k">def</span> <span class="nf">fit_report_adder</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span><span class="n">Var</span><span class="p">,</span><span class="n">Varname</span><span class="o">=</span><span class="s1">&#39;R-square&#39;</span><span class="p">,</span> <span class="n">show_correl</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="n">fit</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="n">lmfit</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ModelResult</span><span class="p">):</span>
+        <span class="n">fit</span><span class="o">=</span><span class="n">fit</span><span class="o">.</span><span class="n">fit_report</span><span class="p">(</span><span class="n">show_correl</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Datatype </span><span class="si">%s</span><span class="s1"> is not implemented!&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">fit</span><span class="p">)))</span>
+    <span class="n">orgstr</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[[Variables]]&quot;</span>
+    <span class="n">repstr</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    </span><span class="si">{0:18s}</span><span class="s2"> = </span><span class="si">{1:1.5f}</span><span class="se">\n</span><span class="s2">[[Variables]]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Varname</span><span class="p">,</span><span class="n">Var</span><span class="p">])</span>
+    <span class="n">txt</span><span class="o">=</span><span class="n">fit</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">orgstr</span><span class="p">,</span><span class="n">repstr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">txt</span></div>
+  
+<div class="viewcode-block" id="YM_eva_com_sel"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.YM_eva_com_sel">[docs]</a><span class="k">def</span> <span class="nf">YM_eva_com_sel</span><span class="p">(</span><span class="n">stress_ser</span><span class="p">,</span>
+                   <span class="n">strain_ser</span><span class="p">,</span>
+                   <span class="n">comp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> 
+                   <span class="n">det_opt</span><span class="o">=</span><span class="s1">&#39;incremental&#39;</span><span class="p">,</span><span class="o">**</span><span class="n">kws</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Young&#39;s Modulus over defined range with definable method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    stress_ser : pd.Series</span>
+<span class="sd">        Series with stress values corresponding strain_ser.</span>
+<span class="sd">    strain_ser : pd.Series</span>
+<span class="sd">        Series with strain values corresponding stress_ser.</span>
+<span class="sd">    comp : boolean, optional</span>
+<span class="sd">        Compression mode. The default is True.</span>
+<span class="sd">    name : string, optional</span>
+<span class="sd">        Name of operation. The default is &#39;A&#39;.</span>
+<span class="sd">    det_opt : TYPE, optional</span>
+<span class="sd">        Definable method for determination.</span>
+<span class="sd">        Ether incremental or leastsq. The default is &#39;incremental&#39;.</span>
+<span class="sd">    **kws : dict</span>
+<span class="sd">        Keyword dict for least-square determination.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    det_opt == &quot;incremental&quot;:</span>
+<span class="sd">        YM_ser : pd.Series</span>
+<span class="sd">            Series of Young&#39;s Moduli.</span>
+<span class="sd">    or</span>
+<span class="sd">    det_opt == &quot;leastsq&quot;:</span>
+<span class="sd">        YM : float</span>
+<span class="sd">            Youngs Modulus (corresponds to slope of linear fit).</span>
+<span class="sd">        YM_abs : float</span>
+<span class="sd">            Stress value on strain origin (corresponds to interception of linear fit).</span>
+<span class="sd">        YM_Rquad : float</span>
+<span class="sd">            Coefficient of determination.</span>
+<span class="sd">        YM_fit : lmfit.model.ModelResult</span>
+<span class="sd">            Fitting result from lmfit (use with fit.fit_report() for report).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">step_range</span><span class="o">=</span><span class="n">pd_combine_index</span><span class="p">(</span><span class="n">stress_ser</span><span class="p">,</span> <span class="n">strain_ser</span><span class="p">)</span>
+    <span class="n">stress_ser</span> <span class="o">=</span> <span class="n">stress_ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step_range</span><span class="p">]</span>
+    <span class="n">strain_ser</span> <span class="o">=</span> <span class="n">strain_ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step_range</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">det_opt</span><span class="o">==</span><span class="s2">&quot;incremental&quot;</span><span class="p">:</span>
+        <span class="n">YM_ser</span> <span class="o">=</span> <span class="n">stress_ser</span> <span class="o">/</span> <span class="n">strain_ser</span>
+        <span class="n">YM_ser</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">YM_ser</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">YM_ser</span>
+    <span class="k">elif</span> <span class="n">det_opt</span><span class="o">==</span><span class="s2">&quot;leastsq&quot;</span><span class="p">:</span>
+        <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">YM_Rquad</span><span class="p">,</span> <span class="n">YM_fit</span> <span class="o">=</span> <span class="n">YM_sigeps_lin</span><span class="p">(</span><span class="n">stress_ser</span><span class="p">,</span>
+                                                     <span class="n">strain_ser</span><span class="p">,</span> <span class="o">**</span><span class="n">kws</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">YM_Rquad</span><span class="p">,</span> <span class="n">YM_fit</span></div>
+
+<div class="viewcode-block" id="Refit_YM_vals"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.Refit_YM_vals">[docs]</a><span class="k">def</span> <span class="nf">Refit_YM_vals</span><span class="p">(</span><span class="n">m_df</span><span class="p">,</span> <span class="n">YM</span><span class="p">,</span> <span class="n">VIP</span><span class="p">,</span> <span class="n">n_strain</span><span class="o">=</span><span class="s1">&#39;Strain&#39;</span><span class="p">,</span> <span class="n">n_stress</span><span class="o">=</span><span class="s1">&#39;Stress&#39;</span><span class="p">,</span>
+              <span class="n">n_loBo</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F3&#39;</span><span class="p">],</span> <span class="n">n_upBo</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F4&#39;</span><span class="p">],</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;range&#39;</span><span class="p">,</span> <span class="n">outopt</span><span class="o">=</span><span class="s1">&#39;Series&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Refits line values for given rising (i.e. absolute value and R² vor given elastic modulus)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    m_df : pd.DataFrame</span>
+<span class="sd">        Measured data.</span>
+<span class="sd">    YM : float</span>
+<span class="sd">        Youngs Modulus (fixed rising of line).</span>
+<span class="sd">    VIP : pd.Series</span>
+<span class="sd">        Important points corresponding to measured data.</span>
+<span class="sd">    n_strain : string</span>
+<span class="sd">        Name of used strain (have to be in measured data).</span>
+<span class="sd">    n_stress : string</span>
+<span class="sd">        Name of used stress (have to be in measured data).</span>
+<span class="sd">    n_loBo : [string]</span>
+<span class="sd">        List of lower borders for determination (have to be in VIP). The default is [&#39;F3&#39;].</span>
+<span class="sd">    n_upBo : [string]</span>
+<span class="sd">        List of upper borders for determination (have to be in VIP). The default is [&#39;F4&#39;].</span>
+<span class="sd">    option : string, optional</span>
+<span class="sd">        Determination range. The default is &#39;range&#39;.</span>
+<span class="sd">    outopt : string, optional</span>
+<span class="sd">        Switch for outupt (Series or list). The default is &#39;Series&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : list or pd.Series</span>
+<span class="sd">        Line values and firt parameters for fixed rising.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m_lim</span> <span class="o">=</span> <span class="n">m_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo</span><span class="p">]):</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">])]</span>
+    <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;range&#39;</span><span class="p">:</span>
+        <span class="n">fitm</span> <span class="o">=</span> <span class="n">lmfit</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">LinearModel</span><span class="p">()</span>
+        <span class="n">fitpar</span> <span class="o">=</span> <span class="n">fitm</span><span class="o">.</span><span class="n">make_params</span><span class="p">()</span>
+        <span class="n">fitpar</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;slope&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">YM</span><span class="p">,</span> <span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">fit</span><span class="o">=</span><span class="n">fitm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">m_lim</span><span class="p">[</span><span class="n">n_stress</span><span class="p">],</span> <span class="n">x</span><span class="o">=</span><span class="n">m_lim</span><span class="p">[</span><span class="n">n_strain</span><span class="p">],</span> 
+                     <span class="n">params</span><span class="o">=</span><span class="n">fitpar</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">)</span>
+        <span class="n">E</span>       <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">valuesdict</span><span class="p">()[</span><span class="s1">&#39;slope&#39;</span><span class="p">]</span>
+        <span class="n">Eabs</span>    <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">valuesdict</span><span class="p">()[</span><span class="s1">&#39;intercept&#39;</span><span class="p">]</span>
+        <span class="n">Rquad</span>    <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">fit</span><span class="o">.</span><span class="n">residual</span><span class="o">.</span><span class="n">var</span><span class="p">()</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanvar</span><span class="p">(</span><span class="n">m_lim</span><span class="p">[</span><span class="s1">&#39;Stress&#39;</span><span class="p">])</span>
+    <span class="n">out</span><span class="o">=</span><span class="n">E</span><span class="p">,</span> <span class="n">Eabs</span><span class="p">,</span> <span class="n">Rquad</span><span class="p">,</span> <span class="n">fit</span>
+    <span class="k">if</span> <span class="n">outopt</span><span class="o">==</span><span class="s1">&#39;Series&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;E&#39;</span><span class="p">,</span><span class="s1">&#39;E_abs&#39;</span><span class="p">,</span><span class="s1">&#39;Rquad&#39;</span><span class="p">,</span><span class="s1">&#39;Fit_result&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Rquad"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.Rquad">[docs]</a><span class="k">def</span> <span class="nf">Rquad</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_predicted</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">nan_policy</span> <span class="o">==</span> <span class="s1">&#39;omit&#39;</span><span class="p">:</span>
+        <span class="n">sse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_predicted</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">y_t_l_woNan</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y_true</span><span class="p">))</span>
+        <span class="n">tse</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_t_l_woNan</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanvar</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">r2_score</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">sse</span> <span class="o">/</span> <span class="n">tse</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r2_score</span>
+    <span class="k">elif</span> <span class="n">nan_policy</span> <span class="o">==</span> <span class="s1">&#39;raise&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y_predicted</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaN values during Rquad detected&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">nan_policy</span> <span class="o">!=</span> <span class="s1">&#39;propagate&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;NaN policy </span><span class="si">%s</span><span class="s2"> not implemented&quot;</span><span class="o">%</span><span class="n">nan_policy</span><span class="p">)</span>
+    <span class="n">sse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_predicted</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">tse</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">r2_score</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">sse</span> <span class="o">/</span> <span class="n">tse</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">r2_score</span></div>
+
+
+<div class="viewcode-block" id="stress_linfit"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.stress_linfit">[docs]</a><span class="k">def</span> <span class="nf">stress_linfit</span><span class="p">(</span><span class="n">strain_ser</span><span class="p">,</span> <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="o">=</span><span class="mf">0.002</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Linearised stress fit corresponding Youngs Modulus and strain&quot;&quot;&quot;</span>
+    <span class="n">stress_fit_ser</span><span class="o">=</span><span class="p">(</span><span class="n">strain_ser</span> <span class="o">-</span> <span class="n">strain_offset</span><span class="p">)</span> <span class="o">*</span> <span class="n">YM</span> <span class="o">+</span> <span class="n">YM_abs</span>
+    <span class="k">return</span> <span class="n">stress_fit_ser</span></div>
+
+<div class="viewcode-block" id="stress_linfit_plt"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.stress_linfit_plt">[docs]</a><span class="k">def</span> <span class="nf">stress_linfit_plt</span><span class="p">(</span><span class="n">strain_ser</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Linearised stress fit for plotting corresponding Youngs Modulus and strain&quot;&quot;&quot;</span>
+    <span class="n">strain_vals</span> <span class="o">=</span> <span class="n">strain_ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">strain_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">strain_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">ext</span><span class="o">*</span><span class="p">(</span><span class="n">strain_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">strain_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
+                          <span class="nb">min</span><span class="p">(</span><span class="n">strain_ser</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="n">strain_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">ext</span><span class="o">*</span><span class="p">(</span><span class="n">strain_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">strain_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]))])</span>
+    <span class="n">stress_vals</span> <span class="o">=</span> <span class="n">stress_linfit</span><span class="p">(</span><span class="n">strain_vals</span><span class="p">,</span> <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">strain_vals</span><span class="p">,</span> <span class="n">stress_vals</span></div>
+
+<div class="viewcode-block" id="strain_linfit"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.strain_linfit">[docs]</a><span class="k">def</span> <span class="nf">strain_linfit</span><span class="p">(</span><span class="n">stress_ser</span><span class="p">,</span> <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="o">=</span><span class="mf">0.002</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Linearised strain fit corresponding Youngs Modulus and stress&quot;&quot;&quot;</span>
+    <span class="n">strain_fit_ser</span><span class="o">=</span><span class="p">(</span><span class="n">stress_ser</span> <span class="o">-</span> <span class="n">YM_abs</span><span class="p">)</span> <span class="o">/</span> <span class="n">YM</span> <span class="o">+</span> <span class="n">strain_offset</span>
+    <span class="k">return</span> <span class="n">strain_fit_ser</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

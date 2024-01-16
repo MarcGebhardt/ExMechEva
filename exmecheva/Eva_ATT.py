@@ -1,24 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Sep 22 11:40:20 2021
+Axial tensile test evaluation.
 
-@author: mgebhard
+@author: MarcGebhardt
+
 ToDo:
-    - opt-DIC Funktionalität
-    - Implementierung genutze Dehnung aus Methoden (range, plot, output)
-    - Dehnung für Ausgabe auf E-Modul beziehen (relevant, wenn Auflagereindrückung nicht eliminiert)
-    - Automatik Compression / Anstiegswechsel (Be-Entlasten)
-        - VIP-Bestimmung
-        - E-Methoden (Spannungs-/Dehnungsmaximum)
-    
-Changelog:
-    - 21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)
-    - 21-10-21: Ende Auswertung erst nach maximaler Kraft
-    - 21-10-29: plastic strain shift -1 (zugehörig nun zu abgelaufenem Zyklus)
-    - 23-10-13: - Ändern finale Spannungs-Dehnungskurve (6.6) mit Ermittlung
-                - Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.5%)
-    - 23-12-07: Resempling frequency standard 4.0 -> 10.0 
-                -> OPT_Determination_Distance [10,5] -> 25,13
+    - reimplement optical measurment usage ("OPT_DIC")
 """
 
 #%% 0 Imports
@@ -47,7 +34,69 @@ def ATT_single(prot_ser, paths, mfile_add='',
                plt_scopt={'tight':True, 'show':True, 
                           'save':True, 's_types':["pdf"], 
                           'clear':True, 'close':True}):
-    
+    """
+    Evaluate single axial tensile test measurement form protocol table and 
+    path collection. Using common options wich are overwritten by protocol 
+    variables starting with 'OPT_'. Produce evaluated measurements, 
+    material parameters and plots and safe them as table (.csv), unstructured 
+    database (.h5) and document (.pdf), using the designation of the specimen 
+    for distinction.
+    Procedure:
+        - 1: Read in options and presetting
+        - 2: Determining geometrical values
+        - 3: Read in measurements (conventional and optical (optinal))
+        - 4: Merging measurements (time offset of conventional to optical 
+                                   (if available), downsampling and merging)
+        - 5: Determine evaluation space (start and end)
+        - 6: Evaluation (curves (stress/strain), importent points on curves,
+                         elastic moduli (different types implemented))
+        - 7: Generating output (tables, database and plots)
+
+    Parameters
+    ----------
+    prot_ser : pd.Series
+        Input data as pandas series with specimen information 
+        (identifier, origin, geometrical data, 
+         assessment codes, evaluation options).
+    paths : pd.DataFrame
+        Path collection for in- and output paths. 
+        Needs indexes: 
+            - "opts": Common evaluation options
+            - "prot": Protocol
+            - "meas": Conventional measured data
+            - "dic": Optical measured data
+            - "out": Output
+    mfile_add : string, optional
+        Suffix of variants of measurements 
+        (p.E. diffferent moistures ["A","B",...]). 
+        The default is ''.
+    log_scopt : dict, optional
+        Options for custom logging. Determining file path, 
+        output level (0=none, 1=normal, 2=special), logging enabled and 
+        printing enabled.
+        The default is {'logfp':None, 'output_lvl': 1,
+                        'logopt':True, 'printopt':False}.
+    plt_scopt : dict, optional
+        Options for plotting. 
+        The default is {'tight':True, 'show':True, 
+                        'save':True, 's_types':["pdf"],
+                        'clear':True, 'close':True}.
+
+    Raises
+    ------
+    ValueError
+        Input value not correct.
+    NotImplementedError
+        Method not implemented.
+
+    Yields
+    ------
+    timings : pd.Series
+        Timings of procedure steps.
+    cout : string
+        Special text output for control purposes.
+
+    """
     out_name = prot_ser['Designation']+mfile_add
     out_full = paths['out']+out_name
     if log_scopt['output_lvl']>=1: 

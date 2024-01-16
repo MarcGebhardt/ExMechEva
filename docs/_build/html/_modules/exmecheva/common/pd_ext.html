@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.common.pd_ext &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.common.pd_ext</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.common.pd_ext</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Contains extensions to pandas functionality (mostly indexing and NaN-handling).</span>
+
+<span class="sd">@author: MarcGebhardt</span>
+
+<span class="sd">ToDo:</span>
+<span class="sd">    - Overwrite implementation needed?</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">.analyze</span> <span class="kn">import</span> <span class="p">(</span><span class="n">sign_n_change</span><span class="p">,</span> <span class="n">normalize</span><span class="p">)</span>
+
+<span class="c1">#%% tests</span>
+<div class="viewcode-block" id="pd_isDF"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_isDF">[docs]</a><span class="k">def</span> <span class="nf">pd_isDF</span><span class="p">(</span><span class="n">pdo</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCDataFrame</span><span class="p">)</span></div>
+<div class="viewcode-block" id="pd_isSer"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_isSer">[docs]</a><span class="k">def</span> <span class="nf">pd_isSer</span><span class="p">(</span><span class="n">pdo</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCSeries</span><span class="p">)</span></div>
+
+<span class="c1">#%% indexing</span>
+<div class="viewcode-block" id="pd_limit"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_limit">[docs]</a><span class="k">def</span> <span class="nf">pd_limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iS</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iE</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Limit a pandas Series or Dataframe to given indexes</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    iS : matching type of self.index, optional</span>
+<span class="sd">        Start index. The default is None.</span>
+<span class="sd">    iE : matching type of self.index, optional</span>
+<span class="sd">        End index. The default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.Series or pandas.DataFrame</span>
+<span class="sd">        Limited pandas object.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">iS</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">iS</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">iE</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">[:</span><span class="n">iE</span><span class="p">]</span>
+    <span class="k">return</span> <span class="bp">self</span></div>
+<span class="c1"># Overwrite pandas</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="o">.</span><span class="n">indlim</span> <span class="o">=</span> <span class="n">pd_limit</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">indlim</span> <span class="o">=</span> <span class="n">pd_limit</span>
+
+<div class="viewcode-block" id="pd_slice_index"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_slice_index">[docs]</a><span class="k">def</span> <span class="nf">pd_slice_index</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;range&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Slice an index by given values and option.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    index : pd.Index</span>
+<span class="sd">        Index.</span>
+<span class="sd">    vals : range or list</span>
+<span class="sd">        Slicing values (list or, lower and upper limits).</span>
+<span class="sd">    option : string, optional</span>
+<span class="sd">        Option for slicing (range or list). The default is &#39;range&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Option not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ind_new : pd.Index</span>
+<span class="sd">        New index.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;range&#39;</span><span class="p">:</span>
+        <span class="n">ind</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">ind</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">))</span>
+        <span class="n">ind</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">))</span>
+        <span class="n">ind_new</span><span class="o">=</span><span class="n">index</span><span class="p">[</span><span class="n">ind</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">ind</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">elif</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;list&#39;</span><span class="p">:</span>
+        <span class="n">ind_new</span><span class="o">=</span><span class="n">index</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">vals</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;option </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">option</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ind_new</span></div>
+
+<div class="viewcode-block" id="pd_combine_index"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_combine_index">[docs]</a><span class="k">def</span> <span class="nf">pd_combine_index</span><span class="p">(</span><span class="n">pd1</span><span class="p">,</span> <span class="n">pd2</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;dropna&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a combined index of two pandas objects (series or dataframe) </span>
+<span class="sd">    with valide values in both.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;dropna&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pd1</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">Index</span><span class="p">):</span>
+            <span class="n">index1</span><span class="o">=</span><span class="n">pd1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">index1</span><span class="o">=</span><span class="n">pd1</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pd2</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">Index</span><span class="p">):</span>
+            <span class="n">index2</span><span class="o">=</span><span class="n">pd2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">index2</span><span class="o">=</span><span class="n">pd2</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">index</span>
+    <span class="k">elif</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;fl_valid&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pd1</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">Index</span><span class="p">):</span>
+            <span class="n">index1</span><span class="o">=</span><span class="n">pd1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f1</span> <span class="o">=</span> <span class="n">pd1</span><span class="o">.</span><span class="n">first_valid_index</span><span class="p">()</span>
+            <span class="n">l1</span> <span class="o">=</span> <span class="n">pd1</span><span class="o">.</span><span class="n">last_valid_index</span><span class="p">()</span>
+            <span class="n">index1</span><span class="o">=</span><span class="n">pd1</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">f1</span><span class="p">:</span><span class="n">l1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pd2</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">Index</span><span class="p">):</span>
+            <span class="n">index2</span><span class="o">=</span><span class="n">pd2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f2</span> <span class="o">=</span> <span class="n">pd2</span><span class="o">.</span><span class="n">first_valid_index</span><span class="p">()</span>
+            <span class="n">l2</span> <span class="o">=</span> <span class="n">pd2</span><span class="o">.</span><span class="n">last_valid_index</span><span class="p">()</span>
+            <span class="n">index2</span><span class="o">=</span><span class="n">pd2</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">f2</span><span class="p">:</span><span class="n">l2</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;option </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">option</span><span class="p">)</span>
+    <span class="n">ind_new</span> <span class="o">=</span> <span class="n">index1</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">index2</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ind_new</span></div>
+
+<div class="viewcode-block" id="pd_valid_index"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_valid_index">[docs]</a><span class="k">def</span> <span class="nf">pd_valid_index</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">pdo</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="s1">&#39;ba&#39;</span><span class="p">,</span> <span class="n">na_hand</span><span class="o">=</span><span class="s1">&#39;Value&#39;</span><span class="p">,</span> <span class="n">na_out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returning valid index of pandas object in respect to defined option.</span>
+<span class="sd">    (b=before,a=after,n=nearest,ba=before and after,bna=before, nearest and after)</span>
+<span class="sd">    Filling not available values according a handler (na_hand) with </span>
+<span class="sd">    standard value (na_out) or a part of an additional index (add_ind).&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">Index</span><span class="p">):</span>
+        <span class="n">index</span><span class="o">=</span><span class="n">pdo</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">pdo</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">pdo</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="n">index</span><span class="o">=</span><span class="n">pdo</span><span class="o">.</span><span class="n">index</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">pdo</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unexpected type of input (</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="nb">type</span><span class="p">(</span><span class="n">pdo</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">pd_valid_index_na</span><span class="p">(</span><span class="n">na_hand</span><span class="p">,</span> <span class="n">na_out</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">add_ind</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Not available handler for function pd_valid_index.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">na_hand</span><span class="o">==</span><span class="s1">&#39;Value&#39;</span><span class="p">:</span>
+            <span class="n">na_ret</span><span class="o">=</span><span class="n">na_out</span>
+        <span class="k">elif</span> <span class="n">na_hand</span><span class="o">==</span><span class="s1">&#39;fi_la_add&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pos</span><span class="o">==</span><span class="s1">&#39;b&#39;</span><span class="p">:</span>
+                <span class="n">na_ret</span><span class="o">=</span><span class="n">add_ind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">pos</span><span class="o">==</span><span class="s1">&#39;a&#39;</span><span class="p">:</span>
+                <span class="n">na_ret</span><span class="o">=</span><span class="n">add_ind</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">pos</span><span class="o">==</span><span class="s1">&#39;n&#39;</span><span class="p">:</span>
+                <span class="n">na_ret</span><span class="o">=</span><span class="n">na_out</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Position (</span><span class="si">%s</span><span class="s2">) not valid!&quot;</span><span class="o">%</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;NA-Handler (</span><span class="si">%s</span><span class="s2">) not implemented!&quot;</span><span class="o">%</span><span class="n">na_hand</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">na_ret</span>            
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ob</span><span class="o">=</span><span class="n">index</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">get_indexer_for</span><span class="p">([</span><span class="n">val</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="c1"># ob=nf_out</span>
+        <span class="n">ob</span><span class="o">=</span><span class="n">pd_valid_index_na</span><span class="p">(</span><span class="n">na_hand</span><span class="o">=</span><span class="n">na_hand</span><span class="p">,</span> <span class="n">na_out</span><span class="o">=</span><span class="n">na_out</span><span class="p">,</span> 
+                             <span class="n">pos</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">add_ind</span><span class="o">=</span><span class="n">add_ind</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ob</span> <span class="o">==</span> <span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span> <span class="c1">#No jump from first to last position</span>
+        <span class="c1"># ob=nf_out</span>
+        <span class="n">ob</span><span class="o">=</span><span class="n">pd_valid_index_na</span><span class="p">(</span><span class="n">na_hand</span><span class="o">=</span><span class="n">na_hand</span><span class="p">,</span> <span class="n">na_out</span><span class="o">=</span><span class="n">na_out</span><span class="p">,</span> 
+                             <span class="n">pos</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">add_ind</span><span class="o">=</span><span class="n">add_ind</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">oa</span><span class="o">=</span><span class="n">index</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">get_indexer_for</span><span class="p">([</span><span class="n">val</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="c1"># oa=nf_out</span>
+        <span class="n">oa</span><span class="o">=</span><span class="n">pd_valid_index_na</span><span class="p">(</span><span class="n">na_hand</span><span class="o">=</span><span class="n">na_hand</span><span class="p">,</span> <span class="n">na_out</span><span class="o">=</span><span class="n">na_out</span><span class="p">,</span> 
+                             <span class="n">pos</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">add_ind</span><span class="o">=</span><span class="n">add_ind</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">on</span><span class="o">=</span><span class="n">index</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">get_indexer_for</span><span class="p">([</span><span class="n">val</span><span class="p">])[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="c1"># on=nf_out</span>
+        <span class="n">on</span><span class="o">=</span><span class="n">pd_valid_index_na</span><span class="p">(</span><span class="n">na_hand</span><span class="o">=</span><span class="n">na_hand</span><span class="p">,</span> <span class="n">na_out</span><span class="o">=</span><span class="n">na_out</span><span class="p">,</span> 
+                             <span class="n">pos</span><span class="o">=</span><span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="n">add_ind</span><span class="o">=</span><span class="n">add_ind</span><span class="p">)</span>
+        
+    <span class="c1"># out=nf_out</span>
+    <span class="k">if</span> <span class="n">opt</span><span class="o">==</span><span class="s1">&#39;b&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">ob</span>
+    <span class="k">elif</span> <span class="n">opt</span><span class="o">==</span><span class="s1">&#39;a&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">oa</span>
+    <span class="k">elif</span> <span class="n">opt</span><span class="o">==</span><span class="s1">&#39;n&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">on</span>
+    <span class="k">elif</span> <span class="n">opt</span><span class="o">==</span><span class="s1">&#39;ba&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="p">[</span><span class="n">ob</span><span class="p">,</span><span class="n">oa</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">opt</span><span class="o">==</span><span class="s1">&#39;bna&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="p">[</span><span class="n">ob</span><span class="p">,</span><span class="n">on</span><span class="p">,</span><span class="n">oa</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Option </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">opt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+    
+<div class="viewcode-block" id="pd_find_index"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_find_index">[docs]</a><span class="k">def</span> <span class="nf">pd_find_index</span><span class="p">(</span><span class="n">ser</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">s</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">o</span> <span class="o">=</span> <span class="n">ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ser</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s</span><span class="p">)]</span><span class="o">.</span><span class="n">index</span>
+    <span class="k">return</span> <span class="n">o</span></div>
+
+<div class="viewcode-block" id="deal_dupl_index"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.deal_dupl_index">[docs]</a><span class="k">def</span> <span class="nf">deal_dupl_index</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">deal_dupl_ind</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Deal with dupliceted index values according option.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pandas.Series or pandas.DataFrame</span>
+<span class="sd">        Data input.</span>
+<span class="sd">    deal_dupl_ind : string, optional</span>
+<span class="sd">        Option to deal with duplicated index entries. </span>
+<span class="sd">        Possible are:</span>
+<span class="sd">            - &#39;raise&#39;: raises IndexError when finding duplicates.</span>
+<span class="sd">            - &#39;keep&#39;: keep unchanged and give no error.</span>
+<span class="sd">            - &#39;keep-first&#39;: drop all duplicated entries except first one.</span>
+<span class="sd">            - &#39;keep-last&#39;: drop all duplicated entries except first one.</span>
+<span class="sd">            - Aggratable function or string accapted by pd.agg: Aggregate duplicated index entries by function.</span>
+<span class="sd">        The default is &#39;raise&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    IndexError</span>
+<span class="sd">        Index has duplicates and option set to &#39;raise&#39;.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        option (deal_dupl_ind) is not aggregatable.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dft : pandas.Series or pandas.DataFrame</span>
+<span class="sd">        Data output.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dft</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">tmp</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tmp</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">and</span> <span class="n">deal_dupl_ind</span><span class="o">!=</span><span class="s1">&#39;keep&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">deal_dupl_ind</span><span class="o">==</span><span class="s1">&#39;raise&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Duplicated index found: </span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">dft</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">tmp</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">deal_dupl_ind</span><span class="o">==</span><span class="s1">&#39;drop&#39;</span><span class="p">:</span>
+            <span class="n">tmp</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">dft</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">tmp</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">deal_dupl_ind</span><span class="o">==</span><span class="s1">&#39;keep-first&#39;</span><span class="p">:</span>
+            <span class="n">tmp</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">)</span>
+            <span class="n">dft</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">tmp</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">deal_dupl_ind</span><span class="o">==</span><span class="s1">&#39;keep-last&#39;</span><span class="p">:</span>
+            <span class="n">tmp</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">)</span>
+            <span class="n">dft</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">tmp</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tmp</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">dft</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">nlevels</span><span class="p">))</span>
+                <span class="n">dft</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">tmp</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">deal_dupl_ind</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Operation </span><span class="si">%s</span><span class="s1"> not aggregatable!&#39;</span><span class="o">%</span><span class="n">deal_dupl_ind</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dft</span></div>
+
+<div class="viewcode-block" id="Find_closest"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.Find_closest">[docs]</a><span class="k">def</span> <span class="nf">Find_closest</span><span class="p">(</span><span class="n">pds</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">iS</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iE</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;abs&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the index of the closest value of a Series to a value&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">iS</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">iE</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
+        <span class="n">pds</span> <span class="o">=</span> <span class="n">pds</span><span class="o">.</span><span class="n">indlim</span><span class="p">(</span><span class="n">iS</span><span class="o">=</span><span class="n">iS</span><span class="p">,</span><span class="n">iE</span><span class="o">=</span><span class="n">iE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;abs&#39;</span><span class="p">:</span>
+        <span class="n">pdt</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pds</span><span class="o">-</span><span class="n">val</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;lower&#39;</span><span class="p">:</span>
+        <span class="n">pdt</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pds</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pds</span> <span class="o">&lt;</span> <span class="n">val</span><span class="p">)</span><span class="o">-</span><span class="n">val</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;higher&#39;</span><span class="p">:</span>
+        <span class="n">pdt</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pds</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pds</span> <span class="o">&gt;</span> <span class="n">val</span><span class="p">)</span><span class="o">-</span><span class="n">val</span><span class="p">)</span>
+    <span class="n">i</span><span class="o">=</span><span class="n">pdt</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">i</span></div>
+
+<div class="viewcode-block" id="Find_closest_perc"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.Find_closest_perc">[docs]</a><span class="k">def</span> <span class="nf">Find_closest_perc</span><span class="p">(</span><span class="n">pds</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">iS</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iE</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                      <span class="n">range_sub</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;abs&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the index of the closest value of a Series </span>
+<span class="sd">    to a percentage value in a range of this series&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">iS</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">iE</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
+        <span class="n">pds</span> <span class="o">=</span> <span class="n">pds</span><span class="o">.</span><span class="n">indlim</span><span class="p">(</span><span class="n">iS</span><span class="o">=</span><span class="n">iS</span><span class="p">,</span><span class="n">iE</span><span class="o">=</span><span class="n">iE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">range_sub</span> <span class="o">==</span> <span class="s1">&#39;min&#39;</span><span class="p">:</span>
+        <span class="n">pds</span> <span class="o">=</span> <span class="n">pds</span><span class="o">-</span><span class="n">pds</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> 
+    <span class="k">elif</span> <span class="n">range_sub</span> <span class="o">==</span> <span class="s1">&#39;max&#39;</span><span class="p">:</span>
+        <span class="n">pds</span> <span class="o">=</span> <span class="n">pds</span><span class="o">-</span><span class="n">pds</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">range_sub</span> <span class="o">==</span> <span class="s1">&#39;iS&#39;</span><span class="p">:</span>
+        <span class="n">pds</span> <span class="o">=</span> <span class="n">pds</span><span class="o">-</span><span class="n">pds</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">iS</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">range_sub</span> <span class="o">==</span> <span class="s1">&#39;iE&#39;</span><span class="p">:</span>
+        <span class="n">pds</span> <span class="o">=</span> <span class="n">pds</span><span class="o">-</span><span class="n">pds</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">iE</span><span class="p">]</span>
+    <span class="n">pdn</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">pdo</span><span class="o">=</span><span class="n">pds</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+        <span class="n">i</span><span class="o">=</span><span class="n">Find_closest</span><span class="p">(</span><span class="n">pds</span><span class="o">=</span><span class="n">pdn</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCSeries</span><span class="p">):</span>
+        <span class="n">i</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">p</span><span class="p">:</span>
+            <span class="n">i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Find_closest</span><span class="p">(</span><span class="n">pds</span><span class="o">=</span><span class="n">pdn</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Type </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="nb">type</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">i</span></div>
+
+<div class="viewcode-block" id="Find_closestv"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.Find_closestv">[docs]</a><span class="k">def</span> <span class="nf">Find_closestv</span><span class="p">(</span><span class="n">pds1</span><span class="p">,</span> <span class="n">pds2</span><span class="p">,</span> <span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">,</span> <span class="n">iS</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iE</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;quad&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the index of the closest value of two corresponding Series</span>
+<span class="sd">    to a pair of values&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">iS</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">iE</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
+        <span class="n">pds1</span> <span class="o">=</span> <span class="n">pds1</span><span class="o">.</span><span class="n">indlim</span><span class="p">(</span><span class="n">iS</span><span class="o">=</span><span class="n">iS</span><span class="p">,</span><span class="n">iE</span><span class="o">=</span><span class="n">iE</span><span class="p">)</span>
+        <span class="n">pds2</span> <span class="o">=</span> <span class="n">pds2</span><span class="o">.</span><span class="n">indlim</span><span class="p">(</span><span class="n">iS</span><span class="o">=</span><span class="n">iS</span><span class="p">,</span><span class="n">iE</span><span class="o">=</span><span class="n">iE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;abs&#39;</span><span class="p">:</span>
+        <span class="n">pdt</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pds1</span><span class="o">-</span><span class="n">val1</span><span class="p">)</span><span class="o">+</span><span class="nb">abs</span><span class="p">(</span><span class="n">pds2</span><span class="o">-</span><span class="n">val2</span><span class="p">)</span>
+    <span class="c1"># elif option == &#39;quad&#39;: # 221014 - option größer/kleiner val1</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;quad&#39;</span><span class="p">,</span><span class="s1">&#39;quad_hieq&#39;</span><span class="p">,</span><span class="s1">&#39;quad_loeq&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;quad_1hieq&#39;</span><span class="p">,</span><span class="s1">&#39;quad_1loeq&#39;</span><span class="p">,</span><span class="s1">&#39;quad_2hieq&#39;</span><span class="p">,</span><span class="s1">&#39;quad_2loeq&#39;</span><span class="p">]:</span>
+        <span class="n">pdt</span> <span class="o">=</span> <span class="p">((</span><span class="n">pds1</span><span class="o">-</span><span class="n">val1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="nb">abs</span><span class="p">(</span><span class="n">pds2</span><span class="o">-</span><span class="n">val2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;quad_1hieq&#39;</span><span class="p">:</span>
+            <span class="n">pdt</span> <span class="o">=</span> <span class="n">pdt</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pds1</span> <span class="o">&gt;=</span> <span class="n">val1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;quad_1loeq&#39;</span><span class="p">:</span>
+            <span class="n">pdt</span> <span class="o">=</span> <span class="n">pdt</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pds1</span> <span class="o">&lt;=</span> <span class="n">val1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;quad_2hieq&#39;</span><span class="p">:</span>
+            <span class="n">pdt</span> <span class="o">=</span> <span class="n">pdt</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pds2</span> <span class="o">&gt;=</span> <span class="n">val2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;quad_2loeq&#39;</span><span class="p">:</span>
+            <span class="n">pdt</span> <span class="o">=</span> <span class="n">pdt</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pds2</span> <span class="o">&lt;=</span> <span class="n">val2</span><span class="p">)</span>
+    <span class="n">i</span><span class="o">=</span><span class="n">pdt</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">i</span></div>
+
+<div class="viewcode-block" id="Find_first_sc"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.Find_first_sc">[docs]</a><span class="k">def</span> <span class="nf">Find_first_sc</span><span class="p">(</span><span class="n">pds</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">iS</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iE</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                  <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">,</span> 
+                  <span class="n">option</span><span class="o">=</span><span class="s1">&#39;after&#39;</span><span class="p">,</span> <span class="n">exclude_1st</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the index of the first value of a Series with change in sign to a value&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">iS</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">iE</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
+        <span class="n">pdt</span> <span class="o">=</span> <span class="n">pds</span><span class="o">.</span><span class="n">indlim</span><span class="p">(</span><span class="n">iS</span><span class="o">=</span><span class="n">iS</span><span class="p">,</span><span class="n">iE</span><span class="o">=</span><span class="n">iE</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pdt</span><span class="o">=</span><span class="n">pds</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">pdt</span><span class="o">=</span><span class="n">pd_nan_handler</span><span class="p">(</span><span class="n">pdt</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="n">nan_policy</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">direction</span><span class="o">==</span><span class="s1">&#39;reverse&#39;</span><span class="p">:</span>
+        <span class="n">pdt</span><span class="o">=</span><span class="n">pdt</span><span class="o">.</span><span class="n">iloc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+    <span class="n">tmp</span><span class="o">=</span><span class="n">sign_n_change</span><span class="p">(</span><span class="n">pdt</span><span class="o">-</span><span class="n">val</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">exclude_1st</span><span class="p">:</span>
+        <span class="n">tmp</span><span class="o">=</span><span class="n">tmp</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="c1">#first index always==True?!</span>
+    <span class="k">if</span> <span class="n">option</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;before&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;bf&#39;</span><span class="p">]:</span>
+        <span class="n">i</span><span class="o">=</span><span class="n">tmp</span><span class="p">[</span><span class="n">tmp</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># if direction==&#39;reverse&#39;:</span>
+        <span class="c1">#     i=pd_valid_index(i+1, tmp, opt=&#39;b&#39;)</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     i=pd_valid_index(i-1, tmp, opt=&#39;b&#39;)</span>
+        <span class="n">i</span><span class="o">=</span><span class="n">pd_valid_index</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;after&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;af&#39;</span><span class="p">]:</span>
+        <span class="n">i</span><span class="o">=</span><span class="n">tmp</span><span class="p">[</span><span class="n">tmp</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+    <span class="k">return</span> <span class="n">i</span></div>
+
+<span class="c1">#%% NaN handling</span>
+<div class="viewcode-block" id="pd_exclnan"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_exclnan">[docs]</a><span class="k">def</span> <span class="nf">pd_exclnan</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">pd_isDF</span><span class="p">(</span><span class="n">pdo</span><span class="p">):</span>
+        <span class="n">exm</span><span class="o">=</span><span class="n">pdo</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">pd_isSer</span><span class="p">(</span><span class="n">pdo</span><span class="p">):</span>
+        <span class="n">exm</span><span class="o">=</span><span class="n">pdo</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Type </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="nb">type</span><span class="p">(</span><span class="n">pdo</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pdo</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">exm</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="pd_nan_handler"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_nan_handler">[docs]</a><span class="k">def</span> <span class="nf">pd_nan_handler</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handles NaN in pandas object according to NaN-policy.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pdo : pandas.Series or pandas.DataFrame</span>
+<span class="sd">        Input Value.</span>
+<span class="sd">    ind : (same as corresponding axis), optional</span>
+<span class="sd">        Index limitation on not scanned axis. The default is None.</span>
+<span class="sd">    axis : [0,1]/[&quot;index&quot;,&quot;columns&quot;], optional</span>
+<span class="sd">        Scanned axis. The default is 0.</span>
+<span class="sd">    nan_policy : string, optional</span>
+<span class="sd">        Policy to handle NaN. Implemented: omit, raise, interpolate. </span>
+<span class="sd">        The default is &#39;omit&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Raise error if nan_policy is raise and NaN&#39;s detected.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pds : pandas.Series or pandas.DataFrame</span>
+<span class="sd">        Output value with NaN handled acc. NaN-policy.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pds</span><span class="o">=</span><span class="n">pdo</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pd_isDF</span><span class="p">(</span><span class="n">pds</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">pds</span><span class="o">=</span><span class="n">pds</span><span class="o">.</span><span class="n">loc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">pd_axischange</span><span class="p">(</span><span class="n">axis</span><span class="p">))[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;omit&#39;</span><span class="p">:</span>
+            <span class="n">pds</span><span class="o">=</span><span class="n">pd_exclnan</span><span class="p">(</span><span class="n">pdo</span><span class="o">=</span><span class="n">pds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">pd_axischange</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;raise&#39;</span> <span class="ow">and</span> <span class="n">pds</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaN in objectiv and NaN-policy = </span><span class="si">%s</span><span class="s2">!&quot;</span><span class="o">%</span><span class="n">nan_policy</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;interpolate&#39;</span><span class="p">:</span>
+            <span class="n">pds</span><span class="o">=</span><span class="n">pds</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">pd_isSer</span><span class="p">(</span><span class="n">pds</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;omit&#39;</span><span class="p">:</span>
+            <span class="n">pds</span><span class="o">=</span><span class="n">pd_exclnan</span><span class="p">(</span><span class="n">pdo</span><span class="o">=</span><span class="n">pds</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;raise&#39;</span> <span class="ow">and</span> <span class="n">pds</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaN in objectiv and NaN-policy = </span><span class="si">%s</span><span class="s2">!&quot;</span><span class="o">%</span><span class="n">nan_policy</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;interpolate&#39;</span><span class="p">:</span>
+            <span class="n">pds</span><span class="o">=</span><span class="n">pds</span><span class="o">.</span><span class="n">interpolate</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Type </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="nb">type</span><span class="p">(</span><span class="n">pds</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pds</span></div>
+
+<span class="c1">#%% misc</span>
+
+<div class="viewcode-block" id="pd_outsort"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_outsort">[docs]</a><span class="k">def</span> <span class="nf">pd_outsort</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="s1">&#39;ascending&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sorts pandas object by given string.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pd.Series or pd.DataFrame</span>
+<span class="sd">        Data to be sorted.</span>
+<span class="sd">    outsort : str, optional</span>
+<span class="sd">        Option for sorting. Implemented:</span>
+<span class="sd">        - ascending: [&#39;A&#39;,&#39;a&#39;,&#39;ascending&#39;,True,&#39;r&#39;,&#39;rising&#39;,&#39;rise&#39;]</span>
+<span class="sd">        - descending: [&#39;D&#39;,&#39;d&#39;,&#39;descending&#39;,&#39;f&#39;,&#39;falling&#39;,&#39;fall&#39;]</span>
+<span class="sd">        The default is &#39;ascending&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dout : pd.Series or pd.DataFrame</span>
+<span class="sd">        Sortted data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">outsort</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;ascending&#39;</span><span class="p">,</span><span class="kc">True</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="s1">&#39;rising&#39;</span><span class="p">,</span><span class="s1">&#39;rise&#39;</span><span class="p">]:</span>
+        <span class="n">dout</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">outsort</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;D&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="s1">&#39;descending&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;falling&#39;</span><span class="p">,</span><span class="s1">&#39;fall&#39;</span><span class="p">]:</span>
+        <span class="n">dout</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dout</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="k">return</span> <span class="n">dout</span></div>
+
+<div class="viewcode-block" id="pd_axischange"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_axischange">[docs]</a><span class="k">def</span> <span class="nf">pd_axischange</span><span class="p">(</span><span class="n">axis</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Change axis (use for pandas object). Index will return columns, </span>
+<span class="sd">    0 will return 1 and in visa versa.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    axis : int in [0,1] or string in [index,columns]</span>
+<span class="sd">        Axis determiner.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    a : int or string</span>
+<span class="sd">        Oposite axis of axis.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axis</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">a</span><span class="o">=</span><span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">axis</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">a</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">if</span> <span class="n">axis</span><span class="o">==</span><span class="s2">&quot;columns&quot;</span><span class="p">:</span>
+        <span class="n">a</span><span class="o">=</span><span class="s2">&quot;index&quot;</span>
+    <span class="k">elif</span> <span class="n">axis</span><span class="o">==</span><span class="s2">&quot;index&quot;</span><span class="p">:</span>
+        <span class="n">a</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Axis </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">a</span></div>
+
+<div class="viewcode-block" id="pd_vec_length"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_vec_length">[docs]</a><span class="k">def</span> <span class="nf">pd_vec_length</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">norm_kws</span><span class="o">=</span><span class="p">{},</span> <span class="n">out</span><span class="o">=</span><span class="s1">&#39;Series&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate (normalized) vector length and return ether whole series or index&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+        <span class="n">pds</span><span class="o">=</span><span class="n">normalize</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="o">**</span><span class="n">norm_kws</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pds</span><span class="o">=</span><span class="n">pdo</span>
+    <span class="n">pds</span><span class="o">=</span><span class="p">((</span><span class="n">pds</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span>
+    <span class="k">if</span> <span class="n">out</span><span class="o">==</span><span class="s1">&#39;Series&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">pds</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">pds</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="pd_trapz"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.pd_ext.pd_trapz">[docs]</a><span class="k">def</span> <span class="nf">pd_trapz</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extends usage of np.trapz for pandas with nan policy.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pdo : pd.DataFrame or pd.Series</span>
+<span class="sd">        Pandas object containing data.</span>
+<span class="sd">    y : string, optional</span>
+<span class="sd">        Determiner for y-values. Have to be in index or columns (see axis).</span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    x : string, optional</span>
+<span class="sd">        Determiner for x-values. Have to be in index or columns (see axis).</span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    axis : int in [0,1] or string in [index,columns], optional</span>
+<span class="sd">        Axis determiner to perform action. The default is 0.</span>
+<span class="sd">    nan_policy : string, optional</span>
+<span class="sd">        Option for handling NaN-values. The default is &#39;omit&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        NaN handling.</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Option for nan_policy not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : float or series of float</span>
+<span class="sd">        DESCRIPTION.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">pd_isDF</span><span class="p">(</span><span class="n">pdo</span><span class="p">):</span>
+        <span class="n">pdo</span><span class="o">=</span><span class="n">pdo</span><span class="o">.</span><span class="n">loc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">pd_axischange</span><span class="p">(</span><span class="n">axis</span><span class="p">))[[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;omit&#39;</span><span class="p">:</span>
+            <span class="n">pdo</span><span class="o">=</span><span class="n">pd_exclnan</span><span class="p">(</span><span class="n">pdo</span><span class="o">=</span><span class="n">pdo</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">pd_axischange</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;raise&#39;</span> <span class="ow">and</span> <span class="n">pdo</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaN in objectiv!&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;interpolate&#39;</span><span class="p">:</span>
+            <span class="n">pdo</span><span class="o">=</span><span class="n">pdo</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">pdo</span><span class="o">.</span><span class="n">loc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">pd_axischange</span><span class="p">(</span><span class="n">axis</span><span class="p">))[</span><span class="n">y</span><span class="p">],</span>
+                     <span class="n">x</span><span class="o">=</span><span class="n">pdo</span><span class="o">.</span><span class="n">loc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">pd_axischange</span><span class="p">(</span><span class="n">axis</span><span class="p">))[</span><span class="n">x</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">pd_isSer</span><span class="p">(</span><span class="n">pdo</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;omit&#39;</span><span class="p">:</span>
+            <span class="n">pdo</span><span class="o">=</span><span class="n">pd_exclnan</span><span class="p">(</span><span class="n">pdo</span><span class="o">=</span><span class="n">pdo</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;raise&#39;</span> <span class="ow">and</span> <span class="n">pdo</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NaN in objectiv!&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">nan_policy</span><span class="o">==</span><span class="s1">&#39;interpolate&#39;</span><span class="p">:</span>
+            <span class="n">pdo</span><span class="o">=</span><span class="n">pdo</span><span class="o">.</span><span class="n">interpolate</span><span class="p">()</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">pdo</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Type </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="nb">type</span><span class="p">(</span><span class="n">pdo</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

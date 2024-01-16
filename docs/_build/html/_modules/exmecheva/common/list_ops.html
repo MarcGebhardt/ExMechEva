@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.common.list_ops &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.common.list_ops</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.common.list_ops</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">List manipulation and interpretation functionality.</span>
+
+<span class="sd">@author: MarcGebhardt</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="c1">#%% List Operations</span>
+<div class="viewcode-block" id="list_cell_compiler"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.list_cell_compiler">[docs]</a><span class="k">def</span> <span class="nf">list_cell_compiler</span><span class="p">(</span><span class="n">ser</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">replace_whitespaces</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">replace_nans</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">ser</span> <span class="o">=</span> <span class="n">ser</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">replace_whitespaces</span><span class="p">:</span>
+        <span class="n">ser</span> <span class="o">=</span> <span class="n">ser</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="n">ser</span> <span class="o">=</span> <span class="n">ser</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ser</span></div>
+
+<div class="viewcode-block" id="list_interpreter"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.list_interpreter">[docs]</a><span class="k">def</span> <span class="nf">list_interpreter</span><span class="p">(</span><span class="n">ser</span><span class="p">,</span> <span class="n">inter_list</span><span class="p">,</span> <span class="n">option</span> <span class="o">=</span> <span class="s1">&#39;exclude&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;exclude&#39;</span><span class="p">:</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="kc">False</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">inter_list</span><span class="p">)))</span><span class="o">&gt;</span><span class="mi">0</span> <span class="k">else</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;include&#39;</span><span class="p">:</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="kc">True</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">inter_list</span><span class="p">)))</span><span class="o">&gt;</span><span class="mi">0</span> <span class="k">else</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Option </span><span class="si">%s</span><span class="s1"> not implemented!&#39;</span><span class="o">%</span><span class="n">option</span><span class="p">)</span>
+    <span class="n">bool_ser</span> <span class="o">=</span> <span class="n">ser</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">bool_ser</span></div>
+
+<div class="viewcode-block" id="list_ser_to_1D"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.list_ser_to_1D">[docs]</a><span class="k">def</span> <span class="nf">list_ser_to_1D</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                   <span class="n">sort_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="n">new</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">_list</span> <span class="ow">in</span> <span class="n">series</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">drop_duplicates</span><span class="p">:</span> <span class="n">new</span> <span class="o">=</span> <span class="n">new</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">sort_values</span><span class="p">:</span> <span class="n">new</span> <span class="o">=</span> <span class="n">new</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
+        <span class="c1"># new = np.delete(new,e)</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">new</span><span class="p">,</span><span class="n">new</span><span class="o">==</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new</span></div>
+
+<div class="viewcode-block" id="list_boolean_df"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.list_boolean_df">[docs]</a><span class="k">def</span> <span class="nf">list_boolean_df</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">unique_items</span><span class="p">,</span> <span class="n">as_int</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># Create empty dict</span>
+    <span class="n">bool_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># Loop through all the tags</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique_items</span><span class="p">):</span>
+        <span class="c1"># Apply boolean mask</span>
+        <span class="n">bool_dict</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span>
+    <span class="c1"># Return the results as a dataframe</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">bool_dict</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">as_int</span><span class="p">:</span> <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+<span class="c1">#%% Failure Codes ~ Assessment codes</span>
+<div class="viewcode-block" id="Failure_code_format"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.Failure_code_format">[docs]</a><span class="k">def</span> <span class="nf">Failure_code_format</span><span class="p">(</span><span class="n">fcstr</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;[A-Z][0-9][0-9][.][0-3]&quot;</span><span class="p">):</span>
+    <span class="n">matched</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">fcstr</span><span class="p">)</span>
+    <span class="n">fc_b</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">matched</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fc_b</span></div>
+
+<div class="viewcode-block" id="Failure_code_checker"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.Failure_code_checker">[docs]</a><span class="k">def</span> <span class="nf">Failure_code_checker</span><span class="p">(</span><span class="n">fc_ser</span><span class="p">,</span> <span class="n">exclude</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;nan&#39;</span><span class="p">],</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;[A-Z][0-9][0-9][.][0-3]&quot;</span><span class="p">):</span>
+    <span class="n">fcu</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">list_ser_to_1D</span><span class="p">(</span><span class="n">fc_ser</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;drop_duplicates&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span>
+                                           <span class="s1">&#39;sort_values&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span>
+                                           <span class="s1">&#39;exclude&#39;</span><span class="p">:</span><span class="n">exclude</span><span class="p">}))</span>
+    <span class="n">fc_wrong</span>   <span class="o">=</span> <span class="n">fcu</span><span class="p">[</span><span class="n">fcu</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">Failure_code_format</span><span class="p">)</span><span class="o">==</span><span class="kc">False</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">fc_wrongid</span> <span class="o">=</span> <span class="n">list_interpreter</span><span class="p">(</span><span class="n">fc_ser</span><span class="p">,</span> <span class="n">fc_wrong</span><span class="p">,</span> <span class="n">option</span> <span class="o">=</span> <span class="s1">&#39;include&#39;</span><span class="p">)</span>
+    <span class="n">fc_wrongid</span> <span class="o">=</span> <span class="n">fc_ser</span><span class="p">[</span><span class="n">fc_wrongid</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">fc_wrongid</span><span class="p">,</span> <span class="n">fc_wrong</span></div>
+
+<div class="viewcode-block" id="Failure_code_lister"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.Failure_code_lister">[docs]</a><span class="k">def</span> <span class="nf">Failure_code_lister</span><span class="p">(</span><span class="n">_list</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span>
+                        <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">replace_whitespaces</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Shortens List of Failure-codes (Version 3.1) to levels and optional strength</span>
+<span class="sd">    Level: 0=Procedure, 1=Procedure Failure_Type, 2=Porcedure.Failure_Type.Strength</span>
+<span class="sd">           &#39;P&#39;=Procedure, &#39;F&#39;=Failure_Type </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">strength</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">strength</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">replace_whitespaces</span><span class="p">:</span>
+        <span class="n">_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">strength</span><span class="p">:</span>
+        <span class="n">_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">_list</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">strength</span><span class="p">]</span>
+        
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">level</span> <span class="o">==</span> <span class="s1">&#39;P&#39;</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="s1">&#39;F&#39;</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">]</span>
+        
+    <span class="k">if</span> <span class="n">drop_duplicates</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">new</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">new</span></div>
+
+<div class="viewcode-block" id="Failure_code_bool_df"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.Failure_code_bool_df">[docs]</a><span class="k">def</span> <span class="nf">Failure_code_bool_df</span><span class="p">(</span><span class="n">list_ser</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span>
+                         <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                         <span class="n">exclude</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;nan&#39;</span><span class="p">],</span>
+                         <span class="n">replace_whitespaces</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">as_int</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="c1"># list_ser = list_cell_compiler(series,sep,replace_whitespaces)</span>
+    <span class="n">list_ser</span> <span class="o">=</span> <span class="n">list_ser</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">Failure_code_lister</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;level&#39;</span><span class="p">:</span><span class="n">level</span><span class="p">,</span><span class="s1">&#39;strength&#39;</span><span class="p">:</span><span class="n">strength</span><span class="p">,</span>
+                                                     <span class="s1">&#39;drop_duplicates&#39;</span><span class="p">:</span><span class="n">drop_duplicates</span><span class="p">,</span>
+                                                     <span class="s1">&#39;replace_whitespaces&#39;</span><span class="p">:</span><span class="n">replace_whitespaces</span><span class="p">})</span>
+    <span class="n">uniques</span> <span class="o">=</span> <span class="n">list_ser_to_1D</span><span class="p">(</span><span class="n">list_ser</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;drop_duplicates&#39;</span><span class="p">:</span><span class="n">drop_duplicates</span><span class="p">,</span>
+                                         <span class="s1">&#39;sort_values&#39;</span><span class="p">:</span><span class="n">sort_values</span><span class="p">,</span>
+                                         <span class="s1">&#39;exclude&#39;</span><span class="p">:</span><span class="n">exclude</span><span class="p">})</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">list_boolean_df</span><span class="p">(</span><span class="n">list_ser</span><span class="p">,</span><span class="n">uniques</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;as_int&#39;</span><span class="p">:</span><span class="n">as_int</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">df</span><span class="p">,</span> <span class="n">uniques</span></div>
+
+
+<span class="c1">#%% ICD Codes</span>
+<div class="viewcode-block" id="ICD_lister"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.ICD_lister">[docs]</a><span class="k">def</span> <span class="nf">ICD_lister</span><span class="p">(</span><span class="n">_list</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+               <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">replace_whitespaces</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Shortens List of ICD-codes to levels &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">replace_whitespaces</span><span class="p">:</span>
+        <span class="n">_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">level</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_list</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">drop_duplicates</span><span class="p">:</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">new</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">new</span></div>
+
+<div class="viewcode-block" id="ICD_bool_df"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.list_ops.ICD_bool_df">[docs]</a><span class="k">def</span> <span class="nf">ICD_bool_df</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">exclude</span> <span class="o">=</span><span class="p">[],</span>
+                <span class="n">replace_whitespaces</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">as_int</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">list_ser</span> <span class="o">=</span> <span class="n">list_cell_compiler</span><span class="p">(</span><span class="n">series</span><span class="p">,</span><span class="n">sep</span><span class="p">,</span><span class="n">replace_whitespaces</span><span class="p">)</span>
+    <span class="n">list_ser</span> <span class="o">=</span> <span class="n">list_ser</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">ICD_lister</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;level&#39;</span><span class="p">:</span><span class="n">level</span><span class="p">,</span>
+                                            <span class="s1">&#39;drop_duplicates&#39;</span><span class="p">:</span><span class="n">drop_duplicates</span><span class="p">,</span>
+                                            <span class="s1">&#39;replace_whitespaces&#39;</span><span class="p">:</span><span class="n">replace_whitespaces</span><span class="p">})</span>
+    <span class="n">uniques</span> <span class="o">=</span> <span class="n">list_ser_to_1D</span><span class="p">(</span><span class="n">list_ser</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;drop_duplicates&#39;</span><span class="p">:</span><span class="n">drop_duplicates</span><span class="p">,</span>
+                                         <span class="s1">&#39;sort_values&#39;</span><span class="p">:</span><span class="n">sort_values</span><span class="p">,</span>
+                                         <span class="s1">&#39;exclude&#39;</span><span class="p">:</span><span class="n">exclude</span><span class="p">})</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">list_boolean_df</span><span class="p">(</span><span class="n">list_ser</span><span class="p">,</span><span class="n">uniques</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;as_int&#39;</span><span class="p">:</span><span class="n">as_int</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

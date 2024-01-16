@@ -7,11 +7,11 @@ Automization and standardization with regards to special requirements of project
 `ExMechEva` is developed under Python 3.7.10 and is available in the [Python Package Index (PyPI)](https://pypi.org/project/ExMechEva/).
 To install the latest stable version, please run:  
 - Linux and Mac: `python3 -m pip install -U ExMechEva`
-- Windows: `py -m pip install -U ExMechEva`  
-To install the development version:
+- Windows: `py -m pip install -U ExMechEva`   
+To install the development version:  
 - download/clone [Github](https://github.com/MarcGebhardt/ExMechEva)
 - install requirements
-- make the modules available by adding the `exmecheva` directory to the `$PYTHONPATH` system variable or inside python with:  
+- make the modules available by adding the `ExMechEva` directory to the `$PYTHONPATH` system variable or inside python with:  
 ```
 import sys
 sys.path.insert(-1,'Path\To\Project\ExMechEva')

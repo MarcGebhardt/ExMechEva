@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.bending.bfunc_fse &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.bending.bfunc_fse</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.bending.bfunc_fse</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Specific fourier series expansion functions for bending.</span>
+
+<span class="sd">@author: MarcGebhardt</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.bfunc_com</span> <span class="kn">import</span> <span class="p">(</span><span class="n">triangle_func_d0</span><span class="p">,</span> <span class="n">triangle_func_d1</span><span class="p">,</span> <span class="n">triangle_func_d2</span><span class="p">)</span>
+
+<span class="c1">#%% Fourier series expansion with linear and constant element</span>
+<div class="viewcode-block" id="FSE_4sin_wlin_d0"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_wlin_d0">[docs]</a><span class="k">def</span> <span class="nf">FSE_4sin_wlin_d0</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">FP</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">b3</span><span class="p">,</span><span class="n">b4</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">,</span> <span class="n">f_V_0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fourier series expansion with four sine elements and additional linear and constant element.</span>
+<span class="sd">    Defined as:</span>
+<span class="sd"> </span>
+<span class="sd">    .. math::</span>
+<span class="sd">     </span>
+<span class="sd">        f(x; b1,b2,b3,b4,b5,c,d) = b1 \sin (\pi / (xmax-xmin) (x-xmin)) + b2 \sin (2 \pi / (xmax-xmin) (x-xmin)) + b3 \sin (3 \pi / (xmax-xmin) (x-xmin)) + b4 \sin (4 \pi / (xmax-xmin) (x-xmin)) +c (x-xmin) + d</span>
+
+<span class="sd">    with `sine-parameters` for :math:`b1,b2,b3,b4`, `slope` for :math:`c` and `intercept` for :math:`d`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array of float</span>
+<span class="sd">        Array of cartesian coordinates in x-direction.</span>
+<span class="sd">    xmin : float</span>
+<span class="sd">        Cartesian coordinate in x-direction of start of function (curvature=0, p.e. left bearing).</span>
+<span class="sd">        Defines length of Fourier series expansion with xmax-xmin.</span>
+<span class="sd">    xmax : float</span>
+<span class="sd">        Cartesian coordinate in x-direction of end of function (curvature=0, p.e. right bearing).</span>
+<span class="sd">        Defines length of Fourier series expansion with xmax-xmin.</span>
+<span class="sd">    b1 : float</span>
+<span class="sd">        Parameter of first sine element.</span>
+<span class="sd">    b2 : float</span>
+<span class="sd">        Parameter of second sine element.</span>
+<span class="sd">    b3 : float</span>
+<span class="sd">        Parameter of third sine element.</span>
+<span class="sd">    b4 : float</span>
+<span class="sd">        Parameter of fourth sine element.</span>
+<span class="sd">    c : float</span>
+<span class="sd">        Parameter of slope.</span>
+<span class="sd">    d : float</span>
+<span class="sd">        Parameter of intercept.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    eq : Function</span>
+<span class="sd">        Fourier series expansion with four sine elements and additional linear and constant element.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="n">b1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="n">b2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="n">b3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="n">b4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="n">c</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">)</span><span class="o">+</span><span class="n">d</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+<div class="viewcode-block" id="FSE_4sin_wlin_d1"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_wlin_d1">[docs]</a><span class="k">def</span> <span class="nf">FSE_4sin_wlin_d1</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">FP</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">b3</span><span class="p">,</span><span class="n">b4</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">f_V_0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;First derivate of fourier series expansion with four sine elements and </span>
+<span class="sd">    additional linear and constant element. For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">b1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">b2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">b3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">b4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">)))</span><span class="o">+</span><span class="n">c</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+<div class="viewcode-block" id="FSE_4sin_wlin_d2"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_wlin_d2">[docs]</a><span class="k">def</span> <span class="nf">FSE_4sin_wlin_d2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">FP</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">b3</span><span class="p">,</span><span class="n">b4</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">f_V_0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Second derivate of fourier series expansion with four sine elements and </span>
+<span class="sd">    additional linear and constant element. For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">FP</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">b1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">b2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">9</span><span class="o">*</span><span class="n">b3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">16</span><span class="o">*</span><span class="n">b4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+
+<span class="c1">#%% Linear and constant part only</span>
+<div class="viewcode-block" id="FSE_4sin_lin_func_d0"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_lin_func_d0">[docs]</a><span class="k">def</span> <span class="nf">FSE_4sin_lin_func_d0</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">,</span> 
+                         <span class="n">xmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">xmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">FP</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b4</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                         <span class="n">f_V_0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Linear part of fourier series expansion with four sine elements and </span>
+<span class="sd">    additional linear and constant element. For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="n">c</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">)</span><span class="o">+</span><span class="n">d</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+<div class="viewcode-block" id="FSE_4sin_lin_func_d1"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_lin_func_d1">[docs]</a><span class="k">def</span> <span class="nf">FSE_4sin_lin_func_d1</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                         <span class="n">xmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">xmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">FP</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b4</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                         <span class="n">f_V_0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;First deriavate of linear part of fourier series expansion with four sine elements and </span>
+<span class="sd">    additional linear and constant element. For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="n">c</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+<div class="viewcode-block" id="FSE_4sin_lin_func_d2"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_lin_func_d2">[docs]</a><span class="k">def</span> <span class="nf">FSE_4sin_lin_func_d2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                         <span class="n">xmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">xmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">FP</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b4</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                         <span class="n">f_V_0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Second deriavate of linear part of fourier series expansion with four sine elements and </span>
+<span class="sd">    additional linear and constant element. For more information see FSE_4sin_wlin_d0. (Equal 0)&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+
+
+<span class="c1">#%% Fourier series expansion (without linear and constant element)</span>
+<div class="viewcode-block" id="FSE_4sin_d0"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_d0">[docs]</a><span class="k">def</span> <span class="nf">FSE_4sin_d0</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">FP</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">b3</span><span class="p">,</span><span class="n">b4</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">f_V_0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fourier series expansion with four sine elements without additional linear </span>
+<span class="sd">    and constant element. For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="n">b1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="n">b2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="n">b3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="n">b4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+<div class="viewcode-block" id="FSE_4sin_d1"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_d1">[docs]</a><span class="k">def</span> <span class="nf">FSE_4sin_d1</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">FP</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">b3</span><span class="p">,</span><span class="n">b4</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">f_V_0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;First deriavate of Fourier series expansion with four sine elements </span>
+<span class="sd">    without additional linear and constant element. For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="p">(</span><span class="n">FP</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">b1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">b2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">b3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">b4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">eq</span>       </div>
+<div class="viewcode-block" id="FSE_4sin_d2"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_4sin_d2">[docs]</a><span class="k">def</span> <span class="nf">FSE_4sin_d2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">FP</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">b3</span><span class="p">,</span><span class="n">b4</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">f_V_0</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Second deriavate of Fourier series expansion with four sine elements </span>
+<span class="sd">    without additional linear and constant element. For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">FP</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">b1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">b2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">9</span><span class="o">*</span><span class="n">b3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">+</span><span class="mi">16</span><span class="o">*</span><span class="n">b4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">FP</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xmin</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+
+<span class="c1">#%% Shear function (triangle)</span>
+<div class="viewcode-block" id="FSE_SF_func_d0"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_SF_func_d0">[docs]</a><span class="k">def</span> <span class="nf">FSE_SF_func_d0</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span> <span class="n">f_V_0</span><span class="p">,</span>
+                   <span class="n">FP</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b4</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shear deformation part of ourier series expansion with four sine elements </span>
+<span class="sd">    and additional linear and constant element. Children of triangle_func_d0.</span>
+<span class="sd">    For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="n">triangle_func_d0</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="o">=</span><span class="n">xmax</span><span class="p">,</span> <span class="n">f_0</span><span class="o">=</span><span class="n">f_V_0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+<div class="viewcode-block" id="FSE_SF_func_d1"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_SF_func_d1">[docs]</a><span class="k">def</span> <span class="nf">FSE_SF_func_d1</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span> <span class="n">f_V_0</span><span class="p">,</span>
+                   <span class="n">FP</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b4</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;First derivate of shear deformation part of ourier series expansion with</span>
+<span class="sd">    four sine elements and additional linear and constant element. </span>
+<span class="sd">    Children of triangle_func_d1. For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="n">triangle_func_d1</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="o">=</span><span class="n">xmax</span><span class="p">,</span> <span class="n">f_0</span><span class="o">=</span><span class="n">f_V_0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+<div class="viewcode-block" id="FSE_SF_func_d2"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_fse.FSE_SF_func_d2">[docs]</a><span class="k">def</span> <span class="nf">FSE_SF_func_d2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span> <span class="n">f_V_0</span><span class="p">,</span>
+                   <span class="n">FP</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b3</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">b4</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Second derivate of shear deformation part of ourier series expansion with</span>
+<span class="sd">    four sine elements and additional linear and constant element. </span>
+<span class="sd">    Children of triangle_func_d1. For more information see FSE_4sin_wlin_d0.&quot;&quot;&quot;</span>
+    <span class="n">eq</span><span class="o">=</span><span class="n">triangle_func_d2</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">xmin</span><span class="o">=</span><span class="n">xmin</span><span class="p">,</span><span class="n">xmax</span><span class="o">=</span><span class="n">xmax</span><span class="p">,</span> <span class="n">f_0</span><span class="o">=</span><span class="n">f_V_0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eq</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

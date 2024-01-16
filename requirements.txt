@@ -1,4 +1,4 @@
-dill==0.3.4
+# dill==0.3.4
 lmfit==1.0.2
 matplotlib==3.3.4
 numpy==1.20.3

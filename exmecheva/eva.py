@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Nov 29 12:23:31 2023
+Functionality for selection of evaluation (single, series or complete) and 
+packing of HDF-file.
 
 @author: MarcGebhardt
 ToDo:
@@ -144,18 +145,13 @@ def selector(eva_single_func, option, combpaths, no_stats_fc,
         mfile_add = var_suffix[0]
         
         prot=pd.read_excel(combpaths.loc[ser,'prot'],**prot_rkws)
-        # _=eva_single_func(prot_ser=prot[prot.Designation==des].iloc[0], 
-        #                   paths=combpaths.loc[ser],
-        #                   mfile_add = mfile_add,
-        #                   log_scopt=log_scopt,
-        #                   plt_scopt=plt_scopt)
         
         try:
             _ = eva_single_func(prot_ser=prot[prot.Designation==des].iloc[0], 
-                                   paths=combpaths.loc[ser],
-                                   mfile_add = mfile_add,
-                                   log_scopt=log_scopt,
-                                   plt_scopt=plt_scopt)
+                                paths=combpaths.loc[ser],
+                                mfile_add = mfile_add,
+                                log_scopt=log_scopt,
+                                plt_scopt=plt_scopt)
         except Exception:
             txt = '\n   Exception:'
             txt+=emec.output.str_indent('\n{}'.format(traceback.format_exc()),5)

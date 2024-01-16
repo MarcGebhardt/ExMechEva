@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Axial tensile test for soft tissues in project PARAFEMM.
+(Material parameters of the human lumbopelvic complex.)
 """
 
 import os 

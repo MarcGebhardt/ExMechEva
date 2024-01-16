@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Axial compression test for cancellous bone in project PARAFEMM.
+(Material parameters of the human lumbopelvic complex.)
 """
 
 import os 
@@ -37,12 +38,12 @@ def main():
     # Options (uncomment to use):
     ## Evaluate single measurement
     option = 'single'
-    # ## Evaluate series of measurements (see protocol table)
-    # option = 'series'
-    # ## Evaluate series of series
-    # option = 'complete'
-    # ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
-    # option = 'pack'
+    ## Evaluate series of measurements (see protocol table)
+    option = 'series'
+    ## Evaluate series of series
+    option = 'complete'
+    ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
+    option = 'pack'
     # ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
     # option = 'pack-all'
     

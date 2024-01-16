@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Axial tensile test for soft tissues.
-Simple example using data/ATT for showing evaluation acc. to "bla".
+Simple example using data/ATT for showing evaluation.
 """
 
 import os 

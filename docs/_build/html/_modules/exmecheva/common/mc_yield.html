@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exmecheva.common.mc_yield &mdash; ExMechEva 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            ExMechEva
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">ExMechEva</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">ExMechEva</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">exmecheva.common.mc_yield</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exmecheva.common.mc_yield</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Dec  5 12:36:27 2023</span>
+
+<span class="sd">@author: mgebhard</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">.pd_ext</span> <span class="kn">import</span> <span class="p">(</span><span class="n">pd_limit</span><span class="p">,</span> <span class="n">pd_valid_index</span><span class="p">,</span> <span class="n">Find_closest</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.analyze</span> <span class="kn">import</span> <span class="p">(</span><span class="n">sign_n_change</span><span class="p">,</span> <span class="n">Line_from2P</span><span class="p">,</span> <span class="n">Inter_Lines</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.fitting</span> <span class="kn">import</span> <span class="p">(</span><span class="n">strain_linfit</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.mc_char</span> <span class="kn">import</span> <span class="p">(</span><span class="n">rise_curve</span><span class="p">,</span> <span class="n">Diff_Quot</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="YM_eva_range_refine"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_yield.YM_eva_range_refine">[docs]</a><span class="k">def</span> <span class="nf">YM_eva_range_refine</span><span class="p">(</span><span class="n">m_df</span><span class="p">,</span> <span class="n">VIP</span><span class="p">,</span> <span class="n">n_strain</span><span class="p">,</span> <span class="n">n_stress</span><span class="p">,</span>
+                         <span class="n">n_loBo</span><span class="o">=</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="n">n_upBo</span><span class="o">=</span><span class="s1">&#39;U&#39;</span><span class="p">,</span>
+                         <span class="n">d_loBo</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">d_max</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span> 
+                         <span class="n">rise_det</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span>
+                         <span class="n">n_Outlo</span><span class="o">=</span><span class="s1">&#39;F3&#39;</span><span class="p">,</span><span class="n">n_Outmi</span><span class="o">=</span><span class="s1">&#39;FM&#39;</span><span class="p">,</span><span class="n">n_Outhi</span><span class="o">=</span><span class="s1">&#39;F4&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Refines the Youngs Modulus determinition range according to </span>
+<span class="sd">    &quot;Keuerleber, M. (2006) - Bestimmung des Elastizitätsmoduls von Kunststoffen</span>
+<span class="sd">    bei hohen Dehnraten am Beispiel von PP. Von der Fakultät Maschinenbau der </span>
+<span class="sd">    Universität Stuttgart zur Erlangung der Würde eines Doktor-Ingenieurs (Dr.-Ing.) </span>
+<span class="sd">    genehmigte Abhandlung. Doktorarbeit. Universität Stuttgart, Stuttgart&quot;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    m_df : pd.DataFrame</span>
+<span class="sd">        Measured data.</span>
+<span class="sd">    VIP : pd.Series</span>
+<span class="sd">        Important points corresponding to measured data.</span>
+<span class="sd">    n_strain : string</span>
+<span class="sd">        Name of used strain (have to be in measured data).</span>
+<span class="sd">    n_stress : string</span>
+<span class="sd">        Name of used stress (have to be in measured data).</span>
+<span class="sd">    n_loBo : string</span>
+<span class="sd">        Lower border for determination (have to be in VIP). The default is &#39;S&#39;.</span>
+<span class="sd">    n_upBo : string</span>
+<span class="sd">        Upper border for determination (have to be in VIP). The default is &#39;U&#39;.</span>
+<span class="sd">    d_loBo : float/str, optional</span>
+<span class="sd">        When float: Percentage of range between n_upBo and n_loBo as start distance to n_loBo.</span>
+<span class="sd">        When str starting with &#39;S&#39;, followed by integer: Distance in steps to n_loBo.</span>
+<span class="sd">        The default is 0.05.</span>
+<span class="sd">    d_max : float, optional</span>
+<span class="sd">        Percentage of . The default is 0.75.</span>
+<span class="sd">    rise_det : [bool, int], optional</span>
+<span class="sd">        Determination options for stress rising ([smoothing, smoothing factor]).</span>
+<span class="sd">    n_Outlo : string, optional</span>
+<span class="sd">        Name of new lower border. The default is &#39;F3&#39;.</span>
+<span class="sd">    n_Outmi : string, optional</span>
+<span class="sd">        Name of maximum differential quotient. The default is &#39;FM&#39;.</span>
+<span class="sd">    n_Outhi : string, optional</span>
+<span class="sd">        Name of new upper border. The default is &#39;F4&#39;.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    VIP_new : pd.Series</span>
+<span class="sd">        Important points corresponding to measured data.</span>
+<span class="sd">    txt : string</span>
+<span class="sd">        Documantation string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d_loBo</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">d_loBo</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;S&#39;</span><span class="p">):</span>
+            <span class="n">i_loBo</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">d_loBo</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Distance to lower border </span><span class="si">%s</span><span class="s2"> seems to be a string, but doesn&#39;t starts with &#39;S&#39;&quot;</span><span class="o">%</span><span class="n">d_loBo</span><span class="p">)</span>
+        <span class="n">Lbord</span> <span class="o">=</span> <span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo</span><span class="p">]</span><span class="o">+</span><span class="n">i_loBo</span>
+        <span class="n">ttmp</span> <span class="o">=</span> <span class="n">m_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo</span><span class="p">]</span><span class="o">+</span><span class="n">i_loBo</span><span class="p">:</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">],</span><span class="n">n_stress</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ttmp</span> <span class="o">=</span> <span class="n">m_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo</span><span class="p">]:</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">],</span><span class="n">n_stress</span><span class="p">]</span>
+        <span class="n">ftmp</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ttmp</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">ttmp</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">ttmp</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">d_loBo</span><span class="p">)</span>
+        <span class="n">Lbord</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">ttmp</span><span class="o">-</span><span class="n">ftmp</span><span class="p">)</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()</span>
+
+    <span class="n">DQdf</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">Diff_Quot</span><span class="p">(</span><span class="n">m_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">n_strain</span><span class="p">],</span> <span class="n">m_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">n_stress</span><span class="p">],</span>
+                              <span class="n">rise_det</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rise_det</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">DQdf</span><span class="o">=</span><span class="n">m_df</span><span class="o">.</span><span class="n">loc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[[</span><span class="n">n_strain</span><span class="p">,</span><span class="n">n_stress</span><span class="p">]]</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DQdf</span><span class="p">,</span><span class="n">how</span><span class="o">=</span><span class="s1">&#39;outer&#39;</span><span class="p">)</span>
+    <span class="n">DQdfs</span><span class="o">=</span><span class="n">DQdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">Lbord</span><span class="p">:</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">]]</span>
+    
+    
+    <span class="n">VIP_new</span> <span class="o">=</span> <span class="n">VIP</span>
+    <span class="n">txt</span> <span class="o">=</span><span class="s2">&quot;&quot;</span>
+    <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_Outmi</span><span class="p">]</span><span class="o">=</span><span class="n">DQdfs</span><span class="o">.</span><span class="n">DQ1</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_Outlo</span><span class="p">]</span><span class="o">=</span><span class="n">DQdfs</span><span class="o">.</span><span class="n">loc</span><span class="p">[:</span><span class="n">VIP_new</span><span class="p">[</span><span class="n">n_Outmi</span><span class="p">]]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">DQdfs</span><span class="o">.</span><span class="n">DQ1</span><span class="o">/</span><span class="n">DQdfs</span><span class="o">.</span><span class="n">DQ1</span><span class="o">.</span><span class="n">max</span><span class="p">())</span><span class="o">&lt;</span><span class="n">d_max</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_Outlo</span><span class="p">]</span><span class="o">=</span><span class="n">DQdfs</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> set to start of diff.-quot. determination &quot;</span><span class="o">%</span><span class="n">n_Outlo</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_Outhi</span><span class="p">]</span><span class="o">=</span><span class="n">DQdfs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">VIP_new</span><span class="p">[</span><span class="n">n_Outmi</span><span class="p">]:]</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">DQdfs</span><span class="o">.</span><span class="n">DQ1</span><span class="o">/</span><span class="n">DQdfs</span><span class="o">.</span><span class="n">DQ1</span><span class="o">.</span><span class="n">max</span><span class="p">())</span><span class="o">&lt;</span><span class="n">d_max</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="c1"># VIP_new[n_Outhi]=VIP_new[n_Outmi]-1 #-1 könnte zu Problemen führen</span>
+        <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_Outhi</span><span class="p">]</span><span class="o">=</span><span class="n">VIP_new</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">]</span> <span class="c1">#-1 könnte zu Problemen führen</span>
+        <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> set on maximum of diff.-quot. &quot;</span><span class="o">%</span><span class="n">n_Outhi</span>
+    <span class="n">VIP_new</span><span class="o">=</span><span class="n">VIP_new</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">VIP_new</span><span class="p">,</span> <span class="n">DQdfs</span><span class="p">,</span> <span class="n">txt</span></div>
+
+<div class="viewcode-block" id="Yield_redet"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_yield.Yield_redet">[docs]</a><span class="k">def</span> <span class="nf">Yield_redet</span><span class="p">(</span><span class="n">m_df</span><span class="p">,</span> <span class="n">VIP</span><span class="p">,</span> <span class="n">n_strain</span><span class="p">,</span> <span class="n">n_stress</span><span class="p">,</span>
+                <span class="n">n_loBo</span><span class="p">,</span> <span class="n">n_upBo</span><span class="p">,</span> <span class="n">n_loBo_int</span><span class="p">,</span> 
+                <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="o">=</span><span class="mf">0.002</span><span class="p">,</span> 
+                <span class="n">rise_det</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span> <span class="n">n_yield</span><span class="o">=</span><span class="s1">&#39;Y&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Redetermine yield point to different conditions </span>
+<span class="sd">    (intersection with linearised strain offset (ones after), zero rising, fixed endpoint).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    m_df : pd.DataFrame</span>
+<span class="sd">        Measured data.</span>
+<span class="sd">    VIP : pd.Series</span>
+<span class="sd">        Important points corresponding to measured data.</span>
+<span class="sd">    n_strain : string</span>
+<span class="sd">        Name of used strain (have to be in measured data).</span>
+<span class="sd">    n_stress : string</span>
+<span class="sd">        Name of used stress (have to be in measured data).</span>
+<span class="sd">    n_loBo : [string]</span>
+<span class="sd">        List of lower borders for determination (have to be in VIP).</span>
+<span class="sd">    n_upBo : [string]</span>
+<span class="sd">        List of upper borders for determination (have to be in VIP).</span>
+<span class="sd">    n_loBo_int : [string]</span>
+<span class="sd">        List of lower borders for interseption (have to be in VIP).</span>
+<span class="sd">    YM : float</span>
+<span class="sd">        Youngs Modulus.</span>
+<span class="sd">    YM_abs : float</span>
+<span class="sd">        Absolut value of Youngs Modulus.</span>
+<span class="sd">    strain_offset : float, optional</span>
+<span class="sd">        Strain offset (eq. plastic strain). The default is -0.002.</span>
+<span class="sd">    rise_det : [bool, int], optional</span>
+<span class="sd">        Determination options for stress rising ([smoothing, smoothing factor]).</span>
+<span class="sd">        The default is [True,4].</span>
+<span class="sd">    n_yield : string, optional</span>
+<span class="sd">        Name of yield point (have to be in VIP). The default is &#39;Y&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VIP_new : pd.Series</span>
+<span class="sd">        Important points corresponding to measured data.</span>
+<span class="sd">    txt : string</span>
+<span class="sd">        Documantation string.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#     mit 0.2% Dehnversatz E(F+-F-) finden</span>
+    <span class="n">m_lim</span> <span class="o">=</span> <span class="n">m_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo</span><span class="p">]):</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">])]</span>
+    <span class="c1"># stress_fit = stress_linfit(m_lim[n_strain],</span>
+    <span class="c1">#                            YM, YM_abs, strain_offset)</span>
+    <span class="c1"># i = m_lim[n_stress]-stress_fit</span>
+    <span class="c1"># i_sign, i_sich = sign_n_change(i)</span>
+    <span class="n">strain_fit</span> <span class="o">=</span> <span class="n">strain_linfit</span><span class="p">(</span><span class="n">m_lim</span><span class="p">[</span><span class="n">n_stress</span><span class="p">],</span>
+                               <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">m_lim</span><span class="p">[</span><span class="n">n_strain</span><span class="p">]</span><span class="o">-</span><span class="n">strain_fit</span>
+    <span class="n">i_sign</span><span class="p">,</span> <span class="n">i_sich</span> <span class="o">=</span> <span class="n">sign_n_change</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">i_sich</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="kc">False</span> <span class="c1"># First signchange always true</span>
+    <span class="n">i_sich</span> <span class="o">=</span> <span class="n">i_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo_int</span><span class="p">]):]</span> <span class="c1"># Y erst ab F- suchen</span>
+    
+    <span class="n">_</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">r_sich</span> <span class="o">=</span> <span class="n">rise_curve</span><span class="p">(</span><span class="n">m_df</span><span class="p">[</span><span class="n">n_stress</span><span class="p">],</span><span class="o">*</span><span class="n">rise_det</span><span class="p">)</span>
+    <span class="c1"># r_sich = r_sich.loc[min(VIP[n_loBo])+2:max(VIP[n_upBo])+2]</span>
+    <span class="n">r_sich</span> <span class="o">=</span> <span class="n">r_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo_int</span><span class="p">])</span><span class="o">+</span><span class="mi">2</span><span class="p">:</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">])</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span>
+    
+    <span class="n">VIP_new</span> <span class="o">=</span> <span class="n">VIP</span>
+    <span class="n">txt</span> <span class="o">=</span><span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">i_sign</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo_int</span><span class="p">])]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_yield</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo_int</span><span class="p">])</span>
+        <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;Fy set on 1st point of lower border of intersection (lower than </span><span class="si">%.3f</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> pl. strain)!&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">strain_offset</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span>
+    <span class="c1"># if (i_sich.any()==True)and(r_sich.any()==True):</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">i_sich</span><span class="o">.</span><span class="n">any</span><span class="p">()</span><span class="o">==</span><span class="kc">True</span><span class="p">)</span><span class="ow">and</span><span class="p">(</span><span class="n">r_sich</span><span class="o">.</span><span class="n">any</span><span class="p">()</span><span class="o">==</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">i_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i_sich</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">&lt;=</span><span class="p">(</span><span class="n">r_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">r_sich</span><span class="o">==</span><span class="kc">True</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_yield</span><span class="p">]</span> <span class="o">=</span> <span class="n">i_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i_sich</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;Fy set on intersection with </span><span class="si">%.3f</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> pl. strain!&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">strain_offset</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_yield</span><span class="p">]</span><span class="o">=</span><span class="n">r_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">r_sich</span><span class="o">==</span><span class="kc">True</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">2</span> <span class="c1">#-2 wegen Anstiegsberechnung</span>
+            <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;Fy on first point between F+ and Fu with rise of 0, instead intersection </span><span class="si">%.3f</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> pl. strain! (earlier)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">strain_offset</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">i_sich</span><span class="o">.</span><span class="n">any</span><span class="p">()</span><span class="o">==</span><span class="kc">True</span><span class="p">)</span><span class="ow">and</span><span class="p">(</span><span class="n">r_sich</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">==</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_yield</span><span class="p">]</span><span class="o">=</span><span class="n">i_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i_sich</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;Fy set on intersection with </span><span class="si">%.3f</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> pl. strain!&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">strain_offset</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">r_sich</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_yield</span><span class="p">]</span><span class="o">=</span><span class="n">r_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">r_sich</span><span class="o">==</span><span class="kc">True</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">2</span>
+            <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;Fy on first point between F+ and Fu with rise of 0, instead intersection </span><span class="si">%.3f</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> pl. strain! (No intersection found!)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">strain_offset</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">VIP</span><span class="p">[</span><span class="n">VIP</span><span class="o">==</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">])]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_yield</span><span class="p">]</span> <span class="o">=</span> <span class="n">VIP</span><span class="p">[</span><span class="n">tmp</span><span class="p">]</span>
+            <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;Fy set to </span><span class="si">%s</span><span class="s2"> (max of </span><span class="si">%s</span><span class="s2">), instead intersection </span><span class="si">%.3f</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> pl. strain or rise of 0! (No intersection found!)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span><span class="n">n_upBo</span><span class="p">,(</span><span class="n">strain_offset</span><span class="o">*</span><span class="mi">100</span><span class="p">))</span>
+    <span class="n">VIP_new</span> <span class="o">=</span> <span class="n">VIP_new</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">VIP_new</span><span class="p">,</span> <span class="n">txt</span></div>
+    
+<div class="viewcode-block" id="Find_intg2p"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_yield.Find_intg2p">[docs]</a><span class="k">def</span> <span class="nf">Find_intg2p</span><span class="p">(</span><span class="n">gsl</span><span class="p">,</span> <span class="n">gin</span><span class="p">,</span> <span class="n">pdo</span><span class="p">,</span> <span class="n">i1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">i2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                    <span class="n">x</span><span class="o">=</span><span class="s1">&#39;Strain&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;Stress&#39;</span><span class="p">,</span> <span class="n">so</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_yield</span><span class="o">=</span><span class="s1">&#39;Y&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determine intersection of line and point (usefull to find yield point)&quot;&quot;&quot;</span>
+    <span class="n">pdn</span> <span class="o">=</span> <span class="n">pd_limit</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">)[[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">]]</span>
+    <span class="n">psl</span><span class="p">,</span> <span class="n">pin</span> <span class="o">=</span> <span class="n">Line_from2P</span><span class="p">(</span><span class="n">pdn</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span><span class="n">pdn</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">gso</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">y</span><span class="p">])</span>
+    <span class="n">gso</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">=</span><span class="n">gso</span><span class="p">[</span><span class="n">y</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">strain_linfit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">gsl</span><span class="p">,</span> <span class="n">gin</span><span class="p">,</span> <span class="n">so</span><span class="p">))</span>
+    <span class="n">gso</span><span class="o">=</span><span class="n">gso</span><span class="p">[[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">]]</span>
+    <span class="n">gslso</span><span class="p">,</span> <span class="n">ginso</span> <span class="o">=</span> <span class="n">Line_from2P</span><span class="p">(</span><span class="n">gso</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span><span class="n">gso</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">inter</span> <span class="o">=</span> <span class="n">Inter_Lines</span><span class="p">(</span><span class="n">r1</span><span class="o">=</span><span class="n">gslso</span><span class="p">,</span> <span class="n">c1</span><span class="o">=</span><span class="n">ginso</span><span class="p">,</span> <span class="n">r2</span><span class="o">=</span><span class="n">psl</span><span class="p">,</span> <span class="n">c2</span><span class="o">=</span><span class="n">pin</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">pdn</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="p">(</span><span class="n">pdn</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="o">-</span><span class="n">pdn</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">inter</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">pdn</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">y</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">pdn</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">y</span><span class="p">]</span><span class="o">-</span><span class="n">pdn</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">y</span><span class="p">])</span>
+    <span class="n">inter</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">i</span><span class="p">,</span><span class="o">*</span><span class="n">inter</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ind_ex&#39;</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">n_yield</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">inter</span></div>
+
+<div class="viewcode-block" id="Yield_redet2"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_yield.Yield_redet2">[docs]</a><span class="k">def</span> <span class="nf">Yield_redet2</span><span class="p">(</span><span class="n">m_df</span><span class="p">,</span> <span class="n">VIP</span><span class="p">,</span> <span class="n">n_strain</span><span class="p">,</span> <span class="n">n_stress</span><span class="p">,</span>
+                <span class="n">n_loBo</span><span class="p">,</span> <span class="n">n_upBo</span><span class="p">,</span> <span class="n">n_loBo_int</span><span class="p">,</span>
+                <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="o">=</span><span class="mf">0.002</span><span class="p">,</span>
+                <span class="n">use_rd</span> <span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rise_det</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span>
+                <span class="n">n_yield</span><span class="o">=</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="n">ywhere</span><span class="o">=</span><span class="s1">&#39;n&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Redetermine yield point to different conditions </span>
+<span class="sd">    (intersection with linearised strain offset (ones after), zero rising, fixed endpoint).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    m_df : pd.DataFrame</span>
+<span class="sd">        Measured data.</span>
+<span class="sd">    VIP : pd.Series</span>
+<span class="sd">        Important points corresponding to measured data.</span>
+<span class="sd">    n_strain : string</span>
+<span class="sd">        Name of used strain (have to be in measured data).</span>
+<span class="sd">    n_stress : string</span>
+<span class="sd">        Name of used stress (have to be in measured data).</span>
+<span class="sd">    n_loBo : [string]</span>
+<span class="sd">        List of lower borders for determination (have to be in VIP).</span>
+<span class="sd">    n_upBo : [string]</span>
+<span class="sd">        List of upper borders for determination (have to be in VIP).</span>
+<span class="sd">    n_loBo_int : [string]</span>
+<span class="sd">        List of lower borders for interseption (have to be in VIP).</span>
+<span class="sd">    YM : float</span>
+<span class="sd">        Youngs Modulus.</span>
+<span class="sd">    YM_abs : float</span>
+<span class="sd">        Absolut value of Youngs Modulus.</span>
+<span class="sd">    strain_offset : float, optional</span>
+<span class="sd">        Strain offset (eq. plastic strain). The default is -0.002.</span>
+<span class="sd">    use_rd : bool, optional</span>
+<span class="sd">        Switch for using change in stress rising. The default is True.</span>
+<span class="sd">    rise_det : [bool, int], optional</span>
+<span class="sd">        Determination options for stress rising ([smoothing, smoothing factor]).</span>
+<span class="sd">        The default is [True,4].</span>
+<span class="sd">    n_yield : string, optional</span>
+<span class="sd">        Name of yield point (have to be in VIP). The default is &#39;Y&#39;.</span>
+<span class="sd">    ywhere : string, optional</span>
+<span class="sd">        Which point should be choosen (n-next, a-after, b-before). The default is &#39;n&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VIP_new : pd.Series</span>
+<span class="sd">        Important points corresponding to measured data.</span>
+<span class="sd">    txt : string</span>
+<span class="sd">        Documantation string.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Intersection with linearization and strain offset</span>
+    <span class="n">m_lim</span> <span class="o">=</span> <span class="n">m_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo</span><span class="p">]):</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">])]</span>
+    <span class="n">strain_fit</span> <span class="o">=</span> <span class="n">strain_linfit</span><span class="p">(</span><span class="n">m_lim</span><span class="p">[</span><span class="n">n_stress</span><span class="p">],</span>
+                               <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">m_lim</span><span class="p">[</span><span class="n">n_strain</span><span class="p">]</span><span class="o">-</span><span class="n">strain_fit</span>
+    <span class="n">i_sign</span><span class="p">,</span> <span class="n">i_sich</span> <span class="o">=</span> <span class="n">sign_n_change</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">i_sich</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="kc">False</span> <span class="c1"># First signchange always true</span>
+
+    <span class="c1"># find change in rise of stress</span>
+    <span class="k">if</span> <span class="n">use_rd</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">r_sich</span> <span class="o">=</span> <span class="n">rise_curve</span><span class="p">(</span><span class="n">m_df</span><span class="p">[</span><span class="n">n_stress</span><span class="p">],</span><span class="o">*</span><span class="n">rise_det</span><span class="p">)</span>
+        <span class="n">r_sich</span> <span class="o">=</span> <span class="n">r_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo_int</span><span class="p">])</span><span class="o">+</span><span class="mi">2</span><span class="p">:</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">])</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">r_sich</span><span class="o">.</span><span class="n">any</span><span class="p">()</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>
+            <span class="n">i_r_sich_1st</span><span class="o">=</span><span class="n">r_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">r_sich</span><span class="o">==</span><span class="kc">True</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">2</span> <span class="c1"># -2  due to determination</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i_r_sich_1st</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">])</span> <span class="c1"># no signchange, last point</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">i_r_sich_1st</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">])</span> <span class="c1"># no signchange, last point</span>
+
+    <span class="c1"># Intersection only from determination limit and to maximum/last sign change</span>
+    <span class="n">i_sign</span> <span class="o">=</span> <span class="n">i_sign</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo_int</span><span class="p">]):</span><span class="n">i_r_sich_1st</span><span class="p">]</span>
+    <span class="n">i_sich</span> <span class="o">=</span> <span class="n">i_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo_int</span><span class="p">]):</span><span class="n">i_r_sich_1st</span><span class="p">]</span>
+
+    <span class="n">VIP_new</span> <span class="o">=</span> <span class="n">VIP</span>
+    <span class="n">plst_txt</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.3f</span><span class="s2"> </span><span class="si">%%</span><span class="s2"> plastic strain&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">strain_offset</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">txt</span> <span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> &quot;</span><span class="o">%</span><span class="p">(</span><span class="n">n_yield</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i_sich</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">iy</span><span class="o">=</span><span class="n">i_sich</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i_sich</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># Signchange allways after &#39;a&#39;</span>
+        <span class="n">yexser</span><span class="o">=</span><span class="n">Find_intg2p</span><span class="p">(</span><span class="n">gsl</span><span class="o">=</span><span class="n">YM</span><span class="p">,</span> <span class="n">gin</span><span class="o">=</span><span class="n">YM_abs</span><span class="p">,</span> <span class="n">pdo</span><span class="o">=</span><span class="n">m_lim</span><span class="p">,</span> 
+                           <span class="n">i1</span><span class="o">=</span><span class="n">pd_valid_index</span><span class="p">(</span><span class="n">iy</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">i2</span><span class="o">=</span><span class="n">iy</span><span class="p">,</span> 
+                           <span class="n">x</span><span class="o">=</span><span class="n">n_strain</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">n_stress</span><span class="p">,</span> <span class="n">so</span><span class="o">=</span><span class="n">strain_offset</span><span class="p">,</span><span class="n">n_yield</span><span class="o">=</span><span class="n">n_yield</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ywhere</span><span class="o">==</span><span class="s1">&#39;b&#39;</span><span class="p">:</span>
+            <span class="n">iy</span><span class="o">=</span><span class="n">pd_valid_index</span><span class="p">(</span><span class="n">iy</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ywhere</span><span class="o">==</span><span class="s1">&#39;n&#39;</span><span class="p">:</span>
+            <span class="n">iy</span><span class="o">=</span><span class="n">Find_closest</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">pd_valid_index</span><span class="p">(</span><span class="n">iy</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span><span class="n">iy</span><span class="p">]],</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;set on intersection with </span><span class="si">%s</span><span class="s2"> (option=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">plst_txt</span><span class="p">,</span><span class="n">ywhere</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i_sign</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">iy</span><span class="o">=</span><span class="n">i_r_sich_1st</span>
+            <span class="k">if</span> <span class="n">i_r_sich_1st</span><span class="o">==</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">]):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">VIP</span><span class="p">[</span><span class="n">VIP</span><span class="o">==</span><span class="nb">max</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_upBo</span><span class="p">])]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;set to </span><span class="si">%s</span><span class="s2"> (max of </span><span class="si">%s</span><span class="s2">), instead intersection </span><span class="si">%s</span><span class="s2"> or rise of 0! (No intersection found!)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span><span class="n">n_upBo</span><span class="p">,</span><span class="n">plst_txt</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;on first point between F+ and Fu with rise of 0, instead intersection </span><span class="si">%s</span><span class="s2">! (No intersection found!)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">plst_txt</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">iy</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo_int</span><span class="p">])</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">VIP</span><span class="p">[</span><span class="n">VIP</span><span class="o">==</span><span class="nb">min</span><span class="p">(</span><span class="n">VIP</span><span class="p">[</span><span class="n">n_loBo_int</span><span class="p">])]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;set to </span><span class="si">%s</span><span class="s2"> (min of </span><span class="si">%s</span><span class="s2">), instead intersection </span><span class="si">%s</span><span class="s2"> or rise of 0! (No intersection found!)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span><span class="n">n_loBo_int</span><span class="p">,</span><span class="n">plst_txt</span><span class="p">)</span>
+        <span class="n">yexser</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">iy</span><span class="p">,</span><span class="o">*</span><span class="n">m_lim</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">iy</span><span class="p">][[</span><span class="n">n_strain</span><span class="p">,</span><span class="n">n_stress</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">],</span> 
+                           <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ind_ex&#39;</span><span class="p">,</span><span class="n">n_strain</span><span class="p">,</span><span class="n">n_stress</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">n_yield</span><span class="p">)</span>
+    <span class="n">VIP_new</span><span class="p">[</span><span class="n">n_yield</span><span class="p">]</span> <span class="o">=</span> <span class="n">iy</span>
+    <span class="n">VIP_new</span> <span class="o">=</span> <span class="n">VIP_new</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">VIP_new</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">yexser</span></div>
+
+<div class="viewcode-block" id="Yield_redet2_Multi"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_yield.Yield_redet2_Multi">[docs]</a><span class="k">def</span> <span class="nf">Yield_redet2_Multi</span><span class="p">(</span><span class="n">m_df</span><span class="p">,</span> <span class="n">VIP</span><span class="p">,</span> <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span>
+                   <span class="n">strain_osd</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;YK&#39;</span><span class="p">:</span><span class="mf">0.0</span><span class="p">,</span><span class="s1">&#39;Y0&#39;</span><span class="p">:</span><span class="mf">0.0</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">:</span><span class="mf">0.2</span><span class="o">/</span><span class="mi">100</span><span class="p">,</span><span class="s1">&#39;Y1&#39;</span><span class="p">:</span><span class="mf">0.007</span><span class="o">/</span><span class="mi">100</span><span class="p">},</span> 
+                   <span class="n">strain_osdf</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;YK&#39;</span><span class="p">:</span><span class="s1">&#39;F4&#39;</span><span class="p">},</span>
+                   <span class="n">n_strain</span><span class="o">=</span><span class="s1">&#39;Strain&#39;</span><span class="p">,</span> <span class="n">n_stress</span><span class="o">=</span><span class="s1">&#39;Stress&#39;</span><span class="p">,</span>
+                   <span class="n">n_loBo</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F3&#39;</span><span class="p">],</span> <span class="n">n_upBo</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">],</span> <span class="n">n_loBo_int</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F3&#39;</span><span class="p">],</span>
+                   <span class="n">use_rd</span> <span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rise_det</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> 
+                   <span class="n">ywhere</span><span class="o">=</span><span class="s1">&#39;n&#39;</span><span class="p">):</span>
+    <span class="n">txt</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+    <span class="n">y_exact</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">strain_osd</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;strain_os&#39;</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">strain_osd</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">strain_osdf</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">VIP</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">VIP</span><span class="p">[</span><span class="n">strain_osdf</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+            <span class="n">txt</span><span class="o">+=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> set on </span><span class="si">%s</span><span class="s2"> (fixed)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">strain_osdf</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">tmp</span><span class="o">=</span><span class="n">VIP</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">VIP</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="o">*</span><span class="n">m_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">VIP</span><span class="p">[</span><span class="n">i</span><span class="p">],[</span><span class="n">n_strain</span><span class="p">,</span><span class="n">n_stress</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">y_exact</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ind&#39;</span><span class="p">,</span><span class="s1">&#39;ind_ex&#39;</span><span class="p">,</span><span class="n">n_strain</span><span class="p">,</span><span class="n">n_stress</span><span class="p">]]</span> <span class="o">=</span> <span class="n">tmp</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">Yield_redet2</span><span class="p">(</span><span class="n">m_df</span><span class="o">=</span><span class="n">m_df</span><span class="p">,</span> <span class="n">VIP</span><span class="o">=</span><span class="n">VIP</span><span class="p">,</span>
+                                <span class="n">n_strain</span><span class="o">=</span><span class="n">n_strain</span><span class="p">,</span> <span class="n">n_stress</span><span class="o">=</span><span class="n">n_stress</span><span class="p">,</span>
+                                <span class="n">n_loBo</span><span class="o">=</span><span class="n">n_loBo</span><span class="p">,</span> <span class="n">n_upBo</span><span class="o">=</span><span class="n">n_upBo</span><span class="p">,</span> <span class="n">n_loBo_int</span><span class="o">=</span><span class="n">n_loBo_int</span><span class="p">,</span>
+                                <span class="n">YM</span>     <span class="o">=</span> <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span> <span class="o">=</span> <span class="n">YM_abs</span><span class="p">,</span>
+                                <span class="n">strain_offset</span><span class="o">=</span><span class="n">strain_osd</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                <span class="n">use_rd</span> <span class="o">=</span><span class="n">use_rd</span><span class="p">,</span> <span class="n">rise_det</span><span class="o">=</span><span class="n">rise_det</span><span class="p">,</span> 
+                                <span class="n">n_yield</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">ywhere</span><span class="o">=</span><span class="n">ywhere</span><span class="p">)</span>
+            <span class="n">VIP</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> &#39;</span><span class="o">+</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">y_exact</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ind&#39;</span><span class="p">,</span><span class="s1">&#39;ind_ex&#39;</span><span class="p">,</span><span class="n">n_strain</span><span class="p">,</span><span class="n">n_stress</span><span class="p">]]</span> <span class="o">=</span> <span class="n">VIP</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="o">*</span><span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">return</span> <span class="n">VIP</span><span class="p">,</span> <span class="n">y_exact</span><span class="p">,</span> <span class="n">txt</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, MarcGebhardt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Three point bending test for cortical bone in project PARAFEMM.
+(Material parameters of the human lumbopelvic complex.)
 """
 
 import os 
