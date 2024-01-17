@@ -141,7 +141,7 @@ def ATT_single(prot_ser, paths, mfile_add='',
     loc_Yd_tmp = 'E_lsq_R_A%s%sl'%(tmp_md,tmp_in)
         
     cout =''
-    ftxt=(("  Parameters of Evaluation:"),
+    ftxt=(("  Parameters of evaluation:"),
           ("   Evaluation start time:     %s" %datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
           ("   Evaluation options:        %s" %paths['opts']),
           ("   Path protocol:             %s" %paths['prot']),

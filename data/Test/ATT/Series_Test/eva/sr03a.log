@@ -1,12 +1,14 @@
-  Parameters of Evaluation:
-   Evaluation start time:     2024-01-10 13:11:54
+  Parameters of evaluation:
+   Evaluation start time:     2024-01-17 17:27:04
+   Evaluation options:        D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\com_eva_opts.json
    Path protocol:             D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\ATT_Protocol_Series_Test.xlsx
    Path measurement:          D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\meas\conventional\WR03A.xlsx
    Path optical- measurement: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\meas\optical\WR03A.csv
-   Resampling = True (Frequency = 10 Hz, moving-average = True)
+   Resampling = True (frequency = 10 Hz, moving-average = True)
    Compression = False
    LVDT failure = [False, 0.0, ' ']
    LVDT-spring-force-reduction = True (K_Fed = -0.116000 N/mm)
+   Rise and curvature smoothing = True (window = 4)
    Youngs Modulus determination between 0.250000 and 0.500000 of point U
    Distance between points: 25 / 13 steps 
    Improvment of Youngs-Modulus-determination between 0.1*Stress_max and point Y,
@@ -20,35 +22,35 @@
     Volume det=IN: True (0.377-0.377)
  ====================================================================================================
  ### 3 Read in measurements ###
-   Timing 3.000000: 0.00149 s
-   Timing 3.100000: 0.00197 s
-   Timing 3.200000: 0.49373 s
-   Timing 3.300000: 0.49517 s
+   Timing 3.000000: 0.00171 s
+   Timing 3.100000: 0.00224 s
+   Timing 3.200000: 0.45875 s
+   Timing 3.300000: 0.46009 s
  ====================================================================================================
  ### 4 Merging measurements ###
-   Timing 4.000000: 0.49560 s
-   Timing 4.100000: 0.49603 s
-   Timing 4.200000: 0.49713 s
-   Timing 4.300000: 0.50254 s
+   Timing 4.000000: 0.46054 s
+   Timing 4.100000: 0.46100 s
+   Timing 4.200000: 0.46222 s
+   Timing 4.300000: 0.46775 s
  ====================================================================================================
  ### 5 Start and End ###
-   Timing 5.000000: 0.50291 s
-   Timing 5.100000: 0.50339 s
+   Timing 5.000000: 0.46812 s
+   Timing 5.100000: 0.46858 s
  ----------------------------------------------------------------------------------------------------
    Start of evaluation after 3.600 seconds, corresponds to 0.04113 % of max. force.
-   Timing 5.200000: 0.84340 s
+   Timing 5.200000: 0.81984 s
  ====================================================================================================
  ### 6 Evaluation ###
-   Timing 6.000000: 1.13370 s
+   Timing 6.000000: 1.09416 s
  ----------------------------------------------------------------------------------------------------
  ### -6.2 Determine evaluation curves ###
-   Timing 6.200000: 1.13438 s
+   Timing 6.200000: 1.09492 s
    Last 10 monoton increasing periods:
             Stress  Strain
     Epoche     380     515
  ----------------------------------------------------------------------------------------------------
  ### -6.3 Determine points of interest ###
-   Timing 6.310000: 1.38664 s
+   Timing 6.310000: 1.33478 s
   0 cycles, with result!
     -> Using last 0.100 s as delimiter.
  ----------------------------------------------------------------------------------------------------
@@ -77,14 +79,14 @@ F1         270     270      NaN        0      NaN
   Differenz Kraft- zu Wegextreme-PM (MW):  -0.350000
   Differenz Kraft- zu Wegextreme-DIC (MW): nan
     Fy set on datapoint of Fu!
-   Timing 6.320000: 1.43751 s
+   Timing 6.320000: 1.38554 s
    F3 set to start of diff.-quot. determination 
    Datapoints (con) between F1-F2: 10 and F3-F4: 15.
  ----------------------------------------------------------------------------------------------------
  ### -6.4 Determine Youngs-Moduli ###
-   Timing 6.400000: 1.82643 s
-   Timing 6.410000: 1.82725 s
-   Timing 6.480000: 2.46772 s
+   Timing 6.400000: 1.77780 s
+   Timing 6.410000: 1.77862 s
+   Timing 6.480000: 2.38448 s
 
   Method comaparison:
   - least square fit
@@ -122,7 +124,7 @@ F1         270     270      NaN        0      NaN
    A0Al  764.176098  764.176098  773.861092  93.469049  877.087727  585.323465  0.122313  0.122313
  ----------------------------------------------------------------------------------------------------
  ### -6.5 Determine yield point ###
-   Timing 6.500000: 2.48571 s
+   Timing 6.500000: 2.40206 s
   Determination of yield strain-conventional:
 
     YK set on F4 (fixed)
@@ -132,11 +134,11 @@ F1         270     270      NaN        0      NaN
     Y2 set on intersection with 0.500 % plastic strain (option=n)
  ----------------------------------------------------------------------------------------------------
  ### -6.6 Determine final stress-strain curve ###
-   Timing 6.600000: 3.20823 s
+   Timing 6.600000: 3.12848 s
    Strain offset about 0.00202
  ====================================================================================================
  ### 7 Outputs ###
-   Timing 7.000000: 3.21348 s
-   Timing 7.100000: 3.21398 s
-   Timing 7.200000: 3.27429 s
-   Timing 7.300000: 4.86286 s
+   Timing 7.000000: 3.13325 s
+   Timing 7.100000: 3.13376 s
+   Timing 7.200000: 3.19489 s
+   Timing 7.300000: 4.79234 s

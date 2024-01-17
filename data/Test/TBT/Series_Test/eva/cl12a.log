@@ -1,5 +1,6 @@
-  Parameters of Evaluation:
-   Evaluation start time:     2023-12-19 13:07:17
+  Parameters of evaluation:
+   Evaluation start time:     2024-01-17 17:15:29
+   Evaluation options:        D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\TBT\Series_Test\com_eva_opts.json
    Path protocol:             D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\TBT\Series_Test\TBT_Protocol_Series_Test.xlsx
    Path measurement:          D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\TBT\Series_Test\meas\conventional\kl12a.xlsx
    Path optical- measurement: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\TBT\Series_Test\meas\optical\KL12A.csv
@@ -7,6 +8,7 @@
    Compression = True
    LVDT failure = False
    LVDT-spring-force-reduction = False (K_Fed = nan N/mm)
+   Rise and curvature smoothing = True (window = 2)
    Youngs Modulus determination between 0.250000 and 0.500000 of point U
    Distance between points: 30 steps 
    Improvment of Youngs-Modulus-determination between 0.150000*Stress_max and point U,
@@ -20,7 +22,7 @@
    DIC-maximal SD = 0.005 mm and maximal displacement between steps 50.0 mm
  ====================================================================================================
  ### 2 Geometry ###
-   Timing 2.000000: 0.03309 s
+   Timing 2.000000: 0.03405 s
   Measured Geometry:
          x     t      w
    0 -10.0  2.96  10.09
@@ -42,10 +44,10 @@
     + 0.01192 x + 0.2488 x + 1.776 x + 19.71
  ====================================================================================================
  ### 3 Read in measurements ###
-   Timing 3.000000: 0.56203 s
-   Timing 3.100000: 0.56243 s
-   Timing 3.200000: 0.93670 s
-   Timing 3.300000: 0.93777 s
+   Timing 3.000000: 0.55610 s
+   Timing 3.100000: 0.55664 s
+   Timing 3.200000: 0.88629 s
+   Timing 3.300000: 0.88743 s
  ----------------------------------------------------------------------------------------------------
   DIC-Tester:
  ----------------------------------------------------------------------------------------------------
@@ -517,25 +519,25 @@
     Mean distance from meas. to spec. points = 7.193e-01
  ====================================================================================================
  ### 4 Merging measurements ###
-   Timing 4.000000: 6.78641 s
-   Timing 4.100000: 6.78682 s
+   Timing 4.000000: 6.46189 s
+   Timing 4.100000: 6.46243 s
  ----------------------------------------------------------------------------------------------------
    Time offset between PM and DIC: 0.192 s
-   Timing 4.200000: 7.19810 s
-   Timing 4.300000: 7.20452 s
+   Timing 4.200000: 6.78813 s
+   Timing 4.300000: 6.79469 s
  ====================================================================================================
  ### 5 Start and End ###
-   Timing 5.000000: 7.20703 s
-   Timing 5.100000: 7.20753 s
+   Timing 5.000000: 6.79780 s
+   Timing 5.100000: 6.79833 s
  ----------------------------------------------------------------------------------------------------
    Start of evaluation after 11.000 seconds, corresponds to 0.72446 % of max. force.
-   Timing 5.200000: 7.56711 s
+   Timing 5.200000: 7.15548 s
  ====================================================================================================
  ### 6 Evaluation ###
-   Timing 6.000000: 7.88085 s
+   Timing 6.000000: 7.44254 s
  ----------------------------------------------------------------------------------------------------
 ## Pre-fit on displacements:
-   Timing 6.110000: 7.88157 s
+   Timing 6.110000: 7.44320 s
   Step 45
    [[Fit Statistics]]
        # fitting method   = leastsq
@@ -3356,7 +3358,7 @@
        f_V_0: -inf (fixed)
  ----------------------------------------------------------------------------------------------------
 ## Bend-fit on displacements:
-   Timing 6.120000: 41.85390 s
+   Timing 6.120000: 40.33399 s
   Step 45
    [[Fit Statistics]]
        # fitting method   = leastsq
@@ -5704,7 +5706,7 @@
        b4:    0.02582017 (init = 0.0256561)
  ----------------------------------------------------------------------------------------------------
 ## Pre-fit on increments:
-   Timing 6.130000: 69.61022 s
+   Timing 6.130000: 67.16319 s
   Step 45
    [[Fit Statistics]]
        # fitting method   = leastsq
@@ -9476,7 +9478,7 @@
        f_V_0: -inf (fixed)
  ----------------------------------------------------------------------------------------------------
 ## Bend-fit on increments:
-   Timing 6.140000: 78.33317 s
+   Timing 6.140000: 74.89411 s
   Step 45
    [[Fit Statistics]]
        # fitting method   = leastsq
@@ -11976,27 +11978,27 @@
        C(b1, b3) = -0.103
  ----------------------------------------------------------------------------------------------------
  ### -6.2 Determine evaluation curves ###
-   Timing 6.200000: 99.61474 s
+   Timing 6.200000: 95.53340 s
    Last 10 monoton increasing periods:
             Stress  Strain  Strain_opt_d_A  Strain_opt_d_S  Strain_opt_d_M  Strain_opt_c_A  Strain_opt_c_S  Strain_opt_c_M
     Epoche      92     152             152             152             152             152             152             152
  ----------------------------------------------------------------------------------------------------
  ### -6.3 Determine points of interest ###
-   Timing 6.310000: 99.69516 s
+   Timing 6.310000: 95.61082 s
     Fy set on datapoint of Fu!
-   Timing 6.320000: 99.70266 s
+   Timing 6.320000: 95.61668 s
    Datapoints (con/opt) between F1-F2: 7/7 and F3-F4: 17/13.
  ----------------------------------------------------------------------------------------------------
  ### -6.4 Determine Youngs-Moduli ###
-   Timing 6.400000: 100.36377 s
-   Timing 6.410000: 100.36806 s
-   Timing 6.420000: 101.09464 s
-   Timing 6.430000: 101.78615 s
-   Timing 6.440000: 102.22204 s
-   Timing 6.450000: 211.55712 s
-   Timing 6.460000: 213.99205 s
-   Timing 6.470000: 221.04522 s
-   Timing 6.480000: 222.23183 s
+   Timing 6.400000: 96.23798 s
+   Timing 6.410000: 96.24239 s
+   Timing 6.420000: 96.84780 s
+   Timing 6.430000: 97.57809 s
+   Timing 6.440000: 97.99087 s
+   Timing 6.450000: 200.99602 s
+   Timing 6.460000: 203.28836 s
+   Timing 6.470000: 209.84016 s
+   Timing 6.480000: 211.00094 s
 
   Method comaparison:
   - least square fit
@@ -12282,7 +12284,7 @@
    dtype: float64
  ----------------------------------------------------------------------------------------------------
  ### -6.5 Determine yield point ###
-   Timing 6.500000: 223.27417 s
+   Timing 6.500000: 211.95875 s
   Determination of yield strain-conventional:
 
     YK set on F4 (fixed)
@@ -12299,12 +12301,12 @@
     Y set on intersection with 0.200 % plastic strain (option=n)
  ----------------------------------------------------------------------------------------------------
  ### -6.6 Determine final stress-strain curve ###
-   Timing 6.600000: 223.99501 s
+   Timing 6.600000: 212.67000 s
    Strain offset (conventional) about 0.00832
    Strain offset (optical) about -0.00034
  ====================================================================================================
  ### 7 Outputs ###
-   Timing 7.000000: 224.00442 s
-   Timing 7.100000: 224.00477 s
-   Timing 7.200000: 224.13221 s
-   Timing 7.300000: 231.42851 s
+   Timing 7.000000: 212.67972 s
+   Timing 7.100000: 212.68019 s
+   Timing 7.200000: 212.80166 s
+   Timing 7.300000: 219.88197 s

@@ -10,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 
-sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva')
+# sys.path.insert(-1,'D:\Gebhardt\Programme\DEV\Git\ExMechEva')
 
 nwd = Path.cwd().resolve().parent.parent
 os.chdir(nwd)

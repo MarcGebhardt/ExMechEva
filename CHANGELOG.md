@@ -7,12 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v0.0.0] – 2023-XX-XX
+## [v0.1.0] – 2023-01-17
 
 ### Added
 
-- Empty placeholder
+- First version with structure, full documentation and packaging
 
 
 [unreleased]: https://github.com/MarcGebhardt/ExMechEva/tree/main
-[v0.0.0]: https://github.com/MarcGebhardt/ExMechEva/releases/tag/v0.0.0
+[v0.1.0]: https://github.com/MarcGebhardt/ExMechEva/releases/tag/v0.1.0
