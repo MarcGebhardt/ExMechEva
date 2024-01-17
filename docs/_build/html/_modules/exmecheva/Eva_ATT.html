@@ -74,25 +74,12 @@
   <h1>Source code for exmecheva.Eva_ATT</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Created on Wed Sep 22 11:40:20 2021</span>
+<span class="sd">Axial tensile test evaluation.</span>
 
-<span class="sd">@author: mgebhard</span>
+<span class="sd">@author: MarcGebhardt</span>
+
 <span class="sd">ToDo:</span>
-<span class="sd">    - opt-DIC Funktionalität</span>
-<span class="sd">    - Implementierung genutze Dehnung aus Methoden (range, plot, output)</span>
-<span class="sd">    - Dehnung für Ausgabe auf E-Modul beziehen (relevant, wenn Auflagereindrückung nicht eliminiert)</span>
-<span class="sd">    - Automatik Compression / Anstiegswechsel (Be-Entlasten)</span>
-<span class="sd">        - VIP-Bestimmung</span>
-<span class="sd">        - E-Methoden (Spannungs-/Dehnungsmaximum)</span>
-<span class="sd">    </span>
-<span class="sd">Changelog:</span>
-<span class="sd">    - 21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)</span>
-<span class="sd">    - 21-10-21: Ende Auswertung erst nach maximaler Kraft</span>
-<span class="sd">    - 21-10-29: plastic strain shift -1 (zugehörig nun zu abgelaufenem Zyklus)</span>
-<span class="sd">    - 23-10-13: - Ändern finale Spannungs-Dehnungskurve (6.6) mit Ermittlung</span>
-<span class="sd">                - Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.5%)</span>
-<span class="sd">    - 23-12-07: Resempling frequency standard 4.0 -&gt; 10.0 </span>
-<span class="sd">                -&gt; OPT_Determination_Distance [10,5] -&gt; 25,13</span>
+<span class="sd">    - reimplement optical measurment usage (&quot;OPT_DIC&quot;)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1">#%% 0 Imports</span>
@@ -121,7 +108,69 @@
                <span class="n">plt_scopt</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;tight&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> 
                           <span class="s1">&#39;save&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;s_types&#39;</span><span class="p">:[</span><span class="s2">&quot;pdf&quot;</span><span class="p">],</span> 
                           <span class="s1">&#39;clear&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;close&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">}):</span>
-    
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate single axial tensile test measurement form protocol table and </span>
+<span class="sd">    path collection. Using common options wich are overwritten by protocol </span>
+<span class="sd">    variables starting with &#39;OPT_&#39;. Produce evaluated measurements, </span>
+<span class="sd">    material parameters and plots and safe them as table (.csv), unstructured </span>
+<span class="sd">    database (.h5) and document (.pdf), using the designation of the specimen </span>
+<span class="sd">    for distinction.</span>
+<span class="sd">    Procedure:</span>
+<span class="sd">        - 1: Read in options and presetting</span>
+<span class="sd">        - 2: Determining geometrical values</span>
+<span class="sd">        - 3: Read in measurements (conventional and optical (optinal))</span>
+<span class="sd">        - 4: Merging measurements (time offset of conventional to optical </span>
+<span class="sd">                                   (if available), downsampling and merging)</span>
+<span class="sd">        - 5: Determine evaluation space (start and end)</span>
+<span class="sd">        - 6: Evaluation (curves (stress/strain), importent points on curves,</span>
+<span class="sd">                         elastic moduli (different types implemented))</span>
+<span class="sd">        - 7: Generating output (tables, database and plots)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prot_ser : pd.Series</span>
+<span class="sd">        Input data as pandas series with specimen information </span>
+<span class="sd">        (identifier, origin, geometrical data, </span>
+<span class="sd">         assessment codes, evaluation options).</span>
+<span class="sd">    paths : pd.DataFrame</span>
+<span class="sd">        Path collection for in- and output paths. </span>
+<span class="sd">        Needs indexes: </span>
+<span class="sd">            - &quot;opts&quot;: Common evaluation options</span>
+<span class="sd">            - &quot;prot&quot;: Protocol</span>
+<span class="sd">            - &quot;meas&quot;: Conventional measured data</span>
+<span class="sd">            - &quot;dic&quot;: Optical measured data</span>
+<span class="sd">            - &quot;out&quot;: Output</span>
+<span class="sd">    mfile_add : string, optional</span>
+<span class="sd">        Suffix of variants of measurements </span>
+<span class="sd">        (p.E. diffferent moistures [&quot;A&quot;,&quot;B&quot;,...]). </span>
+<span class="sd">        The default is &#39;&#39;.</span>
+<span class="sd">    log_scopt : dict, optional</span>
+<span class="sd">        Options for custom logging. Determining file path, </span>
+<span class="sd">        output level (0=none, 1=normal, 2=special), logging enabled and </span>
+<span class="sd">        printing enabled.</span>
+<span class="sd">        The default is {&#39;logfp&#39;:None, &#39;output_lvl&#39;: 1,</span>
+<span class="sd">                        &#39;logopt&#39;:True, &#39;printopt&#39;:False}.</span>
+<span class="sd">    plt_scopt : dict, optional</span>
+<span class="sd">        Options for plotting. </span>
+<span class="sd">        The default is {&#39;tight&#39;:True, &#39;show&#39;:True, </span>
+<span class="sd">                        &#39;save&#39;:True, &#39;s_types&#39;:[&quot;pdf&quot;],</span>
+<span class="sd">                        &#39;clear&#39;:True, &#39;close&#39;:True}.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Input value not correct.</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Method not implemented.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    timings : pd.Series</span>
+<span class="sd">        Timings of procedure steps.</span>
+<span class="sd">    cout : string</span>
+<span class="sd">        Special text output for control purposes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">out_name</span> <span class="o">=</span> <span class="n">prot_ser</span><span class="p">[</span><span class="s1">&#39;Designation&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">mfile_add</span>
     <span class="n">out_full</span> <span class="o">=</span> <span class="n">paths</span><span class="p">[</span><span class="s1">&#39;out&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">out_name</span>
     <span class="k">if</span> <span class="n">log_scopt</span><span class="p">[</span><span class="s1">&#39;output_lvl&#39;</span><span class="p">]</span><span class="o">&gt;=</span><span class="mi">1</span><span class="p">:</span> 

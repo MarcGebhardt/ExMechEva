@@ -77,7 +77,7 @@
 <span class="sd">Adds funcionality for optical measured cartesian points.</span>
 <span class="sd">(Mostly vector geometry)</span>
 
-<span class="sd">@author: Marc Gebhardt</span>
+<span class="sd">@author: MarcGebhardt</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -119,18 +119,26 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    Pmeas : pandas.Dataframe([],index=[&#39;x&#39;,&#39;y&#39;,&#39;z&#39;],columns=[&#39;P1&#39;,&#39;P2&#39;,...],dtype=float64)</span>
+<span class="sd">    Pmeas : pandas.Dataframe([], index=[&#39;x&#39;,&#39;y&#39;,&#39;z&#39;], </span>
+<span class="sd">                             columns=[&#39;P1&#39;,&#39;P2&#39;,...], dtype=float64)</span>
 <span class="sd">        Cartesian coordinates of measured points, which should be fitted.</span>
-<span class="sd">    Pspec : pandas.Dataframe([],index=[&#39;x&#39;,&#39;y&#39;,&#39;z&#39;],columns=[&#39;S1&#39;,&#39;S2&#39;,...],dtype=float64)</span>
-<span class="sd">        Cartesian coordinates of special points which should used for coordinate transformation.</span>
-<span class="sd">    Pmeas_Sdev : pandas.Dataframe([],index=[&#39;Sx&#39;,&#39;Sy&#39;,&#39;Sz&#39;],columns=[&#39;P1&#39;,&#39;P2&#39;,...],dtype=float64)</span>
+<span class="sd">    Pspec : pandas.Dataframe([], index=[&#39;x&#39;,&#39;y&#39;,&#39;z&#39;], </span>
+<span class="sd">                             columns=[&#39;S1&#39;,&#39;S2&#39;,...], dtype=float64)</span>
+<span class="sd">        Cartesian coordinates of special points which should used for </span>
+<span class="sd">        coordinate transformation.</span>
+<span class="sd">    Pmeas_Sdev : pandas.Dataframe([], index=[&#39;Sx&#39;,&#39;Sy&#39;,&#39;Sz&#39;],</span>
+<span class="sd">                                  columns=[&#39;P1&#39;,&#39;P2&#39;,...], dtype=float64)</span>
 <span class="sd">        Standard deviation of measured points, which should be fitted.</span>
-<span class="sd">    Pspec_Sdev : pandas.Dataframe([],index=[&#39;Sx&#39;,&#39;Sy&#39;,&#39;Sz&#39;],columns=[&#39;S1&#39;,&#39;S2&#39;,...],dtype=float64)</span>
-<span class="sd">        Standard deviation of special points which should used for coordinate transformation.</span>
+<span class="sd">    Pspec_Sdev : pandas.Dataframe([], index=[&#39;Sx&#39;,&#39;Sy&#39;,&#39;Sz&#39;],</span>
+<span class="sd">                                  columns=[&#39;S1&#39;,&#39;S2&#39;,...], dtype=float64)</span>
+<span class="sd">        Standard deviation of special points which should used for coordinate </span>
+<span class="sd">        transformation.</span>
 <span class="sd">    dic_P_name_org1 : str</span>
-<span class="sd">        Name of point, which should be on the negativ x-axis. Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.</span>
+<span class="sd">        Name of point, which should be on the negativ x-axis. </span>
+<span class="sd">        Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.</span>
 <span class="sd">    dic_P_name_org2 : str</span>
-<span class="sd">        Name of point, which should be on the positiv x-axis. Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.</span>
+<span class="sd">        Name of point, which should be on the positiv x-axis. </span>
+<span class="sd">        Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.</span>
 
 
 <span class="sd">    Returns</span>
@@ -278,17 +286,23 @@
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;Regex&#39;</span><span class="p">:</span>
                 <span class="c1">#points=dfs.droplevel(level=1).str.contains(pat=points,na=False,regex=True)</span>
-                <span class="n">points</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">pat</span><span class="o">=</span><span class="n">points</span><span class="p">,</span><span class="n">na</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">points</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span>
+                    <span class="n">pat</span><span class="o">=</span><span class="n">points</span><span class="p">,</span><span class="n">na</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">regex</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
             <span class="n">dfs</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">points</span><span class="p">,:]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;Regex&#39;</span><span class="p">:</span>
-                <span class="n">points</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">pat</span><span class="o">=</span><span class="n">points</span><span class="p">,</span><span class="n">na</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">points</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span>
+                    <span class="n">pat</span><span class="o">=</span><span class="n">points</span><span class="p">,</span><span class="n">na</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">regex</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
             <span class="n">dfs</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">loc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="n">points</span><span class="p">,:]</span>
 
     <span class="k">if</span> <span class="n">coordsbool</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;Regex&#39;</span><span class="p">:</span>
-                <span class="n">coords</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">pat</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span><span class="n">na</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">coords</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span>
+                    <span class="n">pat</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span><span class="n">na</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">regex</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
             <span class="c1">#     dfs=dfs.loc[:,coords]</span>
             <span class="c1"># else:</span>
             <span class="c1">#     dfs=dfs.loc[:,[coords]]</span>
@@ -299,7 +313,9 @@
                 <span class="n">dfs</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,[</span><span class="n">coords</span><span class="p">]]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">option</span><span class="o">==</span><span class="s1">&#39;Regex&#39;</span><span class="p">:</span>
-                <span class="n">coords</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">pat</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span><span class="n">na</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">coords</span><span class="o">=</span><span class="n">dfs</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span>
+                    <span class="n">pat</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span><span class="n">na</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">regex</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
             <span class="c1">#     dfs=dfs.loc(axis=1)[:,coords]</span>
             <span class="c1"># else:</span>
             <span class="c1">#     dfs=dfs.loc(axis=1)[:,[coords]]</span>

@@ -73,16 +73,20 @@ def Weight_func(x, option='Triangle', c_func=None, **kwargs):
     option : string, optional
         Choosen option. 
         Possible are:
-            - 'Cut': Excluding values outside range of xmin to xmax (weight equal 0).
-            - 'Triangle': Weighing to triangle function with maximum in the middle between xmin and xmax.
+            - 'Cut': Excluding values outside range of xmin to xmax 
+                    (weight equal 0).
+            - 'Triangle': Weighing to triangle function with maximum in the 
+                    middle between xmin and xmax.
             - 'Triangle_cut': Mixture of 'Triangle' and 'Cut'.
             - 'Custom': Weighing to custom function (p.e. displacement funtion). 
             - 'Custom_cut': Mixture of 'Custom' and 'Cut'.
         The default is 'Triangle'.
     c_func : function, optional
-        Custom function for weighing (p.e. displacement funtion). The default is None.
+        Custom function for weighing (p.e. displacement funtion). 
+        The default is None.
     **kwargs : dict
-        Keyword arguments for custom function (p.e. displacement funtion parameters).
+        Keyword arguments for custom function (p.e. displacement 
+                                               function parameters).
 
     Raises
     ------
@@ -188,13 +192,15 @@ def YM_eva_method_B(stress_mid_ser,
     P_df : pandas.DataFrame, optional
         Dataframe of Points. The default is None.
     P_fork_names : array of string, optional
-        Names of points in P_df in form of [left, mid, right]. The default is None.
+        Names of points in P_df in form of [left, mid, right]. 
+        The default is None.
     w_func : function, optional
         Function of bending line. The default is None.
     w_params : array or pandas.Series, optional
         Parameters of function of bending line per step. The default is None.
     Length_det : float, optional
-        Determination length between left and right point to calculate. The default is None.
+        Determination length between left and right point to calculate. 
+        The default is None.
     comp : boolean, optional
         Compression mode.The default is True.
     name : string, optional
@@ -322,9 +328,11 @@ def YM_eva_method_E(Force_ser, length,
     weight_func : function, optional
         Weighting function for global averaging. The default is Weight_func.
     wargs : array, optional
-        Arguments for weighting function for global averaging. The default is [].
+        Arguments for weighting function for global averaging. 
+        The default is [].
     wkwargs : dictionary, optional
-        Keyword arguments for weighting function for global averaging. The default is {}.
+        Keyword arguments for weighting function for global averaging. 
+        The default is {}.
     name : string, optional
         Name of operation. The default is 'E'.
 
@@ -346,7 +354,8 @@ def YM_eva_method_E(Force_ser, length,
     strain_df : pandas.DataFrame
         Dataframe of strain values.
     E_to_x_g : pandas.DataFrame
-        Dataframe of determined Young's Moduli to span position (x-direction) for global averaging.
+        Dataframe of determined Young's Moduli to span position (x-direction) 
+        for global averaging.
 
     """
             
@@ -514,13 +523,15 @@ def YM_eva_method_G(Force_ser,
     w_func_f_0 : function
         Function of bending line for external work calculation.
     w_params : pandas.Series of dictionionaries
-        Parameters of function of bending line per step for external work calculation.
+        Parameters of function of bending line per step for external 
+        work calculation.
     c_func : function
         Function of curvature (2nd derivate) of bending line.
     r_func : function
         Function of rise (1st derivate) of bending line.
     c_params : pandas.Series of dictionionaries
-        Parameters of function of curvature (2nd derivate) of bending line per step.
+        Parameters of function of curvature (2nd derivate) of bending 
+        line per step.
     r_params : pandas.Series of dictionionaries
         Parameters of function of rise (1st derivate) of bending line per step.
     length : float
@@ -528,17 +539,20 @@ def YM_eva_method_G(Force_ser,
     I_func : np.poly1d function
         Function of Moment of inertia to position on span (x-direction).
     A_func : np.poly1d function, optional
-        Function of Area to position on span (x-direction). The default is None.
+        Function of Area to position on span (x-direction). 
+        The default is None.
     CS_type : string, optional
         Cross-section type. The default is 'Rectangle'.
     kappa : float, optional
-         Correction factor shear area. Depending to CS_type. The default is None.
+         Correction factor shear area. Depending to CS_type. 
+         The default is None.
     poisson : float, optional
         Poisson's ratio. The default is 0.3.
     comp : boolean, optional
         Compression mode.The default is True.
     option : string, optional
-        Determiantion option. Possible are 'ignore_V' and 'M+V'. The default is "M+V".
+        Determiantion option. Possible are 'ignore_V' and 'M+V'. 
+        The default is "M+V".
     name : string, optional
         Name of operation. The default is "G".
 
@@ -573,8 +587,12 @@ def YM_eva_method_G(Force_ser,
         Wint_I_V = W_int_integrant(r_func, r_params, func_AS)
         Wint_V = pd.Series([],dtype='float64',name=name)
         for step in step_range:
-            Wint_M.loc[step]=1/2 * scint.quad(lambda x: Wint_I_M(x=x,s=step),-length/2,length/2)[0]
-            Wint_V.loc[step]=1/2 * 1/(2*(1+poisson))*scint.quad(lambda x: Wint_I_V(x=x,s=step),-length/2,length/2)[0]
+            Wint_M.loc[step]=1/2 * scint.quad(
+                lambda x: Wint_I_M(x=x,s=step),-length/2,length/2
+                )[0]
+            Wint_V.loc[step]=1/2 * 1/(2*(1+poisson))*scint.quad(
+                lambda x: Wint_I_V(x=x,s=step),-length/2,length/2
+                )[0]
         Wint=Wint_M + Wint_V
     E_ser = pd.Series(Wext/Wint,name=name)
     return E_ser
@@ -595,7 +613,8 @@ def YM_eva_method_F(c_func, c_params,
     c_func : function
         Function of curvature (2nd derivate) of bending line.
     c_params : pandas.Series of dictionionaries
-        Parameters of function of curvature (2nd derivate) of bending line per step.
+        Parameters of function of curvature (2nd derivate) of bending line 
+        per step.
     Force_ser : pandas.Series
         Series of force increments.
     Length : float
@@ -607,9 +626,11 @@ def YM_eva_method_F(c_func, c_params,
     weight_func : function, optional
         Weighting function for global averaging. The default is Weight_func.
     wargs : array, optional
-        Arguments for weighting function for global averaging. The default is [].
+        Arguments for weighting function for global averaging. 
+        The default is [].
     wkwargs : dictionary, optional
-        Keyword arguments for weighting function for global averaging. The default is {}.
+        Keyword arguments for weighting function for global averaging. 
+        The default is {}.
     xr_dict : dictionary, optional
         Dictionary of name to range of length around midspan for determination.
         The default is {'fu':1/1, 'ha':1/2, 'th':1/3}.
@@ -681,11 +702,12 @@ def YM_eva_method_C(Force_ser, w_func, w_params,
     I_func : np.poly1d function
         Function of Moment of inertia to position on span (x-direction).
     A_func : np.poly1d function, optional
-        Function of Area to position on span (x-direction)..
+        Function of Area to position on span (x-direction).
     CS_type : string, optional
         Cross-section type. The default is 'Rectangle'.
     kappa : float, optional
-         Correction factor shear area. Depending to CS_type. The default is None.
+         Correction factor shear area. Depending to CS_type. 
+         The default is None.
     poisson : float, optional
         Poisson's ratio. The default is 0.3.
     comp : boolean, optional
@@ -715,7 +737,8 @@ def YM_eva_method_C(Force_ser, w_func, w_params,
 
 def YM_eva_method_D_bend_df(Length, I_func, n=100, E=1, F=1):
     """
-    Calculates the deflection values via the determined integral of the bending line.
+    Calculates the deflection values via the determined integral of the 
+    bending line.
 
     Parameters
     ----------
@@ -733,7 +756,8 @@ def YM_eva_method_D_bend_df(Length, I_func, n=100, E=1, F=1):
     Returns
     -------
     m : pandas.DataFrame
-        Dataframe of deflections and parts of partwise integration to x-positions.
+        Dataframe of deflections and parts of partwise integration to 
+        x-positions.
 
     """
     def sidewise_df(x, Length, F, E , I_func, side='l'):
@@ -743,7 +767,11 @@ def YM_eva_method_D_bend_df(Length, I_func, n=100, E=1, F=1):
             m_df=pd.DataFrame(data=None,index= x)
         else:
             raise NotImplementedError("Side %s not implemented, only l and r allowed!"%side)
-        m_df['M'] = -F * Moment_perF_func(x=m_df.index, xmin=-Length/2,xmax=Length/2, Test_type='TPB')
+        m_df['M'] = -F * Moment_perF_func(
+            x=m_df.index, 
+            xmin=-Length/2, xmax=Length/2, 
+            Test_type='TPB'
+            )
         m_df['I'] = I_func(m_df.index)
         m_df['Quotient'] = m_df.loc[:,'M'] / (E * m_df.loc[:,'I'])
         j = 0
@@ -808,7 +836,9 @@ def YM_eva_method_D_bend_df_add(points_x, m_df, Length, I_func, E=1, F=1):
     x = pd.Float64Index(points_x,name='x')
     p_df=pd.DataFrame(data=None,index=x)
     
-    p_df['M'] = -F * Moment_perF_func(x=x, xmin=-Length/2,xmax=Length/2, Test_type='TPB')
+    p_df['M'] = -F * Moment_perF_func(
+        x=x, xmin=-Length/2, xmax=Length/2, Test_type='TPB'
+        )
     p_df['I'] = I_func(x)
     p_df['Quotient'] = p_df.loc[:,'M'] / (E * p_df.loc[:,'I'])
     for i in points_x:
@@ -832,8 +862,13 @@ def YM_eva_method_D_bend_df_add(points_x, m_df, Length, I_func, E=1, F=1):
     return p_df
 
 def YM_eva_method_D_res(E, x_data, y_data=None, weights=None, **kws):
-    m_df=YM_eva_method_D_bend_df(kws['Length'], kws['I_func'], kws['n'], E, kws['F'])
-    p_df=YM_eva_method_D_bend_df_add(x_data, m_df,kws['Length'], kws['I_func'], E, kws['F'])
+    """Calculate residues of method D."""
+    m_df=YM_eva_method_D_bend_df(
+        kws['Length'], kws['I_func'], kws['n'], E, kws['F']
+        )
+    p_df=YM_eva_method_D_bend_df_add(
+        x_data, m_df,kws['Length'], kws['I_func'], E, kws['F']
+        )
     if y_data is None:
         err=p_df['w']
     elif weights is None:
@@ -843,11 +878,48 @@ def YM_eva_method_D_res(E, x_data, y_data=None, weights=None, **kws):
     return err
 
 def YM_eva_method_D_num(P_df, Force_ser, step_range,
-                         Length, func_I,
-                         weighted=True, weight_func=Weight_func,
-                         wargs=[], wkwargs={}, max_nfev=500,
-                         pb_b=True, name='D'):
-   
+                        Length, func_I,
+                        weighted=True, weight_func=Weight_func,
+                        wargs=[], wkwargs={}, max_nfev=500,
+                        pb_b=True, name='D'):
+    """
+    Evaluate elastic modulus by minimization to method D residuals.
+
+    Parameters
+    ----------
+    P_df : pandas.DataFrame
+        Dataframe of measured points to steps.
+    Force_ser : pandas.Series
+        Series of force increments.
+    step_range : pd.Index or range or list
+        Evaluation range.
+    Length : float
+        Length of span.
+    func_I : np.poly1d function
+        Function of Moment of inertia to position on span (x-direction).
+    weighted : boolean, optional
+        Switch for weighted averaging. The default is True.
+    weight_func : function, optional
+        Weighting function for global averaging. The default is Weight_func.
+    wargs : array, optional
+        Arguments for weighting function for global averaging. 
+        The default is [].
+    wkwargs : dictionary, optional
+        Keyword arguments for weighting function for global averaging. 
+        The default is {}.
+    max_nfev : int, optional
+        Maximum number of iterations. The default is 500.
+    pb_b : boolean, optional
+        Switch of progressbar. The default is True.
+    name : string, optional
+        Name of operation. The default is 'D'.
+
+    Returns
+    -------
+    D_df : pd.DataFrame
+        Evaluated elastic modulus and coefficent of determination per step.
+
+    """
     D_df = pd.DataFrame([],columns=['E','Rquad'],dtype='float64')
     if pb_b: pb = tqdm(step_range, desc =name+": ", unit=' steps', ncols=100)
     for step in step_range:
@@ -866,12 +938,12 @@ def YM_eva_method_D_num(P_df, Force_ser, step_range,
                 weights = weight_func(x_data,*wargs,**wkwargs)
         else:
             weights = None
-        fit_Result = lmfit.minimize(YM_eva_method_D_res, par,
-                                    args=(x_data,), kws={'I_func': func_I, 'n':100,
-                                                         'Length': Length, 'F': F, 
-                                                         'y_data': y_data, 
-                                                         'weights': weights},
-                                    scale_covar=True, max_nfev=max_nfev)
+        fit_Result = lmfit.minimize(
+            YM_eva_method_D_res, par, args=(x_data,),
+            kws={'I_func': func_I, 'n':100, 'Length': Length, 'F': F, 
+                 'y_data': y_data, 'weights': weights},
+            scale_covar=True, max_nfev=max_nfev
+            )
         D_df.loc[step,'E'] = fit_Result.params['E'].value
         D_df.loc[step,'Rquad'] = 1 - fit_Result.residual.var() / np.var(y_data)
         if pb_b: pb.update()
@@ -883,8 +955,9 @@ def YM_eva_method_D(P_df, Force_ser,
                     weighted=False, weight_func=Weight_func,
                     wkwargs={}, wargs=[], pb_b=True, name='D'):
     """
-    Calculates the modulus of elasticity by matching the theoretical displacements
-    from the determined integral of the bending line with the measured ones.
+    Calculates the modulus of elasticity by matching the theoretical 
+    displacements from the determined integral of the bending line with 
+    the measured ones.
 
     Parameters
     ----------
@@ -905,9 +978,11 @@ def YM_eva_method_D(P_df, Force_ser,
     weight_func : function, optional
         Weighting function for global averaging. The default is Weight_func.
     wargs : array, optional
-        Arguments for weighting function for global averaging. The default is [].
+        Arguments for weighting function for global averaging. 
+        The default is [].
     wkwargs : dictionary, optional
-        Keyword arguments for weighting function for global averaging. The default is {}.
+        Keyword arguments for weighting function for global averaging. 
+        The default is {}.
     pb_b : boolean, optional
         Switch of progressbar. The default is True.
     name : string, optional
@@ -926,9 +1001,9 @@ def YM_eva_method_D(P_df, Force_ser,
     # ignore NaN-multiply
     warnings.filterwarnings('ignore',category=RuntimeWarning)
     
-    # step_range = emec.pd_ext.pd_combine_index(Force_ser, P_df)
-    step_range = emec.pd_ext.pd_combine_index(Force_ser, 
-                                       P_df.loc[np.invert(P_df.isna().all(axis=1))].index)
+    step_range = emec.pd_ext.pd_combine_index(
+        Force_ser, P_df.loc[np.invert(P_df.isna().all(axis=1))].index
+        )
     
     if not rel_steps is None: 
         step_range = emec.pd_ext.pd_combine_index(rel_steps, step_range)
@@ -944,21 +1019,14 @@ def YM_eva_method_D(P_df, Force_ser,
     if pb_b: pb = tqdm(step_range, desc =name+": ", unit=' steps', ncols=100)
     for step in step_range:
         F = Force_ser.loc[step]
-        # x_data = P_df.loc[step].loc[:,'x'].values
-        # y_data = P_df.loc[step].loc[:,'y'].values
         x_data = P_df.loc[step].loc[:,'x']
         y_data = P_df.loc[step].loc[:,'y']
-        # p = YM_eva_method_D_bend_df_add(points_x=x_data, m_df=m,
-        #                                  Length=Length, I_func=func_I,
-        #                                  E=1, F=1)
         p = YM_eva_method_D_bend_df_add(points_x=x_data.dropna(), m_df=m,
                                          Length=Length, I_func=func_I,
                                          E=1, F=1)
         D_gamma = F/y_data
         D_alpha = (x_data/Length-0.5)*m['Omega'].iloc[0]
         D_beta  = (x_data/Length+0.5)*m['Omega'].iloc[-1]
-        # YM_df.loc[step]=F/y_data*((x_data/Length-0.5)*m['Omega'].iloc[0]-(x_data/Length+0.5)*m['Omega'].iloc[-1]+p.loc[x_data,'Omega'].values)
-        # YM_df.loc[step] = D_gamma*(D_alpha-D_beta+p.loc[x_data,'Omega'].values)
         D_omega = pd.Series([], dtype='float64')
         for i in x_data.index:
             if np.isnan(x_data[i]):
@@ -971,13 +1039,11 @@ def YM_eva_method_D(P_df, Force_ser,
                 weights = weight_func(x_data,*wargs,**wkwargs.loc[step])
             else:
                 weights = weight_func(x_data,*wargs,**wkwargs)
-            # ind_E = np.where(np.logical_not(np.isnan(YM_tmp)))[0]
             ind_E = np.invert((YM_df.loc[step].isna()) | (YM_df.loc[step] == 0))
             YM_ser.at[step] = np.average(YM_df.loc[step][ind_E],
                                          weights=weights[ind_E])
         else:
             weights = None
-            # ind_E = np.where(np.logical_not(np.isnan(YM_tmp)))[0]
             ind_E = np.invert((YM_df.loc[step].isna()) | (YM_df.loc[step] == 0))
             YM_ser.at[step] = YM_df.loc[step][ind_E].mean()
         YM_ser =pd.Series(YM_ser,name=name)
@@ -986,16 +1052,49 @@ def YM_eva_method_D(P_df, Force_ser,
     return YM_ser, YM_df
 
 #%% Checking and documentation
-def YM_check_with_method_D(E, F, Length, I_func, w_vgl_df, pb_b=True, name='X'):
+def YM_check_with_method_D(E, F, Length, I_func, w_vgl_df, 
+                           pb_b=True, name='X'):
+    """
+    Compares the deformation of the analytical bending line (method D), 
+    scaled by elastic modulus determined by methods, with the measured bending 
+    line.
+    
+    Parameters
+    ----------
+    E : float
+        Elastic modulus.
+    F : float
+        Force (or force increment).
+    Length : float
+        Testing length.
+    I_func : TYPE
+        Function of Moment of Inertia.
+    w_func : Bend_func_sub
+        Bending function.
+    w_params : pd.Series of dict
+        Parameters per step for bending function (w_func).
+    rel_steps : pandas.Index or numpy array, optional
+        Relevant steps. The default is None.
+    n : integer, optional
+        Number of determination points. The default is 100.
+    pb_b : boolean, optional
+        Switch progress bar output. The default is True.
+    name : string, optional
+        Name of executed check. The default is 'X'.
+
+    Returns
+    -------
+    check_E : pandas.Dataframe
+        Deviation of scaled analytical and measured deformation.
+    w_D_to_E : pandas.Dataframe
+        Scaled analytical defeormation.
+
+    """
     step_range = emec.pd_ext.pd_combine_index(E, w_vgl_df)
-    m = YM_eva_method_D_bend_df(Length=w_vgl_df.columns.max()-w_vgl_df.columns.min(),
-                                 I_func=I_func,
-                                 n=len(w_vgl_df.columns)-1,
-                                 E=1, F=1)
-    """
-    Compares the deformation of the analytical bending line, 
-    scaled by Young's Modulus determined by methods, with the measured bending line.
-    """
+    m = YM_eva_method_D_bend_df(
+        Length=w_vgl_df.columns.max()-w_vgl_df.columns.min(),
+        I_func=I_func, n=len(w_vgl_df.columns)-1, E=1, F=1
+        )
     D_gamma = F.loc[step_range]/E.loc[step_range]
     D_alpha = (m.index/Length-0.5)*m['Omega'].iloc[0]
     D_beta  = (m.index/Length+0.5)*m['Omega'].iloc[-1]
@@ -1024,10 +1123,12 @@ def YM_check_many_with_method_D(E_dict, F, Length, I_func,
                                  w_func, w_params, rel_steps=None, n=100,
                                  pb_b=True, name='X'):
     """
-    Compares the deformation of the analytical bending line, 
-    scaled by Young's Modulus determined by methods, with the measured bending line.
-    Returns global mean, local (midspan) mean and complete (n-positions) deviation,
-    as well as the scaled analytical bending line, for each specified step.
+    Compares the deformation of the analytical bending line (method D), 
+    scaled by elastic modulus determined by methods, with the measured bending 
+    line.
+    Returns global mean, local (midspan) mean and complete (n-positions) 
+    deviation, as well as the scaled analytical bending line, for each 
+    specified step.
 
     Parameters
     ----------

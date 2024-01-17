@@ -140,7 +140,6 @@ class Bend_func_sub:
 #                          independent_vars='x', param_names=param_names,
 #                          name=name, **kws)
 
-
 class Bend_func_cohort(object):
     """Function collection of Subfunctions (Bend_func_sub)"""
     
@@ -311,7 +310,6 @@ class Bend_func_legion(object):
             self.description='Bend line as lambdified Fourier series expansion'
     
             w_A_d0_str='b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))+c*(x-xmin)+d'
-            # w_variables_names=np.array(['x','xmin','xmax','FP','b1','b2','b3','b4','c','d'])
             w_variables_names=np.array(['x','xmin','xmax','FP','b1','b2','b3','b4','c','d','f_V_0'])
             self.w_A=Bend_func_cohort(name='A')
             Bend_func_cohort.Init_fandds(self.w_A, expr_d0=w_A_d0_str,
@@ -438,7 +436,7 @@ class Bend_func_legion(object):
                                      var_types=w_variables_types,
                                      option='each_expr_to_all')
             
-            w_M_d0_str ='b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))'
+            w_M_d0_str = 'b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))'
             w_M_d1_str = 'FP*(b1*cos(FP*(x - xmin)) + 2*b2*cos(2*FP*(x - xmin)) + 3*b3*cos(3*FP*(x - xmin)) + 4*b4*cos(4*FP*(x - xmin)))'
             w_M_d2_str = '-FP**2*(b1*sin(FP*(x - xmin)) + 4*b2*sin(2*FP*(x - xmin)) + 9*b3*sin(3*FP*(x - xmin)) + 16*b4*sin(4*FP*(x - xmin)))'
             w_M_d0_func=FSE_4sin_d0

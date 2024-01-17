@@ -388,106 +388,278 @@
 </section>
 <section id="module-exmecheva.Eva_ACT">
 <span id="exmecheva-eva-act-module"></span><h2>exmecheva.Eva_ACT module<a class="headerlink" href="#module-exmecheva.Eva_ACT" title="Permalink to this heading"></a></h2>
-<p>Created on Wed Sep 22 11:40:20 2021</p>
-<p>&#64;author: mgebhard
-.. todo:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">opt</span><span class="o">-</span><span class="n">DIC</span> <span class="n">Funktionalität</span>
-<span class="o">-</span> <span class="n">Implementierung</span> <span class="n">genutze</span> <span class="n">Dehnung</span> <span class="n">aus</span> <span class="n">Methoden</span> <span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
-<span class="o">-</span> <span class="n">Dehnung</span> <span class="n">für</span> <span class="n">Ausgabe</span> <span class="n">auf</span> <span class="n">E</span><span class="o">-</span><span class="n">Modul</span> <span class="n">beziehen</span> <span class="p">(</span><span class="n">relevant</span><span class="p">,</span> <span class="n">wenn</span> <span class="n">Auflagereindrückung</span> <span class="n">nicht</span> <span class="n">eliminiert</span><span class="p">)</span>
-<span class="o">-</span> <span class="n">Automatik</span> <span class="n">Compression</span> <span class="o">/</span> <span class="n">Anstiegswechsel</span> <span class="p">(</span><span class="n">Be</span><span class="o">-</span><span class="n">Entlasten</span><span class="p">)</span>
-    <span class="o">-</span> <span class="n">VIP</span><span class="o">-</span><span class="n">Bestimmung</span>
-    <span class="o">-</span> <span class="n">E</span><span class="o">-</span><span class="n">Methoden</span> <span class="p">(</span><span class="n">Spannungs</span><span class="o">-/</span><span class="n">Dehnungsmaximum</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>Changelog:</dt><dd><ul class="simple">
-<li><p>21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)</p></li>
-<li><dl class="simple">
-<dt>23-10-13: - Hinzufügen finale Spannungs-Dehnungskurve (6.6) mit Ermittlung</dt><dd><ul>
-<li><p>Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.05%), siehe DOI: 10.1007/s10439-020-02719-2</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><p>23-10-20: Bending connection replaced (Bend.YM_eva_method_A child of Evac.YM_eva_com_sel)</p></li>
-</ul>
-</dd>
-</dl>
+<p>Axial compression test evaluation.</p>
+<p>&#64;author: MarcGebhardt</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.Eva_ACT.ACT_single">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.Eva_ACT.</span></span><span class="sig-name descname"><span class="pre">ACT_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prot_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mfile_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'logfp':</span> <span class="pre">None,</span> <span class="pre">'logopt':</span> <span class="pre">True,</span> <span class="pre">'output_lvl':</span> <span class="pre">1,</span> <span class="pre">'printopt':</span> <span class="pre">False}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'clear':</span> <span class="pre">True,</span> <span class="pre">'close':</span> <span class="pre">True,</span> <span class="pre">'s_types':</span> <span class="pre">['pdf'],</span> <span class="pre">'save':</span> <span class="pre">True,</span> <span class="pre">'show':</span> <span class="pre">True,</span> <span class="pre">'tight':</span> <span class="pre">True}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/Eva_ACT.html#ACT_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.Eva_ACT.ACT_single" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate single axial compression test measurement form protocol table and
+path collection. Using common options wich are overwritten by protocol
+variables starting with ‘<a href="#id3"><span class="problematic" id="id4">OPT_</span></a>’. Produce evaluated measurements,
+material parameters and plots and safe them as table (.csv), unstructured
+database (.h5) and document (.pdf), using the designation of the specimen
+for distinction.
+Procedure:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>1: Read in options and presetting</p></li>
+<li><p>2: Determining geometrical values</p></li>
+<li><p>3: Read in measurements (conventional and optical (optinal))</p></li>
+<li><dl class="simple">
+<dt>4: Merging measurements (time offset of conventional to optical</dt><dd><p>(if available), downsampling and merging)</p>
+</dd>
+</dl>
+</li>
+<li><p>5: Determine evaluation space (start and end)</p></li>
+<li><dl class="simple">
+<dt>6: Evaluation (curves (stress/strain), importent points on curves,</dt><dd><p>elastic moduli (different types implemented))</p>
+</dd>
+</dl>
+</li>
+<li><p>7: Generating output (tables, database and plots)</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prot_ser</strong> (<em>pd.Series</em>) – <p>Input data as pandas series with specimen information
+(identifier, origin, geometrical data,</p>
+<blockquote>
+<div><p>assessment codes, evaluation options).</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>paths</strong> (<em>pd.DataFrame</em>) – <p>Path collection for in- and output paths.
+Needs indexes:</p>
+<blockquote>
+<div><ul>
+<li><p>”opts”: Common evaluation options</p></li>
+<li><p>”prot”: Protocol</p></li>
+<li><p>”meas”: Conventional measured data</p></li>
+<li><p>”dic”: Optical measured data</p></li>
+<li><p>”out”: Output</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>mfile_add</strong> (<em>string</em><em>, </em><em>optional</em>) – Suffix of variants of measurements
+(p.E. diffferent moistures [“A”,”B”,…]).
+The default is ‘’.</p></li>
+<li><p><strong>log_scopt</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Options for custom logging. Determining file path,
+output level (0=none, 1=normal, 2=special), logging enabled and
+printing enabled.
+The default is {‘logfp’:None, ‘output_lvl’: 1,</p>
+<blockquote>
+<div><p>’logopt’:True, ‘printopt’:False}.</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>plt_scopt</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Options for plotting.
+The default is {‘tight’:True, ‘show’:True,</p>
+<blockquote>
+<div><p>’save’:True, ‘s_types’:[“pdf”],
+‘clear’:True, ‘close’:True}.</p>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – Input value not correct.</p></li>
+<li><p><strong>NotImplementedError</strong> – Method not implemented.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Yields</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timings</strong> (<em>pd.Series</em>) – Timings of procedure steps.</p></li>
+<li><p><strong>cout</strong> (<em>string</em>) – Special text output for control purposes.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 <section id="module-exmecheva.Eva_ATT">
 <span id="exmecheva-eva-att-module"></span><h2>exmecheva.Eva_ATT module<a class="headerlink" href="#module-exmecheva.Eva_ATT" title="Permalink to this heading"></a></h2>
-<p>Created on Wed Sep 22 11:40:20 2021</p>
-<p>&#64;author: mgebhard
-.. todo:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">opt</span><span class="o">-</span><span class="n">DIC</span> <span class="n">Funktionalität</span>
-<span class="o">-</span> <span class="n">Implementierung</span> <span class="n">genutze</span> <span class="n">Dehnung</span> <span class="n">aus</span> <span class="n">Methoden</span> <span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
-<span class="o">-</span> <span class="n">Dehnung</span> <span class="n">für</span> <span class="n">Ausgabe</span> <span class="n">auf</span> <span class="n">E</span><span class="o">-</span><span class="n">Modul</span> <span class="n">beziehen</span> <span class="p">(</span><span class="n">relevant</span><span class="p">,</span> <span class="n">wenn</span> <span class="n">Auflagereindrückung</span> <span class="n">nicht</span> <span class="n">eliminiert</span><span class="p">)</span>
-<span class="o">-</span> <span class="n">Automatik</span> <span class="n">Compression</span> <span class="o">/</span> <span class="n">Anstiegswechsel</span> <span class="p">(</span><span class="n">Be</span><span class="o">-</span><span class="n">Entlasten</span><span class="p">)</span>
-    <span class="o">-</span> <span class="n">VIP</span><span class="o">-</span><span class="n">Bestimmung</span>
-    <span class="o">-</span> <span class="n">E</span><span class="o">-</span><span class="n">Methoden</span> <span class="p">(</span><span class="n">Spannungs</span><span class="o">-/</span><span class="n">Dehnungsmaximum</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>Changelog:</dt><dd><ul class="simple">
-<li><p>21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)</p></li>
-<li><p>21-10-21: Ende Auswertung erst nach maximaler Kraft</p></li>
-<li><p>21-10-29: plastic strain shift -1 (zugehörig nun zu abgelaufenem Zyklus)</p></li>
-<li><dl class="simple">
-<dt>23-10-13: - Ändern finale Spannungs-Dehnungskurve (6.6) mit Ermittlung</dt><dd><ul>
-<li><p>Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.5%)</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>23-12-07: Resempling frequency standard 4.0 -&gt; 10.0</dt><dd><p>-&gt; OPT_Determination_Distance [10,5] -&gt; 25,13</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
+<p>Axial tensile test evaluation.</p>
+<p>&#64;author: MarcGebhardt</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.Eva_ATT.ATT_single">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.Eva_ATT.</span></span><span class="sig-name descname"><span class="pre">ATT_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prot_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mfile_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'logfp':</span> <span class="pre">None,</span> <span class="pre">'logopt':</span> <span class="pre">True,</span> <span class="pre">'output_lvl':</span> <span class="pre">1,</span> <span class="pre">'printopt':</span> <span class="pre">False}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'clear':</span> <span class="pre">True,</span> <span class="pre">'close':</span> <span class="pre">True,</span> <span class="pre">'s_types':</span> <span class="pre">['pdf'],</span> <span class="pre">'save':</span> <span class="pre">True,</span> <span class="pre">'show':</span> <span class="pre">True,</span> <span class="pre">'tight':</span> <span class="pre">True}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/Eva_ATT.html#ATT_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.Eva_ATT.ATT_single" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate single axial tensile test measurement form protocol table and
+path collection. Using common options wich are overwritten by protocol
+variables starting with ‘<a href="#id5"><span class="problematic" id="id6">OPT_</span></a>’. Produce evaluated measurements,
+material parameters and plots and safe them as table (.csv), unstructured
+database (.h5) and document (.pdf), using the designation of the specimen
+for distinction.
+Procedure:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>1: Read in options and presetting</p></li>
+<li><p>2: Determining geometrical values</p></li>
+<li><p>3: Read in measurements (conventional and optical (optinal))</p></li>
+<li><dl class="simple">
+<dt>4: Merging measurements (time offset of conventional to optical</dt><dd><p>(if available), downsampling and merging)</p>
+</dd>
+</dl>
+</li>
+<li><p>5: Determine evaluation space (start and end)</p></li>
+<li><dl class="simple">
+<dt>6: Evaluation (curves (stress/strain), importent points on curves,</dt><dd><p>elastic moduli (different types implemented))</p>
+</dd>
+</dl>
+</li>
+<li><p>7: Generating output (tables, database and plots)</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prot_ser</strong> (<em>pd.Series</em>) – <p>Input data as pandas series with specimen information
+(identifier, origin, geometrical data,</p>
+<blockquote>
+<div><p>assessment codes, evaluation options).</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>paths</strong> (<em>pd.DataFrame</em>) – <p>Path collection for in- and output paths.
+Needs indexes:</p>
+<blockquote>
+<div><ul>
+<li><p>”opts”: Common evaluation options</p></li>
+<li><p>”prot”: Protocol</p></li>
+<li><p>”meas”: Conventional measured data</p></li>
+<li><p>”dic”: Optical measured data</p></li>
+<li><p>”out”: Output</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>mfile_add</strong> (<em>string</em><em>, </em><em>optional</em>) – Suffix of variants of measurements
+(p.E. diffferent moistures [“A”,”B”,…]).
+The default is ‘’.</p></li>
+<li><p><strong>log_scopt</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Options for custom logging. Determining file path,
+output level (0=none, 1=normal, 2=special), logging enabled and
+printing enabled.
+The default is {‘logfp’:None, ‘output_lvl’: 1,</p>
+<blockquote>
+<div><p>’logopt’:True, ‘printopt’:False}.</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>plt_scopt</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Options for plotting.
+The default is {‘tight’:True, ‘show’:True,</p>
+<blockquote>
+<div><p>’save’:True, ‘s_types’:[“pdf”],
+‘clear’:True, ‘close’:True}.</p>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – Input value not correct.</p></li>
+<li><p><strong>NotImplementedError</strong> – Method not implemented.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Yields</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timings</strong> (<em>pd.Series</em>) – Timings of procedure steps.</p></li>
+<li><p><strong>cout</strong> (<em>string</em>) – Special text output for control purposes.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 <section id="module-exmecheva.Eva_TBT">
 <span id="exmecheva-eva-tbt-module"></span><h2>exmecheva.Eva_TBT module<a class="headerlink" href="#module-exmecheva.Eva_TBT" title="Permalink to this heading"></a></h2>
-<p>Created on Thu Sep  2 13:44:49 2021</p>
-<p>&#64;author: mgebhard</p>
-<dl class="simple">
-<dt>Changelog:</dt><dd><ul class="simple">
-<li><p>21-09-16: Anpassung 6.3.2 (try except bei F4 und Ende FM-1)</p></li>
-<li><p>21-10-25: Ende Auswertung erst nach maximaler Kraft</p></li>
-<li><p>21-12-03: Methodenumbenennung (C:E, D:G, E:F, F:C, G:D)</p></li>
-<li><p>21-12-17: Variantenanpassung Methoden (C2Al, C2Sl, C2Cl; E4A*; F4Ag**M G3Ag, G3Mg, G3Cg)</p></li>
-<li><p>21-12-17: Korrektur stdnwoso über hinzufügen stdwoso</p></li>
-<li><dl class="simple">
-<dt>23-10-13: - Hinzufügen finale Spannungs-Dehnungskurve (6.6) mit Ermittlung</dt><dd><ul>
-<li><p>Hinzufügen mehrere Streckgrenzen (6.5, 0%-0.2%-0.007%), siehe DOI: 10.1007/s10439-020-02719-2</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
+<p>Three point bending test evaluation.</p>
+<p>&#64;author: MarcGebhardt</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.Eva_TBT.TBT_single">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.Eva_TBT.</span></span><span class="sig-name descname"><span class="pre">TBT_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prot_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mfile_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'logfp':</span> <span class="pre">None,</span> <span class="pre">'logopt':</span> <span class="pre">True,</span> <span class="pre">'output_lvl':</span> <span class="pre">1,</span> <span class="pre">'printopt':</span> <span class="pre">False}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_scopt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'clear':</span> <span class="pre">True,</span> <span class="pre">'close':</span> <span class="pre">True,</span> <span class="pre">'s_types':</span> <span class="pre">['pdf'],</span> <span class="pre">'save':</span> <span class="pre">True,</span> <span class="pre">'show':</span> <span class="pre">True,</span> <span class="pre">'tight':</span> <span class="pre">True}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/Eva_TBT.html#TBT_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.Eva_TBT.TBT_single" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate single three point bending measurement form protocol table and
+path collection. Using common options wich are overwritten by protocol
+variables starting with ‘<a href="#id7"><span class="problematic" id="id8">OPT_</span></a>’. Produce evaluated measurements,
+material parameters and plots and safe them as table (.csv), unstructured
+database (.h5) and document (.pdf), using the designation of the specimen
+for distinction.
+Procedure:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>1: Read in options and presetting</p></li>
+<li><p>2: Determining geometrical values</p></li>
+<li><p>3: Read in measurements (conventional and optical (optinal))</p></li>
+<li><dl class="simple">
+<dt>4: Merging measurements (time offset of conventional to optical</dt><dd><p>(if available), downsampling and merging)</p>
+</dd>
+</dl>
+</li>
+<li><p>5: Determine evaluation space (start and end)</p></li>
+<li><dl class="simple">
+<dt>6: Evaluation (curves (stress/strain), importent points on curves,</dt><dd><p>elastic moduli (different types implemented))</p>
+</dd>
+</dl>
+</li>
+<li><p>7: Generating output (tables, database and plots)</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prot_ser</strong> (<em>pd.Series</em>) – <p>Input data as pandas series with specimen information
+(identifier, origin, geometrical data,</p>
+<blockquote>
+<div><p>assessment codes, evaluation options).</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>paths</strong> (<em>pd.DataFrame</em>) – <p>Path collection for in- and output paths.
+Needs indexes:</p>
+<blockquote>
+<div><ul>
+<li><p>”opts”: Common evaluation options</p></li>
+<li><p>”prot”: Protocol</p></li>
+<li><p>”meas”: Conventional measured data</p></li>
+<li><p>”dic”: Optical measured data</p></li>
+<li><p>”out”: Output</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>mfile_add</strong> (<em>string</em><em>, </em><em>optional</em>) – Suffix of variants of measurements
+(p.E. diffferent moistures [“A”,”B”,…]).
+The default is ‘’.</p></li>
+<li><p><strong>log_scopt</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Options for custom logging. Determining file path,
+output level (0=none, 1=normal, 2=special), logging enabled and
+printing enabled.
+The default is {‘logfp’:None, ‘output_lvl’: 1,</p>
+<blockquote>
+<div><p>’logopt’:True, ‘printopt’:False}.</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>plt_scopt</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Options for plotting.
+The default is {‘tight’:True, ‘show’:True,</p>
+<blockquote>
+<div><p>’save’:True, ‘s_types’:[“pdf”],
+‘clear’:True, ‘close’:True}.</p>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – Input value not correct.</p></li>
+<li><p><strong>NotImplementedError</strong> – Method not implemented.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Yields</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timings</strong> (<em>pd.Series</em>) – Timings of procedure steps.</p></li>
+<li><p><strong>cout</strong> (<em>string</em>) – Special text output for control purposes.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 <section id="module-exmecheva.eva">
 <span id="exmecheva-eva-module"></span><h2>exmecheva.eva module<a class="headerlink" href="#module-exmecheva.eva" title="Permalink to this heading"></a></h2>
-<p>Created on Wed Nov 29 12:23:31 2023</p>
+<p>Functionality for selection of evaluation (single, series or complete) and
+packing of HDF-file.</p>
 <p>&#64;author: MarcGebhardt
 .. todo:: - series only work with output_lvl&gt;=1</p>
 <dl class="py function">

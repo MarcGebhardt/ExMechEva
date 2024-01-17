@@ -407,8 +407,16 @@ Children of triangle_func_d1. For more information see FSE_4sin_wlin_d0.</p>
 Possible are:</p>
 <blockquote>
 <div><ul>
-<li><p>’Cut’: Excluding values outside range of xmin to xmax (weight equal 0).</p></li>
-<li><p>’Triangle’: Weighing to triangle function with maximum in the middle between xmin and xmax.</p></li>
+<li><dl class="simple">
+<dt>’Cut’: Excluding values outside range of xmin to xmax</dt><dd><p>(weight equal 0).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>’Triangle’: Weighing to triangle function with maximum in the</dt><dd><p>middle between xmin and xmax.</p>
+</dd>
+</dl>
+</li>
 <li><p>’Triangle_cut’: Mixture of ‘Triangle’ and ‘Cut’.</p></li>
 <li><p>’Custom’: Weighing to custom function (p.e. displacement funtion).</p></li>
 <li><p>’Custom_cut’: Mixture of ‘Custom’ and ‘Cut’.</p></li>
@@ -416,8 +424,13 @@ Possible are:</p>
 </div></blockquote>
 <p>The default is ‘Triangle’.</p>
 </p></li>
-<li><p><strong>c_func</strong> (<em>function</em><em>, </em><em>optional</em>) – Custom function for weighing (p.e. displacement funtion). The default is None.</p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Keyword arguments for custom function (p.e. displacement funtion parameters).</p></li>
+<li><p><strong>c_func</strong> (<em>function</em><em>, </em><em>optional</em>) – Custom function for weighing (p.e. displacement funtion).
+The default is None.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em>) – <dl class="simple">
+<dt>Keyword arguments for custom function (p.e. displacement</dt><dd><p>function parameters).</p>
+</dd>
+</dl>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
@@ -435,10 +448,12 @@ Possible are:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.evaluation.YM_check_many_with_method_D">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.bending.evaluation.</span></span><span class="sig-name descname"><span class="pre">YM_check_many_with_method_D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pb_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'X'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/bending/evaluation.html#YM_check_many_with_method_D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.bending.evaluation.YM_check_many_with_method_D" title="Permalink to this definition"></a></dt>
-<dd><p>Compares the deformation of the analytical bending line,
-scaled by Young’s Modulus determined by methods, with the measured bending line.
-Returns global mean, local (midspan) mean and complete (n-positions) deviation,
-as well as the scaled analytical bending line, for each specified step.</p>
+<dd><p>Compares the deformation of the analytical bending line (method D),
+scaled by elastic modulus determined by methods, with the measured bending
+line.
+Returns global mean, local (midspan) mean and complete (n-positions)
+deviation, as well as the scaled analytical bending line, for each
+specified step.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -469,7 +484,33 @@ as well as the scaled analytical bending line, for each specified step.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.evaluation.YM_check_with_method_D">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.bending.evaluation.</span></span><span class="sig-name descname"><span class="pre">YM_check_with_method_D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">F</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_vgl_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pb_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'X'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/bending/evaluation.html#YM_check_with_method_D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.bending.evaluation.YM_check_with_method_D" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Compares the deformation of the analytical bending line (method D),
+scaled by elastic modulus determined by methods, with the measured bending
+line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>E</strong> (<em>float</em>) – Elastic modulus.</p></li>
+<li><p><strong>F</strong> (<em>float</em>) – Force (or force increment).</p></li>
+<li><p><strong>Length</strong> (<em>float</em>) – Testing length.</p></li>
+<li><p><strong>I_func</strong> (<em>TYPE</em>) – Function of Moment of Inertia.</p></li>
+<li><p><strong>w_func</strong> (<a class="reference internal" href="#exmecheva.bending.bfunc_class.Bend_func_sub" title="exmecheva.bending.bfunc_class.Bend_func_sub"><em>Bend_func_sub</em></a>) – Bending function.</p></li>
+<li><p><strong>w_params</strong> (<em>pd.Series</em><em> of </em><em>dict</em>) – Parameters per step for bending function (w_func).</p></li>
+<li><p><strong>rel_steps</strong> (<em>pandas.Index</em><em> or </em><em>numpy array</em><em>, </em><em>optional</em>) – Relevant steps. The default is None.</p></li>
+<li><p><strong>n</strong> (<em>integer</em><em>, </em><em>optional</em>) – Number of determination points. The default is 100.</p></li>
+<li><p><strong>pb_b</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Switch progress bar output. The default is True.</p></li>
+<li><p><strong>name</strong> (<em>string</em><em>, </em><em>optional</em>) – Name of executed check. The default is ‘X’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>check_E</strong> (<em>pandas.Dataframe</em>) – Deviation of scaled analytical and measured deformation.</p></li>
+<li><p><strong>w_D_to_E</strong> (<em>pandas.Dataframe</em>) – Scaled analytical defeormation.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.evaluation.YM_eva_method_A">
@@ -532,10 +573,12 @@ over defined range with definable method.</p>
 “Fit”, for a fitted bend line.
 The default is “Points”.</p></li>
 <li><p><strong>P_df</strong> (<em>pandas.DataFrame</em><em>, </em><em>optional</em>) – Dataframe of Points. The default is None.</p></li>
-<li><p><strong>P_fork_names</strong> (<em>array</em><em> of </em><em>string</em><em>, </em><em>optional</em>) – Names of points in P_df in form of [left, mid, right]. The default is None.</p></li>
+<li><p><strong>P_fork_names</strong> (<em>array</em><em> of </em><em>string</em><em>, </em><em>optional</em>) – Names of points in P_df in form of [left, mid, right].
+The default is None.</p></li>
 <li><p><strong>w_func</strong> (<em>function</em><em>, </em><em>optional</em>) – Function of bending line. The default is None.</p></li>
 <li><p><strong>w_params</strong> (<em>array</em><em> or </em><em>pandas.Series</em><em>, </em><em>optional</em>) – Parameters of function of bending line per step. The default is None.</p></li>
-<li><p><strong>Length_det</strong> (<em>float</em><em>, </em><em>optional</em>) – Determination length between left and right point to calculate. The default is None.</p></li>
+<li><p><strong>Length_det</strong> (<em>float</em><em>, </em><em>optional</em>) – Determination length between left and right point to calculate.
+The default is None.</p></li>
 <li><p><strong>comp</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Compression mode.The default is True.</p></li>
 <li><p><strong>name</strong> (<em>string</em><em>, </em><em>optional</em>) – Name of operation. The default is ‘B’.</p></li>
 <li><p><strong>det_opt</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – Definable method for determination.
@@ -589,9 +632,10 @@ function of the internal forces (pure geometric fitting function).</p>
 <li><p><strong>w_params</strong> (<em>pandas.Series</em><em> of </em><em>dictionionaries</em>) – Parameters of function  of bending line per step.</p></li>
 <li><p><strong>length</strong> (<em>float</em>) – Length of span.</p></li>
 <li><p><strong>I_func</strong> (<em>np.poly1d function</em>) – Function of Moment of inertia to position on span (x-direction).</p></li>
-<li><p><strong>A_func</strong> (<em>np.poly1d function</em><em>, </em><em>optional</em>) – Function of Area to position on span (x-direction)..</p></li>
+<li><p><strong>A_func</strong> (<em>np.poly1d function</em><em>, </em><em>optional</em>) – Function of Area to position on span (x-direction).</p></li>
 <li><p><strong>CS_type</strong> (<em>string</em><em>, </em><em>optional</em>) – Cross-section type. The default is ‘Rectangle’.</p></li>
-<li><p><strong>kappa</strong> (<em>float</em><em>, </em><em>optional</em>) – Correction factor shear area. Depending to CS_type. The default is None.</p></li>
+<li><p><strong>kappa</strong> (<em>float</em><em>, </em><em>optional</em>) – Correction factor shear area. Depending to CS_type.
+The default is None.</p></li>
 <li><p><strong>poisson</strong> (<em>float</em><em>, </em><em>optional</em>) – Poisson’s ratio. The default is 0.3.</p></li>
 <li><p><strong>comp</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Compression mode.The default is True.</p></li>
 <li><p><strong>option</strong> (<em>string</em><em>, </em><em>optional</em>) – Determiantion option. Possible are ‘M’ and ‘M+V’. The default is “M+V”.</p></li>
@@ -610,8 +654,9 @@ function of the internal forces (pure geometric fitting function).</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.evaluation.YM_eva_method_D">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.bending.evaluation.</span></span><span class="sig-name descname"><span class="pre">YM_eva_method_D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Force_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_steps=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_func=&lt;function</span> <span class="pre">Weight_func&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wkwargs={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wargs=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pb_b=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name='D'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/bending/evaluation.html#YM_eva_method_D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.bending.evaluation.YM_eva_method_D" title="Permalink to this definition"></a></dt>
-<dd><p>Calculates the modulus of elasticity by matching the theoretical displacements
-from the determined integral of the bending line with the measured ones.</p>
+<dd><p>Calculates the modulus of elasticity by matching the theoretical
+displacements from the determined integral of the bending line with
+the measured ones.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -623,8 +668,10 @@ from the determined integral of the bending line with the measured ones.</p>
 <li><p><strong>rel_steps</strong> (<em>index</em><em> or </em><em>array</em><em>, </em><em>optional</em>) – Relevant steps for determination. The default is None.</p></li>
 <li><p><strong>weighted</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Switch for weighted averaging. The default is True.</p></li>
 <li><p><strong>weight_func</strong> (<em>function</em><em>, </em><em>optional</em>) – Weighting function for global averaging. The default is Weight_func.</p></li>
-<li><p><strong>wargs</strong> (<em>array</em><em>, </em><em>optional</em>) – Arguments for weighting function for global averaging. The default is [].</p></li>
-<li><p><strong>wkwargs</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Keyword arguments for weighting function for global averaging. The default is {}.</p></li>
+<li><p><strong>wargs</strong> (<em>array</em><em>, </em><em>optional</em>) – Arguments for weighting function for global averaging.
+The default is [].</p></li>
+<li><p><strong>wkwargs</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Keyword arguments for weighting function for global averaging.
+The default is {}.</p></li>
 <li><p><strong>pb_b</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Switch of progressbar. The default is True.</p></li>
 <li><p><strong>name</strong> (<em>string</em><em>, </em><em>optional</em>) – Name of operation. The default is ‘D’.</p></li>
 </ul>
@@ -642,7 +689,8 @@ from the determined integral of the bending line with the measured ones.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.evaluation.YM_eva_method_D_bend_df">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.bending.evaluation.</span></span><span class="sig-name descname"><span class="pre">YM_eva_method_D_bend_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">F</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/bending/evaluation.html#YM_eva_method_D_bend_df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.bending.evaluation.YM_eva_method_D_bend_df" title="Permalink to this definition"></a></dt>
-<dd><p>Calculates the deflection values via the determined integral of the bending line.</p>
+<dd><p>Calculates the deflection values via the determined integral of the
+bending line.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -654,7 +702,8 @@ from the determined integral of the bending line with the measured ones.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>m</strong> – Dataframe of deflections and parts of partwise integration to x-positions.</p>
+<dd class="field-even"><p><strong>m</strong> – Dataframe of deflections and parts of partwise integration to
+x-positions.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pandas.DataFrame</p>
@@ -690,12 +739,40 @@ determined integral of the bending line.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.evaluation.YM_eva_method_D_num">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.bending.evaluation.</span></span><span class="sig-name descname"><span class="pre">YM_eva_method_D_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Force_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_func=&lt;function</span> <span class="pre">Weight_func&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wargs=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wkwargs={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_nfev=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pb_b=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name='D'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/bending/evaluation.html#YM_eva_method_D_num"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.bending.evaluation.YM_eva_method_D_num" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate elastic modulus by minimization to method D residuals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P_df</strong> (<em>pandas.DataFrame</em>) – Dataframe of measured points to steps.</p></li>
+<li><p><strong>Force_ser</strong> (<em>pandas.Series</em>) – Series of force increments.</p></li>
+<li><p><strong>step_range</strong> (<em>pd.Index</em><em> or </em><em>range</em><em> or </em><em>list</em>) – Evaluation range.</p></li>
+<li><p><strong>Length</strong> (<em>float</em>) – Length of span.</p></li>
+<li><p><strong>func_I</strong> (<em>np.poly1d function</em>) – Function of Moment of inertia to position on span (x-direction).</p></li>
+<li><p><strong>weighted</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Switch for weighted averaging. The default is True.</p></li>
+<li><p><strong>weight_func</strong> (<em>function</em><em>, </em><em>optional</em>) – Weighting function for global averaging. The default is Weight_func.</p></li>
+<li><p><strong>wargs</strong> (<em>array</em><em>, </em><em>optional</em>) – Arguments for weighting function for global averaging.
+The default is [].</p></li>
+<li><p><strong>wkwargs</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Keyword arguments for weighting function for global averaging.
+The default is {}.</p></li>
+<li><p><strong>max_nfev</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of iterations. The default is 500.</p></li>
+<li><p><strong>pb_b</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Switch of progressbar. The default is True.</p></li>
+<li><p><strong>name</strong> (<em>string</em><em>, </em><em>optional</em>) – Name of operation. The default is ‘D’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>D_df</strong> – Evaluated elastic modulus and coefficent of determination per step.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.evaluation.YM_eva_method_D_res">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.bending.evaluation.</span></span><span class="sig-name descname"><span class="pre">YM_eva_method_D_res</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kws</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/bending/evaluation.html#YM_eva_method_D_res"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.bending.evaluation.YM_eva_method_D_res" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculate residues of method D.</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.evaluation.YM_eva_method_E">
@@ -740,8 +817,10 @@ possible are:</p>
 </p></li>
 <li><p><strong>opt_g_lim</strong> (<em>float</em><em>, </em><em>optional</em>) – Limiter for opt_g. The default is 0.5.</p></li>
 <li><p><strong>weight_func</strong> (<em>function</em><em>, </em><em>optional</em>) – Weighting function for global averaging. The default is Weight_func.</p></li>
-<li><p><strong>wargs</strong> (<em>array</em><em>, </em><em>optional</em>) – Arguments for weighting function for global averaging. The default is [].</p></li>
-<li><p><strong>wkwargs</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Keyword arguments for weighting function for global averaging. The default is {}.</p></li>
+<li><p><strong>wargs</strong> (<em>array</em><em>, </em><em>optional</em>) – Arguments for weighting function for global averaging.
+The default is [].</p></li>
+<li><p><strong>wkwargs</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Keyword arguments for weighting function for global averaging.
+The default is {}.</p></li>
 <li><p><strong>name</strong> (<em>string</em><em>, </em><em>optional</em>) – Name of operation. The default is ‘E’.</p></li>
 </ul>
 </dd>
@@ -755,7 +834,8 @@ possible are:</p>
 <li><p><strong>E_to_x</strong> (<em>TYPE</em>) – Dataframe of determined Young’s Moduli to span position (x-direction).</p></li>
 <li><p><strong>stress_df</strong> (<em>pandas.DataFrame</em>) – Dataframe of stress values.</p></li>
 <li><p><strong>strain_df</strong> (<em>pandas.DataFrame</em>) – Dataframe of strain values.</p></li>
-<li><p><strong>E_to_x_g</strong> (<em>pandas.DataFrame</em>) – Dataframe of determined Young’s Moduli to span position (x-direction) for global averaging.</p></li>
+<li><p><strong>E_to_x_g</strong> (<em>pandas.DataFrame</em>) – Dataframe of determined Young’s Moduli to span position (x-direction)
+for global averaging.</p></li>
 </ul>
 </p>
 </dd>
@@ -771,14 +851,17 @@ the differential equation of the bending line.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>c_func</strong> (<em>function</em>) – Function of curvature (2nd derivate) of bending line.</p></li>
-<li><p><strong>c_params</strong> (<em>pandas.Series</em><em> of </em><em>dictionionaries</em>) – Parameters of function of curvature (2nd derivate) of bending line per step.</p></li>
+<li><p><strong>c_params</strong> (<em>pandas.Series</em><em> of </em><em>dictionionaries</em>) – Parameters of function of curvature (2nd derivate) of bending line
+per step.</p></li>
 <li><p><strong>Force_ser</strong> (<em>pandas.Series</em>) – Series of force increments.</p></li>
 <li><p><strong>Length</strong> (<em>float</em>) – Length of span.</p></li>
 <li><p><strong>func_I</strong> (<em>Tnp.poly1d function</em>) – Function of Moment of inertia to position on span (x-direction).</p></li>
 <li><p><strong>weighted</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Switch for weighted averaging. The default is True.</p></li>
 <li><p><strong>weight_func</strong> (<em>function</em><em>, </em><em>optional</em>) – Weighting function for global averaging. The default is Weight_func.</p></li>
-<li><p><strong>wargs</strong> (<em>array</em><em>, </em><em>optional</em>) – Arguments for weighting function for global averaging. The default is [].</p></li>
-<li><p><strong>wkwargs</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Keyword arguments for weighting function for global averaging. The default is {}.</p></li>
+<li><p><strong>wargs</strong> (<em>array</em><em>, </em><em>optional</em>) – Arguments for weighting function for global averaging.
+The default is [].</p></li>
+<li><p><strong>wkwargs</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Keyword arguments for weighting function for global averaging.
+The default is {}.</p></li>
 <li><p><strong>xr_dict</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Dictionary of name to range of length around midspan for determination.
 The default is {‘fu’:1/1, ‘ha’:1/2, ‘th’:1/3}.</p></li>
 <li><p><strong>pb_b</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Switch of progressbar. The default is True.</p></li>
@@ -805,19 +888,24 @@ and deformation energy.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>Force_ser</strong> (<em>pandas.Series</em>) – Series of force increments.</p></li>
 <li><p><strong>w_func_f_0</strong> (<em>function</em>) – Function of bending line for external work calculation.</p></li>
-<li><p><strong>w_params</strong> (<em>pandas.Series</em><em> of </em><em>dictionionaries</em>) – Parameters of function of bending line per step for external work calculation.</p></li>
+<li><p><strong>w_params</strong> (<em>pandas.Series</em><em> of </em><em>dictionionaries</em>) – Parameters of function of bending line per step for external
+work calculation.</p></li>
 <li><p><strong>c_func</strong> (<em>function</em>) – Function of curvature (2nd derivate) of bending line.</p></li>
 <li><p><strong>r_func</strong> (<em>function</em>) – Function of rise (1st derivate) of bending line.</p></li>
-<li><p><strong>c_params</strong> (<em>pandas.Series</em><em> of </em><em>dictionionaries</em>) – Parameters of function of curvature (2nd derivate) of bending line per step.</p></li>
+<li><p><strong>c_params</strong> (<em>pandas.Series</em><em> of </em><em>dictionionaries</em>) – Parameters of function of curvature (2nd derivate) of bending
+line per step.</p></li>
 <li><p><strong>r_params</strong> (<em>pandas.Series</em><em> of </em><em>dictionionaries</em>) – Parameters of function of rise (1st derivate) of bending line per step.</p></li>
 <li><p><strong>length</strong> (<em>float</em>) – Length of span.</p></li>
 <li><p><strong>I_func</strong> (<em>np.poly1d function</em>) – Function of Moment of inertia to position on span (x-direction).</p></li>
-<li><p><strong>A_func</strong> (<em>np.poly1d function</em><em>, </em><em>optional</em>) – Function of Area to position on span (x-direction). The default is None.</p></li>
+<li><p><strong>A_func</strong> (<em>np.poly1d function</em><em>, </em><em>optional</em>) – Function of Area to position on span (x-direction).
+The default is None.</p></li>
 <li><p><strong>CS_type</strong> (<em>string</em><em>, </em><em>optional</em>) – Cross-section type. The default is ‘Rectangle’.</p></li>
-<li><p><strong>kappa</strong> (<em>float</em><em>, </em><em>optional</em>) – Correction factor shear area. Depending to CS_type. The default is None.</p></li>
+<li><p><strong>kappa</strong> (<em>float</em><em>, </em><em>optional</em>) – Correction factor shear area. Depending to CS_type.
+The default is None.</p></li>
 <li><p><strong>poisson</strong> (<em>float</em><em>, </em><em>optional</em>) – Poisson’s ratio. The default is 0.3.</p></li>
 <li><p><strong>comp</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Compression mode.The default is True.</p></li>
-<li><p><strong>option</strong> (<em>string</em><em>, </em><em>optional</em>) – Determiantion option. Possible are ‘ignore_V’ and ‘M+V’. The default is “M+V”.</p></li>
+<li><p><strong>option</strong> (<em>string</em><em>, </em><em>optional</em>) – Determiantion option. Possible are ‘ignore_V’ and ‘M+V’.
+The default is “M+V”.</p></li>
 <li><p><strong>name</strong> (<em>string</em><em>, </em><em>optional</em>) – Name of operation. The default is “G”.</p></li>
 </ul>
 </dd>
@@ -865,8 +953,8 @@ Returns a dataframe with steps as index and x as columns.</p>
 </section>
 <section id="module-exmecheva.bending.fitting">
 <span id="exmecheva-bending-fitting-module"></span><h2>exmecheva.bending.fitting module<a class="headerlink" href="#module-exmecheva.bending.fitting" title="Permalink to this heading"></a></h2>
-<p>Created on Fri Dec 15 11:40:57 2023</p>
-<p>&#64;author: mgebhard</p>
+<p>Fitting functionality for bending.</p>
+<p>&#64;author: MarcGebhardt</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.fitting.Multi_minimize">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.bending.fitting.</span></span><span class="sig-name descname"><span class="pre">Multi_minimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_d0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_d2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_nfev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nan_policy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">err_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_lB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_rB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'-y'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/bending/fitting.html#Multi_minimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.bending.fitting.Multi_minimize" title="Permalink to this definition"></a></dt>
@@ -1077,7 +1165,7 @@ First and last element replaced with input data.</p>
 <span id="exmecheva-bending-opt-mps-module"></span><h2>exmecheva.bending.opt_mps module<a class="headerlink" href="#module-exmecheva.bending.opt_mps" title="Permalink to this heading"></a></h2>
 <p>Adds funcionality for optical measured cartesian points.
 (Mostly vector geometry)</p>
-<p>&#64;author: Marc Gebhardt</p>
+<p>&#64;author: MarcGebhardt</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.bending.opt_mps.Point_df_combine">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.bending.opt_mps.</span></span><span class="sig-name descname"><span class="pre">Point_df_combine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deepcopy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/bending/opt_mps.html#Point_df_combine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.bending.opt_mps.Point_df_combine" title="Permalink to this definition"></a></dt>
@@ -1103,12 +1191,20 @@ First and last element replaced with input data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>Pmeas</strong> (<em>pandas.Dataframe</em><em>(</em><em>[</em><em>]</em><em>,</em><em>index=</em><em>[</em><em>'x'</em><em>,</em><em>'y'</em><em>,</em><em>'z'</em><em>]</em><em>,</em><em>columns=</em><em>[</em><em>'P1'</em><em>,</em><em>'P2'</em><em>,</em><em>...</em><em>]</em><em>,</em><em>dtype=float64</em><em>)</em>) – Cartesian coordinates of measured points, which should be fitted.</p></li>
-<li><p><strong>Pspec</strong> (<em>pandas.Dataframe</em><em>(</em><em>[</em><em>]</em><em>,</em><em>index=</em><em>[</em><em>'x'</em><em>,</em><em>'y'</em><em>,</em><em>'z'</em><em>]</em><em>,</em><em>columns=</em><em>[</em><em>'S1'</em><em>,</em><em>'S2'</em><em>,</em><em>...</em><em>]</em><em>,</em><em>dtype=float64</em><em>)</em>) – Cartesian coordinates of special points which should used for coordinate transformation.</p></li>
-<li><p><strong>Pmeas_Sdev</strong> (<em>pandas.Dataframe</em><em>(</em><em>[</em><em>]</em><em>,</em><em>index=</em><em>[</em><em>'Sx'</em><em>,</em><em>'Sy'</em><em>,</em><em>'Sz'</em><em>]</em><em>,</em><em>columns=</em><em>[</em><em>'P1'</em><em>,</em><em>'P2'</em><em>,</em><em>...</em><em>]</em><em>,</em><em>dtype=float64</em><em>)</em>) – Standard deviation of measured points, which should be fitted.</p></li>
-<li><p><strong>Pspec_Sdev</strong> (<em>pandas.Dataframe</em><em>(</em><em>[</em><em>]</em><em>,</em><em>index=</em><em>[</em><em>'Sx'</em><em>,</em><em>'Sy'</em><em>,</em><em>'Sz'</em><em>]</em><em>,</em><em>columns=</em><em>[</em><em>'S1'</em><em>,</em><em>'S2'</em><em>,</em><em>...</em><em>]</em><em>,</em><em>dtype=float64</em><em>)</em>) – Standard deviation of special points which should used for coordinate transformation.</p></li>
-<li><p><strong>dic_P_name_org1</strong> (<em>str</em>) – Name of point, which should be on the negativ x-axis. Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.</p></li>
-<li><p><strong>dic_P_name_org2</strong> (<em>str</em>) – Name of point, which should be on the positiv x-axis. Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.</p></li>
+<li><p><strong>Pmeas</strong> (<em>pandas.Dataframe</em><em>(</em><em>[</em><em>]</em><em>, </em><em>index=</em><em>[</em><em>'x'</em><em>,</em><em>'y'</em><em>,</em><em>'z'</em><em>]</em><em>,</em>) – columns=[‘P1’,’P2’,…], dtype=float64)
+Cartesian coordinates of measured points, which should be fitted.</p></li>
+<li><p><strong>Pspec</strong> (<em>pandas.Dataframe</em><em>(</em><em>[</em><em>]</em><em>, </em><em>index=</em><em>[</em><em>'x'</em><em>,</em><em>'y'</em><em>,</em><em>'z'</em><em>]</em><em>,</em>) – columns=[‘S1’,’S2’,…], dtype=float64)
+Cartesian coordinates of special points which should used for
+coordinate transformation.</p></li>
+<li><p><strong>Pmeas_Sdev</strong> (<em>pandas.Dataframe</em><em>(</em><em>[</em><em>]</em><em>, </em><em>index=</em><em>[</em><em>'Sx'</em><em>,</em><em>'Sy'</em><em>,</em><em>'Sz'</em><em>]</em><em>,</em>) – columns=[‘P1’,’P2’,…], dtype=float64)
+Standard deviation of measured points, which should be fitted.</p></li>
+<li><p><strong>Pspec_Sdev</strong> (<em>pandas.Dataframe</em><em>(</em><em>[</em><em>]</em><em>, </em><em>index=</em><em>[</em><em>'Sx'</em><em>,</em><em>'Sy'</em><em>,</em><em>'Sz'</em><em>]</em><em>,</em>) – columns=[‘S1’,’S2’,…], dtype=float64)
+Standard deviation of special points which should used for coordinate
+transformation.</p></li>
+<li><p><strong>dic_P_name_org1</strong> (<em>str</em>) – Name of point, which should be on the negativ x-axis.
+Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.</p></li>
+<li><p><strong>dic_P_name_org2</strong> (<em>str</em>) – Name of point, which should be on the positiv x-axis.
+Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

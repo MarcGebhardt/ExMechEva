@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Three point bending test evaluation,
+Three point bending test evaluation.
 
 @author: MarcGebhardt
 """

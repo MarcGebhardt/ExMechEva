@@ -214,7 +214,6 @@
 <span class="c1">#                          independent_vars=&#39;x&#39;, param_names=param_names,</span>
 <span class="c1">#                          name=name, **kws)</span>
 
-
 <div class="viewcode-block" id="Bend_func_cohort"><a class="viewcode-back" href="../../../exmecheva.bending.html#exmecheva.bending.bfunc_class.Bend_func_cohort">[docs]</a><span class="k">class</span> <span class="nc">Bend_func_cohort</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function collection of Subfunctions (Bend_func_sub)&quot;&quot;&quot;</span>
     
@@ -385,7 +384,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Bend line as lambdified Fourier series expansion&#39;</span>
     
             <span class="n">w_A_d0_str</span><span class="o">=</span><span class="s1">&#39;b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))+c*(x-xmin)+d&#39;</span>
-            <span class="c1"># w_variables_names=np.array([&#39;x&#39;,&#39;xmin&#39;,&#39;xmax&#39;,&#39;FP&#39;,&#39;b1&#39;,&#39;b2&#39;,&#39;b3&#39;,&#39;b4&#39;,&#39;c&#39;,&#39;d&#39;])</span>
             <span class="n">w_variables_names</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;xmin&#39;</span><span class="p">,</span><span class="s1">&#39;xmax&#39;</span><span class="p">,</span><span class="s1">&#39;FP&#39;</span><span class="p">,</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span><span class="s1">&#39;b2&#39;</span><span class="p">,</span><span class="s1">&#39;b3&#39;</span><span class="p">,</span><span class="s1">&#39;b4&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="s1">&#39;f_V_0&#39;</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="o">=</span><span class="n">Bend_func_cohort</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
             <span class="n">Bend_func_cohort</span><span class="o">.</span><span class="n">Init_fandds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_A</span><span class="p">,</span> <span class="n">expr_d0</span><span class="o">=</span><span class="n">w_A_d0_str</span><span class="p">,</span>
@@ -512,7 +510,7 @@
                                      <span class="n">var_types</span><span class="o">=</span><span class="n">w_variables_types</span><span class="p">,</span>
                                      <span class="n">option</span><span class="o">=</span><span class="s1">&#39;each_expr_to_all&#39;</span><span class="p">)</span>
             
-            <span class="n">w_M_d0_str</span> <span class="o">=</span><span class="s1">&#39;b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))&#39;</span>
+            <span class="n">w_M_d0_str</span> <span class="o">=</span> <span class="s1">&#39;b1*sin(FP*(x-xmin))+b2*sin(2*FP*(x-xmin))+b3*sin(3*FP*(x-xmin))+b4*sin(4*FP*(x-xmin))&#39;</span>
             <span class="n">w_M_d1_str</span> <span class="o">=</span> <span class="s1">&#39;FP*(b1*cos(FP*(x - xmin)) + 2*b2*cos(2*FP*(x - xmin)) + 3*b3*cos(3*FP*(x - xmin)) + 4*b4*cos(4*FP*(x - xmin)))&#39;</span>
             <span class="n">w_M_d2_str</span> <span class="o">=</span> <span class="s1">&#39;-FP**2*(b1*sin(FP*(x - xmin)) + 4*b2*sin(2*FP*(x - xmin)) + 9*b3*sin(3*FP*(x - xmin)) + 16*b4*sin(4*FP*(x - xmin)))&#39;</span>
             <span class="n">w_M_d0_func</span><span class="o">=</span><span class="n">FSE_4sin_d0</span>

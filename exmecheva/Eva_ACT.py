@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Axial comression test evaluation.
+Axial compression test evaluation.
 
 @author: MarcGebhardt
 

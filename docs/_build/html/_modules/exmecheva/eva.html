@@ -74,7 +74,8 @@
   <h1>Source code for exmecheva.eva</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Created on Wed Nov 29 12:23:31 2023</span>
+<span class="sd">Functionality for selection of evaluation (single, series or complete) and </span>
+<span class="sd">packing of HDF-file.</span>
 
 <span class="sd">@author: MarcGebhardt</span>
 <span class="sd">ToDo:</span>
@@ -218,18 +219,13 @@
         <span class="n">mfile_add</span> <span class="o">=</span> <span class="n">var_suffix</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         
         <span class="n">prot</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">combpaths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ser</span><span class="p">,</span><span class="s1">&#39;prot&#39;</span><span class="p">],</span><span class="o">**</span><span class="n">prot_rkws</span><span class="p">)</span>
-        <span class="c1"># _=eva_single_func(prot_ser=prot[prot.Designation==des].iloc[0], </span>
-        <span class="c1">#                   paths=combpaths.loc[ser],</span>
-        <span class="c1">#                   mfile_add = mfile_add,</span>
-        <span class="c1">#                   log_scopt=log_scopt,</span>
-        <span class="c1">#                   plt_scopt=plt_scopt)</span>
         
         <span class="k">try</span><span class="p">:</span>
             <span class="n">_</span> <span class="o">=</span> <span class="n">eva_single_func</span><span class="p">(</span><span class="n">prot_ser</span><span class="o">=</span><span class="n">prot</span><span class="p">[</span><span class="n">prot</span><span class="o">.</span><span class="n">Designation</span><span class="o">==</span><span class="n">des</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
-                                   <span class="n">paths</span><span class="o">=</span><span class="n">combpaths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ser</span><span class="p">],</span>
-                                   <span class="n">mfile_add</span> <span class="o">=</span> <span class="n">mfile_add</span><span class="p">,</span>
-                                   <span class="n">log_scopt</span><span class="o">=</span><span class="n">log_scopt</span><span class="p">,</span>
-                                   <span class="n">plt_scopt</span><span class="o">=</span><span class="n">plt_scopt</span><span class="p">)</span>
+                                <span class="n">paths</span><span class="o">=</span><span class="n">combpaths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ser</span><span class="p">],</span>
+                                <span class="n">mfile_add</span> <span class="o">=</span> <span class="n">mfile_add</span><span class="p">,</span>
+                                <span class="n">log_scopt</span><span class="o">=</span><span class="n">log_scopt</span><span class="p">,</span>
+                                <span class="n">plt_scopt</span><span class="o">=</span><span class="n">plt_scopt</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="n">txt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">   Exception:&#39;</span>
             <span class="n">txt</span><span class="o">+=</span><span class="n">emec</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">str_indent</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()),</span><span class="mi">5</span><span class="p">)</span>

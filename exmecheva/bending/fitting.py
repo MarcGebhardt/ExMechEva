@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec 15 11:40:57 2023
+Fitting functionality for bending.
 
-@author: mgebhard
+@author: MarcGebhardt
 """
 import copy
 import warnings

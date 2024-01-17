@@ -12,6 +12,10 @@ ENV/
 env.bak/
 venv.bak/
 
+#Packaging
+dist/
+*.egg-info/
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -21,4 +25,4 @@ profile_default/
 ipython_config.py
 
 # Sphinx documentation
-#docs/_build/
+# docs/_build/

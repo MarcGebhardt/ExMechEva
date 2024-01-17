@@ -3,7 +3,7 @@
 Adds funcionality for optical measured cartesian points.
 (Mostly vector geometry)
 
-@author: Marc Gebhardt
+@author: MarcGebhardt
 """
 import numpy as np
 import pandas as pd
@@ -45,18 +45,26 @@ def Point_df_transform(Pmeas, Pspec, Pmeas_Sdev, Pspec_Sdev,
 
     Parameters
     ----------
-    Pmeas : pandas.Dataframe([],index=['x','y','z'],columns=['P1','P2',...],dtype=float64)
+    Pmeas : pandas.Dataframe([], index=['x','y','z'], 
+                             columns=['P1','P2',...], dtype=float64)
         Cartesian coordinates of measured points, which should be fitted.
-    Pspec : pandas.Dataframe([],index=['x','y','z'],columns=['S1','S2',...],dtype=float64)
-        Cartesian coordinates of special points which should used for coordinate transformation.
-    Pmeas_Sdev : pandas.Dataframe([],index=['Sx','Sy','Sz'],columns=['P1','P2',...],dtype=float64)
+    Pspec : pandas.Dataframe([], index=['x','y','z'], 
+                             columns=['S1','S2',...], dtype=float64)
+        Cartesian coordinates of special points which should used for 
+        coordinate transformation.
+    Pmeas_Sdev : pandas.Dataframe([], index=['Sx','Sy','Sz'],
+                                  columns=['P1','P2',...], dtype=float64)
         Standard deviation of measured points, which should be fitted.
-    Pspec_Sdev : pandas.Dataframe([],index=['Sx','Sy','Sz'],columns=['S1','S2',...],dtype=float64)
-        Standard deviation of special points which should used for coordinate transformation.
+    Pspec_Sdev : pandas.Dataframe([], index=['Sx','Sy','Sz'],
+                                  columns=['S1','S2',...], dtype=float64)
+        Standard deviation of special points which should used for coordinate 
+        transformation.
     dic_P_name_org1 : str
-        Name of point, which should be on the negativ x-axis. Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.
+        Name of point, which should be on the negativ x-axis. 
+        Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.
     dic_P_name_org2 : str
-        Name of point, which should be on the positiv x-axis. Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.
+        Name of point, which should be on the positiv x-axis. 
+        Origin is in the middle between dic_P_name_org1 and dic_P_name_org2.
 
 
     Returns
@@ -204,17 +212,23 @@ def Point_df_idx(df, steps=None, points=None, coords=None,
         if type(dfs) is pd.core.series.Series:
             if option=='Regex':
                 #points=dfs.droplevel(level=1).str.contains(pat=points,na=False,regex=True)
-                points=dfs.index.droplevel(level=1).str.contains(pat=points,na=False,regex=True)
+                points=dfs.index.droplevel(level=1).str.contains(
+                    pat=points,na=False,regex=True
+                    )
             dfs=dfs.loc[points,:]
         else:
             if option=='Regex':
-                points=dfs.columns.droplevel(level=1).str.contains(pat=points,na=False,regex=True)
+                points=dfs.columns.droplevel(level=1).str.contains(
+                    pat=points,na=False,regex=True
+                    )
             dfs=dfs.loc(axis=1)[points,:]
 
     if coordsbool:
         if type(dfs) is pd.core.series.Series:
             if option=='Regex':
-                coords=dfs.index.droplevel(level=0).str.contains(pat=coords,na=False,regex=True)
+                coords=dfs.index.droplevel(level=0).str.contains(
+                    pat=coords,na=False,regex=True
+                    )
             #     dfs=dfs.loc[:,coords]
             # else:
             #     dfs=dfs.loc[:,[coords]]
@@ -225,7 +239,9 @@ def Point_df_idx(df, steps=None, points=None, coords=None,
                 dfs=dfs.loc[:,[coords]]
         else:
             if option=='Regex':
-                coords=dfs.columns.droplevel(level=0).str.contains(pat=coords,na=False,regex=True)
+                coords=dfs.columns.droplevel(level=0).str.contains(
+                    pat=coords,na=False,regex=True
+                    )
             #     dfs=dfs.loc(axis=1)[:,coords]
             # else:
             #     dfs=dfs.loc(axis=1)[:,[coords]]
