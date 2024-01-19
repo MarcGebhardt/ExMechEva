@@ -5,7 +5,7 @@ Simple example using data/ATT for showing evaluation.
 """
 
 import os 
-import sys
+# import sys
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -78,6 +78,7 @@ def main():
     combpaths['meas'] = protpaths['path_main']+protpaths['path_con']
     combpaths['dic']  = protpaths['path_main']+protpaths['path_dic']
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']
+    
     # Additional path for hdf-packing
     out_path=main_path+"Complete_Eva\\ATT-Summary" 
     if option == 'pack-all': out_path+='-all'  

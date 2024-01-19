@@ -5,7 +5,7 @@ Axial compression test evaluation.
 @author: MarcGebhardt
 
 ToDo:
-    - reimplement optical measurment usage ("OPT_DIC")
+    - reimplement optical measurement usage ("OPT_DIC")
 """
 
 #%% 0 Imports
@@ -890,21 +890,15 @@ def ACT_single(prot_ser, paths, mfile_add='',
     E_lsq=E_lsq_A
 
     E_Methods_df = E_A_df
-    E_agg_funcs = ['mean',emec.stat_ext.meanwoso,'median','std','max','min']
+    E_agg_funcs = ['mean',emec.stat_ext.meanwoso,'median',
+                   'std',emec.stat_ext.stdwoso,
+                   emec.stat_ext.cv, emec.stat_ext.cvwoso,
+                   'min','max']
     
     E_inc_F_comp = E_Methods_df.loc[sf_eva_con].agg(E_agg_funcs)
-    E_inc_F_comp.loc['stdn']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['mean'].abs()
-    E_inc_F_comp.loc['stdnwoso']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['meanwoso'].abs()
-    
     E_inc_R_comp = E_Methods_df.loc[sr_eva_con].agg(E_agg_funcs)
-    E_inc_R_comp.loc['stdn']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['mean'].abs()
-    E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['meanwoso'].abs()
-    
     if _opts['OPT_Determination_SecHard']:
         E_inc_S_comp = E_Methods_df.loc[ss_eva_con].agg(E_agg_funcs)
-        E_inc_S_comp.loc['stdn']=E_inc_S_comp.loc['std']/E_inc_S_comp.loc['mean'].abs()
-        E_inc_S_comp.loc['stdnwoso']=E_inc_S_comp.loc['std']/E_inc_S_comp.loc['meanwoso'].abs()
-
         
     log_custom("\n\n  Method comaparison:", **log_scoptf)
     log_custom("\n  - least square fit", **log_scoptf)

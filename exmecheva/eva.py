@@ -93,7 +93,7 @@ def series(eva_single_func, paths, no_stats_fc, var_suffix,
 
 def selector(eva_single_func, option, combpaths, no_stats_fc,
              var_suffix=[""], ser='', des='', out_path='',
-             prot_rkws=dict(header=11, skiprows=range(12,13),index_col=0),
+             prot_rkws=dict(header=11, skiprows=range(12,13), index_col=0),
              log_scopt={'logfp':None, 'output_lvl': 1,
                         'logopt':True, 'printopt':False},
              plt_scopt={'tight':True, 'show':True, 
@@ -143,9 +143,7 @@ def selector(eva_single_func, option, combpaths, no_stats_fc,
     """
     if option == 'single':
         mfile_add = var_suffix[0]
-        
         prot=pd.read_excel(combpaths.loc[ser,'prot'],**prot_rkws)
-        
         try:
             _ = eva_single_func(prot_ser=prot[prot.Designation==des].iloc[0], 
                                 paths=combpaths.loc[ser],
@@ -178,23 +176,26 @@ def selector(eva_single_func, option, combpaths, no_stats_fc,
                    plt_scopt=plt_scopt)
             
     elif option == 'pack':
+        emec.loadnsave.comb_logs(in_paths=combpaths, out_path=out_path)
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         emec.loadnsave.pack_hdf(
             in_paths=packpaths, out_path = out_path,
             hdf_naming = 'Designation', var_suffix = var_suffix,
             h5_conc = 'Material_Parameters', h5_data = 'Measurement',
-            opt_pd_out = False, opt_hdf_save = True
+            prot_rkws=prot_rkws, opt_pd_out = False, opt_hdf_save = True
             )
         print("Successfully created %s"%out_path)
+        
     elif option == 'pack-all':
+        emec.loadnsave.comb_logs(in_paths=combpaths, out_path=out_path)
         packpaths = combpaths[['prot','out']]
         packpaths.columns=packpaths.columns.str.replace('out','hdf')
         emec.loadnsave.pack_hdf_mul(
             in_paths=packpaths, out_path = out_path,
             hdf_naming = 'Designation', var_suffix = var_suffix,
             h5_conc = 'Material_Parameters',
-            opt_pd_out = False, opt_hdf_save = True
+            prot_rkws=prot_rkws, opt_pd_out = False, opt_hdf_save = True
             )
         print("Successfully created %s"%out_path)
         

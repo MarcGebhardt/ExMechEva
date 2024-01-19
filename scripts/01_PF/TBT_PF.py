@@ -44,8 +44,8 @@ def main():
     option = 'complete'
     ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
     option = 'pack'
-    # ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
-    # option = 'pack-all'
+    ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
+    option = 'pack-all'
     
     #PF:
     ser='PT5'
@@ -91,7 +91,7 @@ def main():
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
         
     # Additional path for hdf-packing 
-    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240110/TBT/B3-B7_TBT-Summary"
+    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240118/TBT/B3-B7_TBT-Summary"
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function

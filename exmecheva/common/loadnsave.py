@@ -140,19 +140,86 @@ def file_namer_interpreter(fstr, prot_ser, path, variant='',
             fname+=var_df.loc[i,'Value']
     fname+=fdend
     return fname
+#%% Log-files
+def comb_logs(in_paths, out_path):
+    """
+    Generates a combined log-file of a series of log-files.
 
-#%%% HDF
+    Parameters
+    ----------
+    in_paths : pd.DataFrame with columns ['prot','out']
+        Path for finding protocol and evaluation data.
+    out_path : string
+        Output path of combined log-file (without extension).
+
+    Returns
+    -------
+    None.
+
+    """
+    lps = in_paths['out'] + in_paths['prot'].apply(
+        lambda x: os.path.basename(x).replace('.xlsx','.log')
+        )
+    txt=''
+    for i in lps.index:
+        txt+='{}:\n({})'.format(i,lps.loc[i])
+        l=open(lps.loc[i],"r")
+        txt+=''.join(l.readlines())
+        l.close()
+        txt+='\n'+'-'*100+'\n'
+    comblog = open(out_path+'.log','w')
+    comblog.write(txt)
+    comblog.close()
+    
+#%% HDF
 def pack_hdf(in_paths, out_path, 
              hdf_naming = 'Designation', var_suffix = [""],
              h5_conc = 'Material_Parameters', h5_data = 'Measurement',
+             prot_rkws=dict(header=11, skiprows=range(12,13), index_col=0),
              opt_pd_out = True, opt_hdf_save = True):
+    """
+    Packs specimenwise evaluated measurements (HDF-files, *.h5) to a 
+    HDF-database containing material parameters (key is 'Summary') and 
+    evaluated measurements (key is 'Test_Data').
+
+    Parameters
+    ----------
+    in_paths : pd.DataFrame with columns ['prot','hdf']
+        Path for finding protocol and evaluation data.
+    out_path : string
+        Output path of created database.
+    hdf_naming : string, optional
+        Naming rule of evaluated measurements (*.h5). 
+        The default is 'Designation'.
+    var_suffix : list of strings, optional
+        Suffix of hdf naming rule. The default is [""].
+    h5_conc : str, optional
+        Identifier of material parameters conclusion in evaluated measurements 
+        (*.h5). The default is 'Material_Parameters'.
+    h5_data : str, optional
+        Identifier of measured and evaluated curves in evaluated measurements 
+        (*.h5). The default is 'Measurement'.
+    prot_rkws : dict, optional
+        Dictionary for reading protocol. Must be keyword in pandas.read_excel.
+        The default is dict(header=11, skiprows=range(12,13), index_col=0).
+    opt_pd_out : bool, optional
+        Option for pandas object output. The default is True.
+    opt_hdf_save : bool, optional
+        Option for hdf saving. The default is True.
+
+    Returns
+    -------
+    dfc : pd.DataFrame
+        Summary of protocol and material data.
+    dfd : pd.DataFrame
+        Summary of test data.
+
+    """
     
     dfc=pd.DataFrame([],dtype='float64')
     dfd=pd.Series([],dtype='object')
     for p in in_paths.index:
-        prot=pd.read_excel(in_paths.loc[p,'prot'],
-                           header=11, skiprows=range(12,13),
-                           index_col=0)
+        prot=pd.read_excel(in_paths.loc[p,'prot'], **prot_rkws)
         for ms in var_suffix:
             for i in prot[hdf_naming].loc[np.invert(prot[hdf_naming].isna())]:
                 if os.path.exists(in_paths.loc[p,'hdf']+i+ms+'.h5'):
@@ -171,8 +238,6 @@ def pack_hdf(in_paths, out_path,
                     dfp=prot.loc[[prot.loc[prot[hdf_naming]==i].index[0]]]
                     dfp.index=dfp.index+ms
                     dfc = dfc.append(dfp)
-                    
-            
     if opt_hdf_save:
         HDFst = pd.HDFStore(out_path+'.h5')
         HDFst['Summary'] = dfc
@@ -184,15 +249,53 @@ def pack_hdf(in_paths, out_path,
 def pack_hdf_mul(in_paths, out_path, 
                  hdf_naming = 'Designation', var_suffix = [""],
                  h5_conc = 'Material_Parameters', h5_data = 'all',
+                 prot_rkws=dict(header=11, skiprows=range(12,13), index_col=0),
                  opt_pd_out = True, opt_hdf_save = True):
-    
+    """
+    Packs specimenwise evaluated measurements (HDF-files, *.h5) to a 
+    HDF-database containing material parameters key is 'Summary' and other 
+    included data (key starting with 'Add_').
+    Only all keys in single hdf-files are implemented. (High storage 
+    requirements!)
+
+    Parameters
+    ----------
+    in_paths : pd.DataFrame with columns ['prot','hdf']
+        Path for finding protocol and evaluation data.
+    out_path : string
+        Output path of created database.
+    hdf_naming : string, optional
+        Naming rule of evaluated measurements (*.h5). 
+        The default is 'Designation'.
+    var_suffix : list of strings, optional
+        Suffix of hdf naming rule. The default is [""].
+    h5_conc : str, optional
+        Identifier of material parameters conclusion in evaluated measurements 
+        (*.h5). The default is 'Material_Parameters'.
+    h5_data : str, optional
+        Identifier for additional packaging. Only 'all' (packing all keys from 
+        input hfd's)implemented. The default is 'all'.
+    prot_rkws : dict, optional
+        Dictionary for reading protocol. Must be keyword in pandas.read_excel.
+        The default is dict(header=11, skiprows=range(12,13), index_col=0).
+    opt_pd_out : bool, optional
+        Option for pandas object output. The default is True.
+    opt_hdf_save : bool, optional
+        Option for hdf saving. The default is True.
+
+    Returns
+    -------
+    dfc : pd.DataFrame
+        Summary of protocol and material data.
+    dfd : pd.DataFrame
+        Summary of test data.
+
+    """
     dfc=pd.DataFrame([],dtype='float64')
     dfd=pd.Series([],dtype='object')
     # dfd={}
     for p in in_paths.index:
-        prot=pd.read_excel(in_paths.loc[p,'prot'],
-                           header=11, skiprows=range(12,13),
-                           index_col=0)
+        prot=pd.read_excel(in_paths.loc[p,'prot'], **prot_rkws)
         for ms in var_suffix:
             for i in prot[hdf_naming].loc[np.invert(prot[hdf_naming].isna())]:
                 if os.path.exists(in_paths.loc[p,'hdf']+i+ms+'.h5'):

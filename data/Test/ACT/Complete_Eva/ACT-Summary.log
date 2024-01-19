@@ -1,0 +1,15 @@
+TS:
+(D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ACT\Series_Test\eva\ACT_Protocol_Series_Test.log)
+ paths:
+  prot: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ACT\Series_Test\ACT_Protocol_Series_Test.xlsx
+  opts: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ACT\Series_Test\com_eva_opts.json
+  meas: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ACT\Series_Test\meas\conventional\
+  dic: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ACT\Series_Test\meas\optical\
+  out: D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ACT\Series_Test\eva\
+ evaluation: 1 / 1
+['tl21x']
+ not evaluated: 0 / 1
+[]
+ tl21x
+   Eva_time: 4.52054 s (Control: )
+----------------------------------------------------------------------------------------------------

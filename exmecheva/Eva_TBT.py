@@ -2265,34 +2265,25 @@ def TBT_single(prot_ser, paths, mfile_add='',
                                        timings.iloc[-1]-timings.iloc[0]),
                    **log_scopt)    
 
+    E_lsq=pd.concat([E_lsq_A, E_lsq_B],axis=1)
 
-    E_lsq=pd.concat([E_lsq_A,E_lsq_B],axis=1)
-
-    # E_Methods = pd.concat([E_A,E_B,E_C,E_D,E_E,E_F,E_G],axis=1)
-    E_Methods_df = pd.concat([E_A_df,E_B_df,E_C_df,E_D_df,E_E_df,E_F_df,E_G_df],axis=1)
+    E_Methods_df = pd.concat([
+        E_A_df, E_B_df, E_C_df, E_D_df, E_E_df, E_F_df, E_G_df
+        ],axis=1)
     E_agg_funcs = ['mean',emec.stat_ext.meanwoso,'median',
-                   'std',emec.stat_ext.stdwoso,'max','min']
+                   'std',emec.stat_ext.stdwoso,
+                   emec.stat_ext.cv, emec.stat_ext.cvwoso,
+                   'min','max']
     
     cols_con=E_Methods_df.columns.str.contains('0')
-    # E_inc_F_comp_con = emec.pd_ext.pd_agg(E_Methods_df.loc[sf_eva_con,cols_con])
-    # E_inc_F_comp_opt = emec.pd_ext.pd_agg(E_Methods_df.loc[sf_eva_dic,np.invert(cols_con)])
     E_inc_F_comp_con = E_Methods_df.loc[sf_eva_con,cols_con].agg(E_agg_funcs)
     E_inc_F_comp_opt = E_Methods_df.loc[sf_eva_dic,np.invert(cols_con)].agg(E_agg_funcs)
     E_inc_F_comp = pd.concat([E_inc_F_comp_con,E_inc_F_comp_opt],axis=1)
-    E_inc_F_comp.loc['stdn']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['mean'].abs()
-    # E_inc_F_comp.loc['stdnwoso']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['meanwoso'].abs()
-    E_inc_F_comp.loc['stdnwoso']=E_inc_F_comp.loc['stdwoso']/E_inc_F_comp.loc['meanwoso'].abs()
-    # E_inc_F_comp = emec.pd_ext.pd_agg(E_Methods_df.loc[sf_eva_dic])
 
     cols_con=E_Methods_df.columns.str.contains('0')
-    # E_inc_R_comp_con = emec.pd_ext.pd_agg(E_Methods_df.loc[sr_eva_con,cols_con])
-    # E_inc_R_comp_opt = emec.pd_ext.pd_agg(E_Methods_df.loc[sr_eva_dic,np.invert(cols_con)])
     E_inc_R_comp_con = E_Methods_df.loc[sr_eva_con,cols_con].agg(E_agg_funcs)
     E_inc_R_comp_opt = E_Methods_df.loc[sr_eva_dic,np.invert(cols_con)].agg(E_agg_funcs)
     E_inc_R_comp = pd.concat([E_inc_R_comp_con,E_inc_R_comp_opt],axis=1)
-    E_inc_R_comp.loc['stdn']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['mean'].abs()
-    # E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['meanwoso'].abs()
-    E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['stdwoso']/E_inc_R_comp.loc['meanwoso'].abs()
     
     log_custom("\n\n  Method comaparison:",**log_scoptf)
     log_custom("\n  - least square fit",**log_scoptf)
@@ -2988,6 +2979,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
         'func_A': func_A, 'func_I': func_I
         })
     HDFst['Timings'] = timings
+    HDFst['Options'] = _opts
     
     # HDFst['Bending_Legion'] = bl
     HDFst['Opt_Geo_Fit'] = geo_fit

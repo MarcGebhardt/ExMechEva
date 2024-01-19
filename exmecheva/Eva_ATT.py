@@ -5,7 +5,7 @@ Axial tensile test evaluation.
 @author: MarcGebhardt
 
 ToDo:
-    - reimplement optical measurment usage ("OPT_DIC")
+    - reimplement optical measurement usage ("OPT_DIC")
 """
 
 #%% 0 Imports
@@ -614,7 +614,6 @@ def ATT_single(prot_ser, paths, mfile_add='',
         log_custom("\n  %d cycles, with result!\n    -> Using last %.3f s as delimiter."
                    %(i,dt_drif_schg),**log_scopt)
         
-        
         zyklus=1
         VIP_PMf=pd.Series([],dtype='int64') #konventionell-Kraft
         VIP_PMw=pd.Series([],dtype='int64') #konventionell-Weg
@@ -705,7 +704,7 @@ def ATT_single(prot_ser, paths, mfile_add='',
     mun_tmp = messu.loc[VIP_messu['U']-1:VIP_messu['E']-1]
     if mun_tmp.driF_schg.any():
         i=mun_tmp.loc[mun_tmp.driF_schg].index[0]
-        VIP_messu['B']  =mun_tmp.driF.loc[i:i+tmp_odd1].idxmin()-2 # statt allgemeinem Minimum bei größtem Kraftabfall nahe Maximalkraft, -2 da differenz aussage über vorherigen punkt
+        VIP_messu['B'] = mun_tmp.driF.loc[i:i+tmp_odd1].idxmin()-2 # statt allgemeinem Minimum bei größtem Kraftabfall nahe Maximalkraft, -2 da differenz aussage über vorherigen punkt
         if VIP_messu['B']<VIP_messu['U']: VIP_messu['B']=VIP_messu['U']
     # # if (mun_tmp['driF'].min()/mun_tmp['driF'].quantile(0.25))>=2:
     # if (mun_tmp['driF'].min()/mun_tmp['driF'].quantile(0.25))>=1.0:
@@ -713,12 +712,10 @@ def ATT_single(prot_ser, paths, mfile_add='',
     else:
         log_custom('\n   Fb not reliably determinable!',**log_scoptf)
             
-    
     # ftmp=float(messu.Force.loc[VIP_messu[_opts['OPT_YM_Determination_range'][2]]]*_opts['OPT_YM_Determination_range'][0])
     # VIP_messu['F1']=abs(messu.Force.loc[:VIP_messu[_opts['OPT_YM_Determination_range'][2]]]-ftmp).idxmin()
     # ftmp=float(messu.Force.loc[VIP_messu[_opts['OPT_YM_Determination_range'][2]]]*_opts['OPT_YM_Determination_range'][1])
     # VIP_messu['F2']=abs(messu.Force.loc[:VIP_messu[_opts['OPT_YM_Determination_range'][2]]]-ftmp).idxmin()
-    
     
     if (VIP_messu['Y']>VIP_messu['F1']) and (VIP_messu['Y']<VIP_messu['F2']): # Test ob Streckgrenze zwischen F1 und F2 liegt
         VIP_messu['F2']=VIP_messu['Y']
@@ -727,7 +724,6 @@ def ATT_single(prot_ser, paths, mfile_add='',
         # VIP_dicu['F4']=VIP_dicu['Y']
         log_custom("\n   F2 set on Y (Force-rise between F1 and old F2)",
                    **log_scoptf)
-    
     
     VIP_messu=VIP_messu.sort_values()
     if _opts['OPT_DIC']:
@@ -958,17 +954,14 @@ def ATT_single(prot_ser, paths, mfile_add='',
     E_lsq=E_lsq_A
 
     E_Methods_df = E_A_df
-    E_agg_funcs = ['mean',emec.stat_ext.meanwoso,'median','std','max','min']
+    E_agg_funcs = ['mean',emec.stat_ext.meanwoso,'median',
+                   'std',emec.stat_ext.stdwoso,
+                   emec.stat_ext.cv, emec.stat_ext.cvwoso,
+                   'min','max']
     
     E_inc_F_comp = E_Methods_df.loc[sf_eva_con].agg(E_agg_funcs)
-    E_inc_F_comp.loc['stdn']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['mean'].abs()
-    E_inc_F_comp.loc['stdnwoso']=E_inc_F_comp.loc['std']/E_inc_F_comp.loc['meanwoso'].abs()
-    
     E_inc_R_comp = E_Methods_df.loc[sr_eva_con].agg(E_agg_funcs)
-    E_inc_R_comp.loc['stdn']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['mean'].abs()
-    E_inc_R_comp.loc['stdnwoso']=E_inc_R_comp.loc['std']/E_inc_R_comp.loc['meanwoso'].abs()
     
-        
     log_custom("\n\n  Method comaparison:",**log_scoptf)
     log_custom("\n  - least square fit",**log_scoptf)
     log_custom(log_cind('\n'+E_lsq.loc[['E','Rquad']].T.to_string()),
@@ -1469,7 +1462,7 @@ def ATT_single(prot_ser, paths, mfile_add='',
     HDFst['Measurement_FP'] = messu_FP
     HDFst['Material_Parameters'] = out_tab
     HDFst['Timings'] = timings
-        
+    HDFst['Options'] = _opts
     if _opts['OPT_DIC']:
         HDFst['VIP'] = pd.concat([VIP_messu,VIP_dicu],axis=1)
     else:

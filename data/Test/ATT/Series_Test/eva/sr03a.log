@@ -1,5 +1,5 @@
   Parameters of evaluation:
-   Evaluation start time:     2024-01-17 17:27:04
+   Evaluation start time:     2024-01-19 17:01:00
    Evaluation options:        D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\com_eva_opts.json
    Path protocol:             D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\ATT_Protocol_Series_Test.xlsx
    Path measurement:          D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\meas\conventional\WR03A.xlsx
@@ -22,35 +22,35 @@
     Volume det=IN: True (0.377-0.377)
  ====================================================================================================
  ### 3 Read in measurements ###
-   Timing 3.000000: 0.00171 s
-   Timing 3.100000: 0.00224 s
-   Timing 3.200000: 0.45875 s
-   Timing 3.300000: 0.46009 s
+   Timing 3.000000: 0.00217 s
+   Timing 3.100000: 0.00267 s
+   Timing 3.200000: 0.46595 s
+   Timing 3.300000: 0.46729 s
  ====================================================================================================
  ### 4 Merging measurements ###
-   Timing 4.000000: 0.46054 s
-   Timing 4.100000: 0.46100 s
-   Timing 4.200000: 0.46222 s
-   Timing 4.300000: 0.46775 s
+   Timing 4.000000: 0.46767 s
+   Timing 4.100000: 0.46810 s
+   Timing 4.200000: 0.46918 s
+   Timing 4.300000: 0.47456 s
  ====================================================================================================
  ### 5 Start and End ###
-   Timing 5.000000: 0.46812 s
-   Timing 5.100000: 0.46858 s
+   Timing 5.000000: 0.47496 s
+   Timing 5.100000: 0.47541 s
  ----------------------------------------------------------------------------------------------------
    Start of evaluation after 3.600 seconds, corresponds to 0.04113 % of max. force.
-   Timing 5.200000: 0.81984 s
+   Timing 5.200000: 0.80725 s
  ====================================================================================================
  ### 6 Evaluation ###
-   Timing 6.000000: 1.09416 s
+   Timing 6.000000: 1.08423 s
  ----------------------------------------------------------------------------------------------------
  ### -6.2 Determine evaluation curves ###
-   Timing 6.200000: 1.09492 s
+   Timing 6.200000: 1.08487 s
    Last 10 monoton increasing periods:
             Stress  Strain
     Epoche     380     515
  ----------------------------------------------------------------------------------------------------
  ### -6.3 Determine points of interest ###
-   Timing 6.310000: 1.33478 s
+   Timing 6.310000: 1.32225 s
   0 cycles, with result!
     -> Using last 0.100 s as delimiter.
  ----------------------------------------------------------------------------------------------------
@@ -79,14 +79,14 @@ F1         270     270      NaN        0      NaN
   Differenz Kraft- zu Wegextreme-PM (MW):  -0.350000
   Differenz Kraft- zu Wegextreme-DIC (MW): nan
     Fy set on datapoint of Fu!
-   Timing 6.320000: 1.38554 s
+   Timing 6.320000: 1.37233 s
    F3 set to start of diff.-quot. determination 
    Datapoints (con) between F1-F2: 10 and F3-F4: 15.
  ----------------------------------------------------------------------------------------------------
  ### -6.4 Determine Youngs-Moduli ###
-   Timing 6.400000: 1.77780 s
-   Timing 6.410000: 1.77862 s
-   Timing 6.480000: 2.38448 s
+   Timing 6.400000: 1.71221 s
+   Timing 6.410000: 1.71323 s
+   Timing 6.480000: 2.38315 s
 
   Method comaparison:
   - least square fit
@@ -117,14 +117,14 @@ F1         270     270      NaN        0      NaN
 
   - incremental (F,R):
 
-               mean    meanwoso      median         std          max         min     stdn  stdnwoso
-   A0Al  971.930282  866.766506  871.112416  324.361958  1946.354906  841.112858  0.33373  0.374221
+               mean    meanwoso      median         std    stdwoso       cv    cvwoso         min          max
+   A0Al  971.930282  866.766506  871.112416  324.361958  16.909431  0.33373  0.019509  841.112858  1946.354906
 
-               mean    meanwoso      median        std         max         min      stdn  stdnwoso
-   A0Al  764.176098  764.176098  773.861092  93.469049  877.087727  585.323465  0.122313  0.122313
+               mean    meanwoso      median        std    stdwoso        cv    cvwoso         min         max
+   A0Al  764.176098  764.176098  773.861092  93.469049  93.469049  0.122313  0.122313  585.323465  877.087727
  ----------------------------------------------------------------------------------------------------
  ### -6.5 Determine yield point ###
-   Timing 6.500000: 2.40206 s
+   Timing 6.500000: 2.40664 s
   Determination of yield strain-conventional:
 
     YK set on F4 (fixed)
@@ -134,11 +134,11 @@ F1         270     270      NaN        0      NaN
     Y2 set on intersection with 0.500 % plastic strain (option=n)
  ----------------------------------------------------------------------------------------------------
  ### -6.6 Determine final stress-strain curve ###
-   Timing 6.600000: 3.12848 s
+   Timing 6.600000: 3.11973 s
    Strain offset about 0.00202
  ====================================================================================================
  ### 7 Outputs ###
-   Timing 7.000000: 3.13325 s
-   Timing 7.100000: 3.13376 s
-   Timing 7.200000: 3.19489 s
-   Timing 7.300000: 4.79234 s
+   Timing 7.000000: 3.12468 s
+   Timing 7.100000: 3.12524 s
+   Timing 7.200000: 3.18532 s
+   Timing 7.300000: 4.82534 s

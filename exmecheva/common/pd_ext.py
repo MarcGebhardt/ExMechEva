@@ -14,8 +14,10 @@ from .analyze import (sign_n_change, normalize)
 
 #%% tests
 def pd_isDF(pdo):
+    """Tests if object is instance of pandas dataframe"""
     return isinstance(pdo, pd.core.base.ABCDataFrame)
 def pd_isSer(pdo):
+    """Tests if  object is instance of pandas series"""
     return isinstance(pdo, pd.core.base.ABCSeries)
 
 #%% indexing

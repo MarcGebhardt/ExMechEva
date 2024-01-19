@@ -4,17 +4,57 @@ Created on Mon Dec  4 17:54:05 2023
 
 @author: mgebhard
 """
+import string
 import numpy as np
 import pandas as pd
 from scipy import stats
+import statsmodels
 from statsmodels.stats.multicomp import MultiComparison
+import scikit_posthocs as sck_ph
+import seaborn as sb #bootstrapping method
 
+from .helper import type_str_return
 from .pd_ext import (pd_outsort, deal_dupl_index)
 from .output import str_indent
 
 #%% statistical outliers
 def stat_outliers(data, option='IQR', span=1.5,
                   out='all', outsort = 'ascending'):
+    """
+    Determine statistical outliers.
+
+    Parameters
+    ----------
+    data : pd.Series or pd.DataFrame
+        Input data.
+    option : str, optional
+        Determination option. Only 'IQR': interquartile-range-rule implemented.
+        The default is 'IQR'.
+    span : float, optional
+        Span for inclusion (p.e.: 'IQr' and 1.5 leads to standard 
+        1.5-interquartile-range-rule). The default is 1.5.
+    out : str, optional
+        Output option. Implemented are:
+            - 'all': all data points outside range (all statistical outliers)
+            - 'lower': data points lower then range
+            - 'higher': data points higher then range
+            - 'inner': data points inside range (exclusion of statistical outliers)
+        The default is 'all'.
+    outsort : str, optional
+        Sorting of output. Implemented are 'ascending' and 'descending'.
+        All other values will return data unsorted. The default is 'ascending'.
+
+    Raises
+    ------
+    NotImplementedError
+        Option not implemented.
+
+    Returns
+    -------
+    stol : pd.Series or pd.DataFrame (like input data)
+        Statistical outlier data acc. to options.
+
+    """
     # if isinstance(data, pd.core.base.ABCSeries):
     #     d = data
     # elif isinstance(data, np.ndarray):
@@ -52,6 +92,40 @@ def stat_outliers(data, option='IQR', span=1.5,
     return stol
 
 def stat_box_vals(data, option='IQR', span=1.5):
+    """
+    Determine values of typical boxplot values (1st quantile, 3rd qhuantile)
+
+    data : pd.Series or pd.DataFrame
+        Input data.
+    option : str, optional
+        Determination option. Only 'IQR': interquartile-range-rule implemented.
+        The default is 'IQR'.
+    span : float, optional
+        Span for inclusion (p.e.: 'IQr' and 1.5 leads to standard 
+        1.5-interquartile-range-rule). The default is 1.5.
+
+    Raises
+    ------
+    NotImplementedError
+        Option not implemented.
+
+    Returns
+    -------
+    box_vals : dict
+        DESCRIPTION.
+        - 'lBo': lower boarder of 1.5-IQR
+        - 'minin': minimal value inside range
+        - 'dQ1': first quartile
+        - 'med': Median
+        - 'dQ3': third quartile
+        - 'maxin': maximal value inside range
+        - 'uBo': upper boarder of 1.5-IQR
+    inner_vals : pd.Series or pd.DataFrame (like input data)
+        Index of values inside range (not statistical outlier).
+    outer_vals : pd.Series or pd.DataFrame (like input data)
+        Index of values outside range (statistical outlier).
+
+    """
     if option == 'IQR':
         dQ1 = data.quantile(q=0.25)
         med = data.quantile(q=0.50)
@@ -75,7 +149,40 @@ def stat_box_vals(data, option='IQR', span=1.5):
 
 def NaN_stat_outliers(df, numeric_only=True, 
                       option='IQR', span=1.5,
-                      out='all', outsort = None):
+                      out='all', outsort=None):
+    """
+    Determine statistical outliers with respect to NaN values. Optional selects
+    numerical data only.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input data.
+    numeric_only : bool, optional
+        Numerical columns only. The default is True.
+    option : str, optional
+        Determination option. Only 'IQR': interquartile-range-rule implemented.
+        The default is 'IQR'.
+    span : float, optional
+        Span for inclusion (p.e.: 'IQr' and 1.5 leads to standard 
+        1.5-interquartile-range-rule). The default is 1.5.
+    out : str, optional
+        Output option. Implemented are:
+            - 'all': all data points outside range (all statistical outliers)
+            - 'lower': data points lower then range
+            - 'higher': data points higher then range
+            - 'inner': data points inside range (exclusion of statistical outliers)
+        The default is 'all'.
+    outsort : str, optional
+        Sorting of output. Implemented are 'ascending' and 'descending'.
+        All other values will return data unsorted. The default is None.
+
+    Returns
+    -------
+    dfout : pd.DataFrame
+        Statistical outlier data acc. to options.
+
+    """
     if numeric_only:
         cols = df.select_dtypes(include=['int','float']).columns
     else:
@@ -91,13 +198,40 @@ def NaN_stat_outliers(df, numeric_only=True,
 #%% additional descriptive values
 def meanwoso(data, option='IQR', span=1.5,
              out='inner', outsort = None):
-    # if isinstance(data, pd.core.base.ABCSeries):
-    #     data = data
-    # elif isinstance(data, np.ndarray) or isinstance(data, 'float'):
-    #     data = pd.Series(data)
-    # else:
-    #     raise NotImplementedError("Datatype %s not implemented!"%type(data))
-    used = stat_outliers(data=data, option=option, span=span, out=out, outsort=outsort)
+    """
+    Determine mean value of input data without statistical outliers. 
+    (see stat_outliers for more information)
+
+    Parameters
+    ----------
+    data : pd.Series or pd.DataFrame
+        Input data.
+    option : str, optional
+        Determination option. Only 'IQR': interquartile-range-rule implemented.
+        The default is 'IQR'.
+    span : float, optional
+        Span for inclusion (p.e.: 'IQr' and 1.5 leads to standard 
+        1.5-interquartile-range-rule). The default is 1.5.
+    out : str, optional
+        Output option. Only option inner makes sense.
+        Implemented are:
+            - 'all': all data points outside range (all statistical outliers)
+            - 'lower': data points lower then range
+            - 'higher': data points higher then range
+            - 'inner': data points inside range (exclusion of statistical outliers)
+        The default is 'inner'.
+    outsort : str, optional
+        Sorting of output. Implemented are 'ascending' and 'descending'.
+        All other values will return data unsorted. The default is None.
+
+    Returns
+    -------
+    dout : float or pd.Series
+        Mean value/-s of input data without statistical outliers.
+
+    """
+    used = stat_outliers(data=data, option=option, span=span, 
+                         out=out, outsort=outsort)
     dout = data.loc[used].mean()
     return dout
 # Overwrite pandas
@@ -106,16 +240,71 @@ pd.DataFrame.meanwoso = meanwoso
 
 def stdwoso(data, option='IQR', span=1.5,
             out='inner', outsort = None):
-    used = stat_outliers(data=data, option=option, span=span, out=out, outsort=outsort)
+    """
+    Determine standard deviation of input data without statistical outliers. 
+    (see stat_outliers for more information)
+
+    Parameters
+    ----------
+    data : pd.Series or pd.DataFrame
+        Input data.
+    option : str, optional
+        Determination option. Only 'IQR': interquartile-range-rule implemented.
+        The default is 'IQR'.
+    span : float, optional
+        Span for inclusion (p.e.: 'IQr' and 1.5 leads to standard 
+        1.5-interquartile-range-rule). The default is 1.5.
+    out : str, optional
+        Output option. Only option inner makes sense.
+        Implemented are:
+            - 'all': all data points outside range (all statistical outliers)
+            - 'lower': data points lower then range
+            - 'higher': data points higher then range
+            - 'inner': data points inside range (exclusion of statistical outliers)
+        The default is 'inner'.
+    outsort : str, optional
+        Sorting of output. Implemented are 'ascending' and 'descending'.
+        All other values will return data unsorted. The default is None.
+
+    Returns
+    -------
+    dout : float or pd.Series
+        Standard deviation value/-s of input data without statistical outliers.
+
+    """
+    used = stat_outliers(data=data, option=option, span=span, 
+                         out=out, outsort=outsort)
     dout = data.loc[used].std()
     return dout
 # Overwrite pandas
 pd.Series.stdwoso = stdwoso
 pd.DataFrame.stdwoso = stdwoso
 
-def coefficient_of_variation(data, outsort = None):
-    dstd  = data.std()
+def coefficient_of_variation(data, outsort=None, optmeanabs=True):
+    """
+    Determine coefficient of determination (standard deviation to mean value).
+
+    Parameters
+    ----------
+    data : pd.Series or pd.DataFrame
+        Input data.
+    outsort : str, optional
+        Sorting of output. Implemented are None 'ascending' and 'descending'.
+        The default is None.
+    optmeanabs : bool, optional
+        Option for using absolute mean value (if False and mean is negative, 
+        coefficient of variation will be negative).
+        The default is True.
+
+    Returns
+    -------
+    dout : float or pd.Series
+        Coefficient of variation value/-s of input data.
+
+    """
+    dstd = data.std()
     dmean = data.mean()
+    if optmeanabs: dmean = abs(dmean) #absolute value to prevent negative CV
     if (isinstance(dmean, float) and dmean == 0):
         dout  = np.nan
     else:
@@ -124,11 +313,60 @@ def coefficient_of_variation(data, outsort = None):
     if not outsort is None:
         dout = pd_outsort(data = dout, outsort = outsort)
     return dout
+# short naming vor aggregation
+def cv(data, outsort=None, optmeanabs=True):
+    """
+    Short naming of funciton coefficient_of_variation.
+    Readability improved by usage of pandas aggregate function (pd.agg).
+    
+    """
+    return coefficient_of_variation(data=data, outsort=outsort)
 
 def coefficient_of_variation_woso(data, option='IQR', span=1.5,
-                                  out='inner', outsort = None):
-    dstd  =  stdwoso(data=data, option=option, span=span, out=out, outsort=None)
-    dmean = meanwoso(data=data, option=option, span=span, out=out, outsort=None)
+                                  out='inner', outsort=None, 
+                                  optmeanabs=True):
+    """
+    Determine coefficient of variation of input data without statistical 
+    outliers.(see stat_outliers for more information)
+
+    Parameters
+    ----------
+    data : pd.Series or pd.DataFrame
+        Input data.
+    option : str, optional
+        Determination option. Only 'IQR': interquartile-range-rule implemented.
+        The default is 'IQR'.
+    span : float, optional
+        Span for inclusion (p.e.: 'IQr' and 1.5 leads to standard 
+        1.5-interquartile-range-rule). The default is 1.5.
+    out : str, optional
+        Output option. Only option inner makes sense.
+        Implemented are:
+            - 'all': all data points outside range (all statistical outliers)
+            - 'lower': data points lower then range
+            - 'higher': data points higher then range
+            - 'inner': data points inside range (exclusion of statistical outliers)
+        The default is 'inner'.
+    outsort : str, optional
+        Sorting of output. Implemented are 'ascending' and 'descending'.
+        All other values will return data unsorted. The default is None.
+    optmeanabs : bool, optional
+        Option for using absolute mean value (if False and mean is negative, 
+        coefficient of variation will be negative).
+        The default is True.
+
+    Returns
+    -------
+    dout : float or pd.Series
+        Coefficient of variation value/-s of input data without statistical 
+        outliers.
+
+    """
+    dstd = stdwoso(data=data, option=option, 
+                   span=span, out=out, outsort=None)
+    dmean = meanwoso(data=data, option=option, 
+                     span=span, out=out, outsort=None)
+    if optmeanabs: dmean = abs(dmean) #absolute value to prevent negative CV
     if (isinstance(dmean, float) and dmean == 0):
         dout  = np.nan
     else:
@@ -137,6 +375,17 @@ def coefficient_of_variation_woso(data, option='IQR', span=1.5,
     if not outsort is None:
         dout = pd_outsort(data = dout, outsort = outsort)
     return dout
+# short naming vor aggregation
+def cvwoso(data, option='IQR', span=1.5, out='inner', 
+           outsort=None, optmeanabs=True):
+    """
+    Short naming of funciton coefficient_of_variation_woso.
+    Readability improved by usage of pandas aggregate function (pd.agg).
+    
+    """
+    return coefficient_of_variation_woso(
+        data=data, option=option, span=span, out=out, outsort=outsort
+        )
 
 def confidence_interval(data, confidence=0.95, method="Seaborn_Bootstrap",
                         func = np.nanmean, n_boot = 1000, axis = None,
@@ -211,7 +460,6 @@ def confidence_interval(data, confidence=0.95, method="Seaborn_Bootstrap",
     #     import scikits.bootstrap as bootstrap
     #     CI = bootstrap.ci(data=data, statfunction=scipy.mean, alpha = 1-confidence, n_samples=n_boot)
     elif method == "Seaborn_Bootstrap":
-        import seaborn as sb
         CI = sb.utils.ci(a=sb.algorithms.bootstrap(data, func= func, n_boot=n_boot,
                                                    axis=axis, units=units, seed=seed),
                          which = confidence*100, axis=axis)
@@ -239,8 +487,57 @@ def CImax(data, confidence=0.95, method="Seaborn_Bootstrap",
                               units=units, seed=seed,
                               outtype="Max")
     return out
+
+def relative_deviation(a, b, axis=0):
+    """
+    Calculates the relative deviation from second argument to first.
+    .. math::
+        RD_{b-a} = (b-a)/a
+
+    Parameters
+    ----------
+    a : int or float or pd.Series or pd.DataFrame
+        Base value.
+    b : pd.Series or pd.DataFrame
+        Calculation value.
+    axis : int, optional
+        Identifyier for performing calculation. The default is 0.
+
+    Raises
+    ------
+    NotImplementedError
+        Combination of types not implemented.
+
+    Returns
+    -------
+    out : int or float or pd.Series or pd.DataFrame
+        Relative deviation result (type depends on input types).
+
+    """
+    ta=type_str_return(a)
+    tb=type_str_return(b)
+    tab=ta+'_'+tb
+    if tab=='pdDF_pdDF':
+        out=(b.sub(a)).div(a)
+    elif tab=='pdSe_pdDF':
+        out=(b.sub(a, axis=axis)).div(a, axis=axis)
+    elif tab=='pdSe_pdSe':
+        out=(b.sub(a)).div(a)
+    elif tab in ['float_float','float_int','int_float']:
+        out=(b-a)/a
+    elif tab in ['float_pdSe','int_pdSe',
+                 'float_pdDF','int_pdDF']:
+        out=(b-a)/a
+    else:
+        raise NotImplementedError(
+        "Combination of types not implemented ({} and {})!".format(
+        ta,tb
+        ))
+    return out
+
 #%% extended pandas aggregation
-def pd_agg(pd_o, agg_funcs=['mean','median','std','max','min'], numeric_only=False):
+def pd_agg(pd_o, agg_funcs=['mean','median','std','max','min'], 
+           numeric_only=False):
     """Aggregate pandas object with defined functions."""
     if (type(pd_o) is pd.core.series.Series):
         out = pd_o.agg(agg_funcs)
@@ -277,8 +574,9 @@ def pd_agg_custom(pdo, agg_funcs=['mean',meanwoso,'median',
                   af_ren={'coefficient_of_variation_woso':'CVwoso',
                           'coefficient_of_variation':'CV'},
                   af_unp={'confidence_interval': ['CImin','CImax']}):
-    """Aggregate pandas object with defined functions, including unpacked multi-value functions. 
-    
+    """
+    Aggregate pandas object with defined functions, including unpacked 
+    multi-value functions. 
 
     Parameters
     ----------
@@ -307,6 +605,7 @@ def pd_agg_custom(pdo, agg_funcs=['mean',meanwoso,'median',
 
     """
     def unpack_aggval(o, n, rn):
+        """Unpack arguments acc. to dictionary."""
         tmp=o.loc[n].apply(lambda x: pd.Series([*x], index=rn))
         i = o.index.get_indexer_for([n])[0]
         s=pd.concat([o.iloc[:i],tmp.T,o.iloc[i+1:]],axis=0)
@@ -321,7 +620,8 @@ def pd_agg_custom(pdo, agg_funcs=['mean',meanwoso,'median',
 def Dist_test(pds, alpha=0.05, mcomp='Shapiro', mkws={},
               skipna=True, add_out = False):
     """
-    Distribution test of data to Hypothesis sample looks Gaussian (reject, if p<=alpha).
+    Distribution test of data to Hypothesis sample looks Gaussian (reject, if 
+    p<=alpha).
 
     Parameters
     ----------
@@ -401,7 +701,9 @@ def Dist_test_multi(pdo, axis=0,
     return df_out
 
 
-def group_Anova(df, groupby, ano_Var, group_str=None, ano_str=None, alpha=0.05):
+def group_Anova(df, groupby, ano_Var,
+                group_str=None, ano_str=None, alpha=0.05):
+    """Performs an one way ANOVA -> depricated (use group_ANOVA_MComp)"""
     ano_data=pd.Series([],dtype='O')
     j=0
     for i in df[groupby].drop_duplicates().values:
@@ -420,10 +722,9 @@ def group_Anova(df, groupby, ano_Var, group_str=None, ano_str=None, alpha=0.05):
         rtxt = 'H0 rejected!'
     else:
         rtxt = 'Fail to reject H0!'
-    txt=("F(%4d,%4d) = %7.3f, p = %.3e, for %s to %s (%s)"%(ano_df1,ano_df2,
-                                                            F,p,
-                                                            ano_str,group_str,
-                                                            rtxt)) # Gruppen sind signifikant verschieden bei p<0.05
+    txt=("F(%4d,%4d) = %7.3f, p = %.3e, for %s to %s (%s)"%(
+        ano_df1,ano_df2, F,p, ano_str,group_str,rtxt
+        )) # Gruppen sind signifikant verschieden bei p<0.05
     return txt
 
 def group_ANOVA_MComp(df, groupby, ano_Var, 
@@ -433,7 +734,8 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
                       mkws={}, nan_policy='omit', check_resnorm=False,
                       add_T_ind=3, add_out = False):
     """
-    Performs an one way ANOVA and multi comparision test for given variable, in respect to given groups.
+    Performs an one way variance analysis and multi comparision test for given 
+    variable, in respect to given groups.
     Returns an output string with summary and optional additional test outputs.
 
     Parameters
@@ -453,7 +755,8 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
         Implemented are ANOVA and Kruskal-Wallis H-test.
         The default is ANOVA.
     alpha : float, optional
-        Test criterion to reject zero hypothesis (all means are equal). The default is 0.05.
+        Test criterion to reject zero hypothesis (all means are equal). 
+        The default is 0.05.
     group_ren : dict, optional
         Renaming of groups in df. The default is {}.
     do_mcomp_a : int, optional
@@ -543,15 +846,18 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
     else:
         rtxt = 'Fail to reject H0!'
         H0=True
-    Atxt=("- F(%3d,%4d) = %7.3f, p = %.3e, for %s to %s (%s)"%(ano_df1,ano_df2,
-                                                               F,p,
-                                                               ano_str,group_str,
-                                                               rtxt+atxt)) # Gruppen sind signifikant verschieden bei p<0.05
+    Atxt=("- F(%3d,%4d) = %7.3f, p = %.3e, for %s to %s (%s)"%(
+        ano_df1,ano_df2, F,p, ano_str,group_str, rtxt+atxt
+        )) # Gruppen sind signifikant verschieden bei p<0.05
     if check_resnorm:
         tmp=df[[groupby,ano_Var]].copy()
-        tmp.index=pd.MultiIndex.from_arrays([tmp.index,tmp.loc(axis=1)[groupby]])
+        tmp.index=pd.MultiIndex.from_arrays(
+            [tmp.index,tmp.loc(axis=1)[groupby]]
+            )
         tmp1=df.groupby(groupby)[ano_Var].mean()
-        dtest=Dist_test(tmp[ano_Var]-tmp1, alpha=alpha, mcomp='Shapiro', add_out='Series' )
+        dtest=Dist_test(
+            tmp[ano_Var]-tmp1, alpha=alpha, mcomp='Shapiro', add_out='Series'
+            )
         Atxt+='  -> Residuals are normally distributed = {H0} (F({N:d}) = {Stat:.3e}, p = {p:.3e})'.format(**dtest)
     if do_mcomp_a >= 2:
         # t = pairwise_tukeyhsd(endog=df[ano_Var], groups=df[groupby], alpha=alpha)
@@ -560,7 +866,6 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
             t = mcp.tukeyhsd(alpha=alpha*Ffwalpha)
             Ttxt = str_indent(t.summary(),add_T_ind)
         elif mcomp=='Dunn':
-            import scikit_posthocs as sck_ph
             def dunn_o2(a,b):
                 data=[a,b]
                 pvalue = sck_ph.posthoc_dunn(data)
@@ -619,48 +924,56 @@ def group_ANOVA_MComp(df, groupby, ano_Var,
         return txt
     
 def MComp_interpreter(T_Result):
-    import string
-    import statsmodels
+    """
+    Interprets a test result from statsmodels multicomparision (Zero hypothesis 
+    reject). Returns identified higher order groups in relation to original 
+    groups.
+
+    Parameters
+    ----------
+    T_Result : statsmodels.iolib.table.SimpleTable
+        Simple table result from statsmodels.
+
+    Returns
+    -------
+    dict2 : dict
+        Dictionary of results.
+    txt : str
+        Textual output.
+
+    """
     if isinstance(T_Result, statsmodels.iolib.table.SimpleTable):
         t=pd.DataFrame(T_Result.data[1:], columns=T_Result.data[0])
     else:
-        t=pd.DataFrame(T_Result.summary().data[1:], columns=T_Result.summary().data[0])
+        t=pd.DataFrame(T_Result.summary().data[1:], 
+                       columns=T_Result.summary().data[0])
     df_True = t.loc[t.reject==True,:]
     # letters = list(string.ascii_lowercase)
     letters = list(string.ascii_lowercase)+list(string.ascii_uppercase) # List out of index
     n = 0
     txt=''
-    
     group1_list = df_True.group1.tolist() #get the groups from the df with only True (True df) to a list
     group2_list = df_True.group2.tolist()
     group3 = group1_list+group2_list #concat both lists
     group4 = list(set(group3)) #get unique items from the list
     group5 = [str(i) for i in group4 ] #convert unicode to a str
     group5.sort() #sort the list
-    
     gen = ((i, 0) for i in group5) #create dict with 0 so the dict won't be empty when starts
     dictionary = dict(gen)
-    
     group6 = [(group5[i],group5[j]) for i in range(len(group5)) for j in range(i+1, len(group5))] #get all combination pairs
     for pairs in group6: #check for each combination if it is present in df_True
-    
         txt += '\n' + str(n)
         txt += '\n' + str(dictionary)
-    
         try:
             a = df_True.loc[(df_True.group1==pairs[0])&(df_True.group2==pairs[1]),:] #check if the pair exists in the df
-    
         except:
             a.shape[0] == 0
-    
+
         if a.shape[0] == 0: #it mean that the df is empty as it does not appear in df_True so this pair is equal
-    
             txt += '\n' + str('equal')
-    
             if dictionary[pairs[0]] != 0 and dictionary[pairs[1]] == 0: #if the 1st is populated but the 2nd in not populated
                 txt += '\n' + str("1st is populated and 2nd is empty")
                 dictionary[pairs[1]] = dictionary[pairs[0]]
-    
             elif dictionary[pairs[0]] != 0 and dictionary[pairs[1]] != 0: #if both are populated, check matching labeles
                 txt += '\n' + str("both are populated")
                 if len(list(set([c for c in dictionary[pairs[0]] if c in dictionary[pairs[1]]]))) >0: #check if they have a common label
@@ -679,31 +992,22 @@ def MComp_interpreter(T_Result):
                     if m == len(dictionary)-1 and j == len(dictionary)-1: #it means that this value is unique because it has no shared char with another group
                         txt += '\n' + str("unique")
                         dictionary[pairs[1]] = dictionary[pairs[0]][0]
-    
                     else:
                         txt += '\n' + str("there is at least one group in the dict that shares a char with the 1st group")
                         dictionary[pairs[1]] = dictionary[pairs[1]] + dictionary[pairs[0]][0]
-    
-    
             else:  # if it equals 0, meaning if the 1st is empty (which means that the 2nd must be also empty)
                 txt += '\n' + str("both are empty")
                 dictionary[pairs[0]] = letters[n]
                 dictionary[pairs[1]] = letters[n]
-    
         else:
-    
             txt += '\n' + str("not equal")
-    
             if dictionary[pairs[0]] != 0: # if the first one is populated (has a value) then give a value only to the second 
-    
                 txt += '\n' + str('1st is populated')
                 # if the 2nd is not empty and they don't share a charcter then no change is needed as they already have different labels
                 if dictionary[pairs[1]] != 0 and len(list(set([c for c in dictionary[pairs[0]] if c in dictionary[pairs[1]]]))) == 0:
                     txt += '\n' + str("no change")
-    
                 elif dictionary[pairs[1]] == 0: #if the 2nd is not populated give it a new letter
                     dictionary[pairs[1]] = letters[n+1]
-    
                 #if the 2nd is populated and equal to the 1st, then change the letter of the 2nd to a new one and assign its original letter to all the others that had the same original letter       
                 elif  dictionary[pairs[1]] != 0 and len(list(set([c for c in dictionary[pairs[0]] if c in dictionary[pairs[1]]]))) > 0:
                     #need to check that they don't share a charcter
@@ -712,10 +1016,8 @@ def MComp_interpreter(T_Result):
                     dictionary[pairs[1]] = letters[n]
                     for key, value in dictionary.items():
                         if key != pairs[0] and len(list(set([c for c in original_value if c in value])))>0: #for any given value, check if it had a character from the group that will get a new letter, if so, it means  that they are equal and thus the new letter should also appear in the value of the "old" group 
-                            dictionary[key] = original_value + letters[n]  #add the original letter of the group to all the other groups it was similar to               
-    
+                            dictionary[key] = original_value + letters[n]  #add the original letter of the group to all the other groups it was similar to
             else:
-    
                 txt += '\n' + str('1st is empty')
                 dictionary[pairs[0]] = letters[n]
                 dictionary[pairs[1]] = letters[n+1]
@@ -723,7 +1025,6 @@ def MComp_interpreter(T_Result):
             n+=1
     
     # get the letter out the dictionary
-    
     labels = list(dictionary.values())
     labels1 = list(set(labels))
     labels1.sort()
@@ -844,6 +1145,72 @@ def Hypo_test(df, groupby, ano_Var,
               deal_dupl_ind='raise',
               group_ord=None,
               add_T_ind=3, add_out = False):
+    """
+    Performs hypothesis test of given data according to selected method. 
+    Returns results acc. to selected output switch.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe with groups and values as columns for statistical test.
+    groupby : str
+        Name of groups for statistical test.
+    ano_Var : str
+        Name of variable for statistical test.
+    group_str : str, optional
+        String for output implementation of group names. The default is None.
+    ano_str : str, optional
+        String for output implementation of value names. The default is None.
+    alpha : float, optional
+        Test criterion to reject zero hypothesis (all means are equal). 
+        The default is 0.05.
+    group_ren : dict, optional
+        Renaming of groups in df. The default is {}.
+    mcomp : TYPE, optional
+        Method for hypothesis test. The default is 'TukeyHSD'.
+        Implemented are:
+            - 'TukeyHSD': Tukey HSD test (see scipy.stats.tukey_hsd)
+            - 'ttest_ind': Independend t-test (see scipy.stats.ttest_ind)
+            - 'ttest_rel': Related t-test (see scipy.stats.ttest_rel)
+            - 'mannwhitneyu': Mann-Whittney-U-test (see scipy.stats.mannwhitneyu)
+            - 'wilcoxon': Wilcoxon signed rank test (see scipy.stats.wilcoxon)
+    mkws : dict, optional
+        Keyword arguments for used hypothesis test.
+        p.e.: {'equal_var': False, 'nan_policy': 'omit'}
+        The default is {}. 
+    rel : bool, optional
+        Switch for relation of samples (True= related). The default is False.
+    rel_keys : list, optional
+        Variabel/column names for determining relation. The default is [].
+    deal_dupl_ind : string, optional
+        Behavior with duplicated indices (see deal_dupl_index).
+        The default is 'raise'.
+    group_ord : None or list, optional
+        Selected groups. None will use all columns. The default is None.
+    add_T_ind : int, optional
+        Additional indentation of level in textual output. The default is 3.
+    add_out : TYPE, optional
+        Switch for output. The default is False.
+        Implemented are:
+            - False: only text output
+            - True: text output (str) and test result (statistic, pvalue as float)
+            - 'Series': pd.Series of degrees of freedom, statistics, p-value 
+            and zero hypothesis test result to alpha
+            - 'Test': complete output
+
+    Raises
+    ------
+    ValueError
+        More than two groups identified.
+    NotImplementedError
+        Method not implemented.
+
+    Returns
+    -------
+    str or (str, float) or pd.Series or (pd.DataFrame, pd.Series, string)
+        Output of hypothesis test acc. to selected switch(see add_out).
+
+    """
     if ano_str is None:
         ano_str = ano_Var
     if group_str is None:
@@ -896,10 +1263,10 @@ def Hypo_test(df, groupby, ano_Var,
     else:
         rtxt = 'Fail to reject H0!'
         H0=True
-    txt=("- F(%d) = %.3e, p = %.3e, for %s to %s (%s)"%(ano_df2,
-                                                          F,p,
-                                                          ano_str,group_str,
-                                                          rtxt)) # Gruppen sind signifikant verschieden bei p<0.05
+    txt=("- F(%d) = %.3e, p = %.3e, for %s to %s (%s)"%(
+        ano_df2, F,p, ano_str,group_str, rtxt
+        )) # Gruppen sind signifikant verschieden bei p<0.05
+    
     if add_out is True:
         return txt, t
     elif add_out=='Series':
@@ -916,6 +1283,54 @@ def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
                     deal_dupl_ind='raise',
                     group_ord=None,
                     Transpose=True):
+    """
+    Performs hypothesis tests for given variable, in respect to given groups
+    according to selected method. 
+    Returns results acc. to selected output switch.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe with groups and values as columns for statistical test.
+    group_main : str
+        Main group for statistical test. The default is 'Series'.
+    group_sub : list of str
+        Sub-groups for statistical test (p.e. variants). The default is ['A'].
+    ano_Var : list of str
+        Names of variables for statistical test. The default is ['WC_vol'].
+    mcomp : TYPE, optional
+        Method for hypothesis test. The default is 'TukeyHSD'.
+        Implemented are:
+            - 'TukeyHSD': Tukey HSD test (see scipy.stats.tukey_hsd)
+            - 'ttest_ind': Independend t-test (see scipy.stats.ttest_ind)
+            - 'ttest_rel': Related t-test (see scipy.stats.ttest_rel)
+            - 'mannwhitneyu': Mann-Whittney-U-test (see scipy.stats.mannwhitneyu)
+            - 'wilcoxon': Wilcoxon signed rank test (see scipy.stats.wilcoxon)
+    alpha : float, optional
+        Test criterion to reject zero hypothesis (all means are equal). 
+        The default is 0.05.
+    mkws : dict, optional
+        Keyword arguments for used hypothesis test.
+        p.e.: {'equal_var': False, 'nan_policy': 'omit'}
+        The default is {}. 
+    rel : bool, optional
+        Switch for relation of samples (True= related). The default is False.
+    rel_keys : list, optional
+        Variabel/column names for determining relation. The default is [].
+    deal_dupl_ind : string, optional
+        Behavior with duplicated indices (see deal_dupl_index).
+        The default is 'raise'.
+    group_ord : None or list, optional
+        Changing of order of groups not implemented. The default is None.
+    Transpose : bool, optional
+        Switch for transposing result. The default is False.
+
+    Returns
+    -------
+    df_out : pd.DataFrame
+        Dataframe of test results indexed variable name and group.
+
+    """
     df_out=pd.DataFrame([],dtype='O')
     if group_sub is None:
         for av in ano_Var:
@@ -948,7 +1363,51 @@ def Hypo_test_multi(df, group_main='Series', group_sub=['A'],
 
 def CD_rep(pdo, groupby='Series', var='DEFlutoB', 
            det_met='SM-RRT', outtype='txt', tnform='{:.3e}'):
-    """ Calculate critical differences and compare to given.
+    """
+    Calculate critical differences and compare to given mean difference.
+    Can provide information on the comparability and/or repeatability of two 
+    test series.
+
+    Parameters
+    ----------
+    pdo : pd.DataFrame
+        Dataframe with groups and values as columns for test.
+    groupby : str
+        Name of groups for statistical test.
+    var : str
+        Name of variable for statistical test.
+    det_met : string, optional
+        Determination method for deriving critical differences (CD). 
+        The default is 'SM-RRT'.
+        Implemented are (all only implemented for 95 % confidence):
+            - 'SM-RRT': CD by standard deviation and size
+            (see https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf)
+            - 'CV-DC': CD by coefficient of variation and maximum 
+            (see https://flexikon.doccheck.com/de/Kritische_Differenz)
+            - 'CV': CD by coefficient of variation 
+            (see https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887)
+            - 'SD': CD by standard deviation
+            (see https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1
+    outtype : string, optional
+        Switch for output. The default is 'txt'.
+        Implemented are:
+            - 'Ser_all': pd.Series with all derived results
+            - 'Tuple_all': tuple of all derived results
+            - 'txt': single line text output showing results acc. repeatability
+            - 'Series': pd.Series with important resulzs
+    tnform : formatcode, optional
+        Format for float in sttestual output. The default is '{:.3e}'.
+
+    Raises
+    ------
+    NotImplementedError
+        Method not implemented.
+
+    Returns
+    -------
+    out : pd.Series or tuple or string
+        Output according to switch (see outtype).
+
     """
     # grsagg=pdo.groupby(groupby)[var].agg(['mean','std','count'])
     grsagg=pdo[[groupby,var]].groupby(groupby).agg(['mean','std','count'])
@@ -996,12 +1455,47 @@ def CD_rep(pdo, groupby='Series', var='DEFlutoB',
 
 
 def CD_test_multi(df, group_main='Series', group_sub=['A'],
-                    ano_Var=['WC_vol'],
-                    det_met='SM-RRT',
-                    Transpose=True):
+                  ano_Var=['WC_vol'],
+                  det_met='SM-RRT',
+                  Transpose=True):
+    """
+    Calculate critical differences and compare to given mean difference for 
+    groups and subgroups.
+    Can provide information on the comparability and/or repeatability of two 
+    test series.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe with groups, subgroups and values as columns for test.
+    group_main : str, optional
+        Main group for statistical test. The default is 'Series'.
+    group_sub : list of str, optional
+        Sub-groups for statistical test (p.e. variants). The default is ['A'].
+    ano_Var : list of str, optional
+        Names of variables for statistical test.The default is ['WC_vol'].
+    det_met : string, optional
+        Determination method for deriving critical differences (CD). 
+        The default is 'SM-RRT'.
+        Implemented are (all only implemented for 95 % confidence):
+            - 'SM-RRT': CD by standard deviation and size
+            (see https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf)
+            - 'CV-DC': CD by coefficient of variation and maximum 
+            (see https://flexikon.doccheck.com/de/Kritische_Differenz)
+            - 'CV': CD by coefficient of variation 
+            (see https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887)
+            - 'SD': CD by standard deviation
+            (see https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1
+    Transpose : bool, optional
+        Switch for transposing result. The default is False.
+
+    Returns
+    -------
+    df_out : pd.DataFrame
+        Derived test results (pd.Series({'MD':grs_MD,'CD':CD, 'eta':eta, 'H0': MD_l_CD})).
+
+    """
     df_out=pd.DataFrame([],dtype='O')
-    # for sg in group_sub:
-    #     for av in ano_Var:
     for av in ano_Var:
         for sg in group_sub:
             tmp=CD_rep(pdo=df, groupby=(group_main,sg), 

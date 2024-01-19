@@ -6,6 +6,7 @@ Contains test and basic numeric functionality.
 """
 import warnings
 import numpy as np
+import pandas as pd
 
 #%% tests
 def _test_overwrites(impmods, overwr):
@@ -40,6 +41,66 @@ def _test_overwrites(impmods, overwr):
                 warnings.warn("Function %s in %s and will be overwritten!"%(ta,tb),
                               ImportWarning)
 
+def type_str_return(obj):
+    """
+    Tests type of given object and return an identifying string.
+
+    Parameters
+    ----------
+    obj : object
+        Input object to check type.
+        Implemented are:
+            - Standard: None, bool, str, int and float
+            - Numpy array of shape:
+                - unknown shape -> npAu
+                - single row -> npAr
+                - single column -> npAc
+                - frame -> npAF
+            - Pandas:
+                - Index -> pdIN
+                - Series -> pdSe
+                - DataFrame-> pdDF
+
+    Raises
+    ------
+    NotImplementedError
+        Type of object not implemented.
+        
+    Returns
+    -------
+    t : str
+        String of derived type.
+
+    """
+    if obj is None:
+        t='None'
+    elif isinstance(obj, bool):
+        t='bool'
+    elif isinstance(obj, str):
+        t='str'
+    elif isinstance(obj, int):
+        t='int'
+    elif isinstance(obj, float):
+        t='float'
+    elif isinstance(obj, np.ndarray):
+        t='npAu'
+        npshape=obj.shape
+        if np.size(npshape)==1:
+            t='npAr'
+        elif np.size(npshape)==2:
+            if npshape[0]==1:
+                t='npAc'
+            else:
+                t='npAF'
+    elif isinstance(obj, pd.core.base.ABCIndex):
+        t='pdIn'
+    elif isinstance(obj, pd.core.base.ABCSeries):
+        t='pdSe'
+    elif isinstance(obj, pd.core.base.ABCDataFrame):
+        t='pdDF'
+    else:
+        raise NotImplementedError("Type {} not implemented!".format(type(obj)))
+    return t
 
 def check_empty(x, empty_str=['',' ','  ','   ',
                               '#NV''NaN','nan','NA']):
