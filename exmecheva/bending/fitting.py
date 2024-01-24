@@ -321,48 +321,59 @@ def Perform_Fit(BFL, Fit_func_key, P_df,
     Parameters
     ----------
     BFL : Bend_func_legion
-        DESCRIPTION.
-    Fit_func_key : TYPE
-        DESCRIPTION.
-    P_df : TYPE
-        DESCRIPTION.
-    lB : TYPE
-        DESCRIPTION.
-    rB : TYPE
-        DESCRIPTION.
-    s_range : TYPE
-        DESCRIPTION.
-    # Shear_func_key : TYPE, optional
-        DESCRIPTION. The default is None.
-    t_mean : TYPE, optional
-        DESCRIPTION. The default is None.
-    poisson : TYPE, optional
-        DESCRIPTION. The default is 0.3.
-    Shear_func_key : TYPE, optional
-        DESCRIPTION. The default is None.
-    gamma_V : TYPE, optional
-        DESCRIPTION. The default is None.
-    err_weights : TYPE, optional
-        DESCRIPTION. The default is [ 1, 10, 1000, 100].
-    max_nfev : TYPE, optional
-        DESCRIPTION. The default is 500.
-    nan_policy : TYPE, optional
-        DESCRIPTION. The default is 'raise'.
-    option : TYPE, optional
-        DESCRIPTION. The default is 'Pre'.
+        Class conttaining information about bending line and derivates.
+        See Bend_func_legion in ./bfunc_class.py for more information.
+    Fit_func_key : string
+        Identifier for fit function, p.e. 'w_A'.
+    P_df : pd.DataFrame
+        Measured and 2D-transformed displacment data. Combination of 
+        x-coordinates and y-displacments.
+    lB : float
+        Left support x-coordinate, p.e. -10.0 with 20 mm span.
+    rB : float
+        Right support x-coordinate, p.e. 10.0 with 20 mm span.
+    s_range : list or index
+        Range of steps.
+    Shear_func_key : string, optional
+        Identifier for shear function, p.e. 'w_S'. The default is None.
+    gamma_V : float, optional
+        Ratio between shear to entire deformation in mid of bending beam.
+        See gamma_V_det in ./bfunc_com.py
+        The default is None.
+    err_weights : list of float, optional
+        Weights for multi contraint fitting. See res_multi_const_weighted.
+        The default is [ 1, 10, 1000, 100].
+    max_nfev : int, optional
+        Number of evaluations. The default is 500.
+    nan_policy : string, optional
+        NaN handling. The default is 'raise'.
+    option : string, optional
+        Option for fitting. Possible are:
+            - 'Pre': Pre fit with shear deformation
+            - 'Bend': Refit to adjusted bending deformation
+            (without indentation and shear deformation)
+        The default is 'Pre'.
     ldoption : string, optional
         Load direction automatism.
         possible are:
             - 'fixed-y': Load application in -y-direction (default).
             - 'fixed+y': Load application in +y-direction.
-            - 'auto-dispser': Load application direction automaticly determined by a series of displacements (applied as ldoptionadd, index have to match with s_range/P_df).
-            - 'auto-Pcoorddisp': Load application direction automaticly determined by a Points dataframe and specified point name and coordinate (applied as ldoptionadd, index have to match with s_range/P_df)
+            - 'auto-dispser': Load application direction automaticly determined 
+            by a series of displacements (applied as ldoptionadd, 
+            index have to match with s_range/P_df).
+            - 'auto-Pcoorddisp': Load application direction automaticly 
+            determined by a Points dataframe and specified point name and 
+            coordinate (applied as ldoptionadd, index have to match with
+            s_range/P_df)
         The default is 'fixed-y'.
     ldoptionadd : Series or array of [Dataframe, string, string], optional
         Addendum for ldoption.
         Have to match to ldoption:
-            - 'auto-dispser': Series of displacements (index have to match with s_range/P_df).
-            - 'auto-Pcoorddisp': Points dataframe and specified point name and coordinate ([Points as Dataframe, point name as string, coordinate as string],index have to match with s_range/P_df)            
+            - 'auto-dispser': Series of displacements (index have to match with
+            s_range/P_df).
+            - 'auto-Pcoorddisp': Points dataframe and specified point name and 
+            coordinate ([Points as Dataframe, point name as string, coordinate
+            as string],index have to match with s_range/P_df)            
         The default is None.
     pb_b : bool, optional
         Switch for showing progressbar. The default is True.
@@ -372,7 +383,7 @@ def Perform_Fit(BFL, Fit_func_key, P_df,
     Raises
     ------
     NotImplementedError
-        DESCRIPTION.
+        Option not implemented.
 
     Returns
     -------

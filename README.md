@@ -46,8 +46,7 @@ Some important points should therefore be taken into account. These are in desce
 - [PEP8](https://peps.python.org/pep-0008/) styleguide adaptations
 - Updating of environment (now python 3.7.10)
 - Development of a generally customizable routine that can be controlled with keywords. 
-  (p.e. please see: [TBT-MMCB](./scripts/02_MMCB/Eva_TBT_MMCB.py) and 
-   MCurve_Characterizer in [Measurement Curve Characteriszation](./exmecheva/common/mc_char.py)
+  (please see MCurve_Characterizer and following in [Measurement Curve Characteriszation](./exmecheva/common/mc_char.py))
 - Implementing of physical units ([pint](https://github.com/hgrecco/pint)/[pint-pandas](https://github.com/hgrecco/pint-pandas))
 - GUI development for easy, reliable and reproducable use
 - Expandability to personal usage scenarios

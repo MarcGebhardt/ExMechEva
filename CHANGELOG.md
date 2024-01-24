@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Identifying type of given object (standard, numpy and pandas; common.helper.type_str_return)
 - Relative deviation implemented (common.stat_ext.relative_deviation)
 - Coefficient of variation (with or without statistical outliers) with short named function (common.stat_ext.cv and common.stat_ext.cvwoso) for use in pandas aggregate
+- Functionality for automatic determination of points of interest added to ./common/mc_char (PoI_relFinder, PoI_PLH, POI_VIP_namer, PoI_fixeva and PoI_refinement)
 
 ### Changed
 
@@ -21,6 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - common.stat_ext: 
 	- moved imports to start of file
 	- coefficient_of_variation and coefficient_of_variation_woso using absolute value of mean by default (preventing CV to be negative)
+	
+### Removed
+
+- Special evaluation of three-point-bending tests for Young's modulus determination paper (./scripts/01_PF/Methods_Verif/, old structure, https://doi.org/10.1007/s11340-023-00945-y)
+- Special evaluation of preparation, geometry and assessment codes for standardized preparation paper (./scripts/01_PF/Eva_Preparation.py, old structure, https://doi.org/10.1371/journal.pone.0289482)
+- Evaluation of three-point-bending tests of cortical bone specimens with different moisture states (./scripts/02_MMCB/, old structure), Including different improvements:
+	- improvements of measured curve characterization (MCurve_Characterizer, MCurve_Char_Plotter,...)
+	- automatic setting of load direction by optical measured traverse displacement (ldoption='auto-Pcoorddisp' in bending/fitting/Perform_Fit)
+	- automatic determination and naming of points of interest (see ./common/mc_char (PoI_relFinder, PoI_PLH, POI_VIP_namer, PoI_fixeva and PoI_refinement))
+- Mandibulae evaluation (./scripts/03_Zesbo_Mand/, old structure, no relevant changes to other projects)
 
 ## [v0.1.0] – 2023-01-17
 

@@ -37,7 +37,7 @@ def Shear_area(Area, CS_type='Rectangle', kappa=None):
     Returns
     -------
     AreaS : same type as Area
-        DESCRIPTION.
+        Shear area.
 
     """
     if  CS_type=='Rectangle': kappa = 5/6

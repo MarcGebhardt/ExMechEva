@@ -74,15 +74,15 @@ if option == 'Series':
 #%% Complete (hdf) comparision
 elif option == 'Complete':
     path_main="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/"
-    #TBT:
-    path1=path_main+"231023/TBT/B3-B7_TBT-Summary.h5"
-    path2=path_main+"240110/TBT/B3-B7_TBT-Summary.h5"
+    # #TBT:
+    # path1=path_main+"240110/TBT/B3-B7_TBT-Summary.h5"
+    # path2=path_main+"240118/TBT/B3-B7_TBT-Summary.h5"
     # #ACT:
-    # path1=path_main+"231023/ACT/B3-B7_ACT-Summary.h5"
-    # path2=path_main+"240110/ACT/B3-B7_ACT-Summary.h5"
-    # #ATT:
-    # path1=path_main+"231023/ATT/B3-B7_ATT-Summary.h5"
-    # path2=path_main+"240110/ATT/B3-B7_ATT-Summary.h5"
+    # path1=path_main+"240110/ACT/B3-B7_ACT-Summary.h5"
+    # path2=path_main+"240118/ACT/B3-B7_ACT-Summary.h5"
+    #ATT:
+    path1=path_main+"240110/ATT/B3-B7_ATT-Summary.h5"
+    path2=path_main+"240118/ATT/B3-B7_ATT-Summary.h5"
     
     HDFst=pd.HDFStore(path1, mode='r')
     out_tab_zsf1 = HDFst['Summary']
@@ -95,6 +95,15 @@ elif option == 'Complete':
 # Numeric columns/variables in 1st and 2nd evaluation
 zsf1_nc=out_tab_zsf1.select_dtypes(include=['int','float']).columns
 zsf2_nc=out_tab_zsf2.select_dtypes(include=['int','float']).columns
+
+# Different variant naming
+nc_diff1=zsf1_nc.difference(zsf2_nc)
+nc_diff2=zsf2_nc.difference(zsf1_nc)
+
+# PD-DF comparision
+out_tab_comp=out_tab_zsf2[zsf2_nc.difference(nc_diff2)].compare(
+    out_tab_zsf1[zsf1_nc.difference(nc_diff1)]
+    )
 
 # Relative deviation between evaluatuins
 out_tab_vgl=reldev(a=out_tab_zsf2[zsf2_nc],b=out_tab_zsf1[zsf1_nc])
@@ -111,6 +120,3 @@ out_tab_vgl_rel = out_tab_vgl[rel_params_int]
 out_tab_vgl_d_rel = out_tab_vgl_d.loc[rel_params_int]
 rel_params_int_dp = out_tab_vgl_dp.index.intersection(rel_params)
 out_tab_vgl_rel_dp = out_tab_vgl_dp.loc[rel_params_int_dp]
-
-# Optional save of comparision to csv-file
-#out_tab_vgl.to_csv(path_main+path_ausw+path_ausw2+'!VGL-sav_210324_sav_210413-rebuild.csv',sep=';')
