@@ -1,7 +1,7 @@
 # ExMechEva - Experimental mechanics evaluation
 
 Evaluation of data determined by means of experimental mechanics.
-Automization and standardization with regards to special requirements of project and test specimen.
+Automation and standardization, considering special requirements of project and test specimen.
 
 ## Installation
 `ExMechEva` is developed under Python 3.7.10 and is available in the [Python Package Index (PyPI)](https://pypi.org/project/ExMechEva/).
@@ -46,7 +46,7 @@ Some important points should therefore be taken into account. These are in desce
 - [PEP8](https://peps.python.org/pep-0008/) styleguide adaptations
 - Updating of environment (now python 3.7.10)
 - Development of a generally customizable routine that can be controlled with keywords. 
-  (please see MCurve_Characterizer and following in [Measurement Curve Characteriszation](./exmecheva/common/mc_char.py))
+  (please see curve_characterizer and following in [Measurement Curve Characteriszation](./exmecheva/common/mc_char.py))
 - Implementing of physical units ([pint](https://github.com/hgrecco/pint)/[pint-pandas](https://github.com/hgrecco/pint-pandas))
 - GUI development for easy, reliable and reproducable use
 - Expandability to personal usage scenarios
@@ -56,7 +56,7 @@ If you use this framework, please cite this paper:
 ```
 @article{GebhardtKurz_2024_ASCTE,
   author          = {Marc Gebhardt, Sascha Kurz, Fanny Grundmann, Thomas Klink, Volker Slowik, Christoph-Eckhard Heyde, Hanno Steinke},
-  date            = {2024},
+  date            = {planned 2024},
   journaltitle    = {Plos One},
   title           = {Approach to standardized material characterization of the human lumbopelvic system – testing and evaluation},
   doi             = {...},

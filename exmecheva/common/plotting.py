@@ -52,6 +52,7 @@ def plt_handle_suffix(fig, path='foo', tight=True, show=True,
     if close: plt.close(fig)
 
 def tick_label_renamer(ax, renamer={}, axis='both'):
+    """Renames labels on axis (can be switched ['both','x','y'])."""
     def get_ren_label(ax, renamer, axis):
         if axis=='x':
             label = ax.get_xticklabels()
@@ -78,7 +79,7 @@ def tick_label_renamer(ax, renamer={}, axis='both'):
         raise NotImplementedError('Axis %s not implemented!'%axis)
         
 def tick_legend_renamer(ax, renamer={}, title=''):
-    # legend = ax.axes.flat[0].get_legend()
+    """Renames legend entries on axis and optionally insert a title"""
     legend = ax.axes.get_legend()
     if title != '':
         legend.set_title(title)
@@ -86,6 +87,7 @@ def tick_legend_renamer(ax, renamer={}, title=''):
         i.set_text(renamer[i.get_text()])
     
 def tick_label_inserter(ax, pos=0, ins='', axis='both'):
+    """Inserts a string to tick labels on axis (can be switched ['both','x','y'])."""
     def get_ren_label(ax, pos, ins, axis):
         if axis=='x':
             label = ax.get_xticklabels()
@@ -120,9 +122,45 @@ def tick_label_inserter(ax, pos=0, ins='', axis='both'):
 def plt_add_DaAnno(mdf, x_n, y_n, VIP, ax=None, xy_standard=(-6,6),
                    xy_ded = {1:(1,1),2:(-1,1),3:(-1,-1),4:(1,-1)},
                    pkwargs={'marker':'x', 'linestyle':'','color':'red', 
-                            'label':'Points of interest',},
+                            'label':'Points of interest'},
                    akwargs={'xycoords':'data', 'textcoords':'offset points',
                             'ha':"center", 'va':"center"}):
+    """
+    Adds data annotations to curve.
+
+    Parameters
+    ----------
+    mdf : pd.DataFrame
+        DataFrame of measured data.
+    x_n : string
+        Column name of data to plot on x-axis.
+    y_n : string
+        Column name of data to plot on y-axis.
+    VIP : pd.Series
+        Points of interest (name as index and index of mdf as values).
+    ax : plt.subplot axis, optional
+        Matplotlib axis object to plot. The default is None.
+    xy_standard : tuple of int, optional
+        Standard position of text, coordinates related to data. 
+        The default is (-6,6).
+    xy_ded : dict, optional
+        Dictionary with positiioning multipliers to apply to xy_standard. 
+        The default is {1:(1,1),2:(-1,1),3:(-1,-1),4:(1,-1)}.
+    pkwargs : dict, optional
+        Keyword arguments for plt.plot. 
+        The default is {'marker':'x', 'linestyle':'','color':'red', 
+                        'label':'Points of interest'}.
+    akwargs : TYPE, optional
+        Keyword arguments for plt.annotate. 
+        The default is {'xycoords':'data', 'textcoords':'offset points',
+                        'ha':"center", 'va':"center"}.
+
+    Returns
+    -------
+    pd.DataFrame
+        Combined postion and text (for control purposes).
+
+    """
     def recalc_xy(n, xy_ded):
         d,r = divmod(n,max(xy_ded.keys()))
         d+=1
@@ -142,9 +180,6 @@ def plt_add_DaAnno(mdf, x_n, y_n, VIP, ax=None, xy_standard=(-6,6),
 
     if ax is None: ax = plt.gca()
     ax.plot(udf[x_n], udf[y_n], **pkwargs)
-    #for x in udf.index:
-    #    ax.annotate('%s'%udf.loc[x,'VIP'], xy=(udf.loc[x,x_n],udf.loc[x,y_n]),
-    #                 xytext=(udf.loc[x,'xtext'],udf.loc[x,'ytext']), **akwargs)
     j=np.int64(-1)
     for x in udf['VIP']:
         j+=1
@@ -153,19 +188,76 @@ def plt_add_DaAnno(mdf, x_n, y_n, VIP, ax=None, xy_standard=(-6,6),
     return udf
 
 #%% plot analyse
-def MCurve_Char_Plotter(cps, cip, dfp, df,
-                        head=None, 
-                        xlabel=None, ylabel_l=None, ylabel_r=None, 
-                        cco={'y':'m'},
-                        cco_sc={},
-                        ccd={'DQ1':'b','DQ2':'g','DQ3':'y'},
-                        ccd_sc={'DQ1_sc':'b','DQ2_sc':'g','DQ3_sc':'y'},
-                        cc={'Const':'b','Rise':'g','Fall':'r','Pos':'m','Neg':'y'},
-                        disp_opt_DQ='Normalized', 
-                        do_kwargs={'norm':'absmax', 'normadd':0.5,
-                                   'th':0.05, 'th_option':'abs', 'th_set_val':0},
-                        limDQ=False, limDQvals=[-1.1,1.1]):
-    """Plotting method for mc_char.MCurve_Characterizer results."""
+def curve_char_plotter(cps, cip, dfp, df,
+                       head=None, 
+                       xlabel=None, ylabel_l=None, ylabel_r=None, 
+                       cco={'y':'m'},
+                       cco_sc={},
+                       ccd={'DQ1':'b','DQ2':'g','DQ3':'y'},
+                       ccd_sc={'DQ1_sc':'b','DQ2_sc':'g','DQ3_sc':'y'},
+                       cc={'Const':'b','Rise':'g','Fall':'r','Pos':'m','Neg':'y'},
+                       disp_opt_DQ='Normalized', 
+                       do_kwargs={'norm':'absmax', 'normadd':0.5,
+                                  'th':0.05, 'th_option':'abs', 'th_set_val':0},
+                       limDQ=False, limDQvals=[-1.1,1.1]):
+    """
+    Plotting method for mc_char.curve_characterizer results.
+
+    Parameters
+    ----------
+    cps : pd.Dataframe (mc_char.curve_characterizer output)
+        Characterization of input (for linear parts: linearisation and
+                                   intersection to previous included).
+    cip : pd.Series (mc_char.curve_characterizer output)
+        Points of first characteriation (S=Start, E=End, I=Increase, D=Decrease).
+    dfp : pd.Dataframe (mc_char.curve_characterizer output)
+        Maxima and minima of input, as well as differential quotients.
+    df : pd.Dataframe (mc_char.curve_characterizer output)
+		Input, as well as differential quotients.
+    head : string or None, optional
+        Figure title. The default is None.
+    xlabel : string or None, optional
+        Label on x-axis. The default is None.
+    ylabel_l : string or None, optional
+        Label on left y-axis. The default is None.
+    ylabel_r : string or None, optional
+        Label on right y-axis. The default is None.
+    cco : dict, optional
+        Color codes for Max and Min markers in accordance with dfp column name.
+        The default is {'y':'m'}.
+    cco_sc : dict, optional
+        Color codes for changes in sign markers in accordance with dfp column 
+        name. The default is {}.
+    ccd : dict, optional
+        Color codes for differential quotient plotting.
+        The default is {'DQ1':'b','DQ2':'g','DQ3':'y'}.
+    ccd_sc : dict, optional
+        Color codes for plotting of differential quotient sign changes. 
+        The default is {'DQ1_sc':'b','DQ2_sc':'g','DQ3_sc':'y'}.
+    cc : ict, optional
+        Color codes for plotting of curve description in cps.
+        The default is {'Const':'b','Rise':'g','Fall':'r','Pos':'m','Neg':'y'}.
+    disp_opt_DQ : string, optional
+        Normalization of differential quotients. The default is 'Normalized'.
+    do_kwargs : dict, optional
+        Keyword arguments for normalization of differential quotients.
+        The default is {'norm':'absmax', 'normadd':0.5,
+                        'th':0.05, 'th_option':'abs', 'th_set_val':0}.
+    limDQ : bool, optional
+        Limit plot on y-axis to limDQvals. The default is False.
+    limDQvals : list of float, optional
+        Lower and upper limits on y-axis for limDQ. The default is [-1.1,1.1].
+
+    Raises
+    ------
+    NotImplementedError
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
     if disp_opt_DQ == 'True':
         df_u_DQ = df
     else:

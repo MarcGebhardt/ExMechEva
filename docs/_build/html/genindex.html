@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; ExMechEva 0.1.0 documentation</title>
+  <title>Index &mdash; ExMechEva v0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
 
@@ -158,17 +158,19 @@
 </li>
       <li><a href="exmecheva.bending.html#exmecheva.bending.plotting.colplt_df_ax">colplt_df_ax() (in module exmecheva.bending.plotting)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="exmecheva.bending.html#exmecheva.bending.plotting.colplt_funcs_all">colplt_funcs_all() (in module exmecheva.bending.plotting)</a>
 </li>
       <li><a href="exmecheva.bending.html#exmecheva.bending.plotting.colplt_funcs_ax">colplt_funcs_ax() (in module exmecheva.bending.plotting)</a>
 </li>
       <li><a href="exmecheva.bending.html#exmecheva.bending.plotting.colplt_funcs_one">colplt_funcs_one() (in module exmecheva.bending.plotting)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="exmecheva.common.html#exmecheva.common.eva_opt_hand.com_option_file_read">com_option_file_read() (in module exmecheva.common.eva_opt_hand)</a>
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.eva_opt_hand.com_option_file_write">com_option_file_write() (in module exmecheva.common.eva_opt_hand)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.loadnsave.comb_logs">comb_logs() (in module exmecheva.common.loadnsave)</a>
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.stat_ext.confidence_interval">confidence_interval() (in module exmecheva.common.stat_ext)</a>
 </li>
@@ -178,9 +180,19 @@
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.stat_ext.Corr_ext">Corr_ext() (in module exmecheva.common.stat_ext)</a>
 </li>
-      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.Curvecar_Refine">Curvecar_Refine() (in module exmecheva.common.mc_char)</a>
+      <li><a href="exmecheva.common.html#exmecheva.common.plotting.curve_char_plotter">curve_char_plotter() (in module exmecheva.common.plotting)</a>
 </li>
-      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.Curvecar_Section">Curvecar_Section() (in module exmecheva.common.mc_char)</a>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.curve_characterizer">curve_characterizer() (in module exmecheva.common.mc_char)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.curve_merger">curve_merger() (in module exmecheva.common.mc_char)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.curvecar_refine">curvecar_refine() (in module exmecheva.common.mc_char)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.curvecar_section">curvecar_section() (in module exmecheva.common.mc_char)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.stat_ext.cv">cv() (in module exmecheva.common.stat_ext)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.stat_ext.cvwoso">cvwoso() (in module exmecheva.common.stat_ext)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -558,12 +570,6 @@
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.stat_ext.MComp_interpreter">MComp_interpreter() (in module exmecheva.common.stat_ext)</a>
 </li>
-      <li><a href="exmecheva.common.html#exmecheva.common.plotting.MCurve_Char_Plotter">MCurve_Char_Plotter() (in module exmecheva.common.plotting)</a>
-</li>
-      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.MCurve_Characterizer">MCurve_Characterizer() (in module exmecheva.common.mc_char)</a>
-</li>
-      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.MCurve_merger">MCurve_merger() (in module exmecheva.common.mc_char)</a>
-</li>
       <li><a href="exmecheva.common.html#exmecheva.common.stat_ext.meanwoso">meanwoso() (in module exmecheva.common.stat_ext)</a>
 </li>
       <li>
@@ -703,21 +709,31 @@
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.pd_ext.pd_trapz">pd_trapz() (in module exmecheva.common.pd_ext)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="exmecheva.common.html#exmecheva.common.pd_ext.pd_valid_index">pd_valid_index() (in module exmecheva.common.pd_ext)</a>
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.pd_ext.pd_vec_length">pd_vec_length() (in module exmecheva.common.pd_ext)</a>
 </li>
-      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.Peaky_Finder">Peaky_Finder() (in module exmecheva.common.mc_char)</a>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.peaky_finder">peaky_finder() (in module exmecheva.common.mc_char)</a>
 </li>
-      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.Peaky_Finder_MM">Peaky_Finder_MM() (in module exmecheva.common.mc_char)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.peaky_finder_MM">peaky_finder_MM() (in module exmecheva.common.mc_char)</a>
 </li>
       <li><a href="exmecheva.bending.html#exmecheva.bending.fitting.Perform_Fit">Perform_Fit() (in module exmecheva.bending.fitting)</a>
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.plotting.plt_add_DaAnno">plt_add_DaAnno() (in module exmecheva.common.plotting)</a>
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.plotting.plt_handle_suffix">plt_handle_suffix() (in module exmecheva.common.plotting)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.poi_det_plh">poi_det_plh() (in module exmecheva.common.mc_char)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.poi_fixeva">poi_fixeva() (in module exmecheva.common.mc_char)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.poi_refinement">poi_refinement() (in module exmecheva.common.mc_char)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.poi_rel_finder">poi_rel_finder() (in module exmecheva.common.mc_char)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_char.poi_vip_namer">poi_vip_namer() (in module exmecheva.common.mc_char)</a>
 </li>
       <li><a href="exmecheva.bending.html#exmecheva.bending.opt_mps.Point_df_combine">Point_df_combine() (in module exmecheva.bending.opt_mps)</a>
 </li>
@@ -745,12 +761,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="exmecheva.common.html#exmecheva.common.fitting.Refit_YM_vals">Refit_YM_vals() (in module exmecheva.common.fitting)</a>
 </li>
-      <li><a href="exmecheva.bending.html#exmecheva.bending.fitting.res_multi_const_weighted">res_multi_const_weighted() (in module exmecheva.bending.fitting)</a>
+      <li><a href="exmecheva.common.html#exmecheva.common.stat_ext.relative_deviation">relative_deviation() (in module exmecheva.common.stat_ext)</a>
 </li>
-      <li><a href="exmecheva.common.html#exmecheva.common.mc_man.Retrim_Series">Retrim_Series() (in module exmecheva.common.mc_man)</a>
+      <li><a href="exmecheva.bending.html#exmecheva.bending.fitting.res_multi_const_weighted">res_multi_const_weighted() (in module exmecheva.bending.fitting)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="exmecheva.common.html#exmecheva.common.mc_man.Retrim_Series">Retrim_Series() (in module exmecheva.common.mc_man)</a>
+</li>
       <li><a href="exmecheva.common.html#exmecheva.common.mc_char.rise_curve">rise_curve() (in module exmecheva.common.mc_char)</a>
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.helper.round_to_sigdig">round_to_sigdig() (in module exmecheva.common.helper)</a>
@@ -829,10 +847,10 @@
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.plotting.tick_label_renamer">tick_label_renamer() (in module exmecheva.common.plotting)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="exmecheva.common.html#exmecheva.common.plotting.tick_legend_renamer">tick_legend_renamer() (in module exmecheva.common.plotting)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="exmecheva.common.html#exmecheva.common.analyze.TP_circle">TP_circle() (in module exmecheva.common.analyze)</a>
 </li>
       <li><a href="exmecheva.common.html#exmecheva.common.analyze.TP_radius">TP_radius() (in module exmecheva.common.analyze)</a>
@@ -842,6 +860,8 @@
       <li><a href="exmecheva.bending.html#exmecheva.bending.bfunc_com.triangle_func_d1">triangle_func_d1() (in module exmecheva.bending.bfunc_com)</a>
 </li>
       <li><a href="exmecheva.bending.html#exmecheva.bending.bfunc_com.triangle_func_d2">triangle_func_d2() (in module exmecheva.bending.bfunc_com)</a>
+</li>
+      <li><a href="exmecheva.common.html#exmecheva.common.helper.type_str_return">type_str_return() (in module exmecheva.common.helper)</a>
 </li>
   </ul></td>
 </tr></table>

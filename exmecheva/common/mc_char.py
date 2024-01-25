@@ -444,10 +444,62 @@ def Diff_Quot3(y, x=None, deep=3,
                sc_kwargs={'norm':'absmax', 'normadd':0.5,
                           'th':0.05, 'th_option':'abs', 'th_set_val':0},
                shift_value=False, opt_out='DataFrame'):
+    """
+    Computes difference quotient of input arrays (nth-grade) and their signs, 
+    as well as sign changes to find points of inconstancy in measured curves.
 
+    Parameters
+    ----------
+    y : pd.Series of float
+        Ordinate of the curve for which the difference quotient is to be 
+        determined.
+    x : pd.Series of float or None, optional
+        Abscissa of the curve for which the difference quotient is to be 
+        determined. The default is None.
+    deep : int, optional
+        Number of differential quotients to determine. The default is 3.
+    ex_bool : bool, optional
+        Switch for extending data with Extend_Series_n_setter and afterwards 
+        retrim them with Retrim_Series. The default is True.
+    ex_kwargs : dict, optional
+        Keyword arguments for Extend_Series_n_setter. 
+        The default is {'polydeg':1}.
+    smooth_bool : bool or string, optional
+        Switch for smoothing of data. Must ether be True or False or in 
+        ['Input','x-only','y-only','yandDQ','DQ']. The default is False.
+    smooth_type : string, optional
+        Type of smoothing methode (see Smoothsel for further information).
+        The default is 'SMA'.
+    smooth_opts : dict, optional
+        Smoothing option for choosen method (see Smoothsel for further 
+        information). The default is {'window_length':3}.
+    sc_kwargs : dict, optional
+        Keyword arguments for sign and sign change determination 
+        (normalization and thresholding, for further information see 
+        ./analyze.sign_n_changeth).
+        The default is {'norm':'absmax', 'normadd':0.5, 
+                        'th':0.05, 'th_option':'abs', 'th_set_val':0}.
+    shift_value : bool or int, optional
+        Shifting of values. The default is False.
+    opt_out : string, optional
+        Output option (only DataFrame or DF implemented yet). 
+        The default is 'DataFrame'.
+
+    Raises
+    ------
+    TypeError
+        Determination length of smooth_opts seems to be wrong.
+    NotImplementedError
+        Output option not implemented.
+
+    Returns
+    -------
+    out : pd.DataFrame
+        Differnece quotients, signs and sign changes of given input data.
+
+    """
     if x is None:
         x=y.index
-        
     if ex_bool:
         if 'n' not in ex_kwargs.keys():
             ntmp1 = ntmp2 = 0
@@ -462,7 +514,7 @@ def Diff_Quot3(y, x=None, deep=3,
                     ntmp1 = Extend_Series_n_setter('Smooth',
                                                    ffuncargs=[smooth_opts])
                 else:
-                    raise TypeError("Type %s of smoothopts not implemented!(Determination extension length)")
+                    raise TypeError("Type %s of smoothopts not implemented! (Determination extension length)")
             if shift_value or (shift_value !=0):
                 if shift_value: shift_value = -1 
                 ntmp2 = Extend_Series_n_setter('Shift',
@@ -494,7 +546,6 @@ def Diff_Quot3(y, x=None, deep=3,
                                 smooth_opts=smooth_opts, snip=False)
         else:
             DQs_tmp = df[DQ_name]
-            
     t = sign_n_changeth(df,**sc_kwargs,opt_out = 'DF')
     df = pd.concat([df,t],axis=1)
     if shift_value: shift_value = -1
@@ -504,8 +555,8 @@ def Diff_Quot3(y, x=None, deep=3,
         dfs=df.iloc(axis=1)[2:].shift(-1, fill_value=None)
         df[dfs.columns] = dfs
     if ex_bool:
-        df = Retrim_Series(y=df, axis=0, n=ex_kwargs['n'], kind=ex_kwargs['kind'])
-        
+        df = Retrim_Series(y=df, axis=0, n=ex_kwargs['n'], 
+                           kind=ex_kwargs['kind'])
     if opt_out in ['DF','DataFrame','Dataframe']:
         out = df
         return out
@@ -513,7 +564,7 @@ def Diff_Quot3(y, x=None, deep=3,
         raise NotImplementedError("Output option %s not implemented!"%opt_out)
     
 #%% Automatic curve characterization and merging
-def Peaky_Finder(df, cols='all', norm='absmax',
+def peaky_finder(df, cols='all', norm='absmax',
                  fp_kwargs={'prominence':0.1, 'height':0.1},
                  out_opt='valser-loc'):
     """
@@ -577,17 +628,17 @@ def Peaky_Finder(df, cols='all', norm='absmax',
     
     return o
 
-def Peaky_Finder_MM(df, cols='all', norm='absmax',
+def peaky_finder_MM(df, cols='all', norm='absmax',
                     fp_kwargs={'prominence':0.1, 'height':0.1},
                     out_opt='valser-loc'):
-    """Pacckage method of Peaky_Finder to find maxima and minima."""
-    omax=Peaky_Finder(df= df, cols=cols, norm=norm,
+    """Pacckage method of peaky_finder to find maxima and minima."""
+    omax=peaky_finder(df= df, cols=cols, norm=norm,
                       fp_kwargs=fp_kwargs, out_opt=out_opt)
-    omin=Peaky_Finder(df=-df, cols=cols, norm=norm,
+    omin=peaky_finder(df=-df, cols=cols, norm=norm,
                       fp_kwargs=fp_kwargs, out_opt=out_opt)
     return omax, omin
 
-def Curvecar_Section(i_start, i_end, ref_ser, 
+def curvecar_section(i_start, i_end, ref_ser, 
                      sm_w_length=0, threshold=0.01, norm='abs_max_ref',
                      out_vals=['','Const','Rise','Fall'], kind="median"):
     """
@@ -646,7 +697,7 @@ def Curvecar_Section(i_start, i_end, ref_ser,
         o = out_vals[0]
     return o, mob_mean
 
-def Curvecar_Refine(i_start,i_mid,i_end, ref_ser,
+def curvecar_refine(i_start,i_mid,i_end, ref_ser,
                     threshold=0.5, norm='abs_mid',
                     out_vals=['','Pos','Neg']):
     """
@@ -724,20 +775,21 @@ def Curvecar_Refine(i_start,i_mid,i_end, ref_ser,
     return o, i_snew, i_enew, mean
 
 
-def MCurve_Characterizer(x, y,
-                         ex_bool = True, ex_kwargs={'polydeg':1},
-                         smooth_bool=True, smooth_type='SMA',
-                         smooth_opts={'window_length':3},
-                         # smooth_snip=True,  opt_shift=True,
-                         shift_value=-1,
-                         sc_kwargs={'norm':'absmax', 'normadd':0.5,
-                                    'th':0.05, 'th_option':'abs', 'th_set_val':0},
-                         peak_norm='absmax', peak_kwargs={'prominence':0.1, 'height':0.1}, 
-                         cc_snip=3, cc_threshold = 0.01, cc_norm='abs_max_ref',
-                         cc_refine=True, ccr_threshold=0.75, ccr_norm='abs_mid',
-                         nan_policy='omit'):
+def curve_characterizer(x, y,
+                        ex_bool=True, ex_kwargs={'polydeg':1},
+                        smooth_bool=True, smooth_type='SMA',
+                        smooth_opts={'window_length':3},
+                        # smooth_snip=True,  opt_shift=True,
+                        shift_value=-1,
+                        sc_kwargs={'norm':'absmax', 'normadd':0.5,
+                                   'th':0.05, 'th_option':'abs', 'th_set_val':0},
+                        peak_norm='absmax', peak_kwargs={'prominence':0.1, 'height':0.1}, 
+                        cc_snip=3, cc_threshold=0.01, cc_norm='abs_max_ref',
+                        cc_refine=True, ccr_threshold=0.75, ccr_norm='abs_mid',
+                        nan_policy='omit'):
     """
-    Characterize a measured curve.
+    Characterize a measured curve. To plot results please see 
+    curve_char_plotter in ./plotting.py.
 
     Parameters
     ----------
@@ -776,11 +828,14 @@ def MCurve_Characterizer(x, y,
         The default is {'prominence':0.1, 'height':0.1}.
 		
     cc_snip : corresponding type of index, optional
-        Determination distance to start and end for characterization of section. The default is 3.
+        Determination distance to start and end for characterization of 
+        section. The default is 3.
     cc_threshold : float, optional
-        Determination threshold for characterization of section. The default is 0.01.
+        Determination threshold for characterization of section.
+        The default is 0.01.
     cc_norm : string, optional
-        Nomralization method for characterization of section. The default is 'abs_max_ref'.
+        Nomralization method for characterization of section.
+        The default is 'abs_max_ref'.
 		
     cc_refine : bool, optional
         Turn refinement by curvature of curve section on. The default is True.
@@ -792,7 +847,8 @@ def MCurve_Characterizer(x, y,
     Returns
     -------
     pandas Dataframe
-        Characterization of input (for linear parts: linearisation and intersection to previous included).
+        Characterization of input (for linear parts: linearisation and
+                                   intersection to previous included).
     pandas Series
         Points of first characteriation(S=Start,E=End, I=Increase, D=Decrease).
     pandas Dataframe
@@ -814,11 +870,11 @@ def MCurve_Characterizer(x, y,
                         shift_value=shift_value, opt_out='DataFrame')
     
     # Find peaks
-    a,b=Peaky_Finder_MM(df=df, cols='all', norm=peak_norm,
+    a,b=peaky_finder_MM(df=df, cols='all', norm=peak_norm,
     # # exclude sign and n
-    # a,b=Peaky_Finder_MM(df=df, cols=~df.columns.str.contains('_s.*',regex=True),
+    # a,b=peaky_finder_MM(df=df, cols=~df.columns.str.contains('_s.*',regex=True),
                         fp_kwargs=peak_kwargs, out_opt='valser-loc')
-    def Max_or_Min(col,ind,max_p_ser,min_p_ser):
+    def max_or_min(col,ind,max_p_ser,min_p_ser):
         if ind in max_p_ser[col]:
             o='Max'
         elif ind in min_p_ser[col]:
@@ -826,8 +882,9 @@ def MCurve_Characterizer(x, y,
         else:
             o=''
         return o
-    dfp = df.apply(lambda x: pd.DataFrame(x).apply(lambda y: Max_or_Min(x.name, y.name, a, b), axis=1))
-    # dfp = df.apply(lambda x: pd.DataFrame(x).apply(lambda y: Max_or_Min(x.name, y.name, a, b), axis=1))
+    dfp = df.apply(lambda x: pd.DataFrame(x).apply(
+        lambda y: max_or_min(x.name, y.name, a, b), axis=1)
+        )
     dfp = dfp.loc[np.invert((dfp=='').all(axis=1))]
     
     #pre-identify linear sections
@@ -844,7 +901,7 @@ def MCurve_Characterizer(x, y,
             cip[i]='I'
         else:
             cip[i]='D'
-        t1,t2=Curvecar_Section(i_start=ib, i_end=i, ref_ser=df.DQ1,
+        t1,t2=curvecar_section(i_start=ib, i_end=i, ref_ser=df.DQ1,
                                sm_w_length=cc_snip,
                                threshold=cc_threshold, norm=cc_norm)
         cps.loc[j,'Type']= t1
@@ -855,7 +912,7 @@ def MCurve_Characterizer(x, y,
             ia=df.index[-1]
             cps.loc[j,'Start']=i
             cps.loc[j,'End']=ia
-            t1,t2=Curvecar_Section(i_start=i, i_end=ia, ref_ser=df.DQ1,
+            t1,t2=curvecar_section(i_start=i, i_end=ia, ref_ser=df.DQ1,
                                    sm_w_length=cc_snip,
                                    threshold=cc_threshold, norm=cc_norm)
             cps.loc[j,'Type']= t1
@@ -866,7 +923,7 @@ def MCurve_Characterizer(x, y,
         cps_new = cps.copy(deep=True)
         cps_i_crf=cps.loc[cps.Type.apply(lambda x: x in ['Const','Rise','Fall'])].index
         for i in cps_i_crf[:-1]:
-            t=Curvecar_Refine(cps_new.loc[i,'Start'],cps_new.loc[i,'End'],
+            t=curvecar_refine(cps_new.loc[i,'Start'],cps_new.loc[i,'End'],
                               cps_new.loc[i+1,'End'],
                               df['DQ2'], threshold=ccr_threshold,
                               norm=ccr_norm, out_vals=['','Pos','Neg'])
@@ -875,7 +932,7 @@ def MCurve_Characterizer(x, y,
                 cps_new.loc[i+1,'Start']=t[2]
                 cps_new.loc[i+0.1,['Type','Start','End','Special']]=t
         cps=cps_new.sort_index()
-        t=cps.loc[cps_i_crf].apply(lambda i: Curvecar_Section(i_start=i.Start,
+        t=cps.loc[cps_i_crf].apply(lambda i: curvecar_section(i_start=i.Start,
                                                               i_end=i.End,
                                                               ref_ser=df.DQ1,
                                                               sm_w_length=cc_snip,
@@ -914,18 +971,28 @@ def MCurve_Characterizer(x, y,
     
     return cps, cip, dfp, df
 
-def MCurve_merger(cps1,cps2, how='1stMax', option='nearest'):
+def curve_merger(cps1,cps2, how='1stMax', option='nearest'):
     """
     Finds time offset between two measured curves.
 
     Parameters
     ----------
-    cps1 : pandas Dataframe (result of MCurve_Characterizer)
+    cps1 : pandas Dataframe (result of curve_characterizer)
         First curve characterization.
-    cps2 : pandas Dataframe (result of MCurve_Characterizer)
+    cps2 : pandas Dataframe (result of curve_characterizer)
         Second curve characterization.
     how : string, optional
-        Switch. The default is '1stMax'.
+        Switch for how to determine time offset. Possible are:
+            - '1stMax': first maximum
+            - 'wo_1st+last': without first and last relevant positions
+            - 'complete': all relevant positions
+            - 'list;[x,x,...]': list of relevant positions
+            - 'int;x': one relevant position
+            - 'fix;x': fixed time offset
+        The default is '1stMax'.
+    option : string, optional
+        Switch for offset determination. The default is 'nearest'
+        (merging nearest positions found in both frames).
 
     Raises
     ------
@@ -980,9 +1047,7 @@ def MCurve_merger(cps1,cps2, how='1stMax', option='nearest'):
             if tt.any():
                 for i in tt[tt].index:
                     ti=Find_closest(t2,t1[t[i]])
-                    # print(i,ti)
                     if i!= ti and t[i] == t[ti]:
-                        # print('drop',i)
                         t.drop(i,inplace=True)
             t1=t1[t.values]
             t2=t2[t.index]
@@ -992,46 +1057,51 @@ def MCurve_merger(cps1,cps2, how='1stMax', option='nearest'):
     return t_off, t1, t2
 
 #%% Points of interest
-def PoI_relFinder(cip, cycles, xser, df, dx=None,
-                  POI_start='P', POI_sec=['l','u'],
-                  comp_dfx='x', rel_df='DQ2', ascending=True):
+def poi_rel_finder(cip, cycles, xser, df, dx=None,
+                   POI_start='P', POI_sec=['l','u'],
+                   comp_dfx='x', rel_df='DQ2', ascending=True):
     """
-    
+    Finds the relevant point from several given points. For example, if there 
+    are several rise changes (e.g. due to measurement deviation), an attempt 
+    is made to find the actual one. 
 
     Parameters
     ----------
-    cip : TYPE
-        DESCRIPTION.
+    cip : pd.Series ((interim-)result of poi_det_plh)
+        Points of interest, with index by names and value by index of input.
+        data. Labels are 'H'-high point, 'L'-low point, 'Pl'-rise change on 
+        loading and 'Pu'-rise change on unloading.
     cycles : int
         Number of cyclic loadings.
-    xser : TYPE
-        DESCRIPTION.
-    df : TYPE
-        DESCRIPTION.
-    dx : TYPE, optional
-        DESCRIPTION. The default is None.
-    POI_start : TYPE, optional
-        DESCRIPTION. The default is 'P'.
-    POI_sec : TYPE, optional
-        DESCRIPTION. The default is ['l','u'].
-    comp_dfx : TYPE, optional
-        DESCRIPTION. The default is 'x'.
-    rel_df : TYPE, optional
-        DESCRIPTION. The default is 'DQ2'.
-    ascending : TYPE, optional
-        DESCRIPTION. The default is True.
+    xser : pd.Series
+        Input data on abcissa, p.e. time.
+    df : pandas Dataframe (last result of curve_characterizer), optional
+		Input, as well as differential quotients.
+    dx : float or None, optional
+        Test range. The default is None.
+    POI_start : str, optional
+        Start of point of interest name. The default is 'P'.
+    POI_sec : list of strings, optional
+        Second part of point of interest name. The default is ['l','u'].
+    comp_dfx : string, optional
+        Comparision data on df. The default is 'x'.
+    rel_df : string, optional
+        Relevant data on df for testing (DQ1=ris and DQ2=curve).
+        The default is 'DQ2'.
+    ascending : bool, optional
+        Switch for ascending or descending. The default is True.
 
     Returns
     -------
-    Vren : TYPE
-        DESCRIPTION.
+    Vren : pd.Series
+        Renamer for relevant points.
         
     Example
     -------
-    Vren=PoI_relFinder(cip=cip, cycles=cycles, xser=x, 
-                       df=dft, dx=x.diff().mean()*(det_dist),
-                       POI_start='P', POI_sec=['l','u'],
-                       comp_dfx='x', rel_df='DQ2',ascending=True)
+    Vren=poi_rel_finder(cip=cip, cycles=cycles, xser=x, 
+                        df=dft, dx=x.diff().mean()*(det_dist),
+                        POI_start='P', POI_sec=['l','u'],
+                        comp_dfx='x', rel_df='DQ2', ascending=True)
     cip.index=cip.index.to_series().replace(Vren).values
 
     """
@@ -1041,7 +1111,6 @@ def PoI_relFinder(cip, cycles, xser, df, dx=None,
             dft=pd.DataFrame([])
             dft['V']=cip[cip.index.str.startswith(POI_start+lu+str(cc))]
             if len(dft['V'])<1:
-                # print('none in ',str(cc),lu)
                 del dft
                 pass
             else:
@@ -1054,58 +1123,65 @@ def PoI_relFinder(cip, cycles, xser, df, dx=None,
                 else:
                     if ascending:
                         dft['test']  = dft['xTime'].apply(
-                            lambda x: df[rel_df].loc[(df.x>=x-dx/2)&(df.x<=x+dx/2)].min()
+                            lambda x: df[rel_df].loc[
+                                (df.x>=x-dx/2)&(df.x<=x+dx/2)
+                                ].min()
                             )
                     else:
                         dft['test']  = dft['xTime'].apply(
-                            lambda x: df[rel_df].loc[(df.x>=x-dx/2)&(df.x<=x+dx/2)].max()
+                            lambda x: df[rel_df].loc[
+                                (df.x>=x-dx/2)&(df.x<=x+dx/2)
+                                ].max()
                             )
-                dft=dft.sort_values('test',ascending=ascending)
-                #Vnew=['P'+lu+str(cc)+chr(a+96).replace('`','') for a in range(len(dft['V'].index))]
+                dft=dft.sort_values('test', ascending=ascending)
                 Vnew=dft.index.sort_values().values
                 dft['Vnew']=Vnew
-                # print(cc,lu,'\n',dft)
                 Vren.update(dft['Vnew'].copy(deep=True).to_dict())
                 del dft,Vnew
     return Vren
     
-def PoI_PLH(x, y, cps, z=None, dft=None,
-            det_dist=2, det_r='RF', refineP=True, cycles=1):
+def poi_det_plh(x, y, cps, z=None, dft=None,
+            det_dist=2, det_r='RF', refineP=True):
     """
-    Automatically determines high and low points based on a given curve. 
+    Automatically determines high and low points, as well of points with with 
+    changing rise based on a given curve.
 
     Parameters
     ----------
     x : pd.Series
-        Input data on abcissa.
-    y : TYPE
-        DESCRIPTION.
-    cps : TYPE
-        DESCRIPTION.
-    z : TYPE, optional
-        DESCRIPTION. The default is None.
-    dft : TYPE, optional
-        DESCRIPTION. The default is None.
-    det_dist : TYPE, optional
-        DESCRIPTION. The default is 2.
-    det_r : TYPE, optional
-        DESCRIPTION. The default is 'RF'.
-    refineP : TYPE, optional
-        DESCRIPTION. The default is True.
-    cycles : TYPE, optional
-        DESCRIPTION. The default is 1.
+        Input data on abcissa, p.e. time.
+    y : pd.Series
+        Input data on ordinate, p.e. force.
+    cps : pandas Dataframe (first result of curve_characterizer)
+        Measurement curve characterization.
+    z : pd.Series, optional
+        Additional input data on ordinate, p.e. displacement. 
+        The default is None.
+    dft : pandas Dataframe (last result of curve_characterizer), optional
+		Input, as well as differential quotients. Used if refineP is True.
+        The default is None.
+    det_dist : int, optional
+        Determination distance. The default is 2.
+    det_r : string, optional
+        Determination range selection keyword to search in cps.
+        The default is 'RF'.
+    refineP : bool, optional
+        Switch for refinement. The default is True.
 
     Returns
     -------
-    cip : TYPE
-        DESCRIPTION.
-    c : TYPE
-        DESCRIPTION.
+    cip : pd.Series
+        Points of interest, with index by names and value by index of input.
+        data. Labels are 'H'-high point, 'L'-low point, 'Pl'-rise change on 
+        loading and 'Pu'-rise change on unloading.
+    c : int
+        Number of cyclic loadings.
         
     Example
     -------
-    if ('preload' in _opts['OPT_Testtype']) or ('cyclic' in _opts['OPT_Testtype']):
-    Vt, cycles = PoI_PLH(x=messu.Time, y=messu.Force, 
+    if (('preload' in _opts['OPT_Testtype']) 
+        or ('cyclic' in _opts['OPT_Testtype'])):
+    Vt, cycles = poi_det_plh(x=messu.Time, y=messu.Force, 
                          cps=cps_t, z=messu.Way, dft=df_t,
                          det_dist=_opts['OPT_Determination_Distance'], 
                          det_r='RF', refineP=True)
@@ -1150,50 +1226,58 @@ def PoI_PLH(x, y, cps, z=None, dft=None,
             hu += 1
             e = 97
         ib=i
-    c=hu           
+    c=hu
     if refineP and (not dft is None):
-        Vren=PoI_relFinder(cip=cip, cycles=cycles, xser=x, 
+        # Vren=poi_rel_finder(cip=cip, cycles=cycles, xser=x, # cycles may have to be given to function
+        Vren=poi_rel_finder(cip=cip, cycles=c, xser=x, 
                            df=dft, dx=x.diff().mean()*(det_dist),
                            POI_start='P', POI_sec=['l','u'],
-                           comp_dfx='x', rel_df='DQ2',ascending=True)
+                           comp_dfx='x', rel_df='DQ2', ascending=True)
         cip.index=cip.index.to_series().replace(Vren).values
     return cip, c
 
-def POI_VIP_namer(VIP, ttype, key,
+def poi_vip_namer(VIP, ttype, key,
                   cc=1, mc=1, lu='l'):
     """
-    Automatic naming of points of interest.
+    Automatic naming of points of interest to use before poi_fixeva and 
+    poi_refinement. Replaces given string by its equivalent for current cycle.
+    For example if key is 'P' (may be lower edge of elastic modulus 
+    determination range) and lu='l' it will find 'Pl1' for the first cycle and
+    'L3' for the third cycle.
 
     Parameters
     ----------
-    VIP : TYPE
-        DESCRIPTION.
-    ttype : TYPE
-        DESCRIPTION.
-    key : TYPE
-        DESCRIPTION.
-    cc : TYPE, optional
-        DESCRIPTION. The default is 1.
-    mc : TYPE, optional
-        DESCRIPTION. The default is 1.
-    lu : TYPE, optional
-        DESCRIPTION. The default is 'l'.
+    VIP : pd.Series
+        Identified points of interest. Index by name and value by index of 
+        measurement dataframe.
+    ttype : string
+        Test type, i.e. type of applied loading. Searches only for 'cyclic' 
+        and 'destructive'.
+    key : string
+        Label for naming, possible are 'H'-high point, 'L'-low point, 
+        'P'-rise change and 'S'-start.
+    cc : int, optional
+        Current cycle. The default is 1.
+    mc : int, optional
+        maximum applied cycles. The default is 1.
+    lu : string, optional
+        Loading ('l') or unloading ('u'). The default is 'l'.
 
     Returns
     -------
-    TYPE
-        DESCRIPTION.
+    string
+        Found name of point of interest.
         
     Example
     -------
     for cc in np.arange(1,cycles+1):
-        tmp_iS=POI_VIP_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+        tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
                               key=_opts['OPT_YM_Determination_range'][-2],
                               cc=cc,mc=cycles,lu='l')
-        tmp_iE=POI_VIP_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+        tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
                               key=_opts['OPT_YM_Determination_range'][-1],
                               cc=cc,mc=cycles,lu='l')
-        tmp,_,_ = POI_fixeva(pds=messu.Stress, 
+        tmp,_,_ = poi_fixeva(pds=messu.Stress, 
                             p=_opts['OPT_YM_Determination_range'][0:2],
                             iS=VIP_messu[tmp_iS], iE=VIP_messu[tmp_iE],
                             range_sub='min', norm='max', option='abs',
@@ -1201,13 +1285,13 @@ def POI_VIP_namer(VIP, ttype, key,
                             irr_opt='nearest')
         VIP_messu['FlA'+str(cc)],VIP_messu['FlB'+str(cc)]=tmp
         if not (('destructive' in _opts['OPT_Testtype']) and cc==cycles):
-            tmp_iS=POI_VIP_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+            tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
                                  key=_opts['OPT_YM_Determination_range'][-1],
                                  cc=cc,mc=cycles,lu='u')
-            tmp_iE=POI_VIP_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+            tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
                                   key=_opts['OPT_YM_Determination_range'][-2],
                                   cc=cc,mc=cycles,lu='u')
-            tmp,_,_ = POI_fixeva(pds=messu.Stress, 
+            tmp,_,_ = poi_fixeva(pds=messu.Stress, 
                                 p=_opts['OPT_YM_Determination_range'][0:2],
                                 iS=VIP_messu[tmp_iS], iE=VIP_messu[tmp_iE],
                                 range_sub='min', norm='max', option='abs',
@@ -1224,20 +1308,20 @@ def POI_VIP_namer(VIP, ttype, key,
 
     if key == 'P':
         t=key+lu+str(cc)
-        sk = t if indisin(t,VIP) else POI_VIP_namer(VIP, ttype, 'L',
+        sk = t if indisin(t,VIP) else poi_vip_namer(VIP, ttype, 'L',
                                                     cc, mc, lu)
     elif key == 'H':
         t=key+str(cc)
-        sk = t if indisin(t,VIP) else POI_VIP_namer(VIP, ttype, 'U',
+        sk = t if indisin(t,VIP) else poi_vip_namer(VIP, ttype, 'U',
                                                     cc, mc, lu)
     elif key == 'L':
         if lu == 'l':
             t=key+str(cc-1)
-            sk = t if indisin(t,VIP) else POI_VIP_namer(VIP, ttype, 'S',
+            sk = t if indisin(t,VIP) else poi_vip_namer(VIP, ttype, 'S',
                                                         cc, mc, lu)
         else:
             t=key+str(cc)
-            sk = t if indisin(t,VIP) else POI_VIP_namer(VIP, ttype, 'E',
+            sk = t if indisin(t,VIP) else poi_vip_namer(VIP, ttype, 'E',
                                                         cc, mc, lu)
     elif key == 'S' and cc==mc and lu=='u':
         sk = 'E'
@@ -1251,7 +1335,7 @@ def POI_VIP_namer(VIP, ttype, key,
             sk='Hm' # have to be determined afterwards
     return sk
 
-def POI_fixeva(pds, p, iS=None, iE=None, 
+def poi_fixeva(pds, p, iS=None, iE=None, 
                range_sub='min', norm='max', option='abs',
                check_irr=False, irr=None, irr_opt='nearest'):
     """
@@ -1260,10 +1344,10 @@ def POI_fixeva(pds, p, iS=None, iE=None,
 
     Parameters
     ----------
-    pds : TYPE
-        DESCRIPTION.
-    p : TYPE
-        DESCRIPTION.
+    pds : pd.Series
+        Input values, p.e. measured stress data.
+    p : list of two floats
+        Lower (first) and upper (second) border of determination range.
     iS : TYPE, optional
         DESCRIPTION. The default is None.
     iE : TYPE, optional
@@ -1294,6 +1378,37 @@ def POI_fixeva(pds, p, iS=None, iE=None,
         DESCRIPTION.
     TYPE
         DESCRIPTION.
+        
+    Example
+    -------
+    for cc in np.arange(1,cycles+1):
+        tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+                              key=_opts['OPT_YM_Determination_range'][-2],
+                              cc=cc,mc=cycles,lu='l')
+        tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+                              key=_opts['OPT_YM_Determination_range'][-1],
+                              cc=cc,mc=cycles,lu='l')
+        tmp,_,_ = poi_fixeva(pds=messu.Stress, 
+                            p=_opts['OPT_YM_Determination_range'][0:2],
+                            iS=VIP_messu[tmp_iS], iE=VIP_messu[tmp_iE],
+                            range_sub='min', norm='max', option='abs',
+                            check_irr=True, irr=messu[messu.driF_schg].index.values,
+                            irr_opt='nearest')
+        VIP_messu['FlA'+str(cc)],VIP_messu['FlB'+str(cc)]=tmp
+        if not (('destructive' in _opts['OPT_Testtype']) and cc==cycles):
+            tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+                                 key=_opts['OPT_YM_Determination_range'][-1],
+                                 cc=cc,mc=cycles,lu='u')
+            tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+                                  key=_opts['OPT_YM_Determination_range'][-2],
+                                  cc=cc,mc=cycles,lu='u')
+            tmp,_,_ = poi_fixeva(pds=messu.Stress, 
+                                p=_opts['OPT_YM_Determination_range'][0:2],
+                                iS=VIP_messu[tmp_iS], iE=VIP_messu[tmp_iE],
+                                range_sub='min', norm='max', option='abs',
+                                check_irr=True, irr=messu[messu.driF_schg].index.values,
+                                irr_opt='nearest')
+            VIP_messu['FuB'+str(cc)],VIP_messu['FuA'+str(cc)]=tmp
 
     """
     tmp=Find_closest_perc(
@@ -1336,12 +1451,12 @@ def POI_fixeva(pds, p, iS=None, iE=None,
             raise NotImplementedError("Type %s for irregularity not implemented"%type(irr))
     return tmp, irrb, irrpos
 
-def PoI_refinement(DQ, B_ser, s_range, B_ind=None, names=['F3','M','F4'],
+def poi_refinement(DQ, B_ser, s_range, B_ind=None, names=['F3','M','F4'],
                    Blp=0.15, Bup=0.95, Maxp=0.75, trimsch=True):
     """
     Refine elastic modulus determination range according to a method described 
     by Keuerleber [1].
-    ([1]Keuerleber, M. (2006). Bestimmung des Elastizitätsmoduls von 
+    ([1]: Keuerleber, M. (2006). Bestimmung des Elastizitätsmoduls von 
     Kunststoffen bei hohen Dehnraten am Beispiel von PP. Von der Fakultät 
     Maschinenbau der Universität Stuttgart zur Erlangung der Würde eines 
     Doktor-Ingenieurs (Dr.-Ing.) genehmigte Abhandlung. Doktorarbeit. 
@@ -1349,44 +1464,52 @@ def PoI_refinement(DQ, B_ser, s_range, B_ind=None, names=['F3','M','F4'],
 
     Parameters
     ----------
-    DQ : TYPE
-        DESCRIPTION.
-    B_ser : TYPE
-        DESCRIPTION.
-    s_range : TYPE
-        DESCRIPTION.
-    B_ind : TYPE, optional
-        DESCRIPTION. The default is None.
-    names : TYPE, optional
-        DESCRIPTION. The default is ['F3','M','F4'].
-    Blp : TYPE, optional
-        DESCRIPTION. The default is 0.15.
-    Bup : TYPE, optional
-        DESCRIPTION. The default is 0.95.
-    Maxp : TYPE, optional
-        DESCRIPTION. The default is 0.75.
-    trimsch : TYPE, optional
-        DESCRIPTION. The default is True.
+    DQ : pd.DataFrame
+        Stress-strain-curve differential quotients and sign changes. 
+        Generated by Diff_Quot.
+    B_ser : pd.Series
+        Input data, p.e. stress, to search for given lower limit ratio 
+        (Blp) und upper limit ratio (Bup) for refined range.
+    s_range : list
+        Start and end of step range to search for refined range.
+    B_ind : int, optional
+        Index for B_ser. The default is None. Not implemented yet 
+        (using absolute maximum of given B_ser values instead).
+    names : list of string, optional
+        Output names for lower limit, maximum of differental quotient 
+        and upper limit. The default is ['F3','M','F4'].
+    Blp : float, optional
+        Lower limit ratio to identified B_ser value (p.e. maximum stress).
+        The default is 0.15.
+    Bup : float, optional
+        Upper limit ratio to identified B_ser value (p.e. maximum stress).
+        The default is 0.95.
+    Maxp : float, optional
+        Lowest value to include in refined range. The default is 0.75. 
+        (i.e. 75 % of the maximum differntail quotient)
+    trimsch : bool, optional
+        Switch for trimming step range of differential quotients. 
+        The default is True.
 
     Returns
     -------
-    VIP : TYPE
-        DESCRIPTION.
-    DQs : TYPE
-        DESCRIPTION.
+    VIP : pd.Series
+        Determined points of interest as series of steps indexed by given names.
+    DQs : pd.DataFrame 
+        Differential quotients limitet to range.
     
     Example
     -------
     DQcons=None
     DQopts=None
     for cc in np.arange(1,cycles+1):
-        tmp_iS=POI_VIP_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+        tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
                               key=_opts['OPT_YM_Determination_refinement'][2],
                               cc=cc,mc=cycles,lu='l')
-        tmp_iE=POI_VIP_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+        tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
                               key=_opts['OPT_YM_Determination_refinement'][3],
                               cc=cc,mc=cycles,lu='l')
-        tmp,DQcont = PoI_refinement(DQ=DQcon, B_ser=messu.loc(axis=1)['Stress'],
+        tmp,DQcont = poi_refinement(DQ=DQcon, B_ser=messu.loc(axis=1)['Stress'],
                             s_range=[VIP_messu[tmp_iS],VIP_messu[tmp_iE]],
                             names=['RlA'+str(cc),'RlM'+str(cc),'RlB'+str(cc)],
                             Blp=_opts['OPT_YM_Determination_refinement'][0],
@@ -1397,7 +1520,7 @@ def PoI_refinement(DQ, B_ser, s_range, B_ind=None, names=['F3','M','F4'],
             DQcons = DQcont
         else:
             DQcons=pd.concat([DQcons,DQcont],axis=0)
-        tmp,DQoptt = PoI_refinement(DQ=DQopt, B_ser=messu.loc(axis=1)['Stress'],
+        tmp,DQoptt = poi_refinement(DQ=DQopt, B_ser=messu.loc(axis=1)['Stress'],
                             s_range=[VIP_messu[tmp_iS],VIP_messu[tmp_iE]],
                             names=['RlA'+str(cc),'RlM'+str(cc),'RlB'+str(cc)],
                             Blp=_opts['OPT_YM_Determination_refinement'][0],
@@ -1411,30 +1534,28 @@ def PoI_refinement(DQ, B_ser, s_range, B_ind=None, names=['F3','M','F4'],
             
             
         if not (('destructive' in _opts['OPT_Testtype']) and cc==cycles):
-            tmp_iS=POI_VIP_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+            tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
                                  key=_opts['OPT_YM_Determination_refinement'][3],
                                  cc=cc,mc=cycles,lu='u')
-            tmp_iE=POI_VIP_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
+            tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts['OPT_Testtype'],
                                   key=_opts['OPT_YM_Determination_refinement'][2],
                                   cc=cc,mc=cycles,lu='u')
-            tmp,DQcont = PoI_refinement(DQ=DQcon, B_ser=messu.loc(axis=1)['Stress'],
+            tmp,DQcont = poi_refinement(DQ=DQcon, B_ser=messu.loc(axis=1)['Stress'],
                                 s_range=[VIP_messu[tmp_iS],VIP_messu[tmp_iE]],
                                 names=['RuA'+str(cc),'RuM'+str(cc),'RuB'+str(cc)],
                                 Blp=_opts['OPT_YM_Determination_refinement'][0],
-                                # Bup=1.0-_opts['OPT_YM_Determination_refinement'][0],
-                                Bup=0.75-_opts['OPT_YM_Determination_refinement'][0],
+                                Bup=1.0-_opts['OPT_YM_Determination_refinement'][0],
                                 Maxp=_opts['OPT_YM_Determination_refinement'][1])
             VIP_messu=tmp.combine_first(VIP_messu).sort_values().astype(int)
             if DQcons is None:
                 DQcons = DQcont
             else:
                 DQcons=pd.concat([DQcons,DQcont],axis=0)
-            tmp,DQoptt = PoI_refinement(DQ=DQopt, B_ser=messu.loc(axis=1)['Stress'],
+            tmp,DQoptt = poi_refinement(DQ=DQopt, B_ser=messu.loc(axis=1)['Stress'],
                                 s_range=[VIP_messu[tmp_iS],VIP_messu[tmp_iE]],
                                 names=['RuA'+str(cc),'RuM'+str(cc),'RuB'+str(cc)],
                                 Blp=_opts['OPT_YM_Determination_refinement'][0],
-                                # Bup=1.0-_opts['OPT_YM_Determination_refinement'][0],
-                                Bup=0.75-_opts['OPT_YM_Determination_refinement'][0],
+                                Bup=1.0-_opts['OPT_YM_Determination_refinement'][0],
                                 Maxp=_opts['OPT_YM_Determination_refinement'][1])
             VIP_dicu=tmp.combine_first(VIP_dicu).sort_values().astype(int)
             if DQopts is None:
@@ -1456,12 +1577,10 @@ def PoI_refinement(DQ, B_ser, s_range, B_ind=None, names=['F3','M','F4'],
     DQs=DQ.loc[step_range]
     if trimsch:
         t=DQs[DQs['DQ1_signchange']]
-        # t=DQs[DQs['DQ1_sc']]
         t2=pd.Series(t.index.values, index=t.index)
-        # t2.loc[DQs.iloc[-1].name]=DQs.iloc[-1].name # nicht nur ende, sondern auch anfang
-        t4= [DQs.iloc[0].name,DQs.iloc[-1].name]
-        t2 = t2.append(pd.Series(t4, index=t4))
-        t2 = t2.drop_duplicates().sort_index()
+        t4=[DQs.iloc[0].name,DQs.iloc[-1].name]
+        t2=t2.append(pd.Series(t4, index=t4))
+        t2=t2.drop_duplicates().sort_index()
         t3=t2.diff()
         step_range=[t2[t2<t3.idxmax()].iloc[-1],t3.idxmax()-1]
         DQs=DQs.loc[pd_slice_index(DQs.index,step_range)]            
@@ -1470,13 +1589,11 @@ def PoI_refinement(DQ, B_ser, s_range, B_ind=None, names=['F3','M','F4'],
     DQM=DQs.DQ1.loc[VIP[names[1]]]
     try:
         VIP[names[0]]=DQs.loc[:VIP[names[1]]].iloc[::-1].loc[(DQs.DQ1/DQM)<Maxp].index[0]+1
-        # VIP_messu['F3']=DQcons.loc[:VIP_messu['FM']].iloc[::-1].loc[(DQcons.DQ1/DQcons.DQ1.max())<_opts['OPT_YM_Determination_refinement'][1]].index[0]
     except IndexError:
         VIP[names[0]]=DQs.index[0]
     try: # Hinzugefügt am 16.09.2021
         VIP[names[2]]=DQs.loc[VIP[names[1]]:].loc[(DQs.DQ1/DQM)<Maxp].index[0]-1
-        # VIP_messu['F4']=DQcons.loc[VIP_messu['FM']:].loc[(DQcons.DQ1/DQcons.DQ1.max())<_opts['OPT_YM_Determination_refinement'][1]].index[0]
     except IndexError:
-        VIP[names[2]]=VIP[names[1]]-1 #-1 könnte zu Problemen führen
+        VIP[names[2]]=VIP[names[1]]-1 #-1 could be problematic
     VIP=VIP.sort_values()
     return VIP, DQs

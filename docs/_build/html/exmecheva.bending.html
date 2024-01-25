@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>exmecheva.bending package &mdash; ExMechEva 0.1.0 documentation</title>
+  <title>exmecheva.bending package &mdash; ExMechEva v0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
 
@@ -51,7 +51,98 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">ExMechEva</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="exmecheva.html">exmecheva package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="exmecheva.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">exmecheva.bending package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">exmecheva.bending package</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.bending.attr_bgl">exmecheva.bending.attr_bgl module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.bending.bfunc_class">exmecheva.bending.bfunc_class module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_class.Bend_func_cohort"><code class="docutils literal notranslate"><span class="pre">Bend_func_cohort</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_class.Bend_func_legion"><code class="docutils literal notranslate"><span class="pre">Bend_func_legion</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_class.Bend_func_sub"><code class="docutils literal notranslate"><span class="pre">Bend_func_sub</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.bending.bfunc_com">exmecheva.bending.bfunc_com module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_com.Shear_area"><code class="docutils literal notranslate"><span class="pre">Shear_area()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_com.gamma_V_det"><code class="docutils literal notranslate"><span class="pre">gamma_V_det()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_com.triangle_func_d0"><code class="docutils literal notranslate"><span class="pre">triangle_func_d0()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_com.triangle_func_d1"><code class="docutils literal notranslate"><span class="pre">triangle_func_d1()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_com.triangle_func_d2"><code class="docutils literal notranslate"><span class="pre">triangle_func_d2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.bending.bfunc_fse">exmecheva.bending.bfunc_fse module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_4sin_d0"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_d0()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_4sin_d1"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_d1()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_4sin_d2"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_d2()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_4sin_lin_func_d0"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_lin_func_d0()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_4sin_lin_func_d1"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_lin_func_d1()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_4sin_lin_func_d2"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_lin_func_d2()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_4sin_wlin_d0"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_wlin_d0()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_4sin_wlin_d1"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_wlin_d1()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_4sin_wlin_d2"><code class="docutils literal notranslate"><span class="pre">FSE_4sin_wlin_d2()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_SF_func_d0"><code class="docutils literal notranslate"><span class="pre">FSE_SF_func_d0()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_SF_func_d1"><code class="docutils literal notranslate"><span class="pre">FSE_SF_func_d1()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.bfunc_fse.FSE_SF_func_d2"><code class="docutils literal notranslate"><span class="pre">FSE_SF_func_d2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.bending.evaluation">exmecheva.bending.evaluation module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.Moment_perF_func"><code class="docutils literal notranslate"><span class="pre">Moment_perF_func()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.Weight_func"><code class="docutils literal notranslate"><span class="pre">Weight_func()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_check_many_with_method_D"><code class="docutils literal notranslate"><span class="pre">YM_check_many_with_method_D()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_check_with_method_D"><code class="docutils literal notranslate"><span class="pre">YM_check_with_method_D()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_A"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_A()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_B"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_B()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_C"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_C()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_D"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_D_bend_df"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D_bend_df()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_D_bend_df_add"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D_bend_df_add()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_D_num"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D_num()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_D_res"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_D_res()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_E"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_E()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_F"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_F()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.YM_eva_method_G"><code class="docutils literal notranslate"><span class="pre">YM_eva_method_G()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.coord_df_depo"><code class="docutils literal notranslate"><span class="pre">coord_df_depo()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.coord_df_mean"><code class="docutils literal notranslate"><span class="pre">coord_df_mean()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.straindf_from_curve"><code class="docutils literal notranslate"><span class="pre">straindf_from_curve()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.stress_df_from_lin"><code class="docutils literal notranslate"><span class="pre">stress_df_from_lin()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.evaluation.stress_perF"><code class="docutils literal notranslate"><span class="pre">stress_perF()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.bending.fitting">exmecheva.bending.fitting module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.Multi_minimize"><code class="docutils literal notranslate"><span class="pre">Multi_minimize()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.Perform_Fit"><code class="docutils literal notranslate"><span class="pre">Perform_Fit()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.lmfit_bound_checker"><code class="docutils literal notranslate"><span class="pre">lmfit_bound_checker()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.lmfit_free_val_setter"><code class="docutils literal notranslate"><span class="pre">lmfit_free_val_setter()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.lmfit_modelize"><code class="docutils literal notranslate"><span class="pre">lmfit_modelize()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.lmfit_param_adder"><code class="docutils literal notranslate"><span class="pre">lmfit_param_adder()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.lmfit_param_key_checker"><code class="docutils literal notranslate"><span class="pre">lmfit_param_key_checker()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.lmfit_param_prep"><code class="docutils literal notranslate"><span class="pre">lmfit_param_prep()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.res_multi_const_weighted"><code class="docutils literal notranslate"><span class="pre">res_multi_const_weighted()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.fitting.shaped_array_fill_fandl"><code class="docutils literal notranslate"><span class="pre">shaped_array_fill_fandl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.bending.opt_mps">exmecheva.bending.opt_mps module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.Point_df_combine"><code class="docutils literal notranslate"><span class="pre">Point_df_combine()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.Point_df_from_lin"><code class="docutils literal notranslate"><span class="pre">Point_df_from_lin()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.Point_df_idx"><code class="docutils literal notranslate"><span class="pre">Point_df_idx()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.Point_df_transform"><code class="docutils literal notranslate"><span class="pre">Point_df_transform()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.Points_add_step"><code class="docutils literal notranslate"><span class="pre">Points_add_step()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.Points_dif_step"><code class="docutils literal notranslate"><span class="pre">Points_dif_step()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.Points_diff"><code class="docutils literal notranslate"><span class="pre">Points_diff()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.Points_eval_func"><code class="docutils literal notranslate"><span class="pre">Points_eval_func()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.v_Ctrans"><code class="docutils literal notranslate"><span class="pre">v_Ctrans()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.opt_mps.v_length"><code class="docutils literal notranslate"><span class="pre">v_length()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.bending.plotting">exmecheva.bending.plotting module</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.plotting.colplt_common_ax"><code class="docutils literal notranslate"><span class="pre">colplt_common_ax()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.plotting.colplt_df_ax"><code class="docutils literal notranslate"><span class="pre">colplt_df_ax()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.plotting.colplt_funcs_all"><code class="docutils literal notranslate"><span class="pre">colplt_funcs_all()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.plotting.colplt_funcs_ax"><code class="docutils literal notranslate"><span class="pre">colplt_funcs_ax()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.bending.plotting.colplt_funcs_one"><code class="docutils literal notranslate"><span class="pre">colplt_funcs_one()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.bending">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="exmecheva.common.html">exmecheva.common package</a></li>
 </ul>
 </li>
@@ -217,7 +308,7 @@ If x is a Dataframe or float and kws is a Series, evaluates each index in kws.</
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>AreaS</strong> – DESCRIPTION.</p>
+<dd class="field-even"><p><strong>AreaS</strong> – Shear area.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>same type as Area</p>
@@ -1001,30 +1092,46 @@ Possible are:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>BFL</strong> (<a class="reference internal" href="#exmecheva.bending.bfunc_class.Bend_func_legion" title="exmecheva.bending.bfunc_class.Bend_func_legion"><em>Bend_func_legion</em></a>) – DESCRIPTION.</p></li>
-<li><p><strong>Fit_func_key</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
-<li><p><strong>P_df</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
-<li><p><strong>lB</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
-<li><p><strong>rB</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
-<li><p><strong>s_range</strong> (<em>TYPE</em>) – DESCRIPTION.</p></li>
-<li><p><strong>Shear_func_key</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
-<li><p><strong>t_mean</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
-<li><p><strong>poisson</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is 0.3.</p></li>
-<li><p><strong>Shear_func_key</strong> – DESCRIPTION. The default is None.</p></li>
-<li><p><strong>gamma_V</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is None.</p></li>
-<li><p><strong>err_weights</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is [ 1, 10, 1000, 100].</p></li>
-<li><p><strong>max_nfev</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is 500.</p></li>
-<li><p><strong>nan_policy</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is ‘raise’.</p></li>
-<li><p><strong>option</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – DESCRIPTION. The default is ‘Pre’.</p></li>
+<li><p><strong>BFL</strong> (<a class="reference internal" href="#exmecheva.bending.bfunc_class.Bend_func_legion" title="exmecheva.bending.bfunc_class.Bend_func_legion"><em>Bend_func_legion</em></a>) – Class conttaining information about bending line and derivates.
+See Bend_func_legion in ./bfunc_class.py for more information.</p></li>
+<li><p><strong>Fit_func_key</strong> (<em>string</em>) – Identifier for fit function, p.e. ‘w_A’.</p></li>
+<li><p><strong>P_df</strong> (<em>pd.DataFrame</em>) – Measured and 2D-transformed displacment data. Combination of
+x-coordinates and y-displacments.</p></li>
+<li><p><strong>lB</strong> (<em>float</em>) – Left support x-coordinate, p.e. -10.0 with 20 mm span.</p></li>
+<li><p><strong>rB</strong> (<em>float</em>) – Right support x-coordinate, p.e. 10.0 with 20 mm span.</p></li>
+<li><p><strong>s_range</strong> (<em>list</em><em> or </em><em>index</em>) – Range of steps.</p></li>
+<li><p><strong>Shear_func_key</strong> (<em>string</em><em>, </em><em>optional</em>) – Identifier for shear function, p.e. ‘w_S’. The default is None.</p></li>
+<li><p><strong>gamma_V</strong> (<em>float</em><em>, </em><em>optional</em>) – Ratio between shear to entire deformation in mid of bending beam.
+See gamma_V_det in ./bfunc_com.py
+The default is None.</p></li>
+<li><p><strong>err_weights</strong> (<em>list</em><em> of </em><em>float</em><em>, </em><em>optional</em>) – Weights for multi contraint fitting. See res_multi_const_weighted.
+The default is [ 1, 10, 1000, 100].</p></li>
+<li><p><strong>max_nfev</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of evaluations. The default is 500.</p></li>
+<li><p><strong>nan_policy</strong> (<em>string</em><em>, </em><em>optional</em>) – NaN handling. The default is ‘raise’.</p></li>
+<li><p><strong>option</strong> (<em>string</em><em>, </em><em>optional</em>) – <dl>
+<dt>Option for fitting. Possible are:</dt><dd><ul>
+<li><p>’Pre’: Pre fit with shear deformation</p></li>
+<li><p>’Bend’: Refit to adjusted bending deformation</p></li>
+</ul>
+<p>(without indentation and shear deformation)</p>
+</dd>
+</dl>
+<p>The default is ‘Pre’.</p>
+</p></li>
 <li><p><strong>ldoption</strong> (<em>string</em><em>, </em><em>optional</em>) – <p>Load direction automatism.
 possible are:</p>
 <blockquote>
 <div><ul>
 <li><p>’fixed-y’: Load application in -y-direction (default).</p></li>
 <li><p>’fixed+y’: Load application in +y-direction.</p></li>
-<li><p>’auto-dispser’: Load application direction automaticly determined by a series of displacements (applied as ldoptionadd, index have to match with s_range/P_df).</p></li>
-<li><p>’auto-Pcoorddisp’: Load application direction automaticly determined by a Points dataframe and specified point name and coordinate (applied as ldoptionadd, index have to match with s_range/P_df)</p></li>
+<li><p>’auto-dispser’: Load application direction automaticly determined</p></li>
 </ul>
+<p>by a series of displacements (applied as ldoptionadd,
+index have to match with s_range/P_df).
+- ‘auto-Pcoorddisp’: Load application direction automaticly
+determined by a Points dataframe and specified point name and
+coordinate (applied as ldoptionadd, index have to match with
+s_range/P_df)</p>
 </div></blockquote>
 <p>The default is ‘fixed-y’.</p>
 </p></li>
@@ -1032,9 +1139,12 @@ possible are:</p>
 Have to match to ldoption:</p>
 <blockquote>
 <div><ul>
-<li><p>’auto-dispser’: Series of displacements (index have to match with s_range/P_df).</p></li>
-<li><p>’auto-Pcoorddisp’: Points dataframe and specified point name and coordinate ([Points as Dataframe, point name as string, coordinate as string],index have to match with s_range/P_df)</p></li>
+<li><p>’auto-dispser’: Series of displacements (index have to match with</p></li>
 </ul>
+<p>s_range/P_df).
+- ‘auto-Pcoorddisp’: Points dataframe and specified point name and
+coordinate ([Points as Dataframe, point name as string, coordinate
+as string],index have to match with s_range/P_df)</p>
 </div></blockquote>
 <p>The default is None.</p>
 </p></li>
@@ -1043,7 +1153,7 @@ Have to match to ldoption:</p>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> – DESCRIPTION.</p>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – Option not implemented.</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><strong>Fit_res_df</strong> – Data of fit results.</p>

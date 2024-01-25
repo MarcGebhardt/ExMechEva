@@ -78,17 +78,57 @@
 
 <span class="sd">@author: mgebhard</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">string</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">import</span> <span class="nn">statsmodels</span>
 <span class="kn">from</span> <span class="nn">statsmodels.stats.multicomp</span> <span class="kn">import</span> <span class="n">MultiComparison</span>
+<span class="kn">import</span> <span class="nn">scikit_posthocs</span> <span class="k">as</span> <span class="nn">sck_ph</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sb</span> <span class="c1">#bootstrapping method</span>
 
+<span class="kn">from</span> <span class="nn">.helper</span> <span class="kn">import</span> <span class="n">type_str_return</span>
 <span class="kn">from</span> <span class="nn">.pd_ext</span> <span class="kn">import</span> <span class="p">(</span><span class="n">pd_outsort</span><span class="p">,</span> <span class="n">deal_dupl_index</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.output</span> <span class="kn">import</span> <span class="n">str_indent</span>
 
 <span class="c1">#%% statistical outliers</span>
 <div class="viewcode-block" id="stat_outliers"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.stat_outliers">[docs]</a><span class="k">def</span> <span class="nf">stat_outliers</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
                   <span class="n">out</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">outsort</span> <span class="o">=</span> <span class="s1">&#39;ascending&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine statistical outliers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pd.Series or pd.DataFrame</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    option : str, optional</span>
+<span class="sd">        Determination option. Only &#39;IQR&#39;: interquartile-range-rule implemented.</span>
+<span class="sd">        The default is &#39;IQR&#39;.</span>
+<span class="sd">    span : float, optional</span>
+<span class="sd">        Span for inclusion (p.e.: &#39;IQr&#39; and 1.5 leads to standard </span>
+<span class="sd">        1.5-interquartile-range-rule). The default is 1.5.</span>
+<span class="sd">    out : str, optional</span>
+<span class="sd">        Output option. Implemented are:</span>
+<span class="sd">            - &#39;all&#39;: all data points outside range (all statistical outliers)</span>
+<span class="sd">            - &#39;lower&#39;: data points lower then range</span>
+<span class="sd">            - &#39;higher&#39;: data points higher then range</span>
+<span class="sd">            - &#39;inner&#39;: data points inside range (exclusion of statistical outliers)</span>
+<span class="sd">        The default is &#39;all&#39;.</span>
+<span class="sd">    outsort : str, optional</span>
+<span class="sd">        Sorting of output. Implemented are &#39;ascending&#39; and &#39;descending&#39;.</span>
+<span class="sd">        All other values will return data unsorted. The default is &#39;ascending&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Option not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    stol : pd.Series or pd.DataFrame (like input data)</span>
+<span class="sd">        Statistical outlier data acc. to options.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># if isinstance(data, pd.core.base.ABCSeries):</span>
     <span class="c1">#     d = data</span>
     <span class="c1"># elif isinstance(data, np.ndarray):</span>
@@ -126,6 +166,40 @@
     <span class="k">return</span> <span class="n">stol</span></div>
 
 <div class="viewcode-block" id="stat_box_vals"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.stat_box_vals">[docs]</a><span class="k">def</span> <span class="nf">stat_box_vals</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="mf">1.5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine values of typical boxplot values (1st quantile, 3rd qhuantile)</span>
+
+<span class="sd">    data : pd.Series or pd.DataFrame</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    option : str, optional</span>
+<span class="sd">        Determination option. Only &#39;IQR&#39;: interquartile-range-rule implemented.</span>
+<span class="sd">        The default is &#39;IQR&#39;.</span>
+<span class="sd">    span : float, optional</span>
+<span class="sd">        Span for inclusion (p.e.: &#39;IQr&#39; and 1.5 leads to standard </span>
+<span class="sd">        1.5-interquartile-range-rule). The default is 1.5.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Option not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    box_vals : dict</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">        - &#39;lBo&#39;: lower boarder of 1.5-IQR</span>
+<span class="sd">        - &#39;minin&#39;: minimal value inside range</span>
+<span class="sd">        - &#39;dQ1&#39;: first quartile</span>
+<span class="sd">        - &#39;med&#39;: Median</span>
+<span class="sd">        - &#39;dQ3&#39;: third quartile</span>
+<span class="sd">        - &#39;maxin&#39;: maximal value inside range</span>
+<span class="sd">        - &#39;uBo&#39;: upper boarder of 1.5-IQR</span>
+<span class="sd">    inner_vals : pd.Series or pd.DataFrame (like input data)</span>
+<span class="sd">        Index of values inside range (not statistical outlier).</span>
+<span class="sd">    outer_vals : pd.Series or pd.DataFrame (like input data)</span>
+<span class="sd">        Index of values outside range (statistical outlier).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;IQR&#39;</span><span class="p">:</span>
         <span class="n">dQ1</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
         <span class="n">med</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.50</span><span class="p">)</span>
@@ -149,7 +223,40 @@
 
 <div class="viewcode-block" id="NaN_stat_outliers"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.NaN_stat_outliers">[docs]</a><span class="k">def</span> <span class="nf">NaN_stat_outliers</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">numeric_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                       <span class="n">option</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
-                      <span class="n">out</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">outsort</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                      <span class="n">out</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine statistical outliers with respect to NaN values. Optional selects</span>
+<span class="sd">    numerical data only.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pd.DataFrame</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    numeric_only : bool, optional</span>
+<span class="sd">        Numerical columns only. The default is True.</span>
+<span class="sd">    option : str, optional</span>
+<span class="sd">        Determination option. Only &#39;IQR&#39;: interquartile-range-rule implemented.</span>
+<span class="sd">        The default is &#39;IQR&#39;.</span>
+<span class="sd">    span : float, optional</span>
+<span class="sd">        Span for inclusion (p.e.: &#39;IQr&#39; and 1.5 leads to standard </span>
+<span class="sd">        1.5-interquartile-range-rule). The default is 1.5.</span>
+<span class="sd">    out : str, optional</span>
+<span class="sd">        Output option. Implemented are:</span>
+<span class="sd">            - &#39;all&#39;: all data points outside range (all statistical outliers)</span>
+<span class="sd">            - &#39;lower&#39;: data points lower then range</span>
+<span class="sd">            - &#39;higher&#39;: data points higher then range</span>
+<span class="sd">            - &#39;inner&#39;: data points inside range (exclusion of statistical outliers)</span>
+<span class="sd">        The default is &#39;all&#39;.</span>
+<span class="sd">    outsort : str, optional</span>
+<span class="sd">        Sorting of output. Implemented are &#39;ascending&#39; and &#39;descending&#39;.</span>
+<span class="sd">        All other values will return data unsorted. The default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dfout : pd.DataFrame</span>
+<span class="sd">        Statistical outlier data acc. to options.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">numeric_only</span><span class="p">:</span>
         <span class="n">cols</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="s1">&#39;float&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">columns</span>
     <span class="k">else</span><span class="p">:</span>
@@ -165,13 +272,40 @@
 <span class="c1">#%% additional descriptive values</span>
 <div class="viewcode-block" id="meanwoso"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.meanwoso">[docs]</a><span class="k">def</span> <span class="nf">meanwoso</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
              <span class="n">out</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">,</span> <span class="n">outsort</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-    <span class="c1"># if isinstance(data, pd.core.base.ABCSeries):</span>
-    <span class="c1">#     data = data</span>
-    <span class="c1"># elif isinstance(data, np.ndarray) or isinstance(data, &#39;float&#39;):</span>
-    <span class="c1">#     data = pd.Series(data)</span>
-    <span class="c1"># else:</span>
-    <span class="c1">#     raise NotImplementedError(&quot;Datatype %s not implemented!&quot;%type(data))</span>
-    <span class="n">used</span> <span class="o">=</span> <span class="n">stat_outliers</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="n">outsort</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine mean value of input data without statistical outliers. </span>
+<span class="sd">    (see stat_outliers for more information)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pd.Series or pd.DataFrame</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    option : str, optional</span>
+<span class="sd">        Determination option. Only &#39;IQR&#39;: interquartile-range-rule implemented.</span>
+<span class="sd">        The default is &#39;IQR&#39;.</span>
+<span class="sd">    span : float, optional</span>
+<span class="sd">        Span for inclusion (p.e.: &#39;IQr&#39; and 1.5 leads to standard </span>
+<span class="sd">        1.5-interquartile-range-rule). The default is 1.5.</span>
+<span class="sd">    out : str, optional</span>
+<span class="sd">        Output option. Only option inner makes sense.</span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - &#39;all&#39;: all data points outside range (all statistical outliers)</span>
+<span class="sd">            - &#39;lower&#39;: data points lower then range</span>
+<span class="sd">            - &#39;higher&#39;: data points higher then range</span>
+<span class="sd">            - &#39;inner&#39;: data points inside range (exclusion of statistical outliers)</span>
+<span class="sd">        The default is &#39;inner&#39;.</span>
+<span class="sd">    outsort : str, optional</span>
+<span class="sd">        Sorting of output. Implemented are &#39;ascending&#39; and &#39;descending&#39;.</span>
+<span class="sd">        All other values will return data unsorted. The default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dout : float or pd.Series</span>
+<span class="sd">        Mean value/-s of input data without statistical outliers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">used</span> <span class="o">=</span> <span class="n">stat_outliers</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> 
+                         <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="n">outsort</span><span class="p">)</span>
     <span class="n">dout</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">used</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">dout</span></div>
 <span class="c1"># Overwrite pandas</span>
@@ -180,16 +314,71 @@
 
 <div class="viewcode-block" id="stdwoso"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.stdwoso">[docs]</a><span class="k">def</span> <span class="nf">stdwoso</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
             <span class="n">out</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">,</span> <span class="n">outsort</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-    <span class="n">used</span> <span class="o">=</span> <span class="n">stat_outliers</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="n">outsort</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine standard deviation of input data without statistical outliers. </span>
+<span class="sd">    (see stat_outliers for more information)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pd.Series or pd.DataFrame</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    option : str, optional</span>
+<span class="sd">        Determination option. Only &#39;IQR&#39;: interquartile-range-rule implemented.</span>
+<span class="sd">        The default is &#39;IQR&#39;.</span>
+<span class="sd">    span : float, optional</span>
+<span class="sd">        Span for inclusion (p.e.: &#39;IQr&#39; and 1.5 leads to standard </span>
+<span class="sd">        1.5-interquartile-range-rule). The default is 1.5.</span>
+<span class="sd">    out : str, optional</span>
+<span class="sd">        Output option. Only option inner makes sense.</span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - &#39;all&#39;: all data points outside range (all statistical outliers)</span>
+<span class="sd">            - &#39;lower&#39;: data points lower then range</span>
+<span class="sd">            - &#39;higher&#39;: data points higher then range</span>
+<span class="sd">            - &#39;inner&#39;: data points inside range (exclusion of statistical outliers)</span>
+<span class="sd">        The default is &#39;inner&#39;.</span>
+<span class="sd">    outsort : str, optional</span>
+<span class="sd">        Sorting of output. Implemented are &#39;ascending&#39; and &#39;descending&#39;.</span>
+<span class="sd">        All other values will return data unsorted. The default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dout : float or pd.Series</span>
+<span class="sd">        Standard deviation value/-s of input data without statistical outliers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">used</span> <span class="o">=</span> <span class="n">stat_outliers</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> 
+                         <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="n">outsort</span><span class="p">)</span>
     <span class="n">dout</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">used</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">dout</span></div>
 <span class="c1"># Overwrite pandas</span>
 <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="o">.</span><span class="n">stdwoso</span> <span class="o">=</span> <span class="n">stdwoso</span>
 <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">stdwoso</span> <span class="o">=</span> <span class="n">stdwoso</span>
 
-<div class="viewcode-block" id="coefficient_of_variation"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.coefficient_of_variation">[docs]</a><span class="k">def</span> <span class="nf">coefficient_of_variation</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outsort</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-    <span class="n">dstd</span>  <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+<div class="viewcode-block" id="coefficient_of_variation"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.coefficient_of_variation">[docs]</a><span class="k">def</span> <span class="nf">coefficient_of_variation</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optmeanabs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine coefficient of determination (standard deviation to mean value).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pd.Series or pd.DataFrame</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    outsort : str, optional</span>
+<span class="sd">        Sorting of output. Implemented are None &#39;ascending&#39; and &#39;descending&#39;.</span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    optmeanabs : bool, optional</span>
+<span class="sd">        Option for using absolute mean value (if False and mean is negative, </span>
+<span class="sd">        coefficient of variation will be negative).</span>
+<span class="sd">        The default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dout : float or pd.Series</span>
+<span class="sd">        Coefficient of variation value/-s of input data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dstd</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
     <span class="n">dmean</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">optmeanabs</span><span class="p">:</span> <span class="n">dmean</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dmean</span><span class="p">)</span> <span class="c1">#absolute value to prevent negative CV</span>
     <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">dmean</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dmean</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
         <span class="n">dout</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     <span class="k">else</span><span class="p">:</span>
@@ -198,11 +387,60 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">outsort</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">dout</span> <span class="o">=</span> <span class="n">pd_outsort</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">dout</span><span class="p">,</span> <span class="n">outsort</span> <span class="o">=</span> <span class="n">outsort</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dout</span></div>
+<span class="c1"># short naming vor aggregation</span>
+<div class="viewcode-block" id="cv"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.cv">[docs]</a><span class="k">def</span> <span class="nf">cv</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optmeanabs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Short naming of funciton coefficient_of_variation.</span>
+<span class="sd">    Readability improved by usage of pandas aggregate function (pd.agg).</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">coefficient_of_variation</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="n">outsort</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="coefficient_of_variation_woso"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.coefficient_of_variation_woso">[docs]</a><span class="k">def</span> <span class="nf">coefficient_of_variation_woso</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
-                                  <span class="n">out</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">,</span> <span class="n">outsort</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-    <span class="n">dstd</span>  <span class="o">=</span>  <span class="n">stdwoso</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">dmean</span> <span class="o">=</span> <span class="n">meanwoso</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                                  <span class="n">out</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                                  <span class="n">optmeanabs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine coefficient of variation of input data without statistical </span>
+<span class="sd">    outliers.(see stat_outliers for more information)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pd.Series or pd.DataFrame</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    option : str, optional</span>
+<span class="sd">        Determination option. Only &#39;IQR&#39;: interquartile-range-rule implemented.</span>
+<span class="sd">        The default is &#39;IQR&#39;.</span>
+<span class="sd">    span : float, optional</span>
+<span class="sd">        Span for inclusion (p.e.: &#39;IQr&#39; and 1.5 leads to standard </span>
+<span class="sd">        1.5-interquartile-range-rule). The default is 1.5.</span>
+<span class="sd">    out : str, optional</span>
+<span class="sd">        Output option. Only option inner makes sense.</span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - &#39;all&#39;: all data points outside range (all statistical outliers)</span>
+<span class="sd">            - &#39;lower&#39;: data points lower then range</span>
+<span class="sd">            - &#39;higher&#39;: data points higher then range</span>
+<span class="sd">            - &#39;inner&#39;: data points inside range (exclusion of statistical outliers)</span>
+<span class="sd">        The default is &#39;inner&#39;.</span>
+<span class="sd">    outsort : str, optional</span>
+<span class="sd">        Sorting of output. Implemented are &#39;ascending&#39; and &#39;descending&#39;.</span>
+<span class="sd">        All other values will return data unsorted. The default is None.</span>
+<span class="sd">    optmeanabs : bool, optional</span>
+<span class="sd">        Option for using absolute mean value (if False and mean is negative, </span>
+<span class="sd">        coefficient of variation will be negative).</span>
+<span class="sd">        The default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dout : float or pd.Series</span>
+<span class="sd">        Coefficient of variation value/-s of input data without statistical </span>
+<span class="sd">        outliers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dstd</span> <span class="o">=</span> <span class="n">stdwoso</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span> 
+                   <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">dmean</span> <span class="o">=</span> <span class="n">meanwoso</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span> 
+                     <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">optmeanabs</span><span class="p">:</span> <span class="n">dmean</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dmean</span><span class="p">)</span> <span class="c1">#absolute value to prevent negative CV</span>
     <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">dmean</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dmean</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
         <span class="n">dout</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     <span class="k">else</span><span class="p">:</span>
@@ -211,6 +449,17 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">outsort</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">dout</span> <span class="o">=</span> <span class="n">pd_outsort</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">dout</span><span class="p">,</span> <span class="n">outsort</span> <span class="o">=</span> <span class="n">outsort</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dout</span></div>
+<span class="c1"># short naming vor aggregation</span>
+<div class="viewcode-block" id="cvwoso"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.cvwoso">[docs]</a><span class="k">def</span> <span class="nf">cvwoso</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">,</span> 
+           <span class="n">outsort</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optmeanabs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Short naming of funciton coefficient_of_variation_woso.</span>
+<span class="sd">    Readability improved by usage of pandas aggregate function (pd.agg).</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">coefficient_of_variation_woso</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">span</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">outsort</span><span class="o">=</span><span class="n">outsort</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="confidence_interval"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.confidence_interval">[docs]</a><span class="k">def</span> <span class="nf">confidence_interval</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">confidence</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Seaborn_Bootstrap&quot;</span><span class="p">,</span>
                         <span class="n">func</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">,</span> <span class="n">n_boot</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -285,7 +534,6 @@
     <span class="c1">#     import scikits.bootstrap as bootstrap</span>
     <span class="c1">#     CI = bootstrap.ci(data=data, statfunction=scipy.mean, alpha = 1-confidence, n_samples=n_boot)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Seaborn_Bootstrap&quot;</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sb</span>
         <span class="n">CI</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">ci</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">sb</span><span class="o">.</span><span class="n">algorithms</span><span class="o">.</span><span class="n">bootstrap</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span> <span class="n">func</span><span class="p">,</span> <span class="n">n_boot</span><span class="o">=</span><span class="n">n_boot</span><span class="p">,</span>
                                                    <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">),</span>
                          <span class="n">which</span> <span class="o">=</span> <span class="n">confidence</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
@@ -313,8 +561,57 @@
                               <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
                               <span class="n">outtype</span><span class="o">=</span><span class="s2">&quot;Max&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="relative_deviation"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.relative_deviation">[docs]</a><span class="k">def</span> <span class="nf">relative_deviation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the relative deviation from second argument to first.</span>
+<span class="sd">    .. math::</span>
+<span class="sd">        RD_{b-a} = (b-a)/a</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : int or float or pd.Series or pd.DataFrame</span>
+<span class="sd">        Base value.</span>
+<span class="sd">    b : pd.Series or pd.DataFrame</span>
+<span class="sd">        Calculation value.</span>
+<span class="sd">    axis : int, optional</span>
+<span class="sd">        Identifyier for performing calculation. The default is 0.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Combination of types not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : int or float or pd.Series or pd.DataFrame</span>
+<span class="sd">        Relative deviation result (type depends on input types).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ta</span><span class="o">=</span><span class="n">type_str_return</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">tb</span><span class="o">=</span><span class="n">type_str_return</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">tab</span><span class="o">=</span><span class="n">ta</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">tb</span>
+    <span class="k">if</span> <span class="n">tab</span><span class="o">==</span><span class="s1">&#39;pdDF_pdDF&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">a</span><span class="p">))</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">tab</span><span class="o">==</span><span class="s1">&#39;pdSe_pdDF&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">))</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">tab</span><span class="o">==</span><span class="s1">&#39;pdSe_pdSe&#39;</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">a</span><span class="p">))</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">tab</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;float_float&#39;</span><span class="p">,</span><span class="s1">&#39;float_int&#39;</span><span class="p">,</span><span class="s1">&#39;int_float&#39;</span><span class="p">]:</span>
+        <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="n">a</span>
+    <span class="k">elif</span> <span class="n">tab</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;float_pdSe&#39;</span><span class="p">,</span><span class="s1">&#39;int_pdSe&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;float_pdDF&#39;</span><span class="p">,</span><span class="s1">&#39;int_pdDF&#39;</span><span class="p">]:</span>
+        <span class="n">out</span><span class="o">=</span><span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="n">a</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+        <span class="s2">&quot;Combination of types not implemented (</span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2">)!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">ta</span><span class="p">,</span><span class="n">tb</span>
+        <span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
 <span class="c1">#%% extended pandas aggregation</span>
-<div class="viewcode-block" id="pd_agg"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.pd_agg">[docs]</a><span class="k">def</span> <span class="nf">pd_agg</span><span class="p">(</span><span class="n">pd_o</span><span class="p">,</span> <span class="n">agg_funcs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span><span class="s1">&#39;median&#39;</span><span class="p">,</span><span class="s1">&#39;std&#39;</span><span class="p">,</span><span class="s1">&#39;max&#39;</span><span class="p">,</span><span class="s1">&#39;min&#39;</span><span class="p">],</span> <span class="n">numeric_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="pd_agg"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.pd_agg">[docs]</a><span class="k">def</span> <span class="nf">pd_agg</span><span class="p">(</span><span class="n">pd_o</span><span class="p">,</span> <span class="n">agg_funcs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span><span class="s1">&#39;median&#39;</span><span class="p">,</span><span class="s1">&#39;std&#39;</span><span class="p">,</span><span class="s1">&#39;max&#39;</span><span class="p">,</span><span class="s1">&#39;min&#39;</span><span class="p">],</span> 
+           <span class="n">numeric_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregate pandas object with defined functions.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">pd_o</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">pd_o</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">agg_funcs</span><span class="p">)</span>
@@ -351,8 +648,9 @@
                   <span class="n">af_ren</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;coefficient_of_variation_woso&#39;</span><span class="p">:</span><span class="s1">&#39;CVwoso&#39;</span><span class="p">,</span>
                           <span class="s1">&#39;coefficient_of_variation&#39;</span><span class="p">:</span><span class="s1">&#39;CV&#39;</span><span class="p">},</span>
                   <span class="n">af_unp</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;confidence_interval&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;CImin&#39;</span><span class="p">,</span><span class="s1">&#39;CImax&#39;</span><span class="p">]}):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregate pandas object with defined functions, including unpacked multi-value functions. </span>
-<span class="sd">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Aggregate pandas object with defined functions, including unpacked </span>
+<span class="sd">    multi-value functions. </span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -381,6 +679,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">unpack_aggval</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">rn</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unpack arguments acc. to dictionary.&quot;&quot;&quot;</span>
         <span class="n">tmp</span><span class="o">=</span><span class="n">o</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="o">*</span><span class="n">x</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">rn</span><span class="p">))</span>
         <span class="n">i</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_indexer_for</span><span class="p">([</span><span class="n">n</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">s</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">o</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span><span class="n">tmp</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">o</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -395,7 +694,8 @@
 <div class="viewcode-block" id="Dist_test"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.Dist_test">[docs]</a><span class="k">def</span> <span class="nf">Dist_test</span><span class="p">(</span><span class="n">pds</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">mcomp</span><span class="o">=</span><span class="s1">&#39;Shapiro&#39;</span><span class="p">,</span> <span class="n">mkws</span><span class="o">=</span><span class="p">{},</span>
               <span class="n">skipna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">add_out</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Distribution test of data to Hypothesis sample looks Gaussian (reject, if p&lt;=alpha).</span>
+<span class="sd">    Distribution test of data to Hypothesis sample looks Gaussian (reject, if </span>
+<span class="sd">    p&lt;=alpha).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -475,7 +775,9 @@
     <span class="k">return</span> <span class="n">df_out</span></div>
 
 
-<div class="viewcode-block" id="group_Anova"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.group_Anova">[docs]</a><span class="k">def</span> <span class="nf">group_Anova</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">groupby</span><span class="p">,</span> <span class="n">ano_Var</span><span class="p">,</span> <span class="n">group_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ano_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+<div class="viewcode-block" id="group_Anova"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.group_Anova">[docs]</a><span class="k">def</span> <span class="nf">group_Anova</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">groupby</span><span class="p">,</span> <span class="n">ano_Var</span><span class="p">,</span>
+                <span class="n">group_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ano_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs an one way ANOVA -&gt; depricated (use group_ANOVA_MComp)&quot;&quot;&quot;</span>
     <span class="n">ano_data</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;O&#39;</span><span class="p">)</span>
     <span class="n">j</span><span class="o">=</span><span class="mi">0</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="n">groupby</span><span class="p">]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
@@ -494,10 +796,9 @@
         <span class="n">rtxt</span> <span class="o">=</span> <span class="s1">&#39;H0 rejected!&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">rtxt</span> <span class="o">=</span> <span class="s1">&#39;Fail to reject H0!&#39;</span>
-    <span class="n">txt</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;F(</span><span class="si">%4d</span><span class="s2">,</span><span class="si">%4d</span><span class="s2">) = </span><span class="si">%7.3f</span><span class="s2">, p = </span><span class="si">%.3e</span><span class="s2">, for </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ano_df1</span><span class="p">,</span><span class="n">ano_df2</span><span class="p">,</span>
-                                                            <span class="n">F</span><span class="p">,</span><span class="n">p</span><span class="p">,</span>
-                                                            <span class="n">ano_str</span><span class="p">,</span><span class="n">group_str</span><span class="p">,</span>
-                                                            <span class="n">rtxt</span><span class="p">))</span> <span class="c1"># Gruppen sind signifikant verschieden bei p&lt;0.05</span>
+    <span class="n">txt</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;F(</span><span class="si">%4d</span><span class="s2">,</span><span class="si">%4d</span><span class="s2">) = </span><span class="si">%7.3f</span><span class="s2">, p = </span><span class="si">%.3e</span><span class="s2">, for </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+        <span class="n">ano_df1</span><span class="p">,</span><span class="n">ano_df2</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span><span class="n">p</span><span class="p">,</span> <span class="n">ano_str</span><span class="p">,</span><span class="n">group_str</span><span class="p">,</span><span class="n">rtxt</span>
+        <span class="p">))</span> <span class="c1"># Gruppen sind signifikant verschieden bei p&lt;0.05</span>
     <span class="k">return</span> <span class="n">txt</span></div>
 
 <div class="viewcode-block" id="group_ANOVA_MComp"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.group_ANOVA_MComp">[docs]</a><span class="k">def</span> <span class="nf">group_ANOVA_MComp</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">groupby</span><span class="p">,</span> <span class="n">ano_Var</span><span class="p">,</span> 
@@ -507,7 +808,8 @@
                       <span class="n">mkws</span><span class="o">=</span><span class="p">{},</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">,</span> <span class="n">check_resnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                       <span class="n">add_T_ind</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">add_out</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Performs an one way ANOVA and multi comparision test for given variable, in respect to given groups.</span>
+<span class="sd">    Performs an one way variance analysis and multi comparision test for given </span>
+<span class="sd">    variable, in respect to given groups.</span>
 <span class="sd">    Returns an output string with summary and optional additional test outputs.</span>
 
 <span class="sd">    Parameters</span>
@@ -527,7 +829,8 @@
 <span class="sd">        Implemented are ANOVA and Kruskal-Wallis H-test.</span>
 <span class="sd">        The default is ANOVA.</span>
 <span class="sd">    alpha : float, optional</span>
-<span class="sd">        Test criterion to reject zero hypothesis (all means are equal). The default is 0.05.</span>
+<span class="sd">        Test criterion to reject zero hypothesis (all means are equal). </span>
+<span class="sd">        The default is 0.05.</span>
 <span class="sd">    group_ren : dict, optional</span>
 <span class="sd">        Renaming of groups in df. The default is {}.</span>
 <span class="sd">    do_mcomp_a : int, optional</span>
@@ -617,15 +920,18 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">rtxt</span> <span class="o">=</span> <span class="s1">&#39;Fail to reject H0!&#39;</span>
         <span class="n">H0</span><span class="o">=</span><span class="kc">True</span>
-    <span class="n">Atxt</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;- F(</span><span class="si">%3d</span><span class="s2">,</span><span class="si">%4d</span><span class="s2">) = </span><span class="si">%7.3f</span><span class="s2">, p = </span><span class="si">%.3e</span><span class="s2">, for </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ano_df1</span><span class="p">,</span><span class="n">ano_df2</span><span class="p">,</span>
-                                                               <span class="n">F</span><span class="p">,</span><span class="n">p</span><span class="p">,</span>
-                                                               <span class="n">ano_str</span><span class="p">,</span><span class="n">group_str</span><span class="p">,</span>
-                                                               <span class="n">rtxt</span><span class="o">+</span><span class="n">atxt</span><span class="p">))</span> <span class="c1"># Gruppen sind signifikant verschieden bei p&lt;0.05</span>
+    <span class="n">Atxt</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;- F(</span><span class="si">%3d</span><span class="s2">,</span><span class="si">%4d</span><span class="s2">) = </span><span class="si">%7.3f</span><span class="s2">, p = </span><span class="si">%.3e</span><span class="s2">, for </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+        <span class="n">ano_df1</span><span class="p">,</span><span class="n">ano_df2</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span><span class="n">p</span><span class="p">,</span> <span class="n">ano_str</span><span class="p">,</span><span class="n">group_str</span><span class="p">,</span> <span class="n">rtxt</span><span class="o">+</span><span class="n">atxt</span>
+        <span class="p">))</span> <span class="c1"># Gruppen sind signifikant verschieden bei p&lt;0.05</span>
     <span class="k">if</span> <span class="n">check_resnorm</span><span class="p">:</span>
         <span class="n">tmp</span><span class="o">=</span><span class="n">df</span><span class="p">[[</span><span class="n">groupby</span><span class="p">,</span><span class="n">ano_Var</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">tmp</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">([</span><span class="n">tmp</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">tmp</span><span class="o">.</span><span class="n">loc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="n">groupby</span><span class="p">]])</span>
+        <span class="n">tmp</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">tmp</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">tmp</span><span class="o">.</span><span class="n">loc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="n">groupby</span><span class="p">]]</span>
+            <span class="p">)</span>
         <span class="n">tmp1</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">groupby</span><span class="p">)[</span><span class="n">ano_Var</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="n">dtest</span><span class="o">=</span><span class="n">Dist_test</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="n">ano_Var</span><span class="p">]</span><span class="o">-</span><span class="n">tmp1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">mcomp</span><span class="o">=</span><span class="s1">&#39;Shapiro&#39;</span><span class="p">,</span> <span class="n">add_out</span><span class="o">=</span><span class="s1">&#39;Series&#39;</span> <span class="p">)</span>
+        <span class="n">dtest</span><span class="o">=</span><span class="n">Dist_test</span><span class="p">(</span>
+            <span class="n">tmp</span><span class="p">[</span><span class="n">ano_Var</span><span class="p">]</span><span class="o">-</span><span class="n">tmp1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">mcomp</span><span class="o">=</span><span class="s1">&#39;Shapiro&#39;</span><span class="p">,</span> <span class="n">add_out</span><span class="o">=</span><span class="s1">&#39;Series&#39;</span>
+            <span class="p">)</span>
         <span class="n">Atxt</span><span class="o">+=</span><span class="s1">&#39;  -&gt; Residuals are normally distributed = </span><span class="si">{H0}</span><span class="s1"> (F(</span><span class="si">{N:d}</span><span class="s1">) = </span><span class="si">{Stat:.3e}</span><span class="s1">, p = </span><span class="si">{p:.3e}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">dtest</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">do_mcomp_a</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
         <span class="c1"># t = pairwise_tukeyhsd(endog=df[ano_Var], groups=df[groupby], alpha=alpha)</span>
@@ -634,7 +940,6 @@
             <span class="n">t</span> <span class="o">=</span> <span class="n">mcp</span><span class="o">.</span><span class="n">tukeyhsd</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="o">*</span><span class="n">Ffwalpha</span><span class="p">)</span>
             <span class="n">Ttxt</span> <span class="o">=</span> <span class="n">str_indent</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">summary</span><span class="p">(),</span><span class="n">add_T_ind</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">mcomp</span><span class="o">==</span><span class="s1">&#39;Dunn&#39;</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">scikit_posthocs</span> <span class="k">as</span> <span class="nn">sck_ph</span>
             <span class="k">def</span> <span class="nf">dunn_o2</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
                 <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">]</span>
                 <span class="n">pvalue</span> <span class="o">=</span> <span class="n">sck_ph</span><span class="o">.</span><span class="n">posthoc_dunn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -693,48 +998,56 @@
         <span class="k">return</span> <span class="n">txt</span></div>
     
 <div class="viewcode-block" id="MComp_interpreter"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.MComp_interpreter">[docs]</a><span class="k">def</span> <span class="nf">MComp_interpreter</span><span class="p">(</span><span class="n">T_Result</span><span class="p">):</span>
-    <span class="kn">import</span> <span class="nn">string</span>
-    <span class="kn">import</span> <span class="nn">statsmodels</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interprets a test result from statsmodels multicomparision (Zero hypothesis </span>
+<span class="sd">    reject). Returns identified higher order groups in relation to original </span>
+<span class="sd">    groups.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T_Result : statsmodels.iolib.table.SimpleTable</span>
+<span class="sd">        Simple table result from statsmodels.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict2 : dict</span>
+<span class="sd">        Dictionary of results.</span>
+<span class="sd">    txt : str</span>
+<span class="sd">        Textual output.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">T_Result</span><span class="p">,</span> <span class="n">statsmodels</span><span class="o">.</span><span class="n">iolib</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">SimpleTable</span><span class="p">):</span>
         <span class="n">t</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">T_Result</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">columns</span><span class="o">=</span><span class="n">T_Result</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">t</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">T_Result</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">columns</span><span class="o">=</span><span class="n">T_Result</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">t</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">T_Result</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> 
+                       <span class="n">columns</span><span class="o">=</span><span class="n">T_Result</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">df_True</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">reject</span><span class="o">==</span><span class="kc">True</span><span class="p">,:]</span>
     <span class="c1"># letters = list(string.ascii_lowercase)</span>
     <span class="n">letters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span><span class="p">)</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_uppercase</span><span class="p">)</span> <span class="c1"># List out of index</span>
     <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">txt</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
-    
     <span class="n">group1_list</span> <span class="o">=</span> <span class="n">df_True</span><span class="o">.</span><span class="n">group1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="c1">#get the groups from the df with only True (True df) to a list</span>
     <span class="n">group2_list</span> <span class="o">=</span> <span class="n">df_True</span><span class="o">.</span><span class="n">group2</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
     <span class="n">group3</span> <span class="o">=</span> <span class="n">group1_list</span><span class="o">+</span><span class="n">group2_list</span> <span class="c1">#concat both lists</span>
     <span class="n">group4</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">group3</span><span class="p">))</span> <span class="c1">#get unique items from the list</span>
     <span class="n">group5</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group4</span> <span class="p">]</span> <span class="c1">#convert unicode to a str</span>
     <span class="n">group5</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span> <span class="c1">#sort the list</span>
-    
     <span class="n">gen</span> <span class="o">=</span> <span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group5</span><span class="p">)</span> <span class="c1">#create dict with 0 so the dict won&#39;t be empty when starts</span>
     <span class="n">dictionary</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
-    
     <span class="n">group6</span> <span class="o">=</span> <span class="p">[(</span><span class="n">group5</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">group5</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group5</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">group5</span><span class="p">))]</span> <span class="c1">#get all combination pairs</span>
     <span class="k">for</span> <span class="n">pairs</span> <span class="ow">in</span> <span class="n">group6</span><span class="p">:</span> <span class="c1">#check for each combination if it is present in df_True</span>
-    
         <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dictionary</span><span class="p">)</span>
-    
         <span class="k">try</span><span class="p">:</span>
             <span class="n">a</span> <span class="o">=</span> <span class="n">df_True</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df_True</span><span class="o">.</span><span class="n">group1</span><span class="o">==</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">&amp;</span><span class="p">(</span><span class="n">df_True</span><span class="o">.</span><span class="n">group2</span><span class="o">==</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]),:]</span> <span class="c1">#check if the pair exists in the df</span>
-    
         <span class="k">except</span><span class="p">:</span>
             <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
-    
+
         <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1">#it mean that the df is empty as it does not appear in df_True so this pair is equal</span>
-    
             <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
-    
             <span class="k">if</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1">#if the 1st is populated but the 2nd in not populated</span>
                 <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;1st is populated and 2nd is empty&quot;</span><span class="p">)</span>
                 <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-    
             <span class="k">elif</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span> <span class="c1">#if both are populated, check matching labeles</span>
                 <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;both are populated&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]])))</span> <span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span> <span class="c1">#check if they have a common label</span>
@@ -753,31 +1066,22 @@
                     <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">dictionary</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">dictionary</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="c1">#it means that this value is unique because it has no shared char with another group</span>
                         <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;unique&quot;</span><span class="p">)</span>
                         <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
-    
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;there is at least one group in the dict that shares a char with the 1st group&quot;</span><span class="p">)</span>
                         <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
-    
-    
             <span class="k">else</span><span class="p">:</span>  <span class="c1"># if it equals 0, meaning if the 1st is empty (which means that the 2nd must be also empty)</span>
                 <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;both are empty&quot;</span><span class="p">)</span>
                 <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">letters</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
                 <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">letters</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-    
         <span class="k">else</span><span class="p">:</span>
-    
             <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;not equal&quot;</span><span class="p">)</span>
-    
             <span class="k">if</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># if the first one is populated (has a value) then give a value only to the second </span>
-    
                 <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;1st is populated&#39;</span><span class="p">)</span>
                 <span class="c1"># if the 2nd is not empty and they don&#39;t share a charcter then no change is needed as they already have different labels</span>
                 <span class="k">if</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]])))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;no change&quot;</span><span class="p">)</span>
-    
                 <span class="k">elif</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1">#if the 2nd is not populated give it a new letter</span>
                     <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">letters</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
-    
                 <span class="c1">#if the 2nd is populated and equal to the 1st, then change the letter of the 2nd to a new one and assign its original letter to all the others that had the same original letter       </span>
                 <span class="k">elif</span>  <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]])))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="c1">#need to check that they don&#39;t share a charcter</span>
@@ -786,10 +1090,8 @@
                     <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">letters</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
                     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                         <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">original_value</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">value</span><span class="p">])))</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span> <span class="c1">#for any given value, check if it had a character from the group that will get a new letter, if so, it means  that they are equal and thus the new letter should also appear in the value of the &quot;old&quot; group </span>
-                            <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_value</span> <span class="o">+</span> <span class="n">letters</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>  <span class="c1">#add the original letter of the group to all the other groups it was similar to               </span>
-    
+                            <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_value</span> <span class="o">+</span> <span class="n">letters</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>  <span class="c1">#add the original letter of the group to all the other groups it was similar to</span>
             <span class="k">else</span><span class="p">:</span>
-    
                 <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;1st is empty&#39;</span><span class="p">)</span>
                 <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">letters</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
                 <span class="n">dictionary</span><span class="p">[</span><span class="n">pairs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">letters</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
@@ -797,7 +1099,6 @@
             <span class="n">n</span><span class="o">+=</span><span class="mi">1</span>
     
     <span class="c1"># get the letter out the dictionary</span>
-    
     <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dictionary</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
     <span class="n">labels1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
     <span class="n">labels1</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
@@ -918,6 +1219,72 @@
               <span class="n">deal_dupl_ind</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span>
               <span class="n">group_ord</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
               <span class="n">add_T_ind</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">add_out</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs hypothesis test of given data according to selected method. </span>
+<span class="sd">    Returns results acc. to selected output switch.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pd.DataFrame</span>
+<span class="sd">        Dataframe with groups and values as columns for statistical test.</span>
+<span class="sd">    groupby : str</span>
+<span class="sd">        Name of groups for statistical test.</span>
+<span class="sd">    ano_Var : str</span>
+<span class="sd">        Name of variable for statistical test.</span>
+<span class="sd">    group_str : str, optional</span>
+<span class="sd">        String for output implementation of group names. The default is None.</span>
+<span class="sd">    ano_str : str, optional</span>
+<span class="sd">        String for output implementation of value names. The default is None.</span>
+<span class="sd">    alpha : float, optional</span>
+<span class="sd">        Test criterion to reject zero hypothesis (all means are equal). </span>
+<span class="sd">        The default is 0.05.</span>
+<span class="sd">    group_ren : dict, optional</span>
+<span class="sd">        Renaming of groups in df. The default is {}.</span>
+<span class="sd">    mcomp : TYPE, optional</span>
+<span class="sd">        Method for hypothesis test. The default is &#39;TukeyHSD&#39;.</span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - &#39;TukeyHSD&#39;: Tukey HSD test (see scipy.stats.tukey_hsd)</span>
+<span class="sd">            - &#39;ttest_ind&#39;: Independend t-test (see scipy.stats.ttest_ind)</span>
+<span class="sd">            - &#39;ttest_rel&#39;: Related t-test (see scipy.stats.ttest_rel)</span>
+<span class="sd">            - &#39;mannwhitneyu&#39;: Mann-Whittney-U-test (see scipy.stats.mannwhitneyu)</span>
+<span class="sd">            - &#39;wilcoxon&#39;: Wilcoxon signed rank test (see scipy.stats.wilcoxon)</span>
+<span class="sd">    mkws : dict, optional</span>
+<span class="sd">        Keyword arguments for used hypothesis test.</span>
+<span class="sd">        p.e.: {&#39;equal_var&#39;: False, &#39;nan_policy&#39;: &#39;omit&#39;}</span>
+<span class="sd">        The default is {}. </span>
+<span class="sd">    rel : bool, optional</span>
+<span class="sd">        Switch for relation of samples (True= related). The default is False.</span>
+<span class="sd">    rel_keys : list, optional</span>
+<span class="sd">        Variabel/column names for determining relation. The default is [].</span>
+<span class="sd">    deal_dupl_ind : string, optional</span>
+<span class="sd">        Behavior with duplicated indices (see deal_dupl_index).</span>
+<span class="sd">        The default is &#39;raise&#39;.</span>
+<span class="sd">    group_ord : None or list, optional</span>
+<span class="sd">        Selected groups. None will use all columns. The default is None.</span>
+<span class="sd">    add_T_ind : int, optional</span>
+<span class="sd">        Additional indentation of level in textual output. The default is 3.</span>
+<span class="sd">    add_out : TYPE, optional</span>
+<span class="sd">        Switch for output. The default is False.</span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - False: only text output</span>
+<span class="sd">            - True: text output (str) and test result (statistic, pvalue as float)</span>
+<span class="sd">            - &#39;Series&#39;: pd.Series of degrees of freedom, statistics, p-value </span>
+<span class="sd">            and zero hypothesis test result to alpha</span>
+<span class="sd">            - &#39;Test&#39;: complete output</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        More than two groups identified.</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Method not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or (str, float) or pd.Series or (pd.DataFrame, pd.Series, string)</span>
+<span class="sd">        Output of hypothesis test acc. to selected switch(see add_out).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">ano_str</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">ano_str</span> <span class="o">=</span> <span class="n">ano_Var</span>
     <span class="k">if</span> <span class="n">group_str</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -970,10 +1337,10 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">rtxt</span> <span class="o">=</span> <span class="s1">&#39;Fail to reject H0!&#39;</span>
         <span class="n">H0</span><span class="o">=</span><span class="kc">True</span>
-    <span class="n">txt</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;- F(</span><span class="si">%d</span><span class="s2">) = </span><span class="si">%.3e</span><span class="s2">, p = </span><span class="si">%.3e</span><span class="s2">, for </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ano_df2</span><span class="p">,</span>
-                                                          <span class="n">F</span><span class="p">,</span><span class="n">p</span><span class="p">,</span>
-                                                          <span class="n">ano_str</span><span class="p">,</span><span class="n">group_str</span><span class="p">,</span>
-                                                          <span class="n">rtxt</span><span class="p">))</span> <span class="c1"># Gruppen sind signifikant verschieden bei p&lt;0.05</span>
+    <span class="n">txt</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;- F(</span><span class="si">%d</span><span class="s2">) = </span><span class="si">%.3e</span><span class="s2">, p = </span><span class="si">%.3e</span><span class="s2">, for </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+        <span class="n">ano_df2</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span><span class="n">p</span><span class="p">,</span> <span class="n">ano_str</span><span class="p">,</span><span class="n">group_str</span><span class="p">,</span> <span class="n">rtxt</span>
+        <span class="p">))</span> <span class="c1"># Gruppen sind signifikant verschieden bei p&lt;0.05</span>
+    
     <span class="k">if</span> <span class="n">add_out</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">txt</span><span class="p">,</span> <span class="n">t</span>
     <span class="k">elif</span> <span class="n">add_out</span><span class="o">==</span><span class="s1">&#39;Series&#39;</span><span class="p">:</span>
@@ -990,6 +1357,54 @@
                     <span class="n">deal_dupl_ind</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span>
                     <span class="n">group_ord</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">Transpose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs hypothesis tests for given variable, in respect to given groups</span>
+<span class="sd">    according to selected method. </span>
+<span class="sd">    Returns results acc. to selected output switch.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pd.DataFrame</span>
+<span class="sd">        Dataframe with groups and values as columns for statistical test.</span>
+<span class="sd">    group_main : str</span>
+<span class="sd">        Main group for statistical test. The default is &#39;Series&#39;.</span>
+<span class="sd">    group_sub : list of str</span>
+<span class="sd">        Sub-groups for statistical test (p.e. variants). The default is [&#39;A&#39;].</span>
+<span class="sd">    ano_Var : list of str</span>
+<span class="sd">        Names of variables for statistical test. The default is [&#39;WC_vol&#39;].</span>
+<span class="sd">    mcomp : TYPE, optional</span>
+<span class="sd">        Method for hypothesis test. The default is &#39;TukeyHSD&#39;.</span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - &#39;TukeyHSD&#39;: Tukey HSD test (see scipy.stats.tukey_hsd)</span>
+<span class="sd">            - &#39;ttest_ind&#39;: Independend t-test (see scipy.stats.ttest_ind)</span>
+<span class="sd">            - &#39;ttest_rel&#39;: Related t-test (see scipy.stats.ttest_rel)</span>
+<span class="sd">            - &#39;mannwhitneyu&#39;: Mann-Whittney-U-test (see scipy.stats.mannwhitneyu)</span>
+<span class="sd">            - &#39;wilcoxon&#39;: Wilcoxon signed rank test (see scipy.stats.wilcoxon)</span>
+<span class="sd">    alpha : float, optional</span>
+<span class="sd">        Test criterion to reject zero hypothesis (all means are equal). </span>
+<span class="sd">        The default is 0.05.</span>
+<span class="sd">    mkws : dict, optional</span>
+<span class="sd">        Keyword arguments for used hypothesis test.</span>
+<span class="sd">        p.e.: {&#39;equal_var&#39;: False, &#39;nan_policy&#39;: &#39;omit&#39;}</span>
+<span class="sd">        The default is {}. </span>
+<span class="sd">    rel : bool, optional</span>
+<span class="sd">        Switch for relation of samples (True= related). The default is False.</span>
+<span class="sd">    rel_keys : list, optional</span>
+<span class="sd">        Variabel/column names for determining relation. The default is [].</span>
+<span class="sd">    deal_dupl_ind : string, optional</span>
+<span class="sd">        Behavior with duplicated indices (see deal_dupl_index).</span>
+<span class="sd">        The default is &#39;raise&#39;.</span>
+<span class="sd">    group_ord : None or list, optional</span>
+<span class="sd">        Changing of order of groups not implemented. The default is None.</span>
+<span class="sd">    Transpose : bool, optional</span>
+<span class="sd">        Switch for transposing result. The default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    df_out : pd.DataFrame</span>
+<span class="sd">        Dataframe of test results indexed variable name and group.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">df_out</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;O&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">group_sub</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">av</span> <span class="ow">in</span> <span class="n">ano_Var</span><span class="p">:</span>
@@ -1022,7 +1437,51 @@
 
 <div class="viewcode-block" id="CD_rep"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.CD_rep">[docs]</a><span class="k">def</span> <span class="nf">CD_rep</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="s1">&#39;Series&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;DEFlutoB&#39;</span><span class="p">,</span> 
            <span class="n">det_met</span><span class="o">=</span><span class="s1">&#39;SM-RRT&#39;</span><span class="p">,</span> <span class="n">outtype</span><span class="o">=</span><span class="s1">&#39;txt&#39;</span><span class="p">,</span> <span class="n">tnform</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{:.3e}</span><span class="s1">&#39;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Calculate critical differences and compare to given.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate critical differences and compare to given mean difference.</span>
+<span class="sd">    Can provide information on the comparability and/or repeatability of two </span>
+<span class="sd">    test series.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pdo : pd.DataFrame</span>
+<span class="sd">        Dataframe with groups and values as columns for test.</span>
+<span class="sd">    groupby : str</span>
+<span class="sd">        Name of groups for statistical test.</span>
+<span class="sd">    var : str</span>
+<span class="sd">        Name of variable for statistical test.</span>
+<span class="sd">    det_met : string, optional</span>
+<span class="sd">        Determination method for deriving critical differences (CD). </span>
+<span class="sd">        The default is &#39;SM-RRT&#39;.</span>
+<span class="sd">        Implemented are (all only implemented for 95 % confidence):</span>
+<span class="sd">            - &#39;SM-RRT&#39;: CD by standard deviation and size</span>
+<span class="sd">            (see https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf)</span>
+<span class="sd">            - &#39;CV-DC&#39;: CD by coefficient of variation and maximum </span>
+<span class="sd">            (see https://flexikon.doccheck.com/de/Kritische_Differenz)</span>
+<span class="sd">            - &#39;CV&#39;: CD by coefficient of variation </span>
+<span class="sd">            (see https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887)</span>
+<span class="sd">            - &#39;SD&#39;: CD by standard deviation</span>
+<span class="sd">            (see https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1</span>
+<span class="sd">    outtype : string, optional</span>
+<span class="sd">        Switch for output. The default is &#39;txt&#39;.</span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - &#39;Ser_all&#39;: pd.Series with all derived results</span>
+<span class="sd">            - &#39;Tuple_all&#39;: tuple of all derived results</span>
+<span class="sd">            - &#39;txt&#39;: single line text output showing results acc. repeatability</span>
+<span class="sd">            - &#39;Series&#39;: pd.Series with important resulzs</span>
+<span class="sd">    tnform : formatcode, optional</span>
+<span class="sd">        Format for float in sttestual output. The default is &#39;{:.3e}&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Method not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : pd.Series or tuple or string</span>
+<span class="sd">        Output according to switch (see outtype).</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># grsagg=pdo.groupby(groupby)[var].agg([&#39;mean&#39;,&#39;std&#39;,&#39;count&#39;])</span>
     <span class="n">grsagg</span><span class="o">=</span><span class="n">pdo</span><span class="p">[[</span><span class="n">groupby</span><span class="p">,</span><span class="n">var</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">groupby</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span><span class="s1">&#39;std&#39;</span><span class="p">,</span><span class="s1">&#39;count&#39;</span><span class="p">])</span>
@@ -1070,12 +1529,47 @@
 
 
 <div class="viewcode-block" id="CD_test_multi"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.CD_test_multi">[docs]</a><span class="k">def</span> <span class="nf">CD_test_multi</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">group_main</span><span class="o">=</span><span class="s1">&#39;Series&#39;</span><span class="p">,</span> <span class="n">group_sub</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">],</span>
-                    <span class="n">ano_Var</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;WC_vol&#39;</span><span class="p">],</span>
-                    <span class="n">det_met</span><span class="o">=</span><span class="s1">&#39;SM-RRT&#39;</span><span class="p">,</span>
-                    <span class="n">Transpose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                  <span class="n">ano_Var</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;WC_vol&#39;</span><span class="p">],</span>
+                  <span class="n">det_met</span><span class="o">=</span><span class="s1">&#39;SM-RRT&#39;</span><span class="p">,</span>
+                  <span class="n">Transpose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate critical differences and compare to given mean difference for </span>
+<span class="sd">    groups and subgroups.</span>
+<span class="sd">    Can provide information on the comparability and/or repeatability of two </span>
+<span class="sd">    test series.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pd.DataFrame</span>
+<span class="sd">        Dataframe with groups, subgroups and values as columns for test.</span>
+<span class="sd">    group_main : str, optional</span>
+<span class="sd">        Main group for statistical test. The default is &#39;Series&#39;.</span>
+<span class="sd">    group_sub : list of str, optional</span>
+<span class="sd">        Sub-groups for statistical test (p.e. variants). The default is [&#39;A&#39;].</span>
+<span class="sd">    ano_Var : list of str, optional</span>
+<span class="sd">        Names of variables for statistical test.The default is [&#39;WC_vol&#39;].</span>
+<span class="sd">    det_met : string, optional</span>
+<span class="sd">        Determination method for deriving critical differences (CD). </span>
+<span class="sd">        The default is &#39;SM-RRT&#39;.</span>
+<span class="sd">        Implemented are (all only implemented for 95 % confidence):</span>
+<span class="sd">            - &#39;SM-RRT&#39;: CD by standard deviation and size</span>
+<span class="sd">            (see https://www.methodensammlung-bvl.de/resource/blob/208066/e536126ed1723145e51fc90b12736f5e/planung-und-statistische-auswertung-data.pdf)</span>
+<span class="sd">            - &#39;CV-DC&#39;: CD by coefficient of variation and maximum </span>
+<span class="sd">            (see https://flexikon.doccheck.com/de/Kritische_Differenz)</span>
+<span class="sd">            - &#39;CV&#39;: CD by coefficient of variation </span>
+<span class="sd">            (see https://link.springer.com/chapter/10.1007/978-3-662-48986-4_887)</span>
+<span class="sd">            - &#39;SD&#39;: CD by standard deviation</span>
+<span class="sd">            (see https://edoc.hu-berlin.de/bitstream/handle/18452/11713/cclm.1982.20.11.817.pdf?sequence=1</span>
+<span class="sd">    Transpose : bool, optional</span>
+<span class="sd">        Switch for transposing result. The default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    df_out : pd.DataFrame</span>
+<span class="sd">        Derived test results (pd.Series({&#39;MD&#39;:grs_MD,&#39;CD&#39;:CD, &#39;eta&#39;:eta, &#39;H0&#39;: MD_l_CD})).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">df_out</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;O&#39;</span><span class="p">)</span>
-    <span class="c1"># for sg in group_sub:</span>
-    <span class="c1">#     for av in ano_Var:</span>
     <span class="k">for</span> <span class="n">av</span> <span class="ow">in</span> <span class="n">ano_Var</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">sg</span> <span class="ow">in</span> <span class="n">group_sub</span><span class="p">:</span>
             <span class="n">tmp</span><span class="o">=</span><span class="n">CD_rep</span><span class="p">(</span><span class="n">pdo</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="p">(</span><span class="n">group_main</span><span class="p">,</span><span class="n">sg</span><span class="p">),</span> 

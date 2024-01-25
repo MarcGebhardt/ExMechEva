@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>exmecheva.common.mc_char &mdash; ExMechEva 0.1.0 documentation</title>
+  <title>exmecheva.common.mc_char &mdash; ExMechEva 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
 
@@ -85,12 +85,14 @@
 <span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="k">as</span> <span class="nn">scsig</span>
 
 <span class="kn">from</span> <span class="nn">.analyze</span> <span class="kn">import</span> <span class="p">(</span><span class="n">sign_n_change</span><span class="p">,</span> <span class="n">sign_n_changeth</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">Inter_Lines</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.pd_ext</span> <span class="kn">import</span> <span class="p">(</span><span class="n">pd_valid_index</span><span class="p">,</span> <span class="n">Find_closest</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.pd_ext</span> <span class="kn">import</span> <span class="p">(</span><span class="n">pd_valid_index</span><span class="p">,</span> <span class="n">pd_combine_index</span><span class="p">,</span> <span class="n">pd_slice_index</span><span class="p">,</span>
+                     <span class="n">Find_closest</span><span class="p">,</span> <span class="n">Find_closestv</span><span class="p">,</span> 
+                     <span class="n">Find_closest_perc</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.mc_man</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Extend_Series_Poly</span><span class="p">,</span> <span class="n">Extend_Series_n_setter</span><span class="p">,</span> <span class="n">Retrim_Series</span><span class="p">,</span>
                      <span class="n">smooth</span><span class="p">,</span> <span class="n">Smoothsel</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.fitting</span> <span class="kn">import</span> <span class="p">(</span><span class="n">YM_sigeps_lin</span><span class="p">)</span>
 
-
+<span class="c1">#%% Standard functions</span>
 <div class="viewcode-block" id="rise_curve"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.rise_curve">[docs]</a><span class="k">def</span> <span class="nf">rise_curve</span><span class="p">(</span><span class="n">meas_curve</span><span class="p">,</span> <span class="n">smoothbool</span><span class="p">,</span> <span class="n">smooth_lvl</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Computes partial integration (1st[rise] and 2nd-grade[curvature])</span>
@@ -115,9 +117,9 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    Val : pd.Series([],dtype=&#39;float64&#39;)</span>
-<span class="sd">        DESCRIPTION.</span>
+<span class="sd">        Input value.</span>
 <span class="sd">    Val2 : pd.Series([],dtype=&#39;float64&#39;)</span>
-<span class="sd">        DESCRIPTION.</span>
+<span class="sd">        Testing value.</span>
 <span class="sd">    drop_op : string, case-sensitive</span>
 <span class="sd">        Condition name (abV_self,pgm_self,pgm_other,qua_self),</span>
 <span class="sd">    drop_val : float64</span>
@@ -516,10 +518,62 @@
                <span class="n">sc_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;norm&#39;</span><span class="p">:</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="s1">&#39;normadd&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span>
                           <span class="s1">&#39;th&#39;</span><span class="p">:</span><span class="mf">0.05</span><span class="p">,</span> <span class="s1">&#39;th_option&#39;</span><span class="p">:</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span> <span class="s1">&#39;th_set_val&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
                <span class="n">shift_value</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">opt_out</span><span class="o">=</span><span class="s1">&#39;DataFrame&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes difference quotient of input arrays (nth-grade) and their signs, </span>
+<span class="sd">    as well as sign changes to find points of inconstancy in measured curves.</span>
 
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y : pd.Series of float</span>
+<span class="sd">        Ordinate of the curve for which the difference quotient is to be </span>
+<span class="sd">        determined.</span>
+<span class="sd">    x : pd.Series of float or None, optional</span>
+<span class="sd">        Abscissa of the curve for which the difference quotient is to be </span>
+<span class="sd">        determined. The default is None.</span>
+<span class="sd">    deep : int, optional</span>
+<span class="sd">        Number of differential quotients to determine. The default is 3.</span>
+<span class="sd">    ex_bool : bool, optional</span>
+<span class="sd">        Switch for extending data with Extend_Series_n_setter and afterwards </span>
+<span class="sd">        retrim them with Retrim_Series. The default is True.</span>
+<span class="sd">    ex_kwargs : dict, optional</span>
+<span class="sd">        Keyword arguments for Extend_Series_n_setter. </span>
+<span class="sd">        The default is {&#39;polydeg&#39;:1}.</span>
+<span class="sd">    smooth_bool : bool or string, optional</span>
+<span class="sd">        Switch for smoothing of data. Must ether be True or False or in </span>
+<span class="sd">        [&#39;Input&#39;,&#39;x-only&#39;,&#39;y-only&#39;,&#39;yandDQ&#39;,&#39;DQ&#39;]. The default is False.</span>
+<span class="sd">    smooth_type : string, optional</span>
+<span class="sd">        Type of smoothing methode (see Smoothsel for further information).</span>
+<span class="sd">        The default is &#39;SMA&#39;.</span>
+<span class="sd">    smooth_opts : dict, optional</span>
+<span class="sd">        Smoothing option for choosen method (see Smoothsel for further </span>
+<span class="sd">        information). The default is {&#39;window_length&#39;:3}.</span>
+<span class="sd">    sc_kwargs : dict, optional</span>
+<span class="sd">        Keyword arguments for sign and sign change determination </span>
+<span class="sd">        (normalization and thresholding, for further information see </span>
+<span class="sd">        ./analyze.sign_n_changeth).</span>
+<span class="sd">        The default is {&#39;norm&#39;:&#39;absmax&#39;, &#39;normadd&#39;:0.5, </span>
+<span class="sd">                        &#39;th&#39;:0.05, &#39;th_option&#39;:&#39;abs&#39;, &#39;th_set_val&#39;:0}.</span>
+<span class="sd">    shift_value : bool or int, optional</span>
+<span class="sd">        Shifting of values. The default is False.</span>
+<span class="sd">    opt_out : string, optional</span>
+<span class="sd">        Output option (only DataFrame or DF implemented yet). </span>
+<span class="sd">        The default is &#39;DataFrame&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        Determination length of smooth_opts seems to be wrong.</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Output option not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : pd.DataFrame</span>
+<span class="sd">        Differnece quotients, signs and sign changes of given input data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">index</span>
-        
     <span class="k">if</span> <span class="n">ex_bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;n&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ex_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">ntmp1</span> <span class="o">=</span> <span class="n">ntmp2</span> <span class="o">=</span> <span class="mi">0</span>
@@ -534,7 +588,7 @@
                     <span class="n">ntmp1</span> <span class="o">=</span> <span class="n">Extend_Series_n_setter</span><span class="p">(</span><span class="s1">&#39;Smooth&#39;</span><span class="p">,</span>
                                                    <span class="n">ffuncargs</span><span class="o">=</span><span class="p">[</span><span class="n">smooth_opts</span><span class="p">])</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Type </span><span class="si">%s</span><span class="s2"> of smoothopts not implemented!(Determination extension length)&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Type </span><span class="si">%s</span><span class="s2"> of smoothopts not implemented! (Determination extension length)&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">shift_value</span> <span class="ow">or</span> <span class="p">(</span><span class="n">shift_value</span> <span class="o">!=</span><span class="mi">0</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">shift_value</span><span class="p">:</span> <span class="n">shift_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> 
                 <span class="n">ntmp2</span> <span class="o">=</span> <span class="n">Extend_Series_n_setter</span><span class="p">(</span><span class="s1">&#39;Shift&#39;</span><span class="p">,</span>
@@ -566,7 +620,6 @@
                                 <span class="n">smooth_opts</span><span class="o">=</span><span class="n">smooth_opts</span><span class="p">,</span> <span class="n">snip</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">DQs_tmp</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">DQ_name</span><span class="p">]</span>
-            
     <span class="n">t</span> <span class="o">=</span> <span class="n">sign_n_changeth</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="o">**</span><span class="n">sc_kwargs</span><span class="p">,</span><span class="n">opt_out</span> <span class="o">=</span> <span class="s1">&#39;DF&#39;</span><span class="p">)</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">,</span><span class="n">t</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">shift_value</span><span class="p">:</span> <span class="n">shift_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
@@ -576,15 +629,16 @@
         <span class="n">dfs</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="n">df</span><span class="p">[</span><span class="n">dfs</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfs</span>
     <span class="k">if</span> <span class="n">ex_bool</span><span class="p">:</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">Retrim_Series</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ex_kwargs</span><span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="n">ex_kwargs</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">])</span>
-        
+        <span class="n">df</span> <span class="o">=</span> <span class="n">Retrim_Series</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">ex_kwargs</span><span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">],</span> 
+                           <span class="n">kind</span><span class="o">=</span><span class="n">ex_kwargs</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">opt_out</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;DF&#39;</span><span class="p">,</span><span class="s1">&#39;DataFrame&#39;</span><span class="p">,</span><span class="s1">&#39;Dataframe&#39;</span><span class="p">]:</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">df</span>
         <span class="k">return</span> <span class="n">out</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Output option </span><span class="si">%s</span><span class="s2"> not implemented!&quot;</span><span class="o">%</span><span class="n">opt_out</span><span class="p">)</span></div>
     
-<div class="viewcode-block" id="Peaky_Finder"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.Peaky_Finder">[docs]</a><span class="k">def</span> <span class="nf">Peaky_Finder</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
+<span class="c1">#%% Automatic curve characterization and merging</span>
+<div class="viewcode-block" id="peaky_finder"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.peaky_finder">[docs]</a><span class="k">def</span> <span class="nf">peaky_finder</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
                  <span class="n">fp_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;prominence&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;height&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">},</span>
                  <span class="n">out_opt</span><span class="o">=</span><span class="s1">&#39;valser-loc&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -607,7 +661,7 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    NotImplementedError</span>
-<span class="sd">        DESCRIPTION.</span>
+<span class="sd">        Option not implemented.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -648,17 +702,17 @@
     
     <span class="k">return</span> <span class="n">o</span></div>
 
-<div class="viewcode-block" id="Peaky_Finder_MM"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.Peaky_Finder_MM">[docs]</a><span class="k">def</span> <span class="nf">Peaky_Finder_MM</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
+<div class="viewcode-block" id="peaky_finder_MM"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.peaky_finder_MM">[docs]</a><span class="k">def</span> <span class="nf">peaky_finder_MM</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
                     <span class="n">fp_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;prominence&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;height&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">},</span>
                     <span class="n">out_opt</span><span class="o">=</span><span class="s1">&#39;valser-loc&#39;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pacckage method of Peaky_Finder to find maxima and minima.&quot;&quot;&quot;</span>
-    <span class="n">omax</span><span class="o">=</span><span class="n">Peaky_Finder</span><span class="p">(</span><span class="n">df</span><span class="o">=</span> <span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pacckage method of peaky_finder to find maxima and minima.&quot;&quot;&quot;</span>
+    <span class="n">omax</span><span class="o">=</span><span class="n">peaky_finder</span><span class="p">(</span><span class="n">df</span><span class="o">=</span> <span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
                       <span class="n">fp_kwargs</span><span class="o">=</span><span class="n">fp_kwargs</span><span class="p">,</span> <span class="n">out_opt</span><span class="o">=</span><span class="n">out_opt</span><span class="p">)</span>
-    <span class="n">omin</span><span class="o">=</span><span class="n">Peaky_Finder</span><span class="p">(</span><span class="n">df</span><span class="o">=-</span><span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+    <span class="n">omin</span><span class="o">=</span><span class="n">peaky_finder</span><span class="p">(</span><span class="n">df</span><span class="o">=-</span><span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
                       <span class="n">fp_kwargs</span><span class="o">=</span><span class="n">fp_kwargs</span><span class="p">,</span> <span class="n">out_opt</span><span class="o">=</span><span class="n">out_opt</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">omax</span><span class="p">,</span> <span class="n">omin</span></div>
 
-<div class="viewcode-block" id="Curvecar_Section"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.Curvecar_Section">[docs]</a><span class="k">def</span> <span class="nf">Curvecar_Section</span><span class="p">(</span><span class="n">i_start</span><span class="p">,</span> <span class="n">i_end</span><span class="p">,</span> <span class="n">ref_ser</span><span class="p">,</span> 
+<div class="viewcode-block" id="curvecar_section"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.curvecar_section">[docs]</a><span class="k">def</span> <span class="nf">curvecar_section</span><span class="p">(</span><span class="n">i_start</span><span class="p">,</span> <span class="n">i_end</span><span class="p">,</span> <span class="n">ref_ser</span><span class="p">,</span> 
                      <span class="n">sm_w_length</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;abs_max_ref&#39;</span><span class="p">,</span>
                      <span class="n">out_vals</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="s1">&#39;Const&#39;</span><span class="p">,</span><span class="s1">&#39;Rise&#39;</span><span class="p">,</span><span class="s1">&#39;Fall&#39;</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;median&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -717,7 +771,7 @@
         <span class="n">o</span> <span class="o">=</span> <span class="n">out_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">o</span><span class="p">,</span> <span class="n">mob_mean</span></div>
 
-<div class="viewcode-block" id="Curvecar_Refine"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.Curvecar_Refine">[docs]</a><span class="k">def</span> <span class="nf">Curvecar_Refine</span><span class="p">(</span><span class="n">i_start</span><span class="p">,</span><span class="n">i_mid</span><span class="p">,</span><span class="n">i_end</span><span class="p">,</span> <span class="n">ref_ser</span><span class="p">,</span>
+<div class="viewcode-block" id="curvecar_refine"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.curvecar_refine">[docs]</a><span class="k">def</span> <span class="nf">curvecar_refine</span><span class="p">(</span><span class="n">i_start</span><span class="p">,</span><span class="n">i_mid</span><span class="p">,</span><span class="n">i_end</span><span class="p">,</span> <span class="n">ref_ser</span><span class="p">,</span>
                     <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;abs_mid&#39;</span><span class="p">,</span>
                     <span class="n">out_vals</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="s1">&#39;Pos&#39;</span><span class="p">,</span><span class="s1">&#39;Neg&#39;</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -795,20 +849,21 @@
     <span class="k">return</span> <span class="n">o</span><span class="p">,</span> <span class="n">i_snew</span><span class="p">,</span> <span class="n">i_enew</span><span class="p">,</span> <span class="n">mean</span></div>
 
 
-<div class="viewcode-block" id="MCurve_Characterizer"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.MCurve_Characterizer">[docs]</a><span class="k">def</span> <span class="nf">MCurve_Characterizer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
-                         <span class="n">ex_bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">ex_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;polydeg&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
-                         <span class="n">smooth_bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">smooth_type</span><span class="o">=</span><span class="s1">&#39;SMA&#39;</span><span class="p">,</span>
-                         <span class="n">smooth_opts</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;window_length&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span>
-                         <span class="c1"># smooth_snip=True,  opt_shift=True,</span>
-                         <span class="n">shift_value</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-                         <span class="n">sc_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;norm&#39;</span><span class="p">:</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="s1">&#39;normadd&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span>
-                                    <span class="s1">&#39;th&#39;</span><span class="p">:</span><span class="mf">0.05</span><span class="p">,</span> <span class="s1">&#39;th_option&#39;</span><span class="p">:</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span> <span class="s1">&#39;th_set_val&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
-                         <span class="n">peak_norm</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">peak_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;prominence&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;height&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">},</span> 
-                         <span class="n">cc_snip</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">cc_threshold</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">cc_norm</span><span class="o">=</span><span class="s1">&#39;abs_max_ref&#39;</span><span class="p">,</span>
-                         <span class="n">cc_refine</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ccr_threshold</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">ccr_norm</span><span class="o">=</span><span class="s1">&#39;abs_mid&#39;</span><span class="p">,</span>
-                         <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="curve_characterizer"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.curve_characterizer">[docs]</a><span class="k">def</span> <span class="nf">curve_characterizer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+                        <span class="n">ex_bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ex_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;polydeg&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+                        <span class="n">smooth_bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">smooth_type</span><span class="o">=</span><span class="s1">&#39;SMA&#39;</span><span class="p">,</span>
+                        <span class="n">smooth_opts</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;window_length&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span>
+                        <span class="c1"># smooth_snip=True,  opt_shift=True,</span>
+                        <span class="n">shift_value</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">sc_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;norm&#39;</span><span class="p">:</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="s1">&#39;normadd&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span>
+                                   <span class="s1">&#39;th&#39;</span><span class="p">:</span><span class="mf">0.05</span><span class="p">,</span> <span class="s1">&#39;th_option&#39;</span><span class="p">:</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span> <span class="s1">&#39;th_set_val&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span>
+                        <span class="n">peak_norm</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span> <span class="n">peak_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;prominence&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;height&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">},</span> 
+                        <span class="n">cc_snip</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">cc_threshold</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">cc_norm</span><span class="o">=</span><span class="s1">&#39;abs_max_ref&#39;</span><span class="p">,</span>
+                        <span class="n">cc_refine</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ccr_threshold</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">ccr_norm</span><span class="o">=</span><span class="s1">&#39;abs_mid&#39;</span><span class="p">,</span>
+                        <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Characterize a measured curve.</span>
+<span class="sd">    Characterize a measured curve. To plot results please see </span>
+<span class="sd">    curve_char_plotter in ./plotting.py.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -847,11 +902,14 @@
 <span class="sd">        The default is {&#39;prominence&#39;:0.1, &#39;height&#39;:0.1}.</span>
 <span class="sd">		</span>
 <span class="sd">    cc_snip : corresponding type of index, optional</span>
-<span class="sd">        Determination distance to start and end for characterization of section. The default is 3.</span>
+<span class="sd">        Determination distance to start and end for characterization of </span>
+<span class="sd">        section. The default is 3.</span>
 <span class="sd">    cc_threshold : float, optional</span>
-<span class="sd">        Determination threshold for characterization of section. The default is 0.01.</span>
+<span class="sd">        Determination threshold for characterization of section.</span>
+<span class="sd">        The default is 0.01.</span>
 <span class="sd">    cc_norm : string, optional</span>
-<span class="sd">        Nomralization method for characterization of section. The default is &#39;abs_max_ref&#39;.</span>
+<span class="sd">        Nomralization method for characterization of section.</span>
+<span class="sd">        The default is &#39;abs_max_ref&#39;.</span>
 <span class="sd">		</span>
 <span class="sd">    cc_refine : bool, optional</span>
 <span class="sd">        Turn refinement by curvature of curve section on. The default is True.</span>
@@ -863,7 +921,8 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    pandas Dataframe</span>
-<span class="sd">        Characterization of input (for linear parts: linearisation and intersection to previous included).</span>
+<span class="sd">        Characterization of input (for linear parts: linearisation and</span>
+<span class="sd">                                   intersection to previous included).</span>
 <span class="sd">    pandas Series</span>
 <span class="sd">        Points of first characteriation(S=Start,E=End, I=Increase, D=Decrease).</span>
 <span class="sd">    pandas Dataframe</span>
@@ -885,11 +944,11 @@
                         <span class="n">shift_value</span><span class="o">=</span><span class="n">shift_value</span><span class="p">,</span> <span class="n">opt_out</span><span class="o">=</span><span class="s1">&#39;DataFrame&#39;</span><span class="p">)</span>
     
     <span class="c1"># Find peaks</span>
-    <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">Peaky_Finder_MM</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">peak_norm</span><span class="p">,</span>
+    <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">peaky_finder_MM</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">peak_norm</span><span class="p">,</span>
     <span class="c1"># # exclude sign and n</span>
-    <span class="c1"># a,b=Peaky_Finder_MM(df=df, cols=~df.columns.str.contains(&#39;_s.*&#39;,regex=True),</span>
+    <span class="c1"># a,b=peaky_finder_MM(df=df, cols=~df.columns.str.contains(&#39;_s.*&#39;,regex=True),</span>
                         <span class="n">fp_kwargs</span><span class="o">=</span><span class="n">peak_kwargs</span><span class="p">,</span> <span class="n">out_opt</span><span class="o">=</span><span class="s1">&#39;valser-loc&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">Max_or_Min</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="n">ind</span><span class="p">,</span><span class="n">max_p_ser</span><span class="p">,</span><span class="n">min_p_ser</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">max_or_min</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="n">ind</span><span class="p">,</span><span class="n">max_p_ser</span><span class="p">,</span><span class="n">min_p_ser</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">max_p_ser</span><span class="p">[</span><span class="n">col</span><span class="p">]:</span>
             <span class="n">o</span><span class="o">=</span><span class="s1">&#39;Max&#39;</span>
         <span class="k">elif</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">min_p_ser</span><span class="p">[</span><span class="n">col</span><span class="p">]:</span>
@@ -897,8 +956,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">o</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
         <span class="k">return</span> <span class="n">o</span>
-    <span class="n">dfp</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">Max_or_Min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-    <span class="c1"># dfp = df.apply(lambda x: pd.DataFrame(x).apply(lambda y: Max_or_Min(x.name, y.name, a, b), axis=1))</span>
+    <span class="n">dfp</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">max_or_min</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
     <span class="n">dfp</span> <span class="o">=</span> <span class="n">dfp</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">((</span><span class="n">dfp</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))]</span>
     
     <span class="c1">#pre-identify linear sections</span>
@@ -915,7 +975,7 @@
             <span class="n">cip</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;I&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cip</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;D&#39;</span>
-        <span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="o">=</span><span class="n">Curvecar_Section</span><span class="p">(</span><span class="n">i_start</span><span class="o">=</span><span class="n">ib</span><span class="p">,</span> <span class="n">i_end</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">ref_ser</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">DQ1</span><span class="p">,</span>
+        <span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="o">=</span><span class="n">curvecar_section</span><span class="p">(</span><span class="n">i_start</span><span class="o">=</span><span class="n">ib</span><span class="p">,</span> <span class="n">i_end</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">ref_ser</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">DQ1</span><span class="p">,</span>
                                <span class="n">sm_w_length</span><span class="o">=</span><span class="n">cc_snip</span><span class="p">,</span>
                                <span class="n">threshold</span><span class="o">=</span><span class="n">cc_threshold</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">cc_norm</span><span class="p">)</span>
         <span class="n">cps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">t1</span>
@@ -926,7 +986,7 @@
             <span class="n">ia</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">cps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="s1">&#39;Start&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">i</span>
             <span class="n">cps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="s1">&#39;End&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">ia</span>
-            <span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="o">=</span><span class="n">Curvecar_Section</span><span class="p">(</span><span class="n">i_start</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">i_end</span><span class="o">=</span><span class="n">ia</span><span class="p">,</span> <span class="n">ref_ser</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">DQ1</span><span class="p">,</span>
+            <span class="n">t1</span><span class="p">,</span><span class="n">t2</span><span class="o">=</span><span class="n">curvecar_section</span><span class="p">(</span><span class="n">i_start</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">i_end</span><span class="o">=</span><span class="n">ia</span><span class="p">,</span> <span class="n">ref_ser</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">DQ1</span><span class="p">,</span>
                                    <span class="n">sm_w_length</span><span class="o">=</span><span class="n">cc_snip</span><span class="p">,</span>
                                    <span class="n">threshold</span><span class="o">=</span><span class="n">cc_threshold</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">cc_norm</span><span class="p">)</span>
             <span class="n">cps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">t1</span>
@@ -937,7 +997,7 @@
         <span class="n">cps_new</span> <span class="o">=</span> <span class="n">cps</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">cps_i_crf</span><span class="o">=</span><span class="n">cps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cps</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Const&#39;</span><span class="p">,</span><span class="s1">&#39;Rise&#39;</span><span class="p">,</span><span class="s1">&#39;Fall&#39;</span><span class="p">])]</span><span class="o">.</span><span class="n">index</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cps_i_crf</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="n">t</span><span class="o">=</span><span class="n">Curvecar_Refine</span><span class="p">(</span><span class="n">cps_new</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Start&#39;</span><span class="p">],</span><span class="n">cps_new</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;End&#39;</span><span class="p">],</span>
+            <span class="n">t</span><span class="o">=</span><span class="n">curvecar_refine</span><span class="p">(</span><span class="n">cps_new</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Start&#39;</span><span class="p">],</span><span class="n">cps_new</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;End&#39;</span><span class="p">],</span>
                               <span class="n">cps_new</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;End&#39;</span><span class="p">],</span>
                               <span class="n">df</span><span class="p">[</span><span class="s1">&#39;DQ2&#39;</span><span class="p">],</span> <span class="n">threshold</span><span class="o">=</span><span class="n">ccr_threshold</span><span class="p">,</span>
                               <span class="n">norm</span><span class="o">=</span><span class="n">ccr_norm</span><span class="p">,</span> <span class="n">out_vals</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="s1">&#39;Pos&#39;</span><span class="p">,</span><span class="s1">&#39;Neg&#39;</span><span class="p">])</span>
@@ -946,7 +1006,7 @@
                 <span class="n">cps_new</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;Start&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
                 <span class="n">cps_new</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mf">0.1</span><span class="p">,[</span><span class="s1">&#39;Type&#39;</span><span class="p">,</span><span class="s1">&#39;Start&#39;</span><span class="p">,</span><span class="s1">&#39;End&#39;</span><span class="p">,</span><span class="s1">&#39;Special&#39;</span><span class="p">]]</span><span class="o">=</span><span class="n">t</span>
         <span class="n">cps</span><span class="o">=</span><span class="n">cps_new</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
-        <span class="n">t</span><span class="o">=</span><span class="n">cps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cps_i_crf</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">Curvecar_Section</span><span class="p">(</span><span class="n">i_start</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">Start</span><span class="p">,</span>
+        <span class="n">t</span><span class="o">=</span><span class="n">cps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cps_i_crf</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">curvecar_section</span><span class="p">(</span><span class="n">i_start</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">Start</span><span class="p">,</span>
                                                               <span class="n">i_end</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">End</span><span class="p">,</span>
                                                               <span class="n">ref_ser</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">DQ1</span><span class="p">,</span>
                                                               <span class="n">sm_w_length</span><span class="o">=</span><span class="n">cc_snip</span><span class="p">,</span>
@@ -985,23 +1045,33 @@
     
     <span class="k">return</span> <span class="n">cps</span><span class="p">,</span> <span class="n">cip</span><span class="p">,</span> <span class="n">dfp</span><span class="p">,</span> <span class="n">df</span></div>
 
-<div class="viewcode-block" id="MCurve_merger"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.MCurve_merger">[docs]</a><span class="k">def</span> <span class="nf">MCurve_merger</span><span class="p">(</span><span class="n">cps1</span><span class="p">,</span><span class="n">cps2</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;1stMax&#39;</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="curve_merger"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.curve_merger">[docs]</a><span class="k">def</span> <span class="nf">curve_merger</span><span class="p">(</span><span class="n">cps1</span><span class="p">,</span><span class="n">cps2</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;1stMax&#39;</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Finds time offset between two measured curves.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    cps1 : pandas Dataframe (result of MCurve_Characterizer)</span>
+<span class="sd">    cps1 : pandas Dataframe (result of curve_characterizer)</span>
 <span class="sd">        First curve characterization.</span>
-<span class="sd">    cps2 : pandas Dataframe (result of MCurve_Characterizer)</span>
+<span class="sd">    cps2 : pandas Dataframe (result of curve_characterizer)</span>
 <span class="sd">        Second curve characterization.</span>
 <span class="sd">    how : string, optional</span>
-<span class="sd">        Switch. The default is &#39;1stMax&#39;.</span>
+<span class="sd">        Switch for how to determine time offset. Possible are:</span>
+<span class="sd">            - &#39;1stMax&#39;: first maximum</span>
+<span class="sd">            - &#39;wo_1st+last&#39;: without first and last relevant positions</span>
+<span class="sd">            - &#39;complete&#39;: all relevant positions</span>
+<span class="sd">            - &#39;list;[x,x,...]&#39;: list of relevant positions</span>
+<span class="sd">            - &#39;int;x&#39;: one relevant position</span>
+<span class="sd">            - &#39;fix;x&#39;: fixed time offset</span>
+<span class="sd">        The default is &#39;1stMax&#39;.</span>
+<span class="sd">    option : string, optional</span>
+<span class="sd">        Switch for offset determination. The default is &#39;nearest&#39;</span>
+<span class="sd">        (merging nearest positions found in both frames).</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    NotImplementedError</span>
-<span class="sd">        DESCRIPTION.</span>
+<span class="sd">        Method not implemented.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1051,9 +1121,7 @@
             <span class="k">if</span> <span class="n">tt</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tt</span><span class="p">[</span><span class="n">tt</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
                     <span class="n">ti</span><span class="o">=</span><span class="n">Find_closest</span><span class="p">(</span><span class="n">t2</span><span class="p">,</span><span class="n">t1</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
-                    <span class="c1"># print(i,ti)</span>
                     <span class="k">if</span> <span class="n">i</span><span class="o">!=</span> <span class="n">ti</span> <span class="ow">and</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">t</span><span class="p">[</span><span class="n">ti</span><span class="p">]:</span>
-                        <span class="c1"># print(&#39;drop&#39;,i)</span>
                         <span class="n">t</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">t1</span><span class="o">=</span><span class="n">t1</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
             <span class="n">t2</span><span class="o">=</span><span class="n">t2</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
@@ -1061,6 +1129,548 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">t_off</span><span class="o">=</span><span class="p">(</span><span class="n">t1</span><span class="o">-</span><span class="n">t2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">t_off</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span></div>
+
+<span class="c1">#%% Points of interest</span>
+<div class="viewcode-block" id="poi_rel_finder"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.poi_rel_finder">[docs]</a><span class="k">def</span> <span class="nf">poi_rel_finder</span><span class="p">(</span><span class="n">cip</span><span class="p">,</span> <span class="n">cycles</span><span class="p">,</span> <span class="n">xser</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">POI_start</span><span class="o">=</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="n">POI_sec</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;l&#39;</span><span class="p">,</span><span class="s1">&#39;u&#39;</span><span class="p">],</span>
+                   <span class="n">comp_dfx</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">rel_df</span><span class="o">=</span><span class="s1">&#39;DQ2&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Finds the relevant point from several given points. For example, if there </span>
+<span class="sd">    are several rise changes (e.g. due to measurement deviation), an attempt </span>
+<span class="sd">    is made to find the actual one. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cip : pd.Series ((interim-)result of poi_det_plh)</span>
+<span class="sd">        Points of interest, with index by names and value by index of input.</span>
+<span class="sd">        data. Labels are &#39;H&#39;-high point, &#39;L&#39;-low point, &#39;Pl&#39;-rise change on </span>
+<span class="sd">        loading and &#39;Pu&#39;-rise change on unloading.</span>
+<span class="sd">    cycles : int</span>
+<span class="sd">        Number of cyclic loadings.</span>
+<span class="sd">    xser : pd.Series</span>
+<span class="sd">        Input data on abcissa, p.e. time.</span>
+<span class="sd">    df : pandas Dataframe (last result of curve_characterizer), optional</span>
+<span class="sd">		Input, as well as differential quotients.</span>
+<span class="sd">    dx : float or None, optional</span>
+<span class="sd">        Test range. The default is None.</span>
+<span class="sd">    POI_start : str, optional</span>
+<span class="sd">        Start of point of interest name. The default is &#39;P&#39;.</span>
+<span class="sd">    POI_sec : list of strings, optional</span>
+<span class="sd">        Second part of point of interest name. The default is [&#39;l&#39;,&#39;u&#39;].</span>
+<span class="sd">    comp_dfx : string, optional</span>
+<span class="sd">        Comparision data on df. The default is &#39;x&#39;.</span>
+<span class="sd">    rel_df : string, optional</span>
+<span class="sd">        Relevant data on df for testing (DQ1=ris and DQ2=curve).</span>
+<span class="sd">        The default is &#39;DQ2&#39;.</span>
+<span class="sd">    ascending : bool, optional</span>
+<span class="sd">        Switch for ascending or descending. The default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Vren : pd.Series</span>
+<span class="sd">        Renamer for relevant points.</span>
+<span class="sd">        </span>
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    Vren=poi_rel_finder(cip=cip, cycles=cycles, xser=x, </span>
+<span class="sd">                        df=dft, dx=x.diff().mean()*(det_dist),</span>
+<span class="sd">                        POI_start=&#39;P&#39;, POI_sec=[&#39;l&#39;,&#39;u&#39;],</span>
+<span class="sd">                        comp_dfx=&#39;x&#39;, rel_df=&#39;DQ2&#39;, ascending=True)</span>
+<span class="sd">    cip.index=cip.index.to_series().replace(Vren).values</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Vren</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">cycles</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">lu</span> <span class="ow">in</span> <span class="n">POI_sec</span><span class="p">:</span>
+            <span class="n">dft</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([])</span>
+            <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;V&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">cip</span><span class="p">[</span><span class="n">cip</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">POI_start</span><span class="o">+</span><span class="n">lu</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">cc</span><span class="p">))]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dft</span><span class="p">[</span><span class="s1">&#39;V&#39;</span><span class="p">])</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">dft</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;xTime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xser</span><span class="p">[</span><span class="n">dft</span><span class="p">[</span><span class="s1">&#39;V&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
+                <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;tStep&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;xTime&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">Find_closest</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">comp_dfx</span><span class="p">],</span><span class="n">x</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">dx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">rel_df</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">dft</span><span class="p">[</span><span class="s1">&#39;tStep&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">ascending</span><span class="p">:</span>
+                        <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;xTime&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="n">rel_df</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+                                <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">x</span><span class="o">&gt;=</span><span class="n">x</span><span class="o">-</span><span class="n">dx</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">+</span><span class="n">dx</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+                                <span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                            <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;xTime&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="n">rel_df</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+                                <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">x</span><span class="o">&gt;=</span><span class="n">x</span><span class="o">-</span><span class="n">dx</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">+</span><span class="n">dx</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+                                <span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                            <span class="p">)</span>
+                <span class="n">dft</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="n">ascending</span><span class="p">)</span>
+                <span class="n">Vnew</span><span class="o">=</span><span class="n">dft</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+                <span class="n">dft</span><span class="p">[</span><span class="s1">&#39;Vnew&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">Vnew</span>
+                <span class="n">Vren</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dft</span><span class="p">[</span><span class="s1">&#39;Vnew&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+                <span class="k">del</span> <span class="n">dft</span><span class="p">,</span><span class="n">Vnew</span>
+    <span class="k">return</span> <span class="n">Vren</span></div>
+    
+<div class="viewcode-block" id="poi_det_plh"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.poi_det_plh">[docs]</a><span class="k">def</span> <span class="nf">poi_det_plh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cps</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dft</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">det_dist</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">det_r</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">,</span> <span class="n">refineP</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Automatically determines high and low points, as well of points with with </span>
+<span class="sd">    changing rise based on a given curve.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : pd.Series</span>
+<span class="sd">        Input data on abcissa, p.e. time.</span>
+<span class="sd">    y : pd.Series</span>
+<span class="sd">        Input data on ordinate, p.e. force.</span>
+<span class="sd">    cps : pandas Dataframe (first result of curve_characterizer)</span>
+<span class="sd">        Measurement curve characterization.</span>
+<span class="sd">    z : pd.Series, optional</span>
+<span class="sd">        Additional input data on ordinate, p.e. displacement. </span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    dft : pandas Dataframe (last result of curve_characterizer), optional</span>
+<span class="sd">		Input, as well as differential quotients. Used if refineP is True.</span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    det_dist : int, optional</span>
+<span class="sd">        Determination distance. The default is 2.</span>
+<span class="sd">    det_r : string, optional</span>
+<span class="sd">        Determination range selection keyword to search in cps.</span>
+<span class="sd">        The default is &#39;RF&#39;.</span>
+<span class="sd">    refineP : bool, optional</span>
+<span class="sd">        Switch for refinement. The default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cip : pd.Series</span>
+<span class="sd">        Points of interest, with index by names and value by index of input.</span>
+<span class="sd">        data. Labels are &#39;H&#39;-high point, &#39;L&#39;-low point, &#39;Pl&#39;-rise change on </span>
+<span class="sd">        loading and &#39;Pu&#39;-rise change on unloading.</span>
+<span class="sd">    c : int</span>
+<span class="sd">        Number of cyclic loadings.</span>
+<span class="sd">        </span>
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    if ((&#39;preload&#39; in _opts[&#39;OPT_Testtype&#39;]) </span>
+<span class="sd">        or (&#39;cyclic&#39; in _opts[&#39;OPT_Testtype&#39;])):</span>
+<span class="sd">    Vt, cycles = poi_det_plh(x=messu.Time, y=messu.Force, </span>
+<span class="sd">                         cps=cps_t, z=messu.Way, dft=df_t,</span>
+<span class="sd">                         det_dist=_opts[&#39;OPT_Determination_Distance&#39;], </span>
+<span class="sd">                         det_r=&#39;RF&#39;, refineP=True)</span>
+<span class="sd">    VIP_messu = Vt.combine_first(VIP_messu).sort_values().astype(int)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">det_r</span> <span class="o">==</span> <span class="s1">&#39;RF&#39;</span><span class="p">:</span>
+        <span class="n">dr</span> <span class="o">=</span> <span class="n">cps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cps</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Rise&#39;</span><span class="p">,</span><span class="s1">&#39;Fall&#39;</span><span class="p">])]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dr</span> 
+    <span class="n">ib</span> <span class="o">=</span> <span class="n">dr</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">hl</span><span class="o">=</span><span class="n">hu</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">e</span><span class="o">=</span><span class="mi">97</span>
+    <span class="n">cip</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int64&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dr</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">aT</span><span class="o">=</span><span class="n">dr</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span>  <span class="s1">&#39;Type&#39;</span><span class="p">]</span>
+        <span class="n">bT</span><span class="o">=</span><span class="n">dr</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ib</span><span class="p">,</span> <span class="s1">&#39;Type&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">Find_closest</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dr</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;IntP_x&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">Find_closestv</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">,</span> <span class="n">dr</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;IntP_x&#39;</span><span class="p">],</span><span class="n">dr</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;IntP_y&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">aT</span> <span class="o">==</span> <span class="n">bT</span> <span class="o">==</span> <span class="s1">&#39;Rise&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;Pl&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">hl</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cip</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+                <span class="n">cip</span><span class="p">[</span><span class="s1">&#39;Pl&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">hl</span><span class="p">)</span><span class="o">+</span><span class="nb">chr</span><span class="p">(</span><span class="n">e</span><span class="p">)]</span><span class="o">=</span><span class="n">j</span> <span class="c1"># wenn bereits Pl vorhanden, dann Plje</span>
+                <span class="n">e</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cip</span><span class="p">[</span><span class="s1">&#39;Pl&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">hl</span><span class="p">)]</span><span class="o">=</span><span class="n">j</span>
+        <span class="k">elif</span> <span class="n">aT</span> <span class="o">==</span> <span class="n">bT</span> <span class="o">==</span> <span class="s1">&#39;Fall&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;Pu&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">hu</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cip</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+                <span class="n">cip</span><span class="p">[</span><span class="s1">&#39;Pu&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">hu</span><span class="p">)</span><span class="o">+</span><span class="nb">chr</span><span class="p">(</span><span class="n">e</span><span class="p">)]</span><span class="o">=</span><span class="n">j</span> <span class="c1"># wenn bereits Pu vorhanden, dann Puje</span>
+                <span class="n">e</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cip</span><span class="p">[</span><span class="s1">&#39;Pu&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">hu</span><span class="p">)]</span><span class="o">=</span><span class="n">j</span>
+        <span class="k">elif</span> <span class="n">bT</span> <span class="o">==</span>  <span class="s1">&#39;Rise&#39;</span> <span class="ow">and</span> <span class="n">aT</span> <span class="o">==</span> <span class="s1">&#39;Fall&#39;</span> <span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="n">det_dist</span><span class="o">//</span><span class="mi">2</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="n">det_dist</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>    
+            <span class="n">cip</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">hl</span><span class="p">)]</span><span class="o">=</span><span class="n">j</span>
+            <span class="n">hl</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="mi">97</span>
+        <span class="k">elif</span> <span class="n">bT</span> <span class="o">==</span>  <span class="s1">&#39;Fall&#39;</span> <span class="ow">and</span> <span class="n">aT</span> <span class="o">==</span> <span class="s1">&#39;Rise&#39;</span> <span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="n">det_dist</span><span class="o">//</span><span class="mi">2</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="n">det_dist</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()</span>
+            <span class="n">cip</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">hu</span><span class="p">)]</span><span class="o">=</span><span class="n">j</span>
+            <span class="n">hu</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="mi">97</span>
+        <span class="n">ib</span><span class="o">=</span><span class="n">i</span>
+    <span class="n">c</span><span class="o">=</span><span class="n">hu</span>
+    <span class="k">if</span> <span class="n">refineP</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">dft</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Vren=poi_rel_finder(cip=cip, cycles=cycles, xser=x, # cycles may have to be given to function</span>
+        <span class="n">Vren</span><span class="o">=</span><span class="n">poi_rel_finder</span><span class="p">(</span><span class="n">cip</span><span class="o">=</span><span class="n">cip</span><span class="p">,</span> <span class="n">cycles</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">xser</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> 
+                           <span class="n">df</span><span class="o">=</span><span class="n">dft</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">*</span><span class="p">(</span><span class="n">det_dist</span><span class="p">),</span>
+                           <span class="n">POI_start</span><span class="o">=</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="n">POI_sec</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;l&#39;</span><span class="p">,</span><span class="s1">&#39;u&#39;</span><span class="p">],</span>
+                           <span class="n">comp_dfx</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">rel_df</span><span class="o">=</span><span class="s1">&#39;DQ2&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">cip</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">cip</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">Vren</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">return</span> <span class="n">cip</span><span class="p">,</span> <span class="n">c</span></div>
+
+<div class="viewcode-block" id="poi_vip_namer"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.poi_vip_namer">[docs]</a><span class="k">def</span> <span class="nf">poi_vip_namer</span><span class="p">(</span><span class="n">VIP</span><span class="p">,</span> <span class="n">ttype</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span>
+                  <span class="n">cc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">lu</span><span class="o">=</span><span class="s1">&#39;l&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Automatic naming of points of interest to use before poi_fixeva and </span>
+<span class="sd">    poi_refinement. Replaces given string by its equivalent for current cycle.</span>
+<span class="sd">    For example if key is &#39;P&#39; (may be lower edge of elastic modulus </span>
+<span class="sd">    determination range) and lu=&#39;l&#39; it will find &#39;Pl1&#39; for the first cycle and</span>
+<span class="sd">    &#39;L3&#39; for the third cycle.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    VIP : pd.Series</span>
+<span class="sd">        Identified points of interest. Index by name and value by index of </span>
+<span class="sd">        measurement dataframe.</span>
+<span class="sd">    ttype : string</span>
+<span class="sd">        Test type, i.e. type of applied loading. Searches only for &#39;cyclic&#39; </span>
+<span class="sd">        and &#39;destructive&#39;.</span>
+<span class="sd">    key : string</span>
+<span class="sd">        Label for naming, possible are &#39;H&#39;-high point, &#39;L&#39;-low point, </span>
+<span class="sd">        &#39;P&#39;-rise change and &#39;S&#39;-start.</span>
+<span class="sd">    cc : int, optional</span>
+<span class="sd">        Current cycle. The default is 1.</span>
+<span class="sd">    mc : int, optional</span>
+<span class="sd">        maximum applied cycles. The default is 1.</span>
+<span class="sd">    lu : string, optional</span>
+<span class="sd">        Loading (&#39;l&#39;) or unloading (&#39;u&#39;). The default is &#39;l&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    string</span>
+<span class="sd">        Found name of point of interest.</span>
+<span class="sd">        </span>
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    for cc in np.arange(1,cycles+1):</span>
+<span class="sd">        tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                              key=_opts[&#39;OPT_YM_Determination_range&#39;][-2],</span>
+<span class="sd">                              cc=cc,mc=cycles,lu=&#39;l&#39;)</span>
+<span class="sd">        tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                              key=_opts[&#39;OPT_YM_Determination_range&#39;][-1],</span>
+<span class="sd">                              cc=cc,mc=cycles,lu=&#39;l&#39;)</span>
+<span class="sd">        tmp,_,_ = poi_fixeva(pds=messu.Stress, </span>
+<span class="sd">                            p=_opts[&#39;OPT_YM_Determination_range&#39;][0:2],</span>
+<span class="sd">                            iS=VIP_messu[tmp_iS], iE=VIP_messu[tmp_iE],</span>
+<span class="sd">                            range_sub=&#39;min&#39;, norm=&#39;max&#39;, option=&#39;abs&#39;,</span>
+<span class="sd">                            check_irr=True, irr=messu[messu.driF_schg].index.values,</span>
+<span class="sd">                            irr_opt=&#39;nearest&#39;)</span>
+<span class="sd">        VIP_messu[&#39;FlA&#39;+str(cc)],VIP_messu[&#39;FlB&#39;+str(cc)]=tmp</span>
+<span class="sd">        if not ((&#39;destructive&#39; in _opts[&#39;OPT_Testtype&#39;]) and cc==cycles):</span>
+<span class="sd">            tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                                 key=_opts[&#39;OPT_YM_Determination_range&#39;][-1],</span>
+<span class="sd">                                 cc=cc,mc=cycles,lu=&#39;u&#39;)</span>
+<span class="sd">            tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                                  key=_opts[&#39;OPT_YM_Determination_range&#39;][-2],</span>
+<span class="sd">                                  cc=cc,mc=cycles,lu=&#39;u&#39;)</span>
+<span class="sd">            tmp,_,_ = poi_fixeva(pds=messu.Stress, </span>
+<span class="sd">                                p=_opts[&#39;OPT_YM_Determination_range&#39;][0:2],</span>
+<span class="sd">                                iS=VIP_messu[tmp_iS], iE=VIP_messu[tmp_iE],</span>
+<span class="sd">                                range_sub=&#39;min&#39;, norm=&#39;max&#39;, option=&#39;abs&#39;,</span>
+<span class="sd">                                check_irr=True, irr=messu[messu.driF_schg].index.values,</span>
+<span class="sd">                                irr_opt=&#39;nearest&#39;)</span>
+<span class="sd">            VIP_messu[&#39;FuB&#39;+str(cc)],VIP_messu[&#39;FuA&#39;+str(cc)]=tmp</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">indisin</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">i</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">i</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;P&#39;</span><span class="p">:</span>
+        <span class="n">t</span><span class="o">=</span><span class="n">key</span><span class="o">+</span><span class="n">lu</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+        <span class="n">sk</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">indisin</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">VIP</span><span class="p">)</span> <span class="k">else</span> <span class="n">poi_vip_namer</span><span class="p">(</span><span class="n">VIP</span><span class="p">,</span> <span class="n">ttype</span><span class="p">,</span> <span class="s1">&#39;L&#39;</span><span class="p">,</span>
+                                                    <span class="n">cc</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">lu</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span>
+        <span class="n">t</span><span class="o">=</span><span class="n">key</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+        <span class="n">sk</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">indisin</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">VIP</span><span class="p">)</span> <span class="k">else</span> <span class="n">poi_vip_namer</span><span class="p">(</span><span class="n">VIP</span><span class="p">,</span> <span class="n">ttype</span><span class="p">,</span> <span class="s1">&#39;U&#39;</span><span class="p">,</span>
+                                                    <span class="n">cc</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">lu</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;L&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lu</span> <span class="o">==</span> <span class="s1">&#39;l&#39;</span><span class="p">:</span>
+            <span class="n">t</span><span class="o">=</span><span class="n">key</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">cc</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">sk</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">indisin</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">VIP</span><span class="p">)</span> <span class="k">else</span> <span class="n">poi_vip_namer</span><span class="p">(</span><span class="n">VIP</span><span class="p">,</span> <span class="n">ttype</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">,</span>
+                                                        <span class="n">cc</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">lu</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">t</span><span class="o">=</span><span class="n">key</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+            <span class="n">sk</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">indisin</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">VIP</span><span class="p">)</span> <span class="k">else</span> <span class="n">poi_vip_namer</span><span class="p">(</span><span class="n">VIP</span><span class="p">,</span> <span class="n">ttype</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">,</span>
+                                                        <span class="n">cc</span><span class="p">,</span> <span class="n">mc</span><span class="p">,</span> <span class="n">lu</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;S&#39;</span> <span class="ow">and</span> <span class="n">cc</span><span class="o">==</span><span class="n">mc</span> <span class="ow">and</span> <span class="n">lu</span><span class="o">==</span><span class="s1">&#39;u&#39;</span><span class="p">:</span>
+        <span class="n">sk</span> <span class="o">=</span> <span class="s1">&#39;E&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sk</span><span class="o">=</span><span class="n">key</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;cyclic&#39;</span> <span class="ow">in</span> <span class="n">ttype</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;L&#39;</span> <span class="ow">and</span> <span class="n">cc</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">lu</span><span class="o">==</span><span class="s1">&#39;l&#39;</span><span class="p">:</span>
+            <span class="n">sk</span><span class="o">=</span><span class="s1">&#39;Lm&#39;</span> <span class="c1"># have to be determined afterwards</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;H&#39;</span> <span class="ow">and</span> <span class="n">cc</span><span class="o">==</span><span class="n">mc</span> <span class="ow">and</span> <span class="n">lu</span><span class="o">==</span><span class="s1">&#39;l&#39;</span><span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;destructive&#39;</span> <span class="ow">in</span> <span class="n">ttype</span><span class="p">):</span>
+            <span class="n">sk</span><span class="o">=</span><span class="s1">&#39;Hm&#39;</span> <span class="c1"># have to be determined afterwards</span>
+    <span class="k">return</span> <span class="n">sk</span></div>
+
+<div class="viewcode-block" id="poi_fixeva"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.poi_fixeva">[docs]</a><span class="k">def</span> <span class="nf">poi_fixeva</span><span class="p">(</span><span class="n">pds</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">iS</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iE</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+               <span class="n">range_sub</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span>
+               <span class="n">check_irr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">irr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">irr_opt</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine points for start and end of fixed range determination </span>
+<span class="sd">    (by ratios to given value).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pds : pd.Series</span>
+<span class="sd">        Input values, p.e. measured stress data.</span>
+<span class="sd">    p : list of two floats</span>
+<span class="sd">        Lower (first) and upper (second) border of determination range.</span>
+<span class="sd">    iS : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is None.</span>
+<span class="sd">    iE : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is None.</span>
+<span class="sd">    range_sub : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is &#39;min&#39;.</span>
+<span class="sd">    norm : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is &#39;max&#39;.</span>
+<span class="sd">    option : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is &#39;abs&#39;.</span>
+<span class="sd">    check_irr : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is False.</span>
+<span class="sd">    irr : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is None.</span>
+<span class="sd">    irr_opt : TYPE, optional</span>
+<span class="sd">        DESCRIPTION. The default is &#39;nearest&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        DESCRIPTION.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">    TYPE</span>
+<span class="sd">        DESCRIPTION.</span>
+<span class="sd">        </span>
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    for cc in np.arange(1,cycles+1):</span>
+<span class="sd">        tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                              key=_opts[&#39;OPT_YM_Determination_range&#39;][-2],</span>
+<span class="sd">                              cc=cc,mc=cycles,lu=&#39;l&#39;)</span>
+<span class="sd">        tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                              key=_opts[&#39;OPT_YM_Determination_range&#39;][-1],</span>
+<span class="sd">                              cc=cc,mc=cycles,lu=&#39;l&#39;)</span>
+<span class="sd">        tmp,_,_ = poi_fixeva(pds=messu.Stress, </span>
+<span class="sd">                            p=_opts[&#39;OPT_YM_Determination_range&#39;][0:2],</span>
+<span class="sd">                            iS=VIP_messu[tmp_iS], iE=VIP_messu[tmp_iE],</span>
+<span class="sd">                            range_sub=&#39;min&#39;, norm=&#39;max&#39;, option=&#39;abs&#39;,</span>
+<span class="sd">                            check_irr=True, irr=messu[messu.driF_schg].index.values,</span>
+<span class="sd">                            irr_opt=&#39;nearest&#39;)</span>
+<span class="sd">        VIP_messu[&#39;FlA&#39;+str(cc)],VIP_messu[&#39;FlB&#39;+str(cc)]=tmp</span>
+<span class="sd">        if not ((&#39;destructive&#39; in _opts[&#39;OPT_Testtype&#39;]) and cc==cycles):</span>
+<span class="sd">            tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                                 key=_opts[&#39;OPT_YM_Determination_range&#39;][-1],</span>
+<span class="sd">                                 cc=cc,mc=cycles,lu=&#39;u&#39;)</span>
+<span class="sd">            tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                                  key=_opts[&#39;OPT_YM_Determination_range&#39;][-2],</span>
+<span class="sd">                                  cc=cc,mc=cycles,lu=&#39;u&#39;)</span>
+<span class="sd">            tmp,_,_ = poi_fixeva(pds=messu.Stress, </span>
+<span class="sd">                                p=_opts[&#39;OPT_YM_Determination_range&#39;][0:2],</span>
+<span class="sd">                                iS=VIP_messu[tmp_iS], iE=VIP_messu[tmp_iE],</span>
+<span class="sd">                                range_sub=&#39;min&#39;, norm=&#39;max&#39;, option=&#39;abs&#39;,</span>
+<span class="sd">                                check_irr=True, irr=messu[messu.driF_schg].index.values,</span>
+<span class="sd">                                irr_opt=&#39;nearest&#39;)</span>
+<span class="sd">            VIP_messu[&#39;FuB&#39;+str(cc)],VIP_messu[&#39;FuA&#39;+str(cc)]=tmp</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tmp</span><span class="o">=</span><span class="n">Find_closest_perc</span><span class="p">(</span>
+        <span class="n">pds</span><span class="o">=</span><span class="n">pds</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">iS</span><span class="o">=</span><span class="n">iS</span><span class="p">,</span> <span class="n">iE</span><span class="o">=</span><span class="n">iE</span><span class="p">,</span> <span class="n">range_sub</span><span class="o">=</span><span class="n">range_sub</span><span class="p">,</span> 
+        <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span>
+        <span class="p">)</span>
+    <span class="n">irrb</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">irrpos</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">check_irr</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">irr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> 
+        <span class="k">def</span> <span class="nf">c_nba</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">irr</span><span class="p">,</span><span class="n">irr_opt</span><span class="p">):</span>
+            <span class="n">i</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+            <span class="k">if</span> <span class="n">irr</span> <span class="o">&lt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="ow">and</span> <span class="n">irr</span> <span class="o">&gt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">irr_opt</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">,</span><span class="s1">&#39;nearest&#39;</span><span class="p">]:</span>
+                    <span class="n">i</span><span class="o">=</span><span class="n">Find_closest</span><span class="p">(</span><span class="n">pds</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">r</span><span class="p">),</span><span class="n">val</span><span class="o">=</span><span class="n">irr</span><span class="p">,</span><span class="n">option</span><span class="o">=</span><span class="s1">&#39;abs&#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">irr_opt</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span><span class="s1">&#39;first&#39;</span><span class="p">]:</span>
+                    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+                <span class="k">elif</span> <span class="n">irr_opt</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;higher&#39;</span><span class="p">,</span><span class="s1">&#39;last&#39;</span><span class="p">]:</span>
+                    <span class="n">i</span><span class="o">=</span><span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Option not implemented!&#39;</span><span class="p">)</span>                    
+                <span class="n">r</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">irr</span>
+            <span class="k">return</span> <span class="n">r</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">i</span>
+                    
+        <span class="k">if</span>   <span class="nb">isinstance</span><span class="p">(</span><span class="n">irr</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="nb">int</span><span class="p">)):</span>
+            <span class="n">tmp</span><span class="p">,</span> <span class="n">irrb</span><span class="p">,</span> <span class="n">irrpos</span> <span class="o">=</span> <span class="n">c_nba</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span><span class="n">irr</span><span class="p">,</span><span class="n">irr_opt</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">irr</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">irr</span><span class="p">,</span><span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCSeries</span><span class="p">):</span>
+            <span class="n">irrb</span><span class="o">=</span><span class="p">[]</span>
+            <span class="n">irrpos</span><span class="o">=</span><span class="p">[]</span>
+            <span class="c1"># if not isinstance(irr, pd.core.base.ABCSeries):</span>
+            <span class="c1">#     irr = pd.Series(irr)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">irr</span><span class="p">:</span>
+                <span class="n">tmp</span><span class="p">,</span> <span class="n">irrbt</span><span class="p">,</span> <span class="n">irrpost</span> <span class="o">=</span> <span class="n">c_nba</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">irr_opt</span><span class="p">)</span>
+                <span class="n">irrb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">irrbt</span><span class="p">)</span>
+                <span class="n">irrpos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">irrpost</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Type </span><span class="si">%s</span><span class="s2"> for irregularity not implemented&quot;</span><span class="o">%</span><span class="nb">type</span><span class="p">(</span><span class="n">irr</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">irrb</span><span class="p">,</span> <span class="n">irrpos</span></div>
+
+<div class="viewcode-block" id="poi_refinement"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.mc_char.poi_refinement">[docs]</a><span class="k">def</span> <span class="nf">poi_refinement</span><span class="p">(</span><span class="n">DQ</span><span class="p">,</span> <span class="n">B_ser</span><span class="p">,</span> <span class="n">s_range</span><span class="p">,</span> <span class="n">B_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F3&#39;</span><span class="p">,</span><span class="s1">&#39;M&#39;</span><span class="p">,</span><span class="s1">&#39;F4&#39;</span><span class="p">],</span>
+                   <span class="n">Blp</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">Bup</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">Maxp</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">trimsch</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Refine elastic modulus determination range according to a method described </span>
+<span class="sd">    by Keuerleber [1].</span>
+<span class="sd">    ([1]: Keuerleber, M. (2006). Bestimmung des Elastizitätsmoduls von </span>
+<span class="sd">    Kunststoffen bei hohen Dehnraten am Beispiel von PP. Von der Fakultät </span>
+<span class="sd">    Maschinenbau der Universität Stuttgart zur Erlangung der Würde eines </span>
+<span class="sd">    Doktor-Ingenieurs (Dr.-Ing.) genehmigte Abhandlung. Doktorarbeit. </span>
+<span class="sd">    Universität Stuttgart, Stuttgart.)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    DQ : pd.DataFrame</span>
+<span class="sd">        Stress-strain-curve differential quotients and sign changes. </span>
+<span class="sd">        Generated by Diff_Quot.</span>
+<span class="sd">    B_ser : pd.Series</span>
+<span class="sd">        Input data, p.e. stress, to search for given lower limit ratio </span>
+<span class="sd">        (Blp) und upper limit ratio (Bup) for refined range.</span>
+<span class="sd">    s_range : list</span>
+<span class="sd">        Start and end of step range to search for refined range.</span>
+<span class="sd">    B_ind : int, optional</span>
+<span class="sd">        Index for B_ser. The default is None. Not implemented yet </span>
+<span class="sd">        (using absolute maximum of given B_ser values instead).</span>
+<span class="sd">    names : list of string, optional</span>
+<span class="sd">        Output names for lower limit, maximum of differental quotient </span>
+<span class="sd">        and upper limit. The default is [&#39;F3&#39;,&#39;M&#39;,&#39;F4&#39;].</span>
+<span class="sd">    Blp : float, optional</span>
+<span class="sd">        Lower limit ratio to identified B_ser value (p.e. maximum stress).</span>
+<span class="sd">        The default is 0.15.</span>
+<span class="sd">    Bup : float, optional</span>
+<span class="sd">        Upper limit ratio to identified B_ser value (p.e. maximum stress).</span>
+<span class="sd">        The default is 0.95.</span>
+<span class="sd">    Maxp : float, optional</span>
+<span class="sd">        Lowest value to include in refined range. The default is 0.75. </span>
+<span class="sd">        (i.e. 75 % of the maximum differntail quotient)</span>
+<span class="sd">    trimsch : bool, optional</span>
+<span class="sd">        Switch for trimming step range of differential quotients. </span>
+<span class="sd">        The default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VIP : pd.Series</span>
+<span class="sd">        Determined points of interest as series of steps indexed by given names.</span>
+<span class="sd">    DQs : pd.DataFrame </span>
+<span class="sd">        Differential quotients limitet to range.</span>
+<span class="sd">    </span>
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    DQcons=None</span>
+<span class="sd">    DQopts=None</span>
+<span class="sd">    for cc in np.arange(1,cycles+1):</span>
+<span class="sd">        tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                              key=_opts[&#39;OPT_YM_Determination_refinement&#39;][2],</span>
+<span class="sd">                              cc=cc,mc=cycles,lu=&#39;l&#39;)</span>
+<span class="sd">        tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                              key=_opts[&#39;OPT_YM_Determination_refinement&#39;][3],</span>
+<span class="sd">                              cc=cc,mc=cycles,lu=&#39;l&#39;)</span>
+<span class="sd">        tmp,DQcont = poi_refinement(DQ=DQcon, B_ser=messu.loc(axis=1)[&#39;Stress&#39;],</span>
+<span class="sd">                            s_range=[VIP_messu[tmp_iS],VIP_messu[tmp_iE]],</span>
+<span class="sd">                            names=[&#39;RlA&#39;+str(cc),&#39;RlM&#39;+str(cc),&#39;RlB&#39;+str(cc)],</span>
+<span class="sd">                            Blp=_opts[&#39;OPT_YM_Determination_refinement&#39;][0],</span>
+<span class="sd">                            Bup=1.0-_opts[&#39;OPT_YM_Determination_refinement&#39;][0],</span>
+<span class="sd">                            Maxp=_opts[&#39;OPT_YM_Determination_refinement&#39;][1])</span>
+<span class="sd">        VIP_messu=tmp.combine_first(VIP_messu).sort_values().astype(int)</span>
+<span class="sd">        if DQcons is None:</span>
+<span class="sd">            DQcons = DQcont</span>
+<span class="sd">        else:</span>
+<span class="sd">            DQcons=pd.concat([DQcons,DQcont],axis=0)</span>
+<span class="sd">        tmp,DQoptt = poi_refinement(DQ=DQopt, B_ser=messu.loc(axis=1)[&#39;Stress&#39;],</span>
+<span class="sd">                            s_range=[VIP_messu[tmp_iS],VIP_messu[tmp_iE]],</span>
+<span class="sd">                            names=[&#39;RlA&#39;+str(cc),&#39;RlM&#39;+str(cc),&#39;RlB&#39;+str(cc)],</span>
+<span class="sd">                            Blp=_opts[&#39;OPT_YM_Determination_refinement&#39;][0],</span>
+<span class="sd">                            Bup=1.0-_opts[&#39;OPT_YM_Determination_refinement&#39;][0],</span>
+<span class="sd">                            Maxp=_opts[&#39;OPT_YM_Determination_refinement&#39;][1])</span>
+<span class="sd">        VIP_dicu=tmp.combine_first(VIP_dicu).sort_values().astype(int)</span>
+<span class="sd">        if DQopts is None:</span>
+<span class="sd">            DQopts = DQoptt</span>
+<span class="sd">        else:</span>
+<span class="sd">            DQopts=pd.concat([DQopts,DQoptt],axis=0)</span>
+<span class="sd">            </span>
+<span class="sd">            </span>
+<span class="sd">        if not ((&#39;destructive&#39; in _opts[&#39;OPT_Testtype&#39;]) and cc==cycles):</span>
+<span class="sd">            tmp_iS=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                                 key=_opts[&#39;OPT_YM_Determination_refinement&#39;][3],</span>
+<span class="sd">                                 cc=cc,mc=cycles,lu=&#39;u&#39;)</span>
+<span class="sd">            tmp_iE=poi_vip_namer(VIP=VIP_messu,ttype=_opts[&#39;OPT_Testtype&#39;],</span>
+<span class="sd">                                  key=_opts[&#39;OPT_YM_Determination_refinement&#39;][2],</span>
+<span class="sd">                                  cc=cc,mc=cycles,lu=&#39;u&#39;)</span>
+<span class="sd">            tmp,DQcont = poi_refinement(DQ=DQcon, B_ser=messu.loc(axis=1)[&#39;Stress&#39;],</span>
+<span class="sd">                                s_range=[VIP_messu[tmp_iS],VIP_messu[tmp_iE]],</span>
+<span class="sd">                                names=[&#39;RuA&#39;+str(cc),&#39;RuM&#39;+str(cc),&#39;RuB&#39;+str(cc)],</span>
+<span class="sd">                                Blp=_opts[&#39;OPT_YM_Determination_refinement&#39;][0],</span>
+<span class="sd">                                Bup=1.0-_opts[&#39;OPT_YM_Determination_refinement&#39;][0],</span>
+<span class="sd">                                Maxp=_opts[&#39;OPT_YM_Determination_refinement&#39;][1])</span>
+<span class="sd">            VIP_messu=tmp.combine_first(VIP_messu).sort_values().astype(int)</span>
+<span class="sd">            if DQcons is None:</span>
+<span class="sd">                DQcons = DQcont</span>
+<span class="sd">            else:</span>
+<span class="sd">                DQcons=pd.concat([DQcons,DQcont],axis=0)</span>
+<span class="sd">            tmp,DQoptt = poi_refinement(DQ=DQopt, B_ser=messu.loc(axis=1)[&#39;Stress&#39;],</span>
+<span class="sd">                                s_range=[VIP_messu[tmp_iS],VIP_messu[tmp_iE]],</span>
+<span class="sd">                                names=[&#39;RuA&#39;+str(cc),&#39;RuM&#39;+str(cc),&#39;RuB&#39;+str(cc)],</span>
+<span class="sd">                                Blp=_opts[&#39;OPT_YM_Determination_refinement&#39;][0],</span>
+<span class="sd">                                Bup=1.0-_opts[&#39;OPT_YM_Determination_refinement&#39;][0],</span>
+<span class="sd">                                Maxp=_opts[&#39;OPT_YM_Determination_refinement&#39;][1])</span>
+<span class="sd">            VIP_dicu=tmp.combine_first(VIP_dicu).sort_values().astype(int)</span>
+<span class="sd">            if DQopts is None:</span>
+<span class="sd">                DQopts = DQoptt</span>
+<span class="sd">            else:</span>
+<span class="sd">                DQopts=pd.concat([DQopts,DQoptt],axis=0)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">VIP</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int64&#39;</span><span class="p">)</span>
+    <span class="n">step_range</span><span class="o">=</span><span class="n">pd_combine_index</span><span class="p">(</span>
+        <span class="n">DQ</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">B_ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">s_range</span><span class="p">):</span><span class="nb">max</span><span class="p">(</span><span class="n">s_range</span><span class="p">)]</span><span class="o">.</span><span class="n">index</span>
+        <span class="p">)</span>
+    
+    <span class="n">B_range</span><span class="o">=</span><span class="n">Find_closest_perc</span><span class="p">(</span><span class="n">pds</span><span class="o">=</span><span class="n">B_ser</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="n">Blp</span><span class="p">,</span><span class="n">Bup</span><span class="p">],</span>
+                                   <span class="n">iS</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">s_range</span><span class="p">),</span> <span class="n">iE</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">s_range</span><span class="p">),</span>
+                                   <span class="n">range_sub</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;abs&#39;</span><span class="p">)</span>
+    <span class="n">B_range</span><span class="o">=</span><span class="n">B_ser</span><span class="o">.</span><span class="n">indlim</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">B_range</span><span class="p">),</span><span class="nb">max</span><span class="p">(</span><span class="n">B_range</span><span class="p">)])</span><span class="o">.</span><span class="n">index</span>
+    <span class="c1">#B_range=B_ser[(B_ser&gt;=Blp*B_ser.loc[B_ind])&amp;(B_ser&lt;=Bup*B_ser.loc[B_ind])].index</span>
+    <span class="n">DQs</span><span class="o">=</span><span class="n">DQ</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step_range</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">trimsch</span><span class="p">:</span>
+        <span class="n">t</span><span class="o">=</span><span class="n">DQs</span><span class="p">[</span><span class="n">DQs</span><span class="p">[</span><span class="s1">&#39;DQ1_signchange&#39;</span><span class="p">]]</span>
+        <span class="n">t2</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">t4</span><span class="o">=</span><span class="p">[</span><span class="n">DQs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">DQs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">t2</span><span class="o">=</span><span class="n">t2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">t4</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">t4</span><span class="p">))</span>
+        <span class="n">t2</span><span class="o">=</span><span class="n">t2</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+        <span class="n">t3</span><span class="o">=</span><span class="n">t2</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span>
+        <span class="n">step_range</span><span class="o">=</span><span class="p">[</span><span class="n">t2</span><span class="p">[</span><span class="n">t2</span><span class="o">&lt;</span><span class="n">t3</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">t3</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">DQs</span><span class="o">=</span><span class="n">DQs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pd_slice_index</span><span class="p">(</span><span class="n">DQs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">step_range</span><span class="p">)]</span>            
+    <span class="n">step_range2</span><span class="o">=</span><span class="n">pd_combine_index</span><span class="p">(</span><span class="n">DQs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">B_range</span><span class="p">)</span>
+    <span class="n">VIP</span><span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">=</span><span class="n">DQs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">step_range2</span><span class="p">]</span><span class="o">.</span><span class="n">DQ1</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+    <span class="n">DQM</span><span class="o">=</span><span class="n">DQs</span><span class="o">.</span><span class="n">DQ1</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">VIP</span><span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">VIP</span><span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">=</span><span class="n">DQs</span><span class="o">.</span><span class="n">loc</span><span class="p">[:</span><span class="n">VIP</span><span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">DQs</span><span class="o">.</span><span class="n">DQ1</span><span class="o">/</span><span class="n">DQM</span><span class="p">)</span><span class="o">&lt;</span><span class="n">Maxp</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="n">VIP</span><span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">=</span><span class="n">DQs</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span> <span class="c1"># Hinzugefügt am 16.09.2021</span>
+        <span class="n">VIP</span><span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span><span class="o">=</span><span class="n">DQs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">VIP</span><span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]]:]</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">DQs</span><span class="o">.</span><span class="n">DQ1</span><span class="o">/</span><span class="n">DQM</span><span class="p">)</span><span class="o">&lt;</span><span class="n">Maxp</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="n">VIP</span><span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span><span class="o">=</span><span class="n">VIP</span><span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">-</span><span class="mi">1</span> <span class="c1">#-1 could be problematic</span>
+    <span class="n">VIP</span><span class="o">=</span><span class="n">VIP</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">VIP</span><span class="p">,</span> <span class="n">DQs</span></div>
 </pre></div>
 
            </div>

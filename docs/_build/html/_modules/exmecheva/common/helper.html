@@ -80,6 +80,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="c1">#%% tests</span>
 <span class="k">def</span> <span class="nf">_test_overwrites</span><span class="p">(</span><span class="n">impmods</span><span class="p">,</span> <span class="n">overwr</span><span class="p">):</span>
@@ -114,6 +115,66 @@
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Function </span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2"> and will be overwritten!&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ta</span><span class="p">,</span><span class="n">tb</span><span class="p">),</span>
                               <span class="ne">ImportWarning</span><span class="p">)</span>
 
+<div class="viewcode-block" id="type_str_return"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.helper.type_str_return">[docs]</a><span class="k">def</span> <span class="nf">type_str_return</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tests type of given object and return an identifying string.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obj : object</span>
+<span class="sd">        Input object to check type.</span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - Standard: None, bool, str, int and float</span>
+<span class="sd">            - Numpy array of shape:</span>
+<span class="sd">                - unknown shape -&gt; npAu</span>
+<span class="sd">                - single row -&gt; npAr</span>
+<span class="sd">                - single column -&gt; npAc</span>
+<span class="sd">                - frame -&gt; npAF</span>
+<span class="sd">            - Pandas:</span>
+<span class="sd">                - Index -&gt; pdIN</span>
+<span class="sd">                - Series -&gt; pdSe</span>
+<span class="sd">                - DataFrame-&gt; pdDF</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Type of object not implemented.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    t : str</span>
+<span class="sd">        String of derived type.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">t</span><span class="o">=</span><span class="s1">&#39;None&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">t</span><span class="o">=</span><span class="s1">&#39;bool&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">t</span><span class="o">=</span><span class="s1">&#39;str&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">t</span><span class="o">=</span><span class="s1">&#39;int&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">t</span><span class="o">=</span><span class="s1">&#39;float&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">t</span><span class="o">=</span><span class="s1">&#39;npAu&#39;</span>
+        <span class="n">npshape</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">npshape</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">t</span><span class="o">=</span><span class="s1">&#39;npAr&#39;</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">npshape</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">npshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">t</span><span class="o">=</span><span class="s1">&#39;npAc&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">t</span><span class="o">=</span><span class="s1">&#39;npAF&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCIndex</span><span class="p">):</span>
+        <span class="n">t</span><span class="o">=</span><span class="s1">&#39;pdIn&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCSeries</span><span class="p">):</span>
+        <span class="n">t</span><span class="o">=</span><span class="s1">&#39;pdSe&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">ABCDataFrame</span><span class="p">):</span>
+        <span class="n">t</span><span class="o">=</span><span class="s1">&#39;pdDF&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Type </span><span class="si">{}</span><span class="s2"> not implemented!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">t</span></div>
 
 <div class="viewcode-block" id="check_empty"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.helper.check_empty">[docs]</a><span class="k">def</span> <span class="nf">check_empty</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">empty_str</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;  &#39;</span><span class="p">,</span><span class="s1">&#39;   &#39;</span><span class="p">,</span>
                               <span class="s1">&#39;#NV&#39;&#39;NaN&#39;</span><span class="p">,</span><span class="s1">&#39;nan&#39;</span><span class="p">,</span><span class="s1">&#39;NA&#39;</span><span class="p">]):</span>

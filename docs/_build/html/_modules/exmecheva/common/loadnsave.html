@@ -214,19 +214,86 @@
             <span class="n">fname</span><span class="o">+=</span><span class="n">var_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;Value&#39;</span><span class="p">]</span>
     <span class="n">fname</span><span class="o">+=</span><span class="n">fdend</span>
     <span class="k">return</span> <span class="n">fname</span></div>
+<span class="c1">#%% Log-files</span>
+<div class="viewcode-block" id="comb_logs"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.loadnsave.comb_logs">[docs]</a><span class="k">def</span> <span class="nf">comb_logs</span><span class="p">(</span><span class="n">in_paths</span><span class="p">,</span> <span class="n">out_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a combined log-file of a series of log-files.</span>
 
-<span class="c1">#%%% HDF</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_paths : pd.DataFrame with columns [&#39;prot&#39;,&#39;out&#39;]</span>
+<span class="sd">        Path for finding protocol and evaluation data.</span>
+<span class="sd">    out_path : string</span>
+<span class="sd">        Output path of combined log-file (without extension).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lps</span> <span class="o">=</span> <span class="n">in_paths</span><span class="p">[</span><span class="s1">&#39;out&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">in_paths</span><span class="p">[</span><span class="s1">&#39;prot&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">,</span><span class="s1">&#39;.log&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">txt</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lps</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="n">txt</span><span class="o">+=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="se">\n</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">lps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">l</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">lps</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">txt</span><span class="o">+=</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
+        <span class="n">l</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">txt</span><span class="o">+=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">+</span><span class="s1">&#39;-&#39;</span><span class="o">*</span><span class="mi">100</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="n">comblog</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="s1">&#39;.log&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">comblog</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+    <span class="n">comblog</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+    
+<span class="c1">#%% HDF</span>
 <div class="viewcode-block" id="pack_hdf"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.loadnsave.pack_hdf">[docs]</a><span class="k">def</span> <span class="nf">pack_hdf</span><span class="p">(</span><span class="n">in_paths</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> 
              <span class="n">hdf_naming</span> <span class="o">=</span> <span class="s1">&#39;Designation&#39;</span><span class="p">,</span> <span class="n">var_suffix</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
              <span class="n">h5_conc</span> <span class="o">=</span> <span class="s1">&#39;Material_Parameters&#39;</span><span class="p">,</span> <span class="n">h5_data</span> <span class="o">=</span> <span class="s1">&#39;Measurement&#39;</span><span class="p">,</span>
+             <span class="n">prot_rkws</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">),</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
              <span class="n">opt_pd_out</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">opt_hdf_save</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Packs specimenwise evaluated measurements (HDF-files, *.h5) to a </span>
+<span class="sd">    HDF-database containing material parameters (key is &#39;Summary&#39;) and </span>
+<span class="sd">    evaluated measurements (key is &#39;Test_Data&#39;).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_paths : pd.DataFrame with columns [&#39;prot&#39;,&#39;hdf&#39;]</span>
+<span class="sd">        Path for finding protocol and evaluation data.</span>
+<span class="sd">    out_path : string</span>
+<span class="sd">        Output path of created database.</span>
+<span class="sd">    hdf_naming : string, optional</span>
+<span class="sd">        Naming rule of evaluated measurements (*.h5). </span>
+<span class="sd">        The default is &#39;Designation&#39;.</span>
+<span class="sd">    var_suffix : list of strings, optional</span>
+<span class="sd">        Suffix of hdf naming rule. The default is [&quot;&quot;].</span>
+<span class="sd">    h5_conc : str, optional</span>
+<span class="sd">        Identifier of material parameters conclusion in evaluated measurements </span>
+<span class="sd">        (*.h5). The default is &#39;Material_Parameters&#39;.</span>
+<span class="sd">    h5_data : str, optional</span>
+<span class="sd">        Identifier of measured and evaluated curves in evaluated measurements </span>
+<span class="sd">        (*.h5). The default is &#39;Measurement&#39;.</span>
+<span class="sd">    prot_rkws : dict, optional</span>
+<span class="sd">        Dictionary for reading protocol. Must be keyword in pandas.read_excel.</span>
+<span class="sd">        The default is dict(header=11, skiprows=range(12,13), index_col=0).</span>
+<span class="sd">    opt_pd_out : bool, optional</span>
+<span class="sd">        Option for pandas object output. The default is True.</span>
+<span class="sd">    opt_hdf_save : bool, optional</span>
+<span class="sd">        Option for hdf saving. The default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dfc : pd.DataFrame</span>
+<span class="sd">        Summary of protocol and material data.</span>
+<span class="sd">    dfd : pd.DataFrame</span>
+<span class="sd">        Summary of test data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">dfc</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
     <span class="n">dfd</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">in_paths</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
-        <span class="n">prot</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;prot&#39;</span><span class="p">],</span>
-                           <span class="n">header</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">),</span>
-                           <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">prot</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;prot&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">prot_rkws</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">ms</span> <span class="ow">in</span> <span class="n">var_suffix</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">())]:</span>
                 <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;hdf&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="n">ms</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
@@ -245,8 +312,6 @@
                     <span class="n">dfp</span><span class="o">=</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">prot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">==</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
                     <span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">dfp</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="n">ms</span>
                     <span class="n">dfc</span> <span class="o">=</span> <span class="n">dfc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dfp</span><span class="p">)</span>
-                    
-            
     <span class="k">if</span> <span class="n">opt_hdf_save</span><span class="p">:</span>
         <span class="n">HDFst</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">)</span>
         <span class="n">HDFst</span><span class="p">[</span><span class="s1">&#39;Summary&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfc</span>
@@ -258,15 +323,53 @@
 <div class="viewcode-block" id="pack_hdf_mul"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.loadnsave.pack_hdf_mul">[docs]</a><span class="k">def</span> <span class="nf">pack_hdf_mul</span><span class="p">(</span><span class="n">in_paths</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> 
                  <span class="n">hdf_naming</span> <span class="o">=</span> <span class="s1">&#39;Designation&#39;</span><span class="p">,</span> <span class="n">var_suffix</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">],</span>
                  <span class="n">h5_conc</span> <span class="o">=</span> <span class="s1">&#39;Material_Parameters&#39;</span><span class="p">,</span> <span class="n">h5_data</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
+                 <span class="n">prot_rkws</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">),</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
                  <span class="n">opt_pd_out</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">opt_hdf_save</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-    
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Packs specimenwise evaluated measurements (HDF-files, *.h5) to a </span>
+<span class="sd">    HDF-database containing material parameters key is &#39;Summary&#39; and other </span>
+<span class="sd">    included data (key starting with &#39;Add_&#39;).</span>
+<span class="sd">    Only all keys in single hdf-files are implemented. (High storage </span>
+<span class="sd">    requirements!)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_paths : pd.DataFrame with columns [&#39;prot&#39;,&#39;hdf&#39;]</span>
+<span class="sd">        Path for finding protocol and evaluation data.</span>
+<span class="sd">    out_path : string</span>
+<span class="sd">        Output path of created database.</span>
+<span class="sd">    hdf_naming : string, optional</span>
+<span class="sd">        Naming rule of evaluated measurements (*.h5). </span>
+<span class="sd">        The default is &#39;Designation&#39;.</span>
+<span class="sd">    var_suffix : list of strings, optional</span>
+<span class="sd">        Suffix of hdf naming rule. The default is [&quot;&quot;].</span>
+<span class="sd">    h5_conc : str, optional</span>
+<span class="sd">        Identifier of material parameters conclusion in evaluated measurements </span>
+<span class="sd">        (*.h5). The default is &#39;Material_Parameters&#39;.</span>
+<span class="sd">    h5_data : str, optional</span>
+<span class="sd">        Identifier for additional packaging. Only &#39;all&#39; (packing all keys from </span>
+<span class="sd">        input hfd&#39;s)implemented. The default is &#39;all&#39;.</span>
+<span class="sd">    prot_rkws : dict, optional</span>
+<span class="sd">        Dictionary for reading protocol. Must be keyword in pandas.read_excel.</span>
+<span class="sd">        The default is dict(header=11, skiprows=range(12,13), index_col=0).</span>
+<span class="sd">    opt_pd_out : bool, optional</span>
+<span class="sd">        Option for pandas object output. The default is True.</span>
+<span class="sd">    opt_hdf_save : bool, optional</span>
+<span class="sd">        Option for hdf saving. The default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dfc : pd.DataFrame</span>
+<span class="sd">        Summary of protocol and material data.</span>
+<span class="sd">    dfd : pd.DataFrame</span>
+<span class="sd">        Summary of test data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dfc</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
     <span class="n">dfd</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
     <span class="c1"># dfd={}</span>
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">in_paths</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
-        <span class="n">prot</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;prot&#39;</span><span class="p">],</span>
-                           <span class="n">header</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">),</span>
-                           <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">prot</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;prot&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">prot_rkws</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">ms</span> <span class="ow">in</span> <span class="n">var_suffix</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">prot</span><span class="p">[</span><span class="n">hdf_naming</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">())]:</span>
                 <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">in_paths</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;hdf&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="n">ms</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
