@@ -360,13 +360,13 @@ def boxplt_ext(
 #%%% Main
 Version="240118"
 ptype="TBT"
-# ptype="ACT"
-ptype="ATT"
+ptype="ACT"
+# ptype="ATT"
 
 img_p_mpath="D:/Gebhardt/Veröffentlichungen/2022-X-X_MatParams_Pelvis/IMG/04_build/"
-img_p={'TBT':'fig2_cortical_location.png',
-       'ACT':'fig2_trabecular_location.png',
-       'ACT_dir':'fig2_trabecular_direction.png',
+img_p={'TBT':'cortical_location.png',
+       'ACT':'trabecular_location.png',
+       'ACT_dir':'trabecular_direction.png',
        'ATT_F':'fig2_fas.png',
        'ATT_L':'fig2_lig.png',}
 
@@ -1035,7 +1035,7 @@ if ptype in ["TBT","ACT"]:
         pltvartmp=YM_con_str
         with get_sample_data(img_p_mpath+img_p['ACT']) as file:
             arr_img = plt.imread(file)
-    imagebox = OffsetImage(arr_img, zoom=0.16)
+    imagebox = OffsetImage(arr_img, zoom=0.22)
     imagebox.image.axes = ax['Pelvis']
     ab = AnnotationBbox(imagebox, (0,0),
                         xybox=(0.4, 0.5),

@@ -38,14 +38,14 @@ def main():
     # Options (uncomment to use):
     ## Evaluate single measurement
     option = 'single'
-    # ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
-    # option = 'series'
-    # ## Evaluate series of series (here only one series, named 'TS')
-    # option = 'complete'
-    # ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
-    # option = 'pack'
-    # ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
-    # option = 'pack-all'
+    ## Evaluate series of measurements (see protocol table, here only one named 'tl21x')
+    option = 'series'
+    ## Evaluate series of series (here only one series, named 'TS')
+    option = 'complete'
+    ## Pack all evaluations into single hdf-file (only results and evaluated measurement)
+    option = 'pack'
+    ## Pack all evaluations into single hdf-file with (all results, Warning: high memory requirements!)
+    option = 'pack-all'
 
     # Example (Series='TS' and specimen designation='tl21x', see protocol table): 
     ser='TS'
