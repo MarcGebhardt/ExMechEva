@@ -73,61 +73,6 @@ def Stress_Strain_fin(messu, Vipser, YM, YMabs,
     out.sort_index(inplace=True)
     return out
 
-def linRegStats(Y, X, Y_txt, X_txt):
-    des_txt = ("\n- Linear relation between %s and %s:"%(Y_txt,X_txt))
-    tmp  = emec.fitting.YM_sigeps_lin(Y, X)
-    smst = sm.OLS(Y, sm.add_constant(X)).fit().summary()
-    out=pd.Series([*tmp,smst,des_txt],
-                  index=['s','c','Rquad','fit','smstat','Description'])
-    return out
-
-def linRegStats_Multi(df, lRd, var_ren={}, var_sym={}, ind=3, addind=3):
-    Lin_reg_df = pd.DataFrame(lRd, columns=['var1','var2'])
-    Lin_reg_df.index = Lin_reg_df.var1+'-'+Lin_reg_df.var2
-    Lin_reg_df[['var1ren','var2ren']]=Lin_reg_df[['var1','var2']].replace(var_ren)
-    Lin_reg_df[['var1sym','var2sym']]=Lin_reg_df[['var1','var2']].replace(var_sym)
-    tmp=Lin_reg_df.apply(
-        lambda x: linRegStats(df[x.var1], df[x.var2], x.var1ren, x.var2ren),
-        axis=1
-        )
-    Lin_reg_df=pd.concat([Lin_reg_df,tmp],axis=1)
-    txt=Lin_reg_df.apply(
-        lambda x: emec.output.str_indent(x.loc['Description'],ind) + 
-        emec.output.str_indent(
-            emec.fitting.fit_report_adder(*x[['fit','Rquad']]), ind+addind
-            ) + emec.output.str_indent(x['smstat'],ind+addind), axis=1
-        )
-    return Lin_reg_df, txt
-
-def func_lin_str(xl, yl, 
-                 a, b, R=None,
-                 t_form='{a:.3e},{b:.3e},{R:.3f}'):
-    """Return string from a general linear function."""
-    if R is None:
-        txtc = t_form.format(**{'a':a,'b':b},).split(',')
-    else:
-        txtc = t_form.format(**{'a':a,'b':b,'R':R},).split(',')
-    if a==0:
-        txt = r'{y} = {0} {x}'.format(txtc[1],
-                                           **{'y':yl,'x':xl},)
-    else:
-        if b>=0:
-            txt = r'{y} = {0} + {1} $\cdot$ {x}'.format(txtc[0],txtc[1],
-                                                   **{'y':yl,'x':xl},)
-        else:
-            txtc[1]=txtc[1][1:]
-            txt = r'{y} = {0} - {1} $\cdot$ {x}'.format(txtc[0],txtc[1],
-                                                   **{'y':yl,'x':xl},)
-    if not R is None:
-        txt += r' ($R²$ = {0})'.format(txtc[2])
-    return txt
-
-def linRegfunc_fromSt(Lin_reg_df, y, x, t_form='{a:.3e},{b:.3e},{R:.3f}'):
-    tmp=Lin_reg_df.loc[y+'-'+x]
-    txt= func_lin_str(tmp['var2sym'], tmp['var1sym'], 
-                      a=tmp['s'], b=tmp['c'], R=tmp['Rquad'],
-                      t_form=t_form)
-    return txt
 
 def plt_add_figsubl(text, axo=None, off=(0.02,0.02), xg=0.0, yg=1.0,
                     fontdict=dict(fontsize=9+2, fontweight="bold", fontstyle="normal",
@@ -998,11 +943,22 @@ else:
                'Density_app':'apparent density',
                'Age':'donor age'}
 
-Lin_reg_df, txt = linRegStats_Multi(cs_doda, lR, lRvar_ren, VIPar_plt_renamer)
-
+VIPar_plt_ren_oD=pd.Series(VIPar_plt_renamer).str.replace(r'$','').to_dict()
+reg_l_df, reg_l_txt = emec.stat_ext.reg_stats_multi(
+    df=cs_doda, lRd=lR, var_ren=lRvar_ren, var_sym=VIPar_plt_ren_oD,
+    ftype='linear', guess = dict(a=0.01, b=0.1), 
+    t_form='{a:.3e},{b:.3e}'
+    )
+reg_p_df, reg_p_txt = emec.stat_ext.reg_stats_multi(
+    df=cs_doda, lRd=lR, var_ren=lRvar_ren, var_sym=VIPar_plt_ren_oD,
+    ftype='power_nc', guess = dict(a=0, b=0.1, c=0.1), 
+    t_form='{a:.3e},{b:.3e},{c:.3e}'
+    )
 emec.output.str_log("\n\n "+"-"*100, **MG_logopt)
 emec.output.str_log("\n Linear regressions:", **MG_logopt)
-emec.output.str_log(('').join(txt.values), **MG_logopt)
+emec.output.str_log(('').join(reg_l_txt.values), **MG_logopt)
+emec.output.str_log("\n Power regressions:", **MG_logopt)
+emec.output.str_log(('').join(reg_p_txt.values), **MG_logopt)
 
 #%% Plots
 #%%% Paper
@@ -1219,9 +1175,9 @@ if ptype == "ACT":
                                   constrained_layout=True)
     with get_sample_data(img_p_mpath+img_p['ACT_dir']) as file:
         arr_img = plt.imread(file)
-    imagebox = OffsetImage(arr_img, zoom=0.28)
+    imagebox = OffsetImage(arr_img, zoom=0.22)
     imagebox.image.axes = ax['Pelvis']
-    ab = AnnotationBbox(imagebox, xy = (-0.09,-0.05), box_alignment=(0, 0),
+    ab = AnnotationBbox(imagebox, xy = (-0.09,-0.01), box_alignment=(0, 0),
                         # xybox=(0.43, 0.5),
                         xycoords='axes fraction',frameon=False)
     ax['Pelvis'].add_artist(ab)
@@ -2051,7 +2007,6 @@ fig.suptitle(None)
 emec.plotting.plt_handle_suffix(fig,path=path+"SM-DC",**plt_Fig_dict)
 
 #%%%% Regressions
-
 gs_kw = dict(width_ratios=[1], 
              height_ratios=[1, 1, 1, 1],
              wspace=0.1, hspace=0.1)
@@ -2060,35 +2015,53 @@ fig, ax = plt.subplot_mosaic([['Efu'],['ERho'],['fuRho'],['RhoAge']],
                               # empty_sentinel='lower mid',
                               figsize=figsize_sup,
                               constrained_layout=True)
-txt=linRegfunc_fromSt(Lin_reg_df,pltvartmp,'fu','{a:.3e},{b:.3e},{R:.3f}')
-sns.regplot(x="fu", y=pltvartmp, data=cs_doda,
-            ax=ax['Efu'], label=txt)
-ax['Efu'].legend()
-ax['Efu'].set_ylabel('Elastic modulus in MPa')
-ax['Efu'].set_xlabel('Ultimate strength in MPa')
 
-txt=linRegfunc_fromSt(Lin_reg_df,pltvartmp,'Density_app','{a:.3e},{b:.3e},{R:.3f}')
-sns.regplot(x="Density_app", y=pltvartmp, data=cs_doda,
-            ax=ax['ERho'], label=txt)
-ax['ERho'].legend()
-ax['ERho'].set_ylabel('Elastic modulus in MPa')
-ax['ERho'].set_xlabel('Apparent density in g/cm³')
+emec.plotting.plt_ax_regfit(
+    pdo=cs_doda, x="fu", y=pltvartmp, fit=reg_l_df.loc[pltvartmp+"-fu"],
+    ax=ax['Efu'], plt_d=True, label_f="restring_eq_rquad", label_d='Data',
+    xlabel='Ultimate strength in MPa', ylabel='Elastic modulus in MPa',
+    title=None, t_form={'var':'{a:.3e},{b:.3e}','Rquad':'{:.3f}'})
+emec.plotting.plt_ax_regfit(
+    pdo=cs_doda, x="fu", y=pltvartmp, fit=reg_p_df.loc[pltvartmp+"-fu"],
+    ax=ax['Efu'], plt_d=False, label_f="restring_eq_rquad", label_d=None,
+    xlabel='Ultimate strength in MPa', ylabel='Elastic modulus in MPa',
+    title=None, t_form={'var':'{a:.3e},{b:.3e},{c:.3e}','Rquad':'{:.3f}'})
 
-txt=linRegfunc_fromSt(Lin_reg_df,'fu','Density_app','{a:.3e},{b:.3e},{R:.3f}')
-sns.regplot(x="Density_app", y='fu', data=cs_doda,
-            ax=ax['fuRho'], label=txt)
-ax['fuRho'].legend()
-ax['fuRho'].set_ylabel('Ultimate strength in MPa')
-ax['fuRho'].set_xlabel('Apparent density in g/cm³')
+emec.plotting.plt_ax_regfit(
+    pdo=cs_doda, x="Density_app", y=pltvartmp, fit=reg_l_df.loc[pltvartmp+"-Density_app"],
+    ax=ax['ERho'], plt_d=True, label_f="restring_eq_rquad", label_d='Data',
+    xlabel='Apparent density in g/cm³', ylabel='Elastic modulus in MPa',
+    title=None, t_form={'var':'{a:.3e},{b:.3e}','Rquad':'{:.3f}'})
+emec.plotting.plt_ax_regfit(
+    pdo=cs_doda, x="Density_app", y=pltvartmp, fit=reg_p_df.loc[pltvartmp+"-Density_app"],
+    ax=ax['ERho'], plt_d=False, label_f="restring_eq_rquad", label_d=None,
+    xlabel='Apparent density in g/cm³', ylabel='Elastic modulus in MPa',
+    title=None, t_form={'var':'{a:.3e},{b:.3e},{c:.3e}','Rquad':'{:.3f}'})
 
-txt=linRegfunc_fromSt(Lin_reg_df,'Density_app','Age','{a:.3e},{b:.3e},{R:.3f}')
-sns.regplot(x="Age", y='Density_app', data=cs_doda,
-            ax=ax['RhoAge'], label=txt)
-ax['RhoAge'].legend()
-ax['RhoAge'].set_ylabel('Apparent density in g/cm³')
-ax['RhoAge'].set_xlabel('Age in years')
+emec.plotting.plt_ax_regfit(
+    pdo=cs_doda, x="Density_app", y='fu', fit=reg_l_df.loc["fu-Density_app"],
+    ax=ax['fuRho'], plt_d=True, label_f="restring_eq_rquad", label_d='Data',
+    xlabel='Apparent density in g/cm³', ylabel='Ultimate strength in MPa',
+    title=None, t_form={'var':'{a:.3e},{b:.3e}','Rquad':'{:.3f}'})
+emec.plotting.plt_ax_regfit(
+    pdo=cs_doda, x="Density_app", y='fu', fit=reg_p_df.loc["fu-Density_app"],
+    ax=ax['fuRho'], plt_d=False, label_f="restring_eq_rquad", label_d=None,
+    xlabel='Apparent density in g/cm³', ylabel='Ultimate strength in MPa',
+    title=None, t_form={'var':'{a:.3e},{b:.3e},{c:.3e}','Rquad':'{:.3f}'})
+
+emec.plotting.plt_ax_regfit(
+    pdo=cs_doda, x="Age", y='Density_app', fit=reg_l_df.loc["Density_app-Age"],
+    ax=ax['RhoAge'], plt_d=True, label_f="restring_eq_rquad", label_d='Data',
+    xlabel='Age in years', ylabel='Apparent density in g/cm³',
+    title=None, t_form={'var':'{a:.3e},{b:.3e}','Rquad':'{:.3f}'})
+emec.plotting.plt_ax_regfit(
+    pdo=cs_doda, x="Age", y='Density_app', fit=reg_p_df.loc["Density_app-Age"],
+    ax=ax['RhoAge'], plt_d=False, label_f="restring_eq_rquad", label_d=None,
+    xlabel='Age in years', ylabel='Apparent density in g/cm³',
+    title=None, t_form={'var':'{a:.3e},{b:.3e},{c:.3e}','Rquad':'{:.3f}'})
 ax['RhoAge'].set_xlim((50,90))
 fig.suptitle(None)
 emec.plotting.plt_handle_suffix(fig,path=path+"SM-LR",**plt_Fig_dict) 
+
 #%% Close Log
 MG_logopt['logfp'].close()

@@ -571,13 +571,13 @@ def TBT_single(prot_ser, paths, mfile_add='',
                    **log_scopt)
     if _opts['OPT_DIC']:
         dicu.Time=dicu.Time.round(rel_time_digs)
-        ind=pd.RangeIndex(dicu.loc[dicu.Time>=messu.Time.min()].index[0],
-                          messu.Time.count()+dicu.loc[dicu.Time>=messu.Time.min()].index[0],1)
+        ind=pd.RangeIndex(
+            dicu.loc[dicu.Time>=messu.Time.min()].index[0],
+            messu.Time.count()+dicu.loc[dicu.Time>=messu.Time.min()].index[0],1
+            )
         messu=messu.merge(dicu,how='left', on='Time').set_index(ind)
-        
     else:
         dic_f=round(1/dic_dt)
-        
     f_vdm=dic_f/mess_f
         
     # =============================================================================
@@ -1374,145 +1374,202 @@ def TBT_single(prot_ser, paths, mfile_add='',
         plt_hsuf(fig,path=out_full+"-YM-Me_A",**plt_scopt)
         
     #least-square fit
-    E_lsq_F_A0Al = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_F_A0Al', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_messu[Ind_YM_f[0]],
-                                       'ind_E':VIP_messu[Ind_YM_f[1]]})
-    E_lsq_F_A0Al = pd.Series(E_lsq_F_A0Al, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_F_A0Al')
+    E_lsq_F_A0Al = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_A0Al', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_messu[Ind_YM_f[0]],
+           'ind_E':VIP_messu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_A0Al = pd.Series(
+        E_lsq_F_A0Al, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_F_A0Al'
+        )
     
-    E_lsq_F_A2Al = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_d_A,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_F_A2Al', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_A2Al = pd.Series(E_lsq_F_A2Al, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_F_A2Al')
-    E_lsq_F_A2Sl = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_d_S,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_F_A2Sl', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_A2Sl = pd.Series(E_lsq_F_A2Sl, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_F_A2Sl')
-    E_lsq_F_A2Ml = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_d_M,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_F_A2Ml', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_A2Ml = pd.Series(E_lsq_F_A2Ml, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_F_A2Ml')
+    E_lsq_F_A2Al = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_d_A,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_A2Al', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_A2Al = pd.Series(
+        E_lsq_F_A2Al, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_F_A2Al'
+        )
+    E_lsq_F_A2Sl = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_d_S,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_A2Sl', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_A2Sl = pd.Series(
+        E_lsq_F_A2Sl, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_F_A2Sl'
+        )
+    E_lsq_F_A2Ml = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_d_M,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_A2Ml', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_A2Ml = pd.Series(
+        E_lsq_F_A2Ml, index=['E','E_abs','Rquad','Fit_result'],
+         name='E_lsq_F_A2Ml'
+         )
     
-    E_lsq_F_A4Al = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_c_A,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_F_A4Al', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_A4Al = pd.Series(E_lsq_F_A4Al, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_F_A4Al')
-    E_lsq_F_A4Sl = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_c_S,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_F_A4Sl', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_A4Sl = pd.Series(E_lsq_F_A4Sl, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_F_A4Sl')
-    E_lsq_F_A4Ml = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_c_M,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_F_A4Ml', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_A4Ml = pd.Series(E_lsq_F_A4Ml, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_F_A4Ml')
+    E_lsq_F_A4Al = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_c_A,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_A4Al', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_A4Al = pd.Series(
+        E_lsq_F_A4Al, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_F_A4Al'
+        )
+    E_lsq_F_A4Sl = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_c_S,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_A4Sl', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_A4Sl = pd.Series(
+        E_lsq_F_A4Sl, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_F_A4Sl'
+        )
+    E_lsq_F_A4Ml = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_c_M,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_A4Ml', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_A4Ml = pd.Series(
+        E_lsq_F_A4Ml, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_F_A4Ml'
+        )
+        
+    E_lsq_R_A0Al = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_A0Al', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_messu[Ind_YM_r[0]],
+           'ind_E':VIP_messu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_A0Al = pd.Series(
+        E_lsq_R_A0Al, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_R_A0Al'
+        )
     
+    E_lsq_R_A2Al = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_d_A,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_A2Al', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_A2Al = pd.Series(
+        E_lsq_R_A2Al, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_R_A2Al'
+        )
+    E_lsq_R_A2Sl = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_d_S,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_A2Sl', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_A2Sl = pd.Series(
+        E_lsq_R_A2Sl, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_R_A2Sl'
+        )
+    E_lsq_R_A2Ml = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_d_M,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_A2Ml', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_A2Ml = pd.Series(
+        E_lsq_R_A2Ml, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_R_A2Ml'
+        )
     
-    E_lsq_R_A0Al = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_R_A0Al', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_messu[Ind_YM_r[0]],
-                                       'ind_E':VIP_messu[Ind_YM_r[1]]})
-    E_lsq_R_A0Al = pd.Series(E_lsq_R_A0Al, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_R_A0Al')
-    
-    E_lsq_R_A2Al = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_d_A,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_R_A2Al', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_A2Al = pd.Series(E_lsq_R_A2Al, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_R_A2Al')
-    E_lsq_R_A2Sl = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_d_S,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_R_A2Sl', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_A2Sl = pd.Series(E_lsq_R_A2Sl, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_R_A2Sl')
-    E_lsq_R_A2Ml = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_d_M,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_R_A2Ml', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_A2Ml = pd.Series(E_lsq_R_A2Ml, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_R_A2Ml')
-    
-    E_lsq_R_A4Al = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_c_A,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_R_A4Al', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_A4Al = pd.Series(E_lsq_R_A4Al, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_R_A4Al')
-    E_lsq_R_A4Sl = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_c_S,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_R_A4Sl', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_A4Sl = pd.Series(E_lsq_R_A4Sl, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_R_A4Sl')
-    E_lsq_R_A4Ml = emeb.evaluation.YM_eva_method_A(stress_mid_ser=messu.Stress,
-                                    strain_mid_ser=messu.Strain_opt_c_M,
-                                    comp=_opts['OPT_Compression'],
-                                    name='E_lsq_R_A4Ml', 
-                                    det_opt='leastsq',
-                                    **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                       'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_A4Ml = pd.Series(E_lsq_R_A4Ml, index=['E','E_abs','Rquad','Fit_result'],
-                            name='E_lsq_R_A4Ml')
+    E_lsq_R_A4Al = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_c_A,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_A4Al', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_A4Al = pd.Series(
+        E_lsq_R_A4Al, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_R_A4Al'
+        )
+    E_lsq_R_A4Sl = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_c_S,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_A4Sl', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_A4Sl = pd.Series(
+        E_lsq_R_A4Sl, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_R_A4Sl'
+        )
+    E_lsq_R_A4Ml = emeb.evaluation.YM_eva_method_A(
+        stress_mid_ser=messu.Stress,
+        strain_mid_ser=messu.Strain_opt_c_M,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_A4Ml', 
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_A4Ml = pd.Series(
+        E_lsq_R_A4Ml, index=['E','E_abs','Rquad','Fit_result'],
+        name='E_lsq_R_A4Ml'
+        )
 
-    E_lsq_A = pd.concat([E_lsq_F_A0Al,
-                         E_lsq_F_A2Al, E_lsq_F_A2Sl, E_lsq_F_A2Ml,
-                         E_lsq_F_A4Al, E_lsq_F_A4Sl, E_lsq_F_A4Ml,
-                         E_lsq_R_A0Al,
-                         E_lsq_R_A2Al, E_lsq_R_A2Sl, E_lsq_R_A2Ml,
-                         E_lsq_R_A4Al, E_lsq_R_A4Sl, E_lsq_R_A4Ml],axis=1)
+    E_lsq_A = pd.concat([
+        E_lsq_F_A0Al,
+        E_lsq_F_A2Al, E_lsq_F_A2Sl, E_lsq_F_A2Ml,
+        E_lsq_F_A4Al, E_lsq_F_A4Sl, E_lsq_F_A4Ml,
+        E_lsq_R_A0Al,
+        E_lsq_R_A2Al, E_lsq_R_A2Sl, E_lsq_R_A2Ml,
+        E_lsq_R_A4Al, E_lsq_R_A4Sl, E_lsq_R_A4Ml
+        ],axis=1)
 
     del A0Al_ser, A2Al_ser, A2Sl_ser, A2Ml_ser, A4Al_ser, A4Sl_ser, A4Ml_ser
     del E_lsq_F_A0Al, E_lsq_F_A2Al, E_lsq_F_A2Sl, E_lsq_F_A2Ml, E_lsq_F_A4Al, E_lsq_F_A4Sl, E_lsq_F_A4Ml
@@ -1523,60 +1580,70 @@ def TBT_single(prot_ser, paths, mfile_add='',
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                    **log_scopt)
-    B1Al_ser, B1Al_strain_ser = emeb.evaluation.YM_eva_method_B(option="Points", 
-                                                     stress_mid_ser=d_stress_mid,
-                                                     thickness = func_t(0.0), 
-                                                     Length = Length,
-                                                     P_df = P_xcoord_ydiff_meas, 
-                                                     P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
-                                                     comp=_opts['OPT_Compression'],
-                                                     name='B1Al')
-    B1Sl_ser, B1Sl_strain_ser = emeb.evaluation.YM_eva_method_B(option="Points",
-                                                     stress_mid_ser=d_stress_mid,
-                                                     thickness = func_t(0.0), 
-                                                     Length = Length,
-                                                     P_df = P_xcoord_ydiff_meas_S, 
-                                                     P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
-                                                     comp=_opts['OPT_Compression'],
-                                                     name='B1Sl')
-    B1Ml_ser, B1Ml_strain_ser = emeb.evaluation.YM_eva_method_B(option="Points",
-                                                     stress_mid_ser=d_stress_mid,
-                                                     thickness = func_t(0.0), 
-                                                     Length = Length,
-                                                     P_df = P_xcoord_ydiff_meas_M, 
-                                                     P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
-                                                     comp=_opts['OPT_Compression'],
-                                                     name='B1Ml')
+    B1Al_ser, B1Al_strain_ser = emeb.evaluation.YM_eva_method_B(
+        option="Points", 
+        stress_mid_ser=d_stress_mid,
+        thickness = func_t(0.0), 
+        Length = Length,
+        P_df = P_xcoord_ydiff_meas, 
+        P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
+        comp=_opts['OPT_Compression'],
+        name='B1Al'
+        )
+    B1Sl_ser, B1Sl_strain_ser = emeb.evaluation.YM_eva_method_B(
+        option="Points",
+        stress_mid_ser=d_stress_mid,
+        thickness = func_t(0.0), 
+        Length = Length,
+        P_df = P_xcoord_ydiff_meas_S, 
+        P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
+        comp=_opts['OPT_Compression'],
+        name='B1Sl'
+        )
+    B1Ml_ser, B1Ml_strain_ser = emeb.evaluation.YM_eva_method_B(
+        option="Points",
+        stress_mid_ser=d_stress_mid,
+        thickness = func_t(0.0), 
+        Length = Length,
+        P_df = P_xcoord_ydiff_meas_M, 
+        P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
+        comp=_opts['OPT_Compression'],
+        name='B1Ml'
+        )
     
-    
-    B2Al_ser, B2Al_strain_ser = emeb.evaluation.YM_eva_method_B(option="Fit",
-                                                     stress_mid_ser=d_stress_mid,
-                                                     thickness = func_t(0.0),
-                                                     Length=Length,
-                                                     w_func=bl['w_A']['d0'],
-                                                     w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                                     Length_det=10.0,
-                                                     comp=_opts['OPT_Compression'],
-                                                     name='B2Al')
-    B2Sl_ser, B2Sl_strain_ser = emeb.evaluation.YM_eva_method_B(option="Fit", 
-                                                     stress_mid_ser=d_stress_mid,
-                                                     thickness = func_t(0.0),
-                                                     Length=Length,
-                                                     w_func=bl['w_S']['d0'],
-                                                     w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                                     Length_det=10.0, 
-                                                     comp=_opts['OPT_Compression'],
-                                                     name='B2Sl')
-    B2Ml_ser, B2Ml_strain_ser = emeb.evaluation.YM_eva_method_B(option="Fit", 
-                                                     stress_mid_ser=d_stress_mid,
-                                                     thickness = func_t(0.0), 
-                                                     Length=Length,
-                                                     w_func=bl['w_M']['d0'],
-                                                     w_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                                     Length_det=10.0, 
-                                                     comp = _opts['OPT_Compression'],
-                                                     name = 'B2Ml')
-    
+    B2Al_ser, B2Al_strain_ser = emeb.evaluation.YM_eva_method_B(
+        option="Fit",
+        stress_mid_ser=d_stress_mid,
+        thickness = func_t(0.0),
+        Length=Length,
+        w_func=bl['w_A']['d0'],
+        w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        Length_det=10.0,
+        comp=_opts['OPT_Compression'],
+        name='B2Al'
+        )
+    B2Sl_ser, B2Sl_strain_ser = emeb.evaluation.YM_eva_method_B(
+        option="Fit", 
+        stress_mid_ser=d_stress_mid,
+        thickness = func_t(0.0),
+        Length=Length,
+        w_func=bl['w_S']['d0'],
+        w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        Length_det=10.0, 
+        comp=_opts['OPT_Compression'],
+        name='B2Sl'
+        )
+    B2Ml_ser, B2Ml_strain_ser = emeb.evaluation.YM_eva_method_B(
+        option="Fit", 
+        stress_mid_ser=d_stress_mid,
+        thickness = func_t(0.0), 
+        Length=Length,
+        w_func=bl['w_M']['d0'],
+        w_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        Length_det=10.0, 
+        comp = _opts['OPT_Compression'],
+        name = 'B2Ml'
+        )
     
     E_B_df = pd.concat([B1Al_ser,B1Sl_ser,B1Ml_ser,
                         B2Al_ser,B2Sl_ser,B2Ml_ser],axis=1)
@@ -1590,7 +1657,8 @@ def TBT_single(prot_ser, paths, mfile_add='',
         ax1.set_title('All Steps')
         ax1.set_xlabel('Step / -')
         ax1.set_ylabel('E / MPa')
-        cc={'B1Al':'r:','B1Sl':'b:','B1Ml':'g:','B2Al':'r--','B2Sl':'b--','B2Ml':'g--'}
+        cc={'B1Al':'r:','B1Sl':'b:','B1Ml':'g:',
+            'B2Al':'r--','B2Sl':'b--','B2Ml':'g--'}
         for k in cc:
             ax1.plot(E_B_df.loc[:VIP_messu['U']].index,
                      E_B_df.loc[:VIP_messu['U']][k],
@@ -1606,178 +1674,226 @@ def TBT_single(prot_ser, paths, mfile_add='',
         plt_hsuf(fig,path=out_full+"-YM-Me_B",**plt_scopt)
         
     # least-square-fit
-    E_lsq_F_B1Al = emeb.evaluation.YM_eva_method_B(option="Points",
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length = Length,
-                                 P_df = P_xcoord_ydisp_meas,
-                                 P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
-                                 comp = _opts['OPT_Compression'],
-                                 name='E_lsq_F_B1Al',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_B1Al = pd.Series(E_lsq_F_B1Al, index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_F_B1Al')
+    E_lsq_F_B1Al = emeb.evaluation.YM_eva_method_B(
+        option="Points",
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length = Length,
+        P_df = P_xcoord_ydisp_meas,
+        P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
+        comp = _opts['OPT_Compression'],
+        name='E_lsq_F_B1Al',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_B1Al = pd.Series(
+        E_lsq_F_B1Al, index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_F_B1Al'
+        )
+    E_lsq_F_B1Sl = emeb.evaluation.YM_eva_method_B(
+        option="Points",
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        P_df = P_xcoord_ydisp_meas_S,
+        P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_B1Sl',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_B1Sl = pd.Series(
+        E_lsq_F_B1Sl, index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_F_B1Sl'
+        )
+    E_lsq_F_B1Ml = emeb.evaluation.YM_eva_method_B(
+        option="Points",
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        P_df = P_xcoord_ydisp_meas_M,
+        P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_B1Ml',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_B1Ml = pd.Series(
+        E_lsq_F_B1Ml, index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_F_B1Ml'
+        )
     
-    E_lsq_F_B1Sl = emeb.evaluation.YM_eva_method_B(option="Points",
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 P_df = P_xcoord_ydisp_meas_S,
-                                 P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_F_B1Sl',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_B1Sl = pd.Series(E_lsq_F_B1Sl, index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_F_B1Sl')
-    E_lsq_F_B1Ml = emeb.evaluation.YM_eva_method_B(option="Points",
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 P_df = P_xcoord_ydisp_meas_M,
-                                 P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_F_B1Ml',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_B1Ml = pd.Series(E_lsq_F_B1Ml, index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_F_B1Ml')
+    E_lsq_F_B2Al = emeb.evaluation.YM_eva_method_B(
+        option="Fit", 
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        w_func=bl['w_A']['d0'],
+        w_params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
+        Length_det=10.0,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_B2Al',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_B2Al = pd.Series(
+        E_lsq_F_B2Al,index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_F_B2Al'
+        )
+    E_lsq_F_B2Sl = emeb.evaluation.YM_eva_method_B(
+        option="Fit", 
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        w_func=bl['w_S']['d0'],
+        w_params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
+        Length_det=10.0,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_B2Sl',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_B2Sl = pd.Series(
+        E_lsq_F_B2Sl,index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_F_B2Sl'
+        )
+    E_lsq_F_B2Ml = emeb.evaluation.YM_eva_method_B(
+        option="Fit", 
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        w_func=bl['w_M']['d0'], 
+        w_params=Bend_fit_df.loc(axis=1)['Fit_params_dict'],
+        Length_det=10.0, 
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_F_B2Ml',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_f[0]],
+           'ind_E':VIP_dicu[Ind_YM_f[1]]}
+        )
+    E_lsq_F_B2Ml = pd.Series(
+        E_lsq_F_B2Ml,index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_F_B2Ml'
+        )
     
-    E_lsq_F_B2Al = emeb.evaluation.YM_eva_method_B(option="Fit", 
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 w_func=bl['w_A']['d0'],
-                                 w_params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
-                                 Length_det=10.0,
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_F_B2Al',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_B2Al = pd.Series(E_lsq_F_B2Al,index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_F_B2Al')
-    E_lsq_F_B2Sl = emeb.evaluation.YM_eva_method_B(option="Fit", 
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 w_func=bl['w_S']['d0'],
-                                 w_params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
-                                 Length_det=10.0,
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_F_B2Sl',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_B2Sl = pd.Series(E_lsq_F_B2Sl,index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_F_B2Sl')
-    E_lsq_F_B2Ml = emeb.evaluation.YM_eva_method_B(option="Fit", 
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 w_func=bl['w_M']['d0'], 
-                                 w_params=Bend_fit_df.loc(axis=1)['Fit_params_dict'],
-                                 Length_det=10.0, 
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_F_B2Ml',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_f[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_f[1]]})
-    E_lsq_F_B2Ml = pd.Series(E_lsq_F_B2Ml,index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_F_B2Ml')
+    E_lsq_R_B1Al = emeb.evaluation.YM_eva_method_B(
+        option="Points",
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length = Length,
+        P_df = P_xcoord_ydisp_meas,
+        P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
+        comp = _opts['OPT_Compression'],
+        name='E_lsq_R_B1Al',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_B1Al = pd.Series(
+        E_lsq_R_B1Al, index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_R_B1Al'
+        )
+    E_lsq_R_B1Sl = emeb.evaluation.YM_eva_method_B(
+        option="Points",
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        P_df = P_xcoord_ydisp_meas_S,
+        P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_B1Sl',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_B1Sl = pd.Series(
+        E_lsq_R_B1Sl, index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_R_B1Sl'
+        )
+    E_lsq_R_B1Ml = emeb.evaluation.YM_eva_method_B(
+        option="Points",
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        P_df = P_xcoord_ydisp_meas_M,
+        P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_B1Ml',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_B1Ml = pd.Series(
+        E_lsq_R_B1Ml, index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_R_B1Ml'
+        )
     
-    E_lsq_R_B1Al = emeb.evaluation.YM_eva_method_B(option="Points",
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length = Length,
-                                 P_df = P_xcoord_ydisp_meas,
-                                 P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
-                                 comp = _opts['OPT_Compression'],
-                                 name='E_lsq_R_B1Al',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_B1Al = pd.Series(E_lsq_R_B1Al, index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_R_B1Al')
-    
-    E_lsq_R_B1Sl = emeb.evaluation.YM_eva_method_B(option="Points",
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 P_df = P_xcoord_ydisp_meas_S,
-                                 P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_R_B1Sl',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_B1Sl = pd.Series(E_lsq_R_B1Sl, index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_R_B1Sl')
-    E_lsq_R_B1Ml = emeb.evaluation.YM_eva_method_B(option="Points",
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 P_df = P_xcoord_ydisp_meas_M,
-                                 P_fork_names = _opts['OPT_DIC_Points_meas_fork'],
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_R_B1Ml',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_B1Ml = pd.Series(E_lsq_R_B1Ml, index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_R_B1Ml')
-    
-    E_lsq_R_B2Al = emeb.evaluation.YM_eva_method_B(option="Fit", 
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 w_func=bl['w_A']['d0'],
-                                 w_params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
-                                 Length_det=10.0,
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_R_B2Al',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_B2Al = pd.Series(E_lsq_R_B2Al,index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_R_B2Al')
-    E_lsq_R_B2Sl = emeb.evaluation.YM_eva_method_B(option="Fit", 
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 w_func=bl['w_S']['d0'],
-                                 w_params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
-                                 Length_det=10.0,
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_R_B2Sl',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_B2Sl = pd.Series(E_lsq_R_B2Sl,index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_R_B2Sl')
-    E_lsq_R_B2Ml = emeb.evaluation.YM_eva_method_B(option="Fit", 
-                                 stress_mid_ser=messu.Stress,
-                                 thickness = func_t(0.0),
-                                 Length=Length,
-                                 w_func=bl['w_M']['d0'], 
-                                 w_params=Bend_fit_df.loc(axis=1)['Fit_params_dict'],
-                                 Length_det=10.0, 
-                                 comp=_opts['OPT_Compression'],
-                                 name='E_lsq_R_B2Ml',
-                                 det_opt='leastsq',
-                                 **{'ind_S':VIP_dicu[Ind_YM_r[0]],
-                                    'ind_E':VIP_dicu[Ind_YM_r[1]]})
-    E_lsq_R_B2Ml = pd.Series(E_lsq_R_B2Ml,index=['E','E_abs','Rquad','Fit_result','strain'],
-                        name='E_lsq_R_B2Ml')
+    E_lsq_R_B2Al = emeb.evaluation.YM_eva_method_B(
+        option="Fit", 
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        w_func=bl['w_A']['d0'],
+        w_params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
+        Length_det=10.0,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_B2Al',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_B2Al = pd.Series(
+        E_lsq_R_B2Al,index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_R_B2Al'
+        )
+    E_lsq_R_B2Sl = emeb.evaluation.YM_eva_method_B(
+        option="Fit", 
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        w_func=bl['w_S']['d0'],
+        w_params=Pre_fit_df.loc(axis=1)['Fit_params_dict'],
+        Length_det=10.0,
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_B2Sl',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_B2Sl = pd.Series(
+        E_lsq_R_B2Sl,index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_R_B2Sl'
+        )
+    E_lsq_R_B2Ml = emeb.evaluation.YM_eva_method_B(
+        option="Fit", 
+        stress_mid_ser=messu.Stress,
+        thickness = func_t(0.0),
+        Length=Length,
+        w_func=bl['w_M']['d0'], 
+        w_params=Bend_fit_df.loc(axis=1)['Fit_params_dict'],
+        Length_det=10.0, 
+        comp=_opts['OPT_Compression'],
+        name='E_lsq_R_B2Ml',
+        det_opt='leastsq',
+        **{'ind_S':VIP_dicu[Ind_YM_r[0]],
+           'ind_E':VIP_dicu[Ind_YM_r[1]]}
+        )
+    E_lsq_R_B2Ml = pd.Series(
+        E_lsq_R_B2Ml,index=['E','E_abs','Rquad','Fit_result','strain'],
+        name='E_lsq_R_B2Ml'
+        )
         
-    E_lsq_B = pd.concat([E_lsq_F_B1Al,E_lsq_F_B1Sl,E_lsq_F_B1Ml,
-                         E_lsq_F_B2Al,E_lsq_F_B2Sl,E_lsq_F_B2Ml,
-                         E_lsq_R_B1Al,E_lsq_R_B1Sl,E_lsq_R_B1Ml,
-                         E_lsq_R_B2Al,E_lsq_R_B2Sl,E_lsq_R_B2Ml],axis=1)
+    E_lsq_B = pd.concat([
+        E_lsq_F_B1Al,E_lsq_F_B1Sl,E_lsq_F_B1Ml,
+        E_lsq_F_B2Al,E_lsq_F_B2Sl,E_lsq_F_B2Ml,
+        E_lsq_R_B1Al,E_lsq_R_B1Sl,E_lsq_R_B1Ml,
+        E_lsq_R_B2Al,E_lsq_R_B2Sl,E_lsq_R_B2Ml
+        ],axis=1)
     
     del B1Al_strain_ser,B1Sl_strain_ser,B1Ml_strain_ser,B2Al_strain_ser,B2Sl_strain_ser,B2Ml_strain_ser
     del B1Al_ser,B1Sl_ser,B1Ml_ser,B2Al_ser,B2Sl_ser,B2Ml_ser
@@ -1792,30 +1908,38 @@ def TBT_single(prot_ser, paths, mfile_add='',
                                        timings.iloc[-1]-timings.iloc[0]),
                    **log_scopt)    
     
-    E_C2Al_ser = emeb.evaluation.YM_eva_method_C(Force_ser=d_Force, w_func=bl['w_A']['d0'], 
-                                  w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                  length=Length, I_func=func_I, A_func=func_A,
-                                  CS_type='Rectangle', kappa=None,
-                                  poisson=_opts['OPT_Poisson_prediction'],
-                                  comp=_opts['OPT_Compression'], option="M", name="C2Al")
-    E_C2Sl_ser = emeb.evaluation.YM_eva_method_C(Force_ser=d_Force, w_func=bl['w_S']['d0'], 
-                                  w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                  length=Length, I_func=func_I, A_func=func_A,
-                                  CS_type='Rectangle', kappa=None,
-                                  poisson=_opts['OPT_Poisson_prediction'],
-                                  comp=_opts['OPT_Compression'], option="M", name="C2Sl")
-    E_C2Ml_ser = emeb.evaluation.YM_eva_method_C(Force_ser=d_Force, w_func=bl['w_M']['d0'], 
-                                  w_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                  length=Length, I_func=func_I, A_func=func_A,
-                                  CS_type='Rectangle', kappa=None,
-                                  poisson=_opts['OPT_Poisson_prediction'],
-                                  comp=_opts['OPT_Compression'], option="M", name="C2Ml")
-    E_C2Cl_ser = emeb.evaluation.YM_eva_method_C(Force_ser=d_Force, w_func=bl['w_S']['d0'], 
-                                  w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                                  length=Length, I_func=func_I, A_func=func_A,
-                                  CS_type='Rectangle', kappa=None,
-                                  poisson=_opts['OPT_Poisson_prediction'],
-                                  comp=_opts['OPT_Compression'], option="M+V", name="C2Cl")
+    E_C2Al_ser = emeb.evaluation.YM_eva_method_C(
+        Force_ser=d_Force, w_func=bl['w_A']['d0'], 
+        w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        length=Length, I_func=func_I, A_func=func_A,
+        CS_type='Rectangle', kappa=None,
+        poisson=_opts['OPT_Poisson_prediction'],
+        comp=_opts['OPT_Compression'], option="M", name="C2Al"
+        )
+    E_C2Sl_ser = emeb.evaluation.YM_eva_method_C(
+        Force_ser=d_Force, w_func=bl['w_S']['d0'], 
+        w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        length=Length, I_func=func_I, A_func=func_A,
+        CS_type='Rectangle', kappa=None,
+        poisson=_opts['OPT_Poisson_prediction'],
+        comp=_opts['OPT_Compression'], option="M", name="C2Sl"
+        )
+    E_C2Ml_ser = emeb.evaluation.YM_eva_method_C(
+        Force_ser=d_Force, w_func=bl['w_M']['d0'], 
+        w_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        length=Length, I_func=func_I, A_func=func_A,
+        CS_type='Rectangle', kappa=None,
+        poisson=_opts['OPT_Poisson_prediction'],
+        comp=_opts['OPT_Compression'], option="M", name="C2Ml"
+        )
+    E_C2Cl_ser = emeb.evaluation.YM_eva_method_C(
+        Force_ser=d_Force, w_func=bl['w_S']['d0'], 
+        w_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        length=Length, I_func=func_I, A_func=func_A,
+        CS_type='Rectangle', kappa=None,
+        poisson=_opts['OPT_Poisson_prediction'],
+        comp=_opts['OPT_Compression'], option="M+V", name="C2Cl"
+        )
     
     E_C_df = pd.concat([E_C2Al_ser,E_C2Sl_ser,E_C2Ml_ser,E_C2Cl_ser],axis=1)
     E_C = emec.stat_ext.pd_agg(E_C_df.loc[sr_eva_dic])
@@ -2111,32 +2235,38 @@ def TBT_single(prot_ser, paths, mfile_add='',
                                        timings.iloc[-1]-timings.iloc[0]),
                    **log_scopt)    
     
-    F4A_df = emeb.evaluation.YM_eva_method_F(c_func=bl['w_A']['d2'],
-                              c_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                              Force_ser=d_Force, Length=Length, func_I=func_I,
-                              weighted=True, weight_func=emeb.evaluation.Weight_func,
-                              wargs=['Custom_cut', bl['w_A']['d0']],
-                              wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                              xr_dict = {'fu':1/1, 'ha':1/2, 'th':1/3},
-                              pb_b=True, name='F4Ag', n=100)
+    F4A_df = emeb.evaluation.YM_eva_method_F(
+        c_func=bl['w_A']['d2'],
+        c_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        Force_ser=d_Force, Length=Length, func_I=func_I,
+        weighted=True, weight_func=emeb.evaluation.Weight_func,
+        wargs=['Custom_cut', bl['w_A']['d0']],
+        wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        xr_dict = {'fu':1/1, 'ha':1/2, 'th':1/3},
+        pb_b=True, name='F4Ag', n=100
+        )
     
-    F4S_df = emeb.evaluation.YM_eva_method_F(c_func=bl['w_S']['d2'],
-                              c_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                              Force_ser=d_Force, Length=Length, func_I=func_I,
-                              weighted=True, weight_func=emeb.evaluation.Weight_func,
-                              wargs=['Custom_cut', bl['w_S']['d0']],
-                              wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                              xr_dict = {'fu':1/1, 'ha':1/2, 'th':1/3},
-                              pb_b=True, name='F4Sg', n=100)
+    F4S_df = emeb.evaluation.YM_eva_method_F(
+        c_func=bl['w_S']['d2'],
+        c_params=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        Force_ser=d_Force, Length=Length, func_I=func_I,
+        weighted=True, weight_func=emeb.evaluation.Weight_func,
+        wargs=['Custom_cut', bl['w_S']['d0']],
+        wkwargs=Pre_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        xr_dict = {'fu':1/1, 'ha':1/2, 'th':1/3},
+        pb_b=True, name='F4Sg', n=100
+        )
     
-    F4M_df = emeb.evaluation.YM_eva_method_F(c_func=bl['w_M']['d2'],
-                              c_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                              Force_ser=d_Force, Length=Length, func_I=func_I,
-                              weighted=True, weight_func=emeb.evaluation.Weight_func,
-                              wargs=['Custom_cut', bl['w_M']['d0']],
-                              wkwargs=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
-                              xr_dict = {'fu':1/1, 'ha':1/2, 'th':1/3},
-                              pb_b=True, name='F4Mg', n=100)
+    F4M_df = emeb.evaluation.YM_eva_method_F(
+        c_func=bl['w_M']['d2'],
+        c_params=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        Force_ser=d_Force, Length=Length, func_I=func_I,
+        weighted=True, weight_func=emeb.evaluation.Weight_func,
+        wargs=['Custom_cut', bl['w_M']['d0']],
+        wkwargs=Bend_inc_fit_df.loc(axis=1)['Fit_params_dict'],
+        xr_dict = {'fu':1/1, 'ha':1/2, 'th':1/3},
+        pb_b=True, name='F4Mg', n=100
+        )
     
     E_F_df = pd.concat([F4A_df, F4S_df, F4M_df],axis=1)
     E_F = emec.stat_ext.pd_agg(E_F_df.loc[sr_eva_dic])

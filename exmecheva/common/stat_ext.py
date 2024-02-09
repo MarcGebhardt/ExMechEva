@@ -15,6 +15,7 @@ import seaborn as sb #bootstrapping method
 
 from .helper import type_str_return
 from .pd_ext import (pd_outsort, deal_dupl_index)
+from .fitting import regfitret
 from .output import str_indent
 
 #%% statistical outliers
@@ -617,6 +618,7 @@ def pd_agg_custom(pdo, agg_funcs=['mean',meanwoso,'median',
         pda = pda.rename(af_ren)
     return pda
 
+#%% tests (distribution, variance, hypothesis,...)
 def Dist_test(pds, alpha=0.05, mcomp='Shapiro', mkws={},
               skipna=True, add_out = False):
     """
@@ -1648,3 +1650,78 @@ def Corr_ext(df, method='spearman',
     tmpf='{'+':.'+'%d'%(corr_round) +'f}'
     df_c2 = df_c.applymap(lambda x: tmpf.format(x)) + p
     return df_c, df_c2
+
+def reg_stats_multi(df, lRd, var_ren={}, var_sym={}, ftype='linear',
+                    guess = dict(a=0.01, b=0.1), t_form='{a:.3e},{b:.3e}', 
+       			  max_nfev=1000, nan_policy='omit',
+                    ind=3, addind=3):
+    """
+    Performs multiple regression fits (according fitting.regfitret) on given 
+    data. Returns a DataFrame and textual output.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input data.
+    lRd : list
+        List of compared variables (must be column names in df).
+        Example: [['Density_app','Age']]
+    var_ren : dict, optional
+        Renamer for given variables (description). 
+        Example: {'Density_app':'apparent density','Age':'donor age'}
+        The default is {}.
+    var_sym : dict, optional
+        Renamer for given variables (symbols).
+        Example: {'Density_app':'\rho_{app}','Age':'age'}
+        The default is {}.
+    ftype : str, optional
+        Type and name of function to adjust. 
+        Implemented are:
+            - 'linear': linear and constant function (see func_lin)
+            - 'power': power and constant function (see func_pow)
+            - 'exponential': exponantial and constant function (see func_exp)
+            - additional endings:
+                - '_nc': no constant value
+                - '_x0': fixed to zero
+        The default is 'linear'.
+    guess : dictionary, optional
+        Dictionary for first guess. The default is dict(a=0.01, b=0.1).
+    t_form : str, optional
+        String of dictionary with variables and format strings. 
+        The default is '{a:.3e},{b:.3e}'.
+    max_nfev : int, optional
+        Maximum number of evaluations. The default is 1000.
+    nan_policy : string, optional
+        NaN policy (omit, raise or propagate). The default is 'omit'.
+    ind : TYPE, optional
+        Indentation for text output. The default is 3.
+    addind : int, optional
+        Additional indentation for text output. The default is 3.
+
+    Returns
+    -------
+    reg_df : pd.Dataframe
+        Results of regressions.
+    txt : str
+        Textual output.
+
+    """
+    reg_df = pd.DataFrame(lRd, columns=['vary','varx'])
+    reg_df.index = reg_df['vary']+'-'+reg_df['varx']
+    reg_df[['varyren','varxren']]=reg_df[['vary','varx']].replace(var_ren)
+    reg_df[['varysym','varxsym']]=reg_df[['vary','varx']].replace(var_sym)
+    tmp=reg_df.apply(
+        lambda x: regfitret(
+            pdo=df, x=x['varx'], y=x['vary'], 
+            xl=x['varxsym'], yl=x['varysym'], xt=x['varxren'], yt=x['varyren'],
+            name=ftype, guess=guess, t_form=t_form, 
+            max_nfev=max_nfev, nan_policy=nan_policy, outtype='Series'
+            ), axis=1
+        )
+    reg_df=pd.concat([reg_df,tmp],axis=1)
+    txt=reg_df.apply(
+        lambda x: str_indent(x.loc['Description'], ind)
+            + str_indent(x.loc['Exp_txt'], ind+addind) 
+            + str_indent(x.loc['Rep_txt'], ind+addind), axis=1
+        )
+    return reg_df, txt

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added least square regression fit functionality (./common/fitting.py; used in conclusion evaluation)
+	- Genaral functions with equation string builders (linear, power law and exponential)
+	- Variable fitting functionality (./common/fitting.regfitret)
+	- Wrapping functionality for multiple combination (./common/stat_ext.reg_stats_multi)
+	- Plotting functionality on matplotlib axis level (./common/plotting.plt_ax_regfit)
+- Test of elastic modulus determination by generic three-point-bending test data reimplemented (./tests/test_tbt_emdet.py)
+
+### Changed
+
+- Documentation improved
+- Conclusion evaluation improved (./scripts/01_PF/Eva_Conclusion_PMat.py)
 
 ## [v0.1.1] – 2023-01-25
 

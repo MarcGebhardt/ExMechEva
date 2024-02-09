@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from .analyze import (normalize, threshhold_setter)
+from .fitting import regfitret_restring_func
 
 #%% core
 def plt_handle_suffix(fig, path='foo', tight=True, show=True, 
@@ -343,6 +344,75 @@ def curve_char_plotter(cps, cip, dfp, df,
     plt.close(fig)
     
 #%% Seaborn extra
+def plt_ax_regfit(pdo, x, y=None,  
+                  fit={}, ax=None, plt_d=False,
+    			  label_d='Data', label_f=False,
+                  xlabel=None, ylabel=None, title=None, legend=True,
+                  skws={}, lkws={}, t_form={}):
+    """
+    Plots a regression (done by fitting.regfitret) and data (optional).
+    Optional legend entry with fitting function.
+
+    Parameters
+    ----------
+    pdo : pd.DataFrame
+        Input data.
+    x : str
+        Column name for abscissa data.
+    y : str or None
+        Column name for ordinate data or none, if plt_d is False. 
+        The default is None.
+    fit : pd.DataFrame (result of fitting.regfitret), optional
+        Least square regression fit results. The default is {}.
+    ax : plt.axis or None, optional
+        Axis to plote result. The default is None.
+    plt_d : bool, optional
+        Switch for plotting data. The default is False.
+    label_d : string, optional
+        Label for data plot. The default is 'Data'.
+    label_f : bool, optional
+        Label for function plot. The default is False.
+    xlabel : string, optional
+        label for x-axis. The default is None.
+    ylabel : string, optional
+        Label for y-axis. The default is None.
+    title : string, optional
+        Axis title. The default is None.
+    skws : dict, optional
+        Dictionary for scatter plot (data). The default is {}.
+    lkws : dict, optional
+        Dictionary for lineplot (function). The default is {}.
+    legend : bool, optional
+        Switch for showing legend. The default is True.
+
+    Returns
+    -------
+    None.
+
+    """
+    if ax is None: ax = plt.gca()
+    if not title is None: ax.set_title(title)
+    if not xlabel is None: ax.set_xlabel(xlabel)
+    if not ylabel is None: ax.set_ylabel(ylabel)
+    if plt_d: 
+        sns.scatterplot(x=x, y=y, data=pdo, ax=ax, label=label_d, **skws)
+    xtmp = np.linspace(pdo[x].min(), pdo[x].max(), 101)
+    ytmp = fit['Model'].eval(x=xtmp, **fit['PD'])
+    if label_f==True:
+        ltxt=fit['Exp_txt']+' ($R²$={:.3f})'.format(fit['Rquad'])
+    elif label_f=="restring_eq":
+        ltxt=regfitret_restring_func(
+            reg_res=fit, xl=fit['varxsym'], yl=fit['varysym'], 
+            t_form=t_form, rquad_add=False, rq_form='')
+    elif label_f=="restring_eq_rquad":
+        ltxt=regfitret_restring_func(
+            reg_res=fit, xl=fit['varxsym'], yl=fit['varysym'], 
+            t_form=t_form['var'], rquad_add=True, rq_form=t_form['Rquad'])
+    else:
+        ltxt='Fit-%s'%fit['Name']
+    sns.lineplot(x=xtmp, y=ytmp, ax=ax, label=ltxt, **lkws)
+    if legend: ax.legend()
+
 def sns_pointplot_MMeb(ax, data, x,y, hue=None,
                        dodge=0.2, join=False, palette=None,
                        markers=['o','P'], scale=1, barsabove=True, capsize=4,
