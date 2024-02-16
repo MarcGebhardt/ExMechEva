@@ -52,6 +52,17 @@ plt_Fig_dict={'tight':True, 'show':True,
 MG_logopt={'logfp':None,'output_lvl':1,'logopt':True,'printopt':False}
 # MG_logopt={'logfp':None,'output_lvl':1,'logopt':False,'printopt':True}
 #%% Functions
+def containsetter(a, sd={' L':'L',' R':'R'}):
+    """Sets values by containing string in other values by given dictionary"""
+    out=''
+    for i in sd.keys():
+        if i in a:
+            if out=='': 
+                out = sd[i]
+            else:
+                out += sd[i]
+    return out
+
 def VIP_rebuild(ser):
     """Rebuild VIP Series by Column in Dataframe"""
     tmp=ser[~(ser=='')]
@@ -62,23 +73,12 @@ def VIP_rebuild(ser):
             tmp3[j]=tmp2.loc[i]
     return tmp3
 
-def Stress_Strain_fin(messu, Vipser, YM, YMabs,
-                      signame='Stress', epsname='Strain',
-                      lSname='F3'):
-    # strain_dif=messu.loc[Vipser[lSname],signame]/YM
-    out=messu.loc[Vipser[lSname]:,[signame,epsname]].copy(deep=True)
-    # out[epsname]=out[epsname]-strain_dif
-    out[epsname]=out[epsname]-(-YMabs/YM)
-    out.loc[0]={signame:0,epsname:0}
-    out.sort_index(inplace=True)
-    return out
-
-
 def plt_add_figsubl(text, axo=None, off=(0.02,0.02), xg=0.0, yg=1.0,
                     fontdict=dict(fontsize=9+2, fontweight="bold", fontstyle="normal",
                                   ha='left', va='bottom'),
                     bboxdict=dict(boxstyle="circle", fc="gray", alpha=0.3,
                                   ec="black", lw=1, pad=0.2)):
+    """Adds subfigure labels for publication"""
     if axo is None: axo=plt.gca()
     axo.annotate(text,
                  xy=(xg, yg), xycoords='axes fraction',
@@ -306,14 +306,14 @@ def boxplt_ext(
 Version="240118"
 ptype="TBT"
 ptype="ACT"
-# ptype="ATT"
+ptype="ATT"
 
 img_p_mpath="D:/Gebhardt/Veröffentlichungen/2022-X-X_MatParams_Pelvis/IMG/04_build/"
-img_p={'TBT':'cortical_location.png',
-       'ACT':'trabecular_location.png',
-       'ACT_dir':'trabecular_direction.png',
-       'ATT_F':'fig2_fas.png',
-       'ATT_L':'fig2_lig.png',}
+img_p={'TBT':'cortical_location-sat120p.png',
+       'ACT':'trabecular_location-sat120p.png',
+       'ACT_dir':'trabecular_direction-sat120p.png',
+       'ATT_F':'fascia_location-sat120p.png',
+       'ATT_L':'ligaments_location-sat120p.png',}
 
 no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
                'B01.1','B01.2','B01.3', 'B02.3',
@@ -323,12 +323,18 @@ no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
                'G01.1','G01.2','G01.3', 'G02.3']
 
 VIPar_plt_renamer = {'fy':'$f_{y}$','fu':'$f_{u}$','fb':'$f_{b}$',
-                     'ey_con':r'$\epsilon_{y,con}$','eu_con':r'$\epsilon_{u,con}$','eb_con':r'$\epsilon_{b,con}$',
-                     'Wy_con':'$W_{y,con}$','Wu_con':'$W_{u,con}$','Wb_con':'$W_{b,con}$',
-                     'Uy_con':'$U_{y,con}$','Uu_con':'$U_{u,con}$','Ub_con':'$U_{b,con}$',
-                     'ey_opt':r'$\epsilon_{y,opt}$','eu_opt':r'$\epsilon_{u,opt}$','eb_opt':r'$\epsilon_{b,opt}$',
-                     'Wy_opt':'$W_{y,opt}$','Wu_opt':'$W_{u,opt}$','Wb_opt':'$W_{b,opt}$',
-                     'Uy_opt':'$U_{y,opt}$','Uu_opt':'$U_{u,opt}$','Ub_opt':'$U_{b,opt}$',
+                     'ey_con':r'$\epsilon_{y,con}$',
+                     'eu_con':r'$\epsilon_{u,con}$','eb_con':r'$\epsilon_{b,con}$',
+                     'Wy_con':'$W_{y,con}$',
+                     'Wu_con':'$W_{u,con}$','Wb_con':'$W_{b,con}$',
+                     'Uy_con':'$U_{y,con}$',
+                     'Uu_con':'$U_{u,con}$','Ub_con':'$U_{b,con}$',
+                     'ey_opt':r'$\epsilon_{y,opt}$',
+                     'eu_opt':r'$\epsilon_{u,opt}$','eb_opt':r'$\epsilon_{b,opt}$',
+                     'Wy_opt':'$W_{y,opt}$',
+                     'Wu_opt':'$W_{u,opt}$','Wb_opt':'$W_{b,opt}$',
+                     'Uy_opt':'$U_{y,opt}$',
+                     'Uu_opt':'$U_{u,opt}$','Ub_opt':'$U_{b,opt}$',
                      'E_con': '$E_{con}$','E_opt': '$E_{opt}$',
                      'Density_app': r'$\rho_{app}$',
                      'Length_test': r'$l_{test}$',
@@ -338,9 +344,6 @@ VIPar_plt_renamer = {'fy':'$f_{y}$','fu':'$f_{u}$','fb':'$f_{b}$',
                      'Fy':'$F_{y}$','Fu':'$F_{u}$','Fb':'$F_{u}$',
                      'sy_con':'$s_{y,con}$','su_con':'$s_{u,con}$','sb_con':'$s_{b,con}$',
                      'D_con':r'$D_{con}$'}
-# Donor_dict={"LEIULANA_67-17":"PT3","LEIULANA_57-17":"PT4","LEIULANA_48-17":"PT5",
-#             "LEIULANA_22-17":"PT6","LEIULANA_60-17":"PT7"}
-# doda.Naming.to_dict()
 
 VIParams_don=["Sex","Age","Storagetime","BMI",
               "ICDCodes","Special_Anamnesis","Note_Anamnesis",
@@ -457,7 +460,9 @@ else: print("Failure ptype!!!")
 
 #%%% Output
 out_full= os.path.abspath(path+name_out)
-path_doda = os.path.abspath('F:/Messung/000-PARAFEMM_Patientendaten/PARAFEMM_Donordata_full.xlsx')
+path_doda = os.path.abspath(
+    'F:/Messung/000-PARAFEMM_Patientendaten/PARAFEMM_Donordata_full.xlsx'
+    )
 h5_conc = 'Summary'
 h5_data = 'Test_Data'
 VIParams = copy.deepcopy(VIParams_geo)
@@ -467,12 +472,13 @@ MG_logopt['logfp']=open(out_full+'.log','w')
 emec.output.str_log(name_out, **MG_logopt)
 emec.output.str_log("\n   Paths:", **MG_logopt)
 emec.output.str_log("\n   - in:", **MG_logopt)
-emec.output.str_log("\n         {}".format(os.path.abspath(path+name_in+'.h5')), **MG_logopt)
+emec.output.str_log("\n         {}".format(os.path.abspath(
+    path+name_in+'.h5')), **MG_logopt
+    )
 emec.output.str_log("\n   - out:", **MG_logopt)
 emec.output.str_log("\n         {}".format(out_full), **MG_logopt)
 emec.output.str_log("\n   - donor:", **MG_logopt)
 emec.output.str_log("\n         {}".format(path_doda), **MG_logopt)
-# emec.output.str_log("\n   Donors:"+emec.output.str_indent('\n{}'.format(pd.Series(Donor_dict).to_string()),5), **MG_logopt)
 
 #%%% Read
 data_read = pd.HDFStore(path+name_in+'.h5','r')
@@ -496,20 +502,14 @@ for i in relist:
 for i in h.index:
     if h[i].endswith(' '): h[i]=h[i][:-1]
 h2=h.map(Locdict)
-if (h2.isna()).any(): print('Locdict have missing/wrong values! \n   (Lnr: %s)'%['{:s}'.format(i) for i in h2.loc[h2.isna()].index])
+if (h2.isna()).any(): print(
+        'Locdict have missing/wrong values! \n   (Lnr: %s)'%[
+            '{:s}'.format(i) for i in h2.loc[h2.isna()].index
+            ])
 dfa.insert(4,'Origin_short',h)
 dfa.insert(5,'Origin_sshort',h2)
 del h, h2
 
-def containsetter(a, sd={' L':'L',' R':'R'}):
-    out=''
-    for i in sd.keys():
-        if i in a:
-            if out=='': 
-                out = sd[i]
-            else:
-                out += sd[i]
-    return out
 tmp=dfa.Origin.apply(containsetter, sd={' L':'L',' R':'R'})
 dfa.insert(6,'Side_LR',tmp)
 if ptype == 'TBT':
@@ -1064,7 +1064,7 @@ if ptype == "ATT":
     pltvartmp=YM_con_str
     with get_sample_data(img_p_mpath+img_p['ATT_F']) as file:
         arr_img = plt.imread(file)
-    imagebox = OffsetImage(arr_img, zoom=0.105)
+    imagebox = OffsetImage(arr_img, zoom=0.22)
     imagebox.image.axes = ax['PelvisF']
     ab = AnnotationBbox(imagebox, (0,0),
                         xybox=(0.43, 0.5),
@@ -1107,7 +1107,7 @@ if ptype == "ATT":
     
     with get_sample_data(img_p_mpath+img_p['ATT_L']) as file:
         arr_img = plt.imread(file)
-    imagebox = OffsetImage(arr_img, zoom=0.105)
+    imagebox = OffsetImage(arr_img, zoom=0.22)
     imagebox.image.axes = ax['PelvisL']
     ab = AnnotationBbox(imagebox, (0,0),
                         xybox=(0.43, 0.5),

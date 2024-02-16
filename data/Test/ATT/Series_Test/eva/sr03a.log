@@ -1,5 +1,5 @@
   Parameters of evaluation:
-   Evaluation start time:     2024-01-26 10:34:45
+   Evaluation start time:     2024-02-16 17:26:27
    Evaluation options:        D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\com_eva_opts.json
    Path protocol:             D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\ATT_Protocol_Series_Test.xlsx
    Path measurement:          D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ATT\Series_Test\meas\conventional\WR03A.xlsx
@@ -22,35 +22,35 @@
     Volume det=IN: True (0.377-0.377)
  ====================================================================================================
  ### 3 Read in measurements ###
-   Timing 3.000000: 0.00240 s
-   Timing 3.100000: 0.00301 s
-   Timing 3.200000: 0.52249 s
-   Timing 3.300000: 0.52398 s
+   Timing 3.000000: 0.00176 s
+   Timing 3.100000: 0.00238 s
+   Timing 3.200000: 0.56880 s
+   Timing 3.300000: 0.57094 s
  ====================================================================================================
  ### 4 Merging measurements ###
-   Timing 4.000000: 0.52471 s
-   Timing 4.100000: 0.52514 s
-   Timing 4.200000: 0.52637 s
-   Timing 4.300000: 0.53892 s
+   Timing 4.000000: 0.57143 s
+   Timing 4.100000: 0.57185 s
+   Timing 4.200000: 0.57318 s
+   Timing 4.300000: 0.59081 s
  ====================================================================================================
  ### 5 Start and End ###
-   Timing 5.000000: 0.53937 s
-   Timing 5.100000: 0.53985 s
+   Timing 5.000000: 0.59141 s
+   Timing 5.100000: 0.59198 s
  ----------------------------------------------------------------------------------------------------
-   Start of evaluation after 3.600 seconds, corresponds to 0.04113 % of max. force.
-   Timing 5.200000: 1.02640 s
+   Start of evaluation after 3.600 seconds, corresponds to 0.04123 % of max. force.
+   Timing 5.200000: 1.24348 s
  ====================================================================================================
  ### 6 Evaluation ###
-   Timing 6.000000: 1.33103 s
+   Timing 6.000000: 1.55265 s
  ----------------------------------------------------------------------------------------------------
  ### -6.2 Determine evaluation curves ###
-   Timing 6.200000: 1.33158 s
+   Timing 6.200000: 1.55318 s
    Last 10 monoton increasing periods:
             Stress  Strain
     Epoche     380     515
  ----------------------------------------------------------------------------------------------------
  ### -6.3 Determine points of interest ###
-   Timing 6.310000: 1.58944 s
+   Timing 6.310000: 1.80992 s
   0 cycles, with result!
     -> Using last 0.100 s as delimiter.
  ----------------------------------------------------------------------------------------------------
@@ -79,52 +79,52 @@ F1         270     270      NaN        0      NaN
   Differenz Kraft- zu Wegextreme-PM (MW):  -0.350000
   Differenz Kraft- zu Wegextreme-DIC (MW): nan
     Fy set on datapoint of Fu!
-   Timing 6.320000: 1.64178 s
+   Timing 6.320000: 1.86448 s
    F3 set to start of diff.-quot. determination 
    Datapoints (con) between F1-F2: 10 and F3-F4: 15.
  ----------------------------------------------------------------------------------------------------
  ### -6.4 Determine Youngs-Moduli ###
-   Timing 6.400000: 2.25108 s
-   Timing 6.410000: 2.25200 s
-   Timing 6.480000: 2.87752 s
+   Timing 6.400000: 2.54541 s
+   Timing 6.410000: 2.54624 s
+   Timing 6.480000: 3.22604 s
 
   Method comaparison:
   - least square fit
 
                              E     Rquad
-   E_lsq_F_A0Al      877.10038  0.999503
-   E_lsq_R_A0Al      761.12597  0.996829
-   E_lsq_C1+_A0Al   718.961356  0.999597
-   E_lsq_C1-_A0Al   903.107551  0.995439
-   E_lsq_C2+_A0Al   853.919203   0.99879
-   E_lsq_C2-_A0Al   883.664691   0.99686
-   E_lsq_C3+_A0Al   866.609139  0.999094
-   E_lsq_C3-_A0Al   886.927846  0.996512
-   E_lsq_C4+_A0Al    866.22617  0.999314
-   E_lsq_C4-_A0Al   881.540351  0.996852
-   E_lsq_C5+_A0Al   868.331014  0.999595
-   E_lsq_C5-_A0Al   886.172968  0.997785
-   E_lsq_C6+_A0Al   873.236376  0.999639
-   E_lsq_C6-_A0Al   890.418905  0.997676
-   E_lsq_C7+_A0Al   873.748663  0.999567
-   E_lsq_C7-_A0Al   889.425974  0.997768
-   E_lsq_C8+_A0Al   878.772637  0.999557
-   E_lsq_C8-_A0Al   887.722949  0.997802
-   E_lsq_C9+_A0Al   878.182167  0.999601
-   E_lsq_C9-_A0Al   897.466239  0.997725
-   E_lsq_C10+_A0Al  884.983014  0.999549
-   E_lsq_C10-_A0Al  887.458132  0.998064
+   E_lsq_F_A0Al     875.837211  0.999502
+   E_lsq_R_A0Al     759.862803  0.996819
+   E_lsq_C1+_A0Al   717.698188  0.999595
+   E_lsq_C1-_A0Al   901.844382  0.995426
+   E_lsq_C2+_A0Al   852.656035  0.998786
+   E_lsq_C2-_A0Al   882.401522  0.996851
+   E_lsq_C3+_A0Al   865.345969  0.999092
+   E_lsq_C3-_A0Al   885.664676  0.996502
+   E_lsq_C4+_A0Al   864.963001  0.999312
+   E_lsq_C4-_A0Al   880.277182  0.996843
+   E_lsq_C5+_A0Al   867.067844  0.999594
+   E_lsq_C5-_A0Al     884.9098  0.997778
+   E_lsq_C6+_A0Al   871.973207  0.999638
+   E_lsq_C6-_A0Al   889.155734   0.99767
+   E_lsq_C7+_A0Al   872.485494  0.999566
+   E_lsq_C7-_A0Al   888.162806  0.997762
+   E_lsq_C8+_A0Al   877.509467  0.999556
+   E_lsq_C8-_A0Al   886.459779  0.997796
+   E_lsq_C9+_A0Al   876.918998    0.9996
+   E_lsq_C9-_A0Al   896.203069  0.997718
+   E_lsq_C10+_A0Al  883.719844  0.999548
+   E_lsq_C10-_A0Al  886.194963  0.998059
 
   - incremental (F,R):
 
-               mean    meanwoso      median         std    stdwoso       cv    cvwoso         min          max
-   A0Al  971.930282  866.766506  871.112416  324.361958  16.909431  0.33373  0.019509  841.112858  1946.354906
+               mean    meanwoso      median         std    stdwoso        cv    cvwoso         min          max
+   A0Al  970.667112  865.503337  869.849247  324.361958  16.909431  0.334164  0.019537  839.849689  1945.091737
 
                mean    meanwoso      median        std    stdwoso        cv    cvwoso         min         max
-   A0Al  764.176098  764.176098  773.861092  93.469049  93.469049  0.122313  0.122313  585.323465  877.087727
+   A0Al  762.912929  762.912929  772.597922  93.469049  93.469049  0.122516  0.122516  584.060295  875.824557
  ----------------------------------------------------------------------------------------------------
  ### -6.5 Determine yield point ###
-   Timing 6.500000: 2.90205 s
+   Timing 6.500000: 3.24975 s
   Determination of yield strain-conventional:
 
     YK set on F4 (fixed)
@@ -134,11 +134,11 @@ F1         270     270      NaN        0      NaN
     Y2 set on intersection with 0.500 % plastic strain (option=n)
  ----------------------------------------------------------------------------------------------------
  ### -6.6 Determine final stress-strain curve ###
-   Timing 6.600000: 3.63538 s
+   Timing 6.600000: 4.00882 s
    Strain offset about 0.00202
  ====================================================================================================
  ### 7 Outputs ###
-   Timing 7.000000: 3.63998 s
-   Timing 7.100000: 3.64042 s
-   Timing 7.200000: 3.70019 s
-   Timing 7.300000: 5.27150 s
+   Timing 7.000000: 4.01486 s
+   Timing 7.100000: 4.01520 s
+   Timing 7.200000: 4.07860 s
+   Timing 7.300000: 5.77115 s

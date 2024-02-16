@@ -40,7 +40,7 @@ Overview of news is given in [CHANGELOG](./CHANGELOG.md).
 
 ## Development targets and ToDos
 It is planned to extend the use of this package and make it as easily available as possible for scientific purposes.
-Some important points should therefore be taken into account. These are in descending order of importance:
+Some important points should therefore be taken into account, which are for example:
 - Improvement of documentation
 - Implementation of test routines in [TESTS](./tests/)
 - [PEP8](https://peps.python.org/pep-0008/) styleguide adaptations
@@ -49,6 +49,7 @@ Some important points should therefore be taken into account. These are in desce
   (please see curve_characterizer and following in [Measurement Curve Characteriszation](./exmecheva/common/mc_char.py))
 - Implementing of physical units ([pint](https://github.com/hgrecco/pint)/[pint-pandas](https://github.com/hgrecco/pint-pandas))
 - GUI development for easy, reliable and reproducable use
+- Implementing of option for input definition (p.e. positve direction of displacment measurement)
 - Expandability to personal usage scenarios
 
 ## Citation

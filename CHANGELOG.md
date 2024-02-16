@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Documentation improved
 - Conclusion evaluation improved (./scripts/01_PF/Eva_Conclusion_PMat.py)
+- Spring force reduction made dependent on the number of displacement measurement devices (LVDTs, only relevant for axial tensile test)
 
 ## [v0.1.1] – 2023-01-25
 

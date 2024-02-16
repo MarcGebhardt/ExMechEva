@@ -237,13 +237,22 @@ def ATT_single(prot_ser, paths, mfile_add='',
     mess = mess-mess.iloc[0]
     
     if isinstance(_opts['OPT_Measurement_file']['used_names_dict']['Way'],type(list())):
-        mess['L_IWA']=pd.Series(mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']].mean(axis=1))
+        mess['L_IWA']=pd.Series(
+            mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']].mean(axis=1)
+            )
         _opts['OPT_Measurement_file']['used_names_dict']['Way'] ='L_IWA'
+        n_IWAs=len(_opts['OPT_Measurement_file']['used_names_dict']['Way'])
+    # Additional option for easy switching of force measurement type 
     if ('OPT_Force_measure_type' in _opts.index):
         if not emec.helper.check_empty(_opts['OPT_Force_measure_type']):
-            _opts['OPT_Measurement_file']['used_names_dict']['Force'] ='F_'+_opts['OPT_Force_measure_type']
-    if _opts['OPT_Springreduction']: 
-        mess['F_IWA_red']=(mess.L_IWA)*_opts['OPT_Springreduction_K']
+            _opts['OPT_Measurement_file']['used_names_dict']['Force'] =(
+                'F_'+_opts['OPT_Force_measure_type']
+                )
+    # Applying spring correction factor (if true), since displacement of LVDTs
+    # is defined positive by sliding together, Springreduction_K have to be negative.
+    # The resulting correction force is then positive.
+    if _opts['OPT_Springreduction']:
+        mess['F_IWA_red']=(mess['L_IWA'])*_opts['OPT_Springreduction_K']*n_IWAs
         
     # # =============================================================================
     # #%%% 3.2 Specify used conventional measured force and way
@@ -251,10 +260,16 @@ def ATT_single(prot_ser, paths, mfile_add='',
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                **log_scopt)
-    messu = pd.DataFrame({'Time': mess[_opts['OPT_Measurement_file']['used_names_dict']['Time']],
-                          'Force': mess[_opts['OPT_Measurement_file']['used_names_dict']['Force']],
-                          'Way': mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']]})
+    messu = pd.DataFrame({
+        'Time': mess[_opts['OPT_Measurement_file']['used_names_dict']['Time']],
+        'Force': mess[_opts['OPT_Measurement_file']['used_names_dict']['Force']],
+        'Way': mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']]
+        })
 
+    # The setup is can be seen as parallel connected springs
+    # n of them are LVDTs, with a maximum from spring stiffness at the start of the test
+    # if the sample is stretched, this force (from spring stiffness) is reduced
+    # this force have to be substracted from the measured force
     if _opts['OPT_Springreduction']:     
         messu['Force'] = messu['Force'] - mess['F_IWA_red']
     if _opts['OPT_LVDT_failure'][0]:     
@@ -263,7 +278,7 @@ def ATT_single(prot_ser, paths, mfile_add='',
     if _opts['OPT_Compression']==True:
         messu.Force=messu.Force*(-1)
     else:
-        messu.Way=messu.Way*(-1)
+        messu.Way=messu.Way*(-1) # normal definition of LVDT is compression positive
     if np.invert(np.isnan(_opts['OPT_End'])):
         messu=messu.loc[messu.Time.round(rel_time_digs) <= _opts['OPT_End']]
     

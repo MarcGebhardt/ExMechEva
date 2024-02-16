@@ -1,5 +1,5 @@
   Parameters of evaluation:
-   Evaluation start time:     2024-01-26 10:27:43
+   Evaluation start time:     2024-02-16 17:30:06
    Evaluation options:        D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ACT\Series_Test\com_eva_opts.json
    Path protocol:             D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ACT\Series_Test\ACT_Protocol_Series_Test.xlsx
    Path measurement:          D:\Gebhardt\Programme\DEV\Git\ExMechEva\data\Test\ACT\Series_Test\meas\conventional\sl21x.xlsx
@@ -23,46 +23,46 @@
     Volume det=IN: True (0.587-0.587)
  ====================================================================================================
  ### 3 Read in measurements ###
-   Timing 3.000000: 0.00067 s
-   Timing 3.100000: 0.00121 s
-   Timing 3.200000: 0.60043 s
-   Timing 3.300000: 0.60153 s
+   Timing 3.000000: 0.00104 s
+   Timing 3.100000: 0.00145 s
+   Timing 3.200000: 0.74577 s
+   Timing 3.300000: 0.74699 s
  ====================================================================================================
  ### 4 Merging measurements ###
-   Timing 4.000000: 0.60190 s
-   Timing 4.100000: 0.60238 s
-   Timing 4.200000: 0.60354 s
-   Timing 4.300000: 0.61811 s
+   Timing 4.000000: 0.74773 s
+   Timing 4.100000: 0.74812 s
+   Timing 4.200000: 0.74924 s
+   Timing 4.300000: 0.75964 s
  ====================================================================================================
  ### 5 Start and End ###
-   Timing 5.000000: 0.61853 s
-   Timing 5.100000: 0.61896 s
+   Timing 5.000000: 0.76014 s
+   Timing 5.100000: 0.76057 s
  ----------------------------------------------------------------------------------------------------
    Start of evaluation after 8.600 seconds, corresponds to 0.38236 % of max. force.
-   Timing 5.200000: 1.27785 s
+   Timing 5.200000: 1.26736 s
  ====================================================================================================
  ### 6 Evaluation ###
-   Timing 6.000000: 1.55392 s
+   Timing 6.000000: 1.57765 s
  ----------------------------------------------------------------------------------------------------
  ### -6.2 Determine evaluation curves ###
-   Timing 6.200000: 1.55458 s
+   Timing 6.200000: 1.57832 s
    Last 10 monoton increasing periods:
             Strain  Stress
     Epoche     718     655
  ----------------------------------------------------------------------------------------------------
  ### -6.3 Determine points of interest ###
-   Timing 6.310000: 1.88372 s
+   Timing 6.310000: 1.92311 s
     Fy set on datapoint of Fu!
     End set on first minimum near inflection after Y!
       -> Ultimate set before new Endpoint!
    Second hardening is used:
-   Timing 6.320000: 1.89134 s
+   Timing 6.320000: 1.93186 s
    Datapoints (con) between F1-F2: 24 and F3-F4: 50.
  ----------------------------------------------------------------------------------------------------
  ### -6.4 Determine Youngs-Moduli ###
-   Timing 6.400000: 2.82148 s
-   Timing 6.410000: 2.82250 s
-   Timing 6.480000: 3.39601 s
+   Timing 6.400000: 2.92870 s
+   Timing 6.410000: 2.92957 s
+   Timing 6.480000: 3.36783 s
 
   Method comaparison:
   - least square fit
@@ -84,7 +84,7 @@
    A0Al  4.570604  4.570604  4.623708  1.0287   1.0287  0.225069  0.225069  3.149173  6.064526
  ----------------------------------------------------------------------------------------------------
  ### -6.5 Determine yield point ###
-   Timing 6.500000: 3.42948 s
+   Timing 6.500000: 3.40802 s
   Determination of yield strain-conventional:
 
     YK set on F4 (fixed)
@@ -101,11 +101,11 @@
     SY set on intersection with 0.200 % plastic strain (option=n)
  ----------------------------------------------------------------------------------------------------
  ### -6.6 Determine final stress-strain curve ###
-   Timing 6.600000: 3.50904 s
+   Timing 6.600000: 3.48888 s
    Strain offset about 0.06397
  ====================================================================================================
  ### 7 Outputs ###
-   Timing 7.000000: 3.51606 s
-   Timing 7.100000: 3.51643 s
-   Timing 7.200000: 3.62304 s
-   Timing 7.300000: 5.14558 s
+   Timing 7.000000: 3.49588 s
+   Timing 7.100000: 3.49638 s
+   Timing 7.200000: 3.61133 s
+   Timing 7.300000: 5.28750 s

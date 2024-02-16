@@ -233,16 +233,22 @@ def ACT_single(prot_ser, paths, mfile_add='',
     log_custom("\n   Timing %f: %.5f s"%(timings.index[-1],
                                        timings.iloc[-1]-timings.iloc[0]),
                **log_scopt)
-    mess=pd.read_excel(path_meas, header=_opts['OPT_Measurement_file']['header'],
-                       names=_opts['OPT_Measurement_file']['head_names'])
+    mess=pd.read_excel(
+        path_meas, header=_opts['OPT_Measurement_file']['header'],
+        names=_opts['OPT_Measurement_file']['head_names']
+        )
     
     mess = mess-mess.iloc[0]
     
     if isinstance(_opts['OPT_Measurement_file']['used_names_dict']['Way'],type(list())):
-        mess['L_IWA']=pd.Series(mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']].mean(axis=1))
+        mess['L_IWA']=pd.Series(
+            mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']].mean(axis=1)
+            )
         _opts['OPT_Measurement_file']['used_names_dict']['Way'] ='L_IWA'
+        n_IWAs=len(_opts['OPT_Measurement_file']['used_names_dict']['Way'])
+    #Applying spring correction factor (if true)
     if _opts['OPT_Springreduction']: 
-        mess['F_IWA_red']=(mess.L_IWA)*_opts['OPT_Springreduction_K']
+        mess['F_IWA_red']=(mess['L_IWA'])*_opts['OPT_Springreduction_K']*n_IWAs
         
     # # =============================================================================
     # #%%% 3.2 Specify used conventional measured force and way
