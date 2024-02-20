@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v0.1.2] – 2023-02-20
+## [v0.1.2] – 2024-02-20
 
 ### Added
 
@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Conclusion evaluation improved (./scripts/01_PF/Eva_Conclusion_PMat.py)
 - Spring force reduction made dependent on the number of displacement measurement devices (LVDTs, only relevant for axial tensile test)
 
-## [v0.1.1] – 2023-01-25
+## [v0.1.1] – 2024-01-25
 
 ### Added
 
@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 	- automatic determination and naming of points of interest (see ./common/mc_char (poi_rel_finder, poi_det_plh, poi_vip_namer, poi_fixeva and poi_refinement)
 - Mandibulae evaluation (./scripts/03_Zesbo_Mand/, old structure, no relevant changes to other projects)
 
-## [v0.1.0] – 2023-01-17
+## [v0.1.0] – 2024-01-17
 
 ### Added
 
