@@ -60,5 +60,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 [unreleased]: https://github.com/MarcGebhardt/ExMechEva/tree/main
+[v0.1.2]: https://github.com/MarcGebhardt/ExMechEva/releases/tag/v0.1.2
 [v0.1.1]: https://github.com/MarcGebhardt/ExMechEva/releases/tag/v0.1.1
 [v0.1.0]: https://github.com/MarcGebhardt/ExMechEva/releases/tag/v0.1.0
