@@ -244,11 +244,12 @@ def ACT_single(prot_ser, paths, mfile_add='',
         mess['L_IWA']=pd.Series(
             mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']].mean(axis=1)
             )
-        _opts['OPT_Measurement_file']['used_names_dict']['Way'] ='L_IWA'
+        # automatic number of LVDTs by list elements in used way
         n_IWAs=len(_opts['OPT_Measurement_file']['used_names_dict']['Way'])
+        _opts['OPT_Measurement_file']['used_names_dict']['Way'] ='L_IWA'
     #Applying spring correction factor (if true)
     if _opts['OPT_Springreduction']: 
-        mess['F_IWA_red']=(mess['L_IWA'])*_opts['OPT_Springreduction_K']*n_IWAs
+        mess['F_IWA_red']=mess['L_IWA']*_opts['OPT_Springreduction_K']*n_IWAs
         
     # # =============================================================================
     # #%%% 3.2 Specify used conventional measured force and way
@@ -404,12 +405,17 @@ def ACT_single(prot_ser, paths, mfile_add='',
     
     for i in messu.index: # Startpunkt über Vorzeichenwechsel im Anstieg
         if messu.loc[i,'driF_schg']:
-            if not messu.loc[i+1:i+max(int(_opts['OPT_Determination_Distance'][0]/2),1),'driF_schg'].any():
+            if not messu.loc[
+                    i+1:i+max(int(_opts['OPT_Determination_Distance'][0]/2),1),
+                    'driF_schg'
+                    ].any():
                 messu_iS=i
                 break
     
-    messu_iS,_=emec.mc_char.find_SandE(messu.loc[messu_iS:messu_iS+_opts['OPT_Determination_Distance'][0],
-                                         'driF'],abs(messu['driF']).quantile(0.5),"pgm_other",0.1)
+    messu_iS,_=emec.mc_char.find_SandE(
+        messu.loc[messu_iS:messu_iS+_opts['OPT_Determination_Distance'][0],
+                                         'driF'],
+        abs(messu['driF']).quantile(0.5),"pgm_other",0.1)
     _,messu_iE=emec.mc_char.find_SandE(messu['driF'],0,"qua_self",0.5)
     messu_iE=min(messu_iE,dic_to_mess_End)
     
@@ -435,7 +441,7 @@ def ACT_single(prot_ser, paths, mfile_add='',
     ax1.plot(mess.Time, -mess.F_WZ, 'r-', label='Force-WZ')
     ax1.plot(mess.Time, -mess.F_PM, 'm-', label='Force-PM')
     if _opts['OPT_Springreduction']: 
-        ax1.plot(mess.Time, -mess.F_IWA_red, 'b:', label='Force-IWA')
+        ax1.plot(mess.Time, mess.F_IWA_red, 'b:', label='Force-red. (LVDT)')
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     ax2.grid(False)
     color2 = 'tab:blue'

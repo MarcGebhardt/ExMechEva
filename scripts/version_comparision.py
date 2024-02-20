@@ -75,14 +75,14 @@ if option == 'Series':
 elif option == 'Complete':
     path_main="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/"
     # #TBT:
-    # path1=path_main+"240110/TBT/B3-B7_TBT-Summary.h5"
-    # path2=path_main+"240118/TBT/B3-B7_TBT-Summary.h5"
+    # path1=path_main+"240118/TBT/B3-B7_TBT-Summary.h5"
+    # path2=path_main+"240219/TBT/B3-B7_TBT-Summary.h5"
     # #ACT:
-    # path1=path_main+"240110/ACT/B3-B7_ACT-Summary.h5"
-    # path2=path_main+"240118/ACT/B3-B7_ACT-Summary.h5"
+    # path1=path_main+"240118/ACT/B3-B7_ACT-Summary.h5"
+    # path2=path_main+"240219/ACT/B3-B7_ACT-Summary.h5"
     #ATT:
-    path1=path_main+"240110/ATT/B3-B7_ATT-Summary.h5"
-    path2=path_main+"240118/ATT/B3-B7_ATT-Summary.h5"
+    path1=path_main+"240118/ATT/B3-B7_ATT-Summary.h5"
+    path2=path_main+"240219/ATT/B3-B7_ATT-Summary.h5"
     
     HDFst=pd.HDFStore(path1, mode='r')
     out_tab_zsf1 = HDFst['Summary']
@@ -99,11 +99,29 @@ zsf2_nc=out_tab_zsf2.select_dtypes(include=['int','float']).columns
 # Different variant naming
 nc_diff1=zsf1_nc.difference(zsf2_nc)
 nc_diff2=zsf2_nc.difference(zsf1_nc)
+print('Different naming:')
+print(' - 1: {}'.format(nc_diff1))
+print(' - 2: {}'.format(nc_diff2))
 
 # PD-DF comparision
-out_tab_comp=out_tab_zsf2[zsf2_nc.difference(nc_diff2)].compare(
-    out_tab_zsf1[zsf1_nc.difference(nc_diff1)]
-    )
+# out_tab_comp=out_tab_zsf2[zsf2_nc.difference(nc_diff2)].compare(
+#     out_tab_zsf1[zsf1_nc.difference(nc_diff1)]
+#     )
+out_tab_comp=out_tab_zsf2.compare(out_tab_zsf1)
+
+#relevant Parameters index comp
+zsf1_nna=out_tab_zsf1[
+    out_tab_zsf1.columns.intersection(rel_params)
+    ].dropna(axis=0,how='all')
+zsf2_nna=out_tab_zsf2[
+    out_tab_zsf2.columns.intersection(rel_params)
+    ].dropna(axis=0,how='all')
+print('Index count with not all NaN for relevant parameters:')
+print(' - 1: {}'.format(zsf1_nna.count().min()))
+print(' - 2: {}'.format(zsf2_nna.count().min()))
+print('  -> Index difference: {}'.format(
+    zsf2_nna.index.difference(zsf1_nna.index)
+    ))
 
 # Relative deviation between evaluatuins
 out_tab_vgl=reldev(a=out_tab_zsf2[zsf2_nc],b=out_tab_zsf1[zsf1_nc])

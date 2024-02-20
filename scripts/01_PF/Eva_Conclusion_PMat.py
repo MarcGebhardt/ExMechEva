@@ -43,7 +43,6 @@ sns.set_theme(context="paper",style="whitegrid",
                   'xtick.labelsize': 9,'ytick.labelsize': 9,
                   'legend.title_fontsize': 9,'legend.fontsize': 9,
                   'lines.linewidth': 1.0,'markers.fillstyle': 'none'})
-
 # , "axes.axisbelow": True
 
 plt_Fig_dict={'tight':True, 'show':True, 
@@ -303,10 +302,10 @@ def boxplt_ext(
     
 #%% Einlesen und auswählen
 #%%% Main
-Version="240118"
+Version="240219"
 ptype="TBT"
 ptype="ACT"
-ptype="ATT"
+# ptype="ATT"
 
 img_p_mpath="D:/Gebhardt/Veröffentlichungen/2022-X-X_MatParams_Pelvis/IMG/04_build/"
 img_p={'TBT':'cortical_location-sat120p.png',
@@ -324,25 +323,34 @@ no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
 
 VIPar_plt_renamer = {'fy':'$f_{y}$','fu':'$f_{u}$','fb':'$f_{b}$',
                      'ey_con':r'$\epsilon_{y,con}$',
-                     'eu_con':r'$\epsilon_{u,con}$','eb_con':r'$\epsilon_{b,con}$',
+                     'eu_con':r'$\epsilon_{u,con}$',
+                     'eb_con':r'$\epsilon_{b,con}$',
                      'Wy_con':'$W_{y,con}$',
-                     'Wu_con':'$W_{u,con}$','Wb_con':'$W_{b,con}$',
+                     'Wu_con':'$W_{u,con}$',
+                     'Wb_con':'$W_{b,con}$',
                      'Uy_con':'$U_{y,con}$',
-                     'Uu_con':'$U_{u,con}$','Ub_con':'$U_{b,con}$',
+                     'Uu_con':'$U_{u,con}$',
+                     'Ub_con':'$U_{b,con}$',
                      'ey_opt':r'$\epsilon_{y,opt}$',
-                     'eu_opt':r'$\epsilon_{u,opt}$','eb_opt':r'$\epsilon_{b,opt}$',
+                     'eu_opt':r'$\epsilon_{u,opt}$',
+                     'eb_opt':r'$\epsilon_{b,opt}$',
                      'Wy_opt':'$W_{y,opt}$',
-                     'Wu_opt':'$W_{u,opt}$','Wb_opt':'$W_{b,opt}$',
+                     'Wu_opt':'$W_{u,opt}$',
+                     'Wb_opt':'$W_{b,opt}$',
                      'Uy_opt':'$U_{y,opt}$',
-                     'Uu_opt':'$U_{u,opt}$','Ub_opt':'$U_{b,opt}$',
-                     'E_con': '$E_{con}$','E_opt': '$E_{opt}$',
+                     'Uu_opt':'$U_{u,opt}$',
+                     'Ub_opt':'$U_{b,opt}$',
+                     'E_con': '$E_{con}$',
+                     'E_opt': '$E_{opt}$',
                      'Density_app': r'$\rho_{app}$',
                      'Length_test': r'$l_{test}$',
                      'MoI_mid': r'$I_{mid}$',
-                     'thickness_mean': r'$t_{mean}$', 'width_mean': r'$w_{mean}$',
+                     'thickness_mean': r'$t_{mean}$', 
+                     'width_mean': r'$w_{mean}$',
                      'Area_CS': r'$A_{CS}$', 'Volume': r'$V$',
                      'Fy':'$F_{y}$','Fu':'$F_{u}$','Fb':'$F_{u}$',
-                     'sy_con':'$s_{y,con}$','su_con':'$s_{u,con}$','sb_con':'$s_{b,con}$',
+                     'sy_con':'$s_{y,con}$',
+                     'su_con':'$s_{u,con}$','sb_con':'$s_{b,con}$',
                      'D_con':r'$D_{con}$'}
 
 VIParams_don=["Sex","Age","Storagetime","BMI",
@@ -516,15 +524,6 @@ if ptype == 'TBT':
     tmp=dfa.Origin.apply(containsetter, sd={' proximal':'p',' distal':'d'})
     dfa.insert(7,'Side_pd',tmp)
     
-# ## Add Strain Energy Density
-# tmp=dfa.loc(axis=1)[dfa.columns.str.startswith('W')].copy(deep=True)
-# if ptype=="TBT":
-#     tmp=tmp.div(dfa.thickness_2 * dfa.width_2 * dfa.Length_test,axis=0)*9
-# else:
-#     tmp=tmp.div(dfa.Area_CS * dfa.Length_test,axis=0)
-# tmp.columns=tmp.columns.str.replace('W','U')
-# dfa=pd.concat([dfa,tmp],axis=1)
-
 doda['Date_Test']=pd.to_datetime(dfa.loc[dfa.statistics].groupby('Donor')['Date_test'].max())
 doda['Storagetime']=(doda['Date_Test']-doda['Date_Death']).dt.days
 
@@ -546,7 +545,6 @@ cs_doda = cs.join(doda,on='Donor',how='inner',rsuffix='Don_')
 #%%%Eva
 agg_funcs=['count','mean',emec.stat_ext.meanwoso,'median',
            'std', emec.stat_ext.stdwoso,
-           # Evac.coefficient_of_variation, Evac.coefficient_of_variation_woso,Evac.confidence_interval,
            'min','max',emec.stat_ext.CImin,emec.stat_ext.CImax]
 cs_eva = emec.stat_ext.pd_agg(cs,agg_funcs,True)
 cs_short_eva = emec.stat_ext.pd_agg(cs_short,agg_funcs,True)
@@ -569,18 +567,28 @@ if ptype == "ATT":
     cs_E.columns = cs_E.columns.str.split('_', expand=True)
     cs_E = cs_E.droplevel(0,axis=1)
     cs_E_lsq_m=cs_E.loc(axis=1)[idx['lsq',:,'A0Al','E']].droplevel([0,2,3],axis=1)
-    cs_E_lsq_m_pR=cs_E_lsq_m.loc(axis=1)[cs_E_lsq_m.columns.str.contains(r'^C',regex=True)]
+    cs_E_lsq_m_pR=cs_E_lsq_m.loc(axis=1)[
+        cs_E_lsq_m.columns.str.contains(r'^C',regex=True)
+        ]
     cs_E_lsq_m_pR=cs_E_lsq_m_pR.div(cs_E_lsq_m['F'],axis=0)
     cs_E_lsq_m_pR.dropna(axis=0, inplace=True)
-    cs_E_lsq_m_sR=cs_E_lsq_m.loc(axis=1)[cs_E_lsq_m.columns.str.contains(r'^C',regex=True)]
+    cs_E_lsq_m_sR=cs_E_lsq_m.loc(axis=1)[
+        cs_E_lsq_m.columns.str.contains(r'^C',regex=True)
+        ]
     cs_E_lsq_m_sR=cs_E_lsq_m_sR.sub(cs_E_lsq_m['F'],axis=0)
     cs_E_lsq_m_sR.dropna(axis=0, inplace=True)
-    cs_E_lsq_m_dR=cs_E_lsq_m.loc(axis=1)[cs_E_lsq_m.columns.str.contains(r'^C',regex=True)]
+    cs_E_lsq_m_dR=cs_E_lsq_m.loc(axis=1)[
+        cs_E_lsq_m.columns.str.contains(r'^C',regex=True)
+        ]
     cs_E_lsq_m_dR=(cs_E_lsq_m_dR.sub(cs_E_lsq_m['F'],axis=0)).div(cs_E_lsq_m['F'],axis=0)
     cs_E_lsq_m_dR.dropna(axis=0, inplace=True)
     
-    cs_E_lsq_m_pR_rise = cs_E_lsq_m_pR.loc(axis=1)[cs_E_lsq_m_pR.columns.str.contains(r'^C.*\+$',regex=True)]
-    cs_E_lsq_m_pR_fall = cs_E_lsq_m_pR.loc(axis=1)[cs_E_lsq_m_pR.columns.str.contains(r'^C.*\-$',regex=True)]
+    cs_E_lsq_m_pR_rise = cs_E_lsq_m_pR.loc(axis=1)[
+        cs_E_lsq_m_pR.columns.str.contains(r'^C.*\+$',regex=True)
+        ]
+    cs_E_lsq_m_pR_fall = cs_E_lsq_m_pR.loc(axis=1)[
+        cs_E_lsq_m_pR.columns.str.contains(r'^C.*\-$',regex=True)
+        ]
     cs_E_lsq_m_pR_rise.columns=cs_E_lsq_m_pR_rise.columns.str.replace('C','',regex=True).str.replace('\+','',regex=True)
     cs_E_lsq_m_pR_fall.columns=cs_E_lsq_m_pR_fall.columns.str.replace('C','',regex=True).str.replace('\-','',regex=True)
 
@@ -592,9 +600,15 @@ if ptype == "ATT":
     cs_E_lsq_m_pR_rise_so=emec.stat_ext.stat_outliers(cs_E_lsq_m_pR_rise.mean(axis=1))
     cs_E_lsq_m_pR_fall_so=emec.stat_ext.stat_outliers(cs_E_lsq_m_pR_fall.mean(axis=1))
     cs_epl_m_so = emec.stat_ext.stat_outliers(cs_epl_m.mean(axis=1))
-    cs_E_lsq_m_pR_rise_si=emec.stat_ext.stat_outliers(cs_E_lsq_m_pR_rise.mean(axis=1),out='inner')
-    cs_E_lsq_m_pR_fall_si=emec.stat_ext.stat_outliers(cs_E_lsq_m_pR_fall.mean(axis=1),out='inner')
-    cs_epl_m_si = emec.stat_ext.stat_outliers(cs_epl_m.mean(axis=1),out='inner')
+    cs_E_lsq_m_pR_rise_si=emec.stat_ext.stat_outliers(
+        cs_E_lsq_m_pR_rise.mean(axis=1),out='inner'
+        )
+    cs_E_lsq_m_pR_fall_si=emec.stat_ext.stat_outliers(
+        cs_E_lsq_m_pR_fall.mean(axis=1),out='inner'
+        )
+    cs_epl_m_si = emec.stat_ext.stat_outliers(
+        cs_epl_m.mean(axis=1),out='inner'
+        )
     
     tmp = cs_E_lsq_m.copy()
     tmp.columns = 'E_con_'+tmp.columns
@@ -626,16 +640,15 @@ emec.output.str_log(emec.output.str_indent(txt,5),**MG_logopt)
     
 #%% Data-Export
 writer = pd.ExcelWriter(out_full+'.xlsx', engine = 'xlsxwriter')
-# tmp=dft_comb_rel.rename(VIPar_plt_renamer,axis=1)
 dfa.to_excel(writer, sheet_name='Data-All')
 tmp1=['Date_test','Temperature_test','Humidity_test','Failure_code','statistics','Date_eva']
 tmp=dfa[VIParams_gen + VIParams_geo + tmp1 + VIParams_mat].copy()
+tmp1=tmp.Failure_code.apply(lambda x: True if x == ['nan'] else False)
+tmp.loc[tmp1,'Failure_code']=''
 tmp.rename(columns=VIParams_rename,inplace=True)
 tmp.to_excel(writer, sheet_name='Data')
 if ptype=="ATT":
     cs_cyc.to_excel(writer, sheet_name='Data-Cyclic')
-# tmp=dfa.append(cs_eva,sort=False)
-# if ptype=="ATT": tmp=tmp.append(c_short_Type_eva,sort=False)
 cs_short_eva.to_excel(writer, sheet_name='Summary')
 if ptype=="ATT":
     c_short_Type_eva.loc['Fascia'].to_excel(writer, sheet_name='Summary-Fascia')
@@ -692,13 +705,19 @@ emec.output.str_log(emec.output.str_indent(tmp.to_string()), **MG_logopt)
 if ptype == "ATT":
     txt="\n "+"="*100
     txt+=("\n Cyclic-loading influence: (%d samples)"%cs.OPT_pre_load_cycles[cs.OPT_pre_load_cycles>0].size)
-    txt += emec.output.str_indent('- cyclic loading stress level (related to ultimate strength):')
+    txt += emec.output.str_indent(
+        '- cyclic loading stress level (related to ultimate strength):'
+        )
     txt += emec.output.str_indent('- preload (aim: 0.10):',6)
     tmp=cs_cfl.cyc_f_lo.agg(agg_funcs)[['mean','std','min','max','CImin','CImax']]
-    txt += emec.output.str_indent('  {0:.5f} ± {1:.5f} ({2:.5f}-{3:.5f}, CI: {4:.5f}-{5:.5f})'.format(*tmp),6)
+    txt += emec.output.str_indent(
+        '  {0:.5f} ± {1:.5f} ({2:.5f}-{3:.5f}, CI: {4:.5f}-{5:.5f})'.format(*tmp),
+        6)
     txt += emec.output.str_indent('- cyclic (aim: 0.30):',6)
     tmp=cs_cfl.cyc_f_hi.agg(agg_funcs)[['mean','std','min','max','CImin','CImax']]
-    txt += emec.output.str_indent('  {0:.5f} ± {1:.5f} ({2:.5f}-{3:.5f}, CI: {4:.5f}-{5:.5f})'.format(*tmp),6)
+    txt += emec.output.str_indent(
+        '  {0:.5f} ± {1:.5f} ({2:.5f}-{3:.5f}, CI: {4:.5f}-{5:.5f})'.format(*tmp),
+        6)
     txt += emec.output.str_indent('- cyclic related to final Youngs Modulus:')
     txt += emec.output.str_indent('- loading (ascending):',6)
     txt += emec.output.str_indent(cs_E_lsq_m_pR_rise.agg(agg_funcs).T.to_string(),9)
@@ -709,25 +728,42 @@ if ptype == "ATT":
     tmp.loc['H0']=tmp.loc['p'].apply(lambda x: False if x <= alpha else True)
     tmp1=tmp.columns.str.contains(r'^C.*\-$',regex=True)
     txt += emec.output.str_indent(tmp.loc(axis=1)[~tmp1].to_string(),9)
-    txt += emec.output.str_indent('statistical outliers: %d'%len(cs_E_lsq_m_pR_rise_so),9)
+    txt += emec.output.str_indent(
+        'statistical outliers: %d'%len(cs_E_lsq_m_pR_rise_so),9
+        )
     txt += emec.output.str_indent(cs.Failure_code[cs_E_lsq_m_pR_rise_so],9)
     txt += emec.output.str_indent('- unloading (descending):',6)
-    txt += emec.output.str_indent(cs_E_lsq_m_pR_fall.agg(agg_funcs).T.to_string(),9)
+    txt += emec.output.str_indent(
+        cs_E_lsq_m_pR_fall.agg(agg_funcs).T.to_string(),9
+        )
     txt += emec.output.str_indent('Mean over all:',9)
-    txt += emec.output.str_indent(cs_E_lsq_m_pR_fall.stack().agg(agg_funcs).to_string(),9)
+    txt += emec.output.str_indent(
+        cs_E_lsq_m_pR_fall.stack().agg(agg_funcs).to_string(),9
+        )
     txt += emec.output.str_indent('Hypothesis test equality:',9)
     txt += emec.output.str_indent(tmp.loc(axis=1)[tmp1].to_string(),9)
-    txt += emec.output.str_indent('statistical outliers: %d'%len(cs_E_lsq_m_pR_fall_so),9)
+    txt += emec.output.str_indent(
+        'statistical outliers: %d'%len(cs_E_lsq_m_pR_fall_so),9
+        )
     txt += emec.output.str_indent(cs.Failure_code[cs_E_lsq_m_pR_fall_so],12)
     txt += emec.output.str_indent('- plastic strain after cycle:')
     txt += emec.output.str_indent(cs_epl_m.agg(agg_funcs).T.to_string(),9)
-    txt += emec.output.str_indent('statistical outliers: %d'%len(cs_epl_m_so),9)
+    txt += emec.output.str_indent(
+        'statistical outliers: %d'%len(cs_epl_m_so),9
+        )
     txt += emec.output.str_indent(cs.Failure_code[cs_epl_m_so],12)
+    tmp=cs_epl_m.div(cs_epl_m['1'],axis=0).loc(axis=1)['2':]
+    txt += emec.output.str_indent('- plastic strain ratio of first cycle:')
+    txt += emec.output.str_indent(tmp.agg(agg_funcs).T.to_string(),9)
     emec.output.str_log(txt,**MG_logopt)
     
 #%%% Variance analyses
 emec.output.str_log("\n\n "+"-"*100, **MG_logopt)
-emec.output.str_log("\n %s-Harvesting location: (Groups are significantly different for p < %.3f)"%(mpop,alpha),**MG_logopt)
+emec.output.str_log(
+    "\n %s-Harvesting location: (Groups are significantly different for p < %.3f)"%(
+        mpop,alpha
+        ),**MG_logopt
+    )
 tmp=pd.concat([cs_short,cs['Origin_short']],axis=1)
 tmp=emec.stat_ext.Multi_conc(df=tmp,group_main='Origin_short', anat='VAwoSg',
                stdict=css_ncols.to_series().to_dict(), 
@@ -743,16 +779,27 @@ tmp2=tmp2.droplevel(0).apply(pd.Series)[0].apply(pd.Series).T
 emec.output.str_log(emec.output.str_indent(tmp2.to_string(),5),**MG_logopt)
 
 emec.output.str_log("\n\n "+"-"*100, **MG_logopt)
-emec.output.str_log("\n %s-Donor: (Groups are significantly different for p < %.3f)"%(mpop,alpha),**MG_logopt)
+emec.output.str_log(
+    "\n %s-Donor: (Groups are significantly different for p < %.3f)"%(
+        mpop,alpha
+        ),**MG_logopt
+    )
 tmp=emec.stat_ext.Multi_conc(df=cs_short,group_main='Donor', anat='VAwoSg',
                stdict=css_ncols.to_series().to_dict(), 
                met=mpop, alpha=alpha, kws=MCompdf_kws)
-emec.output.str_log(emec.output.str_indent(tmp.loc(axis=1)['DF1':'H0'].to_string()),**MG_logopt)
-emec.output.str_log("\n  -> Multicomparision (%s)):"%MComp_kws['mcomp'],**MG_logopt)
+emec.output.str_log(
+    emec.output.str_indent(tmp.loc(axis=1)['DF1':'H0'].to_string()),
+    **MG_logopt
+    )
+emec.output.str_log(
+    "\n  -> Multicomparision (%s)):"%MComp_kws['mcomp'],**MG_logopt
+    )
 for i in tmp.loc[tmp.H0 == False].index:
     txt="{}:\n{}".format(i,tmp.loc[i,'MCP'],)
     emec.output.str_log(emec.output.str_indent(txt,5),**MG_logopt)
-emec.output.str_log("\n\n   -> Multicomparison relationship interpretation:",**MG_logopt)
+emec.output.str_log(
+    "\n\n   -> Multicomparison relationship interpretation:",**MG_logopt
+    )
 tmp2=tmp.loc[tmp.H0 == False]['MCP'].apply(emec.stat_ext.MComp_interpreter)
 tmp2=tmp2.droplevel(0).apply(pd.Series)[0].apply(pd.Series).T
 emec.output.str_log(emec.output.str_indent(tmp2.to_string(),5),**MG_logopt)
@@ -760,8 +807,16 @@ emec.output.str_log(emec.output.str_indent(tmp2.to_string(),5),**MG_logopt)
 #%%% Hyphotesis tests
 #%%%% Side Left Right
 emec.output.str_log("\n\n "+"-"*100, **MG_logopt)
-emec.output.str_log("\n Hypothesis test - body side (left/right): (significantly different for p < %.3f)"%(alpha),**MG_logopt)
-emec.output.str_log("\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(mcomp_ind, mcomp_rel),**MG_logopt)
+emec.output.str_log(
+    "\n Hypothesis test - body side (left/right): (significantly different for p < %.3f)"%(
+        alpha
+        ),**MG_logopt
+    )
+emec.output.str_log(
+    "\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(
+        mcomp_ind, mcomp_rel
+        ),**MG_logopt
+    )
 if ptype == 'TBT':
     stat_dd_ind='raise'
     stat_dd_rel=['Donor','Origin_woLRpd','Side_pd']
@@ -792,7 +847,11 @@ tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
 emec.output.str_log(emec.output.str_indent(tmp3.to_string()),**MG_logopt)
 
 if ptype == 'ATT':
-    emec.output.str_log("\n Hypothesis test - type (Fascia/Ligament): (%s, significantly different for p < %.3f)"%(mcomp_ind,alpha),**MG_logopt)
+    emec.output.str_log(
+        "\n Hypothesis test - type (Fascia/Ligament): (%s, significantly different for p < %.3f)"%(
+            mcomp_ind,alpha
+            ),**MG_logopt
+        )
     tmp1=emec.stat_ext.Hypo_test_multi(cs, group_main='Type', group_sub=None, 
                      ano_Var=VIParams_geo+VIParams_mat, 
                      rel=False, rel_keys=[], 
@@ -802,115 +861,176 @@ if ptype == 'ATT':
 #%%%% Side proximal distal (TBT only)
 if ptype == 'TBT':
     emec.output.str_log("\n\n "+"-"*100, **MG_logopt)
-    emec.output.str_log("\n Hypothesis test - body side (proximal/distal): (significantly different for p < %.3f)"%(alpha),**MG_logopt)
-    emec.output.str_log("\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(mcomp_ind, mcomp_rel),**MG_logopt)
+    emec.output.str_log(
+        "\n Hypothesis test - body side (proximal/distal): (significantly different for p < %.3f)"%(
+            alpha
+            ),**MG_logopt
+        )
+    emec.output.str_log(
+        "\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(
+            mcomp_ind, mcomp_rel
+            ),**MG_logopt
+        )
     # tmp=pd.concat([cs_short,cs[['Side_pd','Donor','Origin_short']]],axis=1)
     tmp=cs.query("Side_pd =='p' or Side_pd =='d'")
-    tmp1=emec.stat_ext.Hypo_test_multi(tmp, group_main='Side_pd', group_sub=None, 
-                         ano_Var=VIParams_geo+VIParams_mat, 
-                         rel=False, rel_keys=[], 
-                         mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
-    tmp2=emec.stat_ext.Hypo_test_multi(tmp, group_main='Side_pd', group_sub=None, 
-                         ano_Var=VIParams_geo+VIParams_mat, 
-                         rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                         mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp1=emec.stat_ext.Hypo_test_multi(
+        tmp, group_main='Side_pd', group_sub=None, 
+        ano_Var=VIParams_geo+VIParams_mat, 
+        rel=False, rel_keys=[], 
+        mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind
+        )
+    tmp2=emec.stat_ext.Hypo_test_multi(
+        tmp, group_main='Side_pd', group_sub=None, 
+        ano_Var=VIParams_geo+VIParams_mat, 
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind
+        )
     tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
     emec.output.str_log(emec.output.str_indent(tmp3.to_string()),**MG_logopt)
     
 #%%%% Direction of test (ACT only)
 if ptype == 'ACT':
     emec.output.str_log("\n\n "+"-"*100, **MG_logopt)
-    emec.output.str_log("\n Hypothesis test - direction (x/y/z): (significantly different for p < %.3f)"%(alpha),**MG_logopt)
-    emec.output.str_log("\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(mcomp_ind, mcomp_rel),**MG_logopt)
-    tmp=emec.stat_ext.Multi_conc(df=cs,group_main='Direction_test', anat='VAwoSg',
-               stdict=pd.Series(VIParams_geo+VIParams_mat, index=VIParams_geo+VIParams_mat).to_dict(), 
-               met=mpop, alpha=alpha, kws=MCompdf_kws)
-    emec.output.str_log(emec.output.str_indent(tmp.loc(axis=1)['DF1':'H0'].to_string()),**MG_logopt)
+    emec.output.str_log(
+        "\n Hypothesis test - direction (x/y/z): (significantly different for p < %.3f)"%(
+            alpha
+            ),**MG_logopt
+        )
+    emec.output.str_log(
+        "\n    (%s: all values, %s: Only values which are available at donor and location on both sides)"%(
+            mcomp_ind, mcomp_rel
+            ),**MG_logopt
+        )
+    tmp=emec.stat_ext.Multi_conc(
+        df=cs,group_main='Direction_test', anat='VAwoSg',
+        stdict=pd.Series(
+            VIParams_geo+VIParams_mat, index=VIParams_geo+VIParams_mat
+            ).to_dict(), 
+        met=mpop, alpha=alpha, kws=MCompdf_kws
+        )
+    emec.output.str_log(
+        emec.output.str_indent(tmp.loc(axis=1)['DF1':'H0'].to_string()),
+        **MG_logopt
+        )
     # tmp=pd.concat([cs_short,cs[['Direction_test','Donor','Origin_short']]],axis=1)
     emec.output.str_log("\n  - x to y:",**MG_logopt)
     tmp4=cs.query("Direction_test =='x' or Direction_test =='y'")
-    tmp1=emec.stat_ext.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
-                         ano_Var=VIParams_geo+VIParams_mat, 
-                         rel=False, rel_keys=[], 
-                         mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
-    tmp2=emec.stat_ext.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
-                         ano_Var=VIParams_geo+VIParams_mat, 
-                         rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                         mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp1=emec.stat_ext.Hypo_test_multi(
+        tmp4, group_main='Direction_test', group_sub=None, 
+        ano_Var=VIParams_geo+VIParams_mat, 
+        rel=False, rel_keys=[], 
+        mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind
+        )
+    tmp2=emec.stat_ext.Hypo_test_multi(
+        tmp4, group_main='Direction_test', group_sub=None, 
+        ano_Var=VIParams_geo+VIParams_mat, 
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind
+        )
     tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
     emec.output.str_log(emec.output.str_indent(tmp3.to_string()),**MG_logopt)
     emec.output.str_log("\n  - x to z:",**MG_logopt)
     tmp4=cs.query("Direction_test =='x' or Direction_test =='z'")
-    tmp1=emec.stat_ext.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
-                         ano_Var=VIParams_geo+VIParams_mat, 
-                         rel=False, rel_keys=[], 
-                         mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
-    tmp2=emec.stat_ext.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
-                         ano_Var=VIParams_geo+VIParams_mat, 
-                         rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                         mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp1=emec.stat_ext.Hypo_test_multi(
+        tmp4, group_main='Direction_test', group_sub=None, 
+        ano_Var=VIParams_geo+VIParams_mat, 
+        rel=False, rel_keys=[], 
+        mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind
+        )
+    tmp2=emec.stat_ext.Hypo_test_multi(
+        tmp4, group_main='Direction_test', group_sub=None, 
+        ano_Var=VIParams_geo+VIParams_mat, 
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind
+        )
     tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
     emec.output.str_log(emec.output.str_indent(tmp3.to_string()),**MG_logopt)
     emec.output.str_log("\n  - y to z:",**MG_logopt)
     tmp4=cs.query("Direction_test =='y' or Direction_test =='z'")
-    tmp1=emec.stat_ext.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
-                         ano_Var=VIParams_geo+VIParams_mat, 
-                         rel=False, rel_keys=[], 
-                         mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
-    tmp2=emec.stat_ext.Hypo_test_multi(tmp4, group_main='Direction_test', group_sub=None, 
-                         ano_Var=VIParams_geo+VIParams_mat, 
-                         rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                         mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind)
+    tmp1=emec.stat_ext.Hypo_test_multi(
+        tmp4, group_main='Direction_test', group_sub=None, 
+        ano_Var=VIParams_geo+VIParams_mat, 
+        rel=False, rel_keys=[], 
+        mcomp=mcomp_ind,  alpha=alpha, deal_dupl_ind=stat_dd_ind
+        )
+    tmp2=emec.stat_ext.Hypo_test_multi(
+        tmp4, group_main='Direction_test', group_sub=None, 
+        ano_Var=VIParams_geo+VIParams_mat, 
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha, deal_dupl_ind=stat_dd_ind
+        )
     tmp3=pd.concat([tmp1, tmp2], axis=1, keys=[mcomp_ind, mcomp_rel])
     emec.output.str_log(emec.output.str_indent(tmp3.to_string()),**MG_logopt)
     
-    emec.output.str_log("\n  - Corpus vertebrae lumbales (CVLu, x/z equal/greater y):",**MG_logopt)
+    emec.output.str_log(
+        "\n  - Corpus vertebrae lumbales (CVLu, x/z equal/greater y):",
+        **MG_logopt
+        )
     tmp1=pd.DataFrame([])
     tmp2=cs.query("Origin_sshort=='CVLu'")
-    tmp1['yx-wi-eq']=emec.stat_ext.Hypo_test(tmp2, groupby='Direction_test',
-                        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
-                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                        mcomp=mcomp_rel,  alpha=alpha,
-                        deal_dupl_ind=stat_dd_ind, group_ord=['y','x'], add_out='Series')
-    tmp1['yx-wi-gr']=emec.stat_ext.Hypo_test(tmp2, groupby='Direction_test',
-                        ano_Var=YM_con_str, mkws={'alternative':'greater'},
-                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                        mcomp=mcomp_rel,  alpha=alpha,
-                        deal_dupl_ind=stat_dd_ind, group_ord=['y','x'], add_out='Series')
-    tmp1['yz-wi-eq']=emec.stat_ext.Hypo_test(tmp2, groupby='Direction_test',
-                        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
-                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                        mcomp=mcomp_rel,  alpha=alpha,
-                        deal_dupl_ind=stat_dd_ind, group_ord=['y','z'], add_out='Series')
-    tmp1['yz-wi-gr']=emec.stat_ext.Hypo_test(tmp2, groupby='Direction_test',
-                        ano_Var=YM_con_str, mkws={'alternative':'greater'},
-                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                        mcomp=mcomp_rel,  alpha=alpha,
-                        deal_dupl_ind=stat_dd_ind, group_ord=['y','z'], add_out='Series')      
+    tmp1['yx-wi-eq']=emec.stat_ext.Hypo_test(
+        tmp2, groupby='Direction_test',
+        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha,
+        deal_dupl_ind=stat_dd_ind, group_ord=['y','x'], add_out='Series'
+        )
+    tmp1['yx-wi-gr']=emec.stat_ext.Hypo_test(
+        tmp2, groupby='Direction_test',
+        ano_Var=YM_con_str, mkws={'alternative':'greater'},
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha,
+        deal_dupl_ind=stat_dd_ind, group_ord=['y','x'], add_out='Series'
+        )
+    tmp1['yz-wi-eq']=emec.stat_ext.Hypo_test(
+        tmp2, groupby='Direction_test',
+        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha,
+        deal_dupl_ind=stat_dd_ind, group_ord=['y','z'], add_out='Series'
+        )
+    tmp1['yz-wi-gr']=emec.stat_ext.Hypo_test(
+        tmp2, groupby='Direction_test',
+        ano_Var=YM_con_str, mkws={'alternative':'greater'},
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha,
+        deal_dupl_ind=stat_dd_ind, group_ord=['y','z'], add_out='Series'
+        )      
     emec.output.str_log(emec.output.str_indent(tmp1.to_string()),**MG_logopt)
-    emec.output.str_log("\n  - Corpus vertebrae sacrales (CVSa, x/y equal/greater z):",**MG_logopt)
+    emec.output.str_log(
+        "\n  - Corpus vertebrae sacrales (CVSa, x/y equal/greater z):",
+        **MG_logopt
+        )
     tmp1=pd.DataFrame([])
     tmp2=cs.query("Origin_sshort=='CVSa'")
-    tmp1['zx-wi-eq']=emec.stat_ext.Hypo_test(tmp2, groupby='Direction_test',
-                        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
-                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                        mcomp=mcomp_rel,  alpha=alpha,
-                        deal_dupl_ind=stat_dd_ind, group_ord=['z','x'], add_out='Series')
-    tmp1['zx-wi-le']=emec.stat_ext.Hypo_test(tmp2, groupby='Direction_test',
-                        ano_Var=YM_con_str, mkws={'alternative':'greater'},
-                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                        mcomp=mcomp_rel,  alpha=alpha,
-                        deal_dupl_ind=stat_dd_ind, group_ord=['z','x'], add_out='Series')
-    tmp1['zy-wi-eq']=emec.stat_ext.Hypo_test(tmp2, groupby='Direction_test',
-                        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
-                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                        mcomp=mcomp_rel,  alpha=alpha,
-                        deal_dupl_ind=stat_dd_ind, group_ord=['z','y'], add_out='Series')
-    tmp1['zy-wi-le']=emec.stat_ext.Hypo_test(tmp2, groupby='Direction_test',
-                        ano_Var=YM_con_str, mkws={'alternative':'greater'},
-                        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
-                        mcomp=mcomp_rel,  alpha=alpha,
-                        deal_dupl_ind=stat_dd_ind, group_ord=['z','y'], add_out='Series')    
+    tmp1['zx-wi-eq']=emec.stat_ext.Hypo_test(
+        tmp2, groupby='Direction_test',
+        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha,
+        deal_dupl_ind=stat_dd_ind, group_ord=['z','x'], add_out='Series'
+        )
+    tmp1['zx-wi-le']=emec.stat_ext.Hypo_test(
+        tmp2, groupby='Direction_test',
+        ano_Var=YM_con_str, mkws={'alternative':'greater'},
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha,
+        deal_dupl_ind=stat_dd_ind, group_ord=['z','x'], add_out='Series'
+        )
+    tmp1['zy-wi-eq']=emec.stat_ext.Hypo_test(
+        tmp2, groupby='Direction_test',
+        ano_Var=YM_con_str, mkws={'alternative':'two-sided'},
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha,
+        deal_dupl_ind=stat_dd_ind, group_ord=['z','y'], add_out='Series'
+        )
+    tmp1['zy-wi-le']=emec.stat_ext.Hypo_test(
+        tmp2, groupby='Direction_test',
+        ano_Var=YM_con_str, mkws={'alternative':'greater'},
+        rel=True, rel_keys=['Donor','Origin_woLRpd','Side_LR'], 
+        mcomp=mcomp_rel,  alpha=alpha,
+        deal_dupl_ind=stat_dd_ind, group_ord=['z','y'], add_out='Series'
+        )    
     emec.output.str_log(emec.output.str_indent(tmp1.to_string()),**MG_logopt)
     
 #%%% Correlations
@@ -921,8 +1041,12 @@ doda_corr_d['Sex'] = doda_corr_d['Sex'].map({'f':1,'m':-1})
 doda_corr_d_num_cols=doda_corr_d.select_dtypes(include=['int','float']).columns
 doda_corr_i= emec.list_ops.ICD_bool_df(doda.ICDCodes,**{'level':0})
 # doda_corr_i['SP'] = np.invert(doda['Special_Anamnesis'].isna()).astype(int)
-doda_di = pd.concat([doda_corr_d.loc(axis=1)[doda_corr_d_num_cols],doda_corr_i],axis=1)
-cs_doda_short=pd.merge(left=cs_short,right=doda_di,left_on='Donor',right_index=True)
+doda_di = pd.concat(
+    [doda_corr_d.loc(axis=1)[doda_corr_d_num_cols],doda_corr_i],axis=1
+    )
+cs_doda_short=pd.merge(
+    left=cs_short,right=doda_di,left_on='Donor',right_index=True
+    )
 doda_corr=cs_doda_short.corr(method=mcorr)
 
 #%%% Regressions
@@ -1004,9 +1128,11 @@ if ptype in ["TBT","ACT"]:
     axt = sns.boxplot(x="Origin_sshort", y="value", 
                       data=df, ax=ax['Location'], 
                       order=Locdict.values(),
-                      showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
-                                                 "markeredgecolor":"black", "markersize":"12",
-                                                 "alpha":0.75})
+                      showmeans=True, 
+                      meanprops={
+                          "marker":"_", "markerfacecolor":"white",
+                          "markeredgecolor":"black", "markersize":"12",
+                          "alpha":0.75})
     axt = sns.swarmplot(x="Origin_sshort", y="value",
                         data=df, ax=ax['Location'], 
                         order=Locdict.values(),
@@ -1022,9 +1148,10 @@ if ptype in ["TBT","ACT"]:
     df.Donor.replace(doda.Naming,inplace=True)
     axt = sns.boxplot(x="Donor", y="value", 
                       data=df, ax=ax['Donor'], 
-                      showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
-                                                 "markeredgecolor":"black", "markersize":"12",
-                                                 "alpha":0.75})
+                      showmeans=True, 
+                      meanprops={"marker":"_", "markerfacecolor":"white",
+                                 "markeredgecolor":"black", "markersize":"12",
+                                 "alpha":0.75})
     axt = sns.swarmplot(x="Donor", y="value",
                         data=df, ax=ax['Donor'], 
                         dodge=True, edgecolor="black",
@@ -1035,16 +1162,22 @@ if ptype in ["TBT","ACT"]:
     ax['Location'].sharey(ax['Donor'])
     plt_add_figsubl(text='a', axo=ax['Donor'],**subfiglabeldict)
     
-    axt = sns.regplot(x="Density_app", y=pltvartmp, data=cs,
-                      ax=ax['Reg'], color = sns.color_palette()[0], scatter_kws={'s':2})
+    axt = sns.regplot(
+        x="Density_app", y=pltvartmp, data=cs,
+        ax=ax['Reg'], color = sns.color_palette()[0], scatter_kws={'s':2}
+        )
     axtmp = ax['Reg'].twiny()
-    axt = sns.regplot(x="fu", y=pltvartmp, data=cs,
-                      ax=axtmp, color = sns.color_palette()[1], scatter_kws={'s':2})
+    axt = sns.regplot(
+        x="fu", y=pltvartmp, data=cs,
+        ax=axtmp, color = sns.color_palette()[1], scatter_kws={'s':2}
+        )
     # ax['Reg'].set_title('Linear Regression')
-    ax['Reg'].set_xlabel('Apparent density in g/cm³',color=sns.color_palette()[0])
+    ax['Reg'].set_xlabel('Apparent density in g/cm³',
+                         color=sns.color_palette()[0])
     ax['Reg'].set_ylabel('Elastic modulus in MPa')
     ax['Reg'].tick_params(axis='x', colors=sns.color_palette()[0])
-    axtmp.set_xlabel('Ultimate strength in MPa',color=sns.color_palette()[1])
+    axtmp.set_xlabel('Ultimate strength in MPa',
+                     color=sns.color_palette()[1])
     axtmp.tick_params(axis='x', colors=sns.color_palette()[1])
     plt_add_figsubl(text='c', axo=ax['Reg'],**subfiglabeldict)
     fig.suptitle(None)
@@ -1073,28 +1206,33 @@ if ptype == "ATT":
     ax['PelvisF'].grid(False)
     ax['PelvisF'].axis('off')
     
-    df=pd.melt(cs[cs.Type=='Fascia'], id_vars=['Origin_sshort'], value_vars=[pltvartmp])
+    df=pd.melt(cs[cs.Type=='Fascia'], id_vars=['Origin_sshort'], 
+               value_vars=[pltvartmp])
     axt = sns.boxplot(x="Origin_sshort", y="value", data=df, ax=ax['LocationF'], 
                       order=Locdict_F.values(),
-                      showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
-                                                 "markeredgecolor":"black", "markersize":"12",
-                                                 "alpha":0.75})
-    axt = sns.swarmplot(x="Origin_sshort", y="value", data=df, ax=ax['LocationF'], 
+                      showmeans=True, 
+                      meanprops={"marker":"_", "markerfacecolor":"white",
+                                 "markeredgecolor":"black", "markersize":"12",
+                                 "alpha":0.75})
+    axt = sns.swarmplot(x="Origin_sshort", y="value", 
+                        data=df, ax=ax['LocationF'], 
                         order=Locdict_F.values(),
                         dodge=True, edgecolor="black",
                         linewidth=.5, alpha=.5, size=2)
     ax['LocationF'].set_title('Fascia by harvesting region')
     ax['LocationF'].set_xlabel('Region')
     ax['LocationF'].set_ylabel('')
-    ax['LocationF'].tick_params(axis='y',which='both',left=False,labelleft=False)
+    ax['LocationF'].tick_params(axis='y',which='both',
+                                left=False,labelleft=False)
     plt_add_figsubl(text='b', axo=ax['LocationF'],**subfiglabeldict)
     
     df=pd.melt(cs[cs.Type=='Fascia'], id_vars=['Donor'], value_vars=[pltvartmp])
     df.Donor.replace(doda.Naming,inplace=True)
     axt = sns.boxplot(x="Donor", y="value", data=df, ax=ax['DonorF'], 
-                      showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
-                                                 "markeredgecolor":"black", "markersize":"12",
-                                                 "alpha":0.75})
+                      showmeans=True, 
+                      meanprops={"marker":"_", "markerfacecolor":"white",
+                                 "markeredgecolor":"black", "markersize":"12",
+                                 "alpha":0.75})
     axt = sns.swarmplot(x="Donor", y="value",
                         data=df, ax=ax['DonorF'], dodge=True, edgecolor="black",
                         linewidth=.5, alpha=.5, size=2)
@@ -1116,12 +1254,14 @@ if ptype == "ATT":
     ax['PelvisL'].grid(False)
     ax['PelvisL'].axis('off')
     
-    df=pd.melt(cs[cs.Type=='Ligament'], id_vars=['Origin_sshort'], value_vars=[pltvartmp])
+    df=pd.melt(cs[cs.Type=='Ligament'], id_vars=['Origin_sshort'], 
+               value_vars=[pltvartmp])
     axt = sns.boxplot(x="Origin_sshort", y="value", data=df, ax=ax['LocationL'], 
                       order=Locdict_L.values(),
-                      showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
-                                                 "markeredgecolor":"black", "markersize":"12",
-                                                 "alpha":0.75})
+                      showmeans=True, 
+                      meanprops={"marker":"_", "markerfacecolor":"white",
+                                 "markeredgecolor":"black", "markersize":"12",
+                                 "alpha":0.75})
     axt = sns.swarmplot(x="Origin_sshort", y="value",
                         data=df, ax=ax['LocationL'], 
                         order=Locdict_L.values(),
@@ -1130,15 +1270,17 @@ if ptype == "ATT":
     ax['LocationL'].set_title('Ligaments by harvesting region')
     ax['LocationL'].set_xlabel('Region')
     ax['LocationL'].set_ylabel('')
-    ax['LocationL'].tick_params(axis='y',which='both',left=False,labelleft=False)
+    ax['LocationL'].tick_params(axis='y',which='both',
+                                left=False,labelleft=False)
     plt_add_figsubl(text='d', axo=ax['LocationL'],**subfiglabeldict)
     
     df=pd.melt(cs[cs.Type=='Ligament'], id_vars=['Donor'], value_vars=[pltvartmp])
     df.Donor.replace(doda.Naming,inplace=True)
     axt = sns.boxplot(x="Donor", y="value", data=df, ax=ax['DonorL'], 
-                      showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
-                                                 "markeredgecolor":"black", "markersize":"12",
-                                                 "alpha":0.75})
+                      showmeans=True, 
+                      meanprops={"marker":"_", "markerfacecolor":"white",
+                                 "markeredgecolor":"black", "markersize":"12",
+                                 "alpha":0.75})
     axt = sns.swarmplot(x="Donor", y="value", data=df, ax=ax['DonorL'], 
                         dodge=True, edgecolor="black",
                         linewidth=.5, alpha=.5, size=2)
@@ -1149,15 +1291,19 @@ if ptype == "ATT":
     plt_add_figsubl(text='c', axo=ax['DonorL'],**subfiglabeldict)
     
     axt = sns.regplot(x="Density_app", y=pltvartmp, data=cs,
-                      ax=ax['Reg'], color = sns.color_palette()[0], scatter_kws={'s':2})
+                      ax=ax['Reg'], color = sns.color_palette()[0], 
+                      scatter_kws={'s':2})
     axtmp = ax['Reg'].twiny()
     axt = sns.regplot(x="fu", y=pltvartmp, data=cs,
-                      ax=axtmp, color = sns.color_palette()[1], scatter_kws={'s':2})
+                      ax=axtmp, color = sns.color_palette()[1], 
+                      scatter_kws={'s':2})
     # ax['Reg'].set_title('Linear Regression')
-    ax['Reg'].set_xlabel('Apparent density in g/cm³',color=sns.color_palette()[0])
+    ax['Reg'].set_xlabel('Apparent density in g/cm³',
+                         color=sns.color_palette()[0])
     ax['Reg'].set_ylabel('Elastic modulus in MPa')
     ax['Reg'].tick_params(axis='x', colors=sns.color_palette()[0])
-    axtmp.set_xlabel('Ultimate strength in MPa',color=sns.color_palette()[1])
+    axtmp.set_xlabel('Ultimate strength in MPa',
+                     color=sns.color_palette()[1])
     axtmp.tick_params(axis='x', colors=sns.color_palette()[1])
     plt_add_figsubl(text='e', axo=ax['Reg'],**subfiglabeldict)
     fig.suptitle(None)
@@ -1184,7 +1330,8 @@ if ptype == "ACT":
     ax['Pelvis'].grid(False)
     ax['Pelvis'].axis('off')
     
-    df=pd.melt(cs, id_vars=['Origin_sshort','Direction_test'], value_vars=[YM_con_str])
+    df=pd.melt(cs, id_vars=['Origin_sshort','Direction_test'], 
+               value_vars=[YM_con_str])
     df.sort_values(['Origin_sshort','Direction_test'],inplace=True)
     axt = sns.boxplot(x="Origin_sshort", y="value", hue="Direction_test",
                      # data=df, ax=ax['E'], palette={'x':'r','y':'g','z':'b'}, saturation=.5,
@@ -1192,15 +1339,17 @@ if ptype == "ACT":
                      palette={'x':sns.color_palette()[3],
                               'y':sns.color_palette()[2],
                               'z':sns.color_palette()[0]}, 
-                     showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
-                                                "markeredgecolor":"black",
-                                                "markersize":"8","alpha":0.75})
+                     showmeans=True, 
+                     meanprops={"marker":"_", "markerfacecolor":"white",
+                                "markeredgecolor":"black",
+                                "markersize":"8","alpha":0.75})
     axt = sns.swarmplot(x="Origin_sshort", y="value", hue="Direction_test",
                        data=df, ax=ax['E'], 
                        palette={'x':sns.color_palette()[3],
                                 'y':sns.color_palette()[2],
                                 'z':sns.color_palette()[0]}, 
-                       dodge=True, edgecolor="black", linewidth=.5, alpha=.5, size=2)
+                       dodge=True, edgecolor="black", 
+                       linewidth=.5, alpha=.5, size=2)
     ax['E'].set_title('Elastic modulus by harvesting region and testing direction')
     ax['E'].set_xlabel(None)
     ax['E'].set_ylabel('Elastic modulus in MPa')
@@ -1212,23 +1361,26 @@ if ptype == "ACT":
                title="Direction", 
                loc="upper right", bbox_to_anchor=(0.98, 0.918))
     ax['E'].legend().set_visible(False)    
-    df=pd.melt(cs, id_vars=['Origin_sshort','Direction_test'], value_vars=['fu'])
+    df=pd.melt(cs, id_vars=['Origin_sshort','Direction_test'], 
+               value_vars=['fu'])
     df.sort_values(['Origin_sshort','Direction_test'],inplace=True)
     axt = sns.boxplot(x="Origin_sshort", y="value", hue="Direction_test",
                      data=df, ax=ax['fu'], 
                        palette={'x':sns.color_palette()[3],
                                 'y':sns.color_palette()[2],
                                 'z':sns.color_palette()[0]},
-                     showmeans=True, meanprops={"marker":"_", "markerfacecolor":"white",
-                                                "markeredgecolor":"black",
-                                                "markersize":"8","alpha":0.75})
+                     showmeans=True, 
+                     meanprops={"marker":"_", "markerfacecolor":"white",
+                                "markeredgecolor":"black",
+                                "markersize":"8","alpha":0.75})
     axt = sns.swarmplot(x="Origin_sshort", y="value", hue="Direction_test",
                        data=df, ax=ax['fu'], 
                        # palette={'x':'r','y':'g','z':'b'},
                        palette={'x':sns.color_palette()[3],
                                 'y':sns.color_palette()[2],
                                 'z':sns.color_palette()[0]},
-                       dodge=True, edgecolor="black", linewidth=.5, alpha=.5, size=2)
+                       dodge=True, edgecolor="black", 
+                       linewidth=.5, alpha=.5, size=2)
     ax['fu'].set_title('Ultimate strength by harvesting region and testing direction')
     ax['fu'].set_xlabel('Region')
     ax['fu'].set_ylabel('Ultimate strength in MPa')
@@ -1271,25 +1423,27 @@ if ptype == "ATT":
     ax['slvl'].legend(ncol=3)
     plt_add_figsubl(text='a', axo=ax['slvl'],**subfiglabeldict)
     
-    sns.lineplot(data=cs_E_lsq_m_pR_rise.loc[cs_E_lsq_m_pR_rise_si].T,palette=('cyan',),
+    sns.lineplot(data=cs_E_lsq_m_pR_rise.loc[cs_E_lsq_m_pR_rise_si].T,
+                 palette=('cyan',),
                  linestyle='dashed',linewidth=0.25,legend=False,ax=ax['Ecyc'])
-    sns.lineplot(data=cs_E_lsq_m_pR_fall.loc[cs_E_lsq_m_pR_fall_si].T,palette=('orange',),
+    sns.lineplot(data=cs_E_lsq_m_pR_fall.loc[cs_E_lsq_m_pR_fall_si].T,
+                 palette=('orange',),
                  linestyle='dashed',linewidth=0.25,legend=False,ax=ax['Ecyc'])
-    lns = sns.lineplot(data=cs_E_lsq_m_pR_rise.loc[cs_E_lsq_m_pR_rise_si].mean(),color='blue',
-                 linestyle='-',linewidth=1.0,legend=True,
-                 label='Loading',ax=ax['Ecyc'])
-    lns = sns.lineplot(data=cs_E_lsq_m_pR_fall.loc[cs_E_lsq_m_pR_fall_si].mean(),color='red',
-                 linestyle='-',linewidth=1.0,legend=True,
-                 label='Unloading',ax=ax['Ecyc'])
+    lns = sns.lineplot(data=cs_E_lsq_m_pR_rise.loc[cs_E_lsq_m_pR_rise_si].mean(),
+                       color='blue',linestyle='-',linewidth=1.0,legend=True,
+                       label='Loading',ax=ax['Ecyc'])
+    lns = sns.lineplot(data=cs_E_lsq_m_pR_fall.loc[cs_E_lsq_m_pR_fall_si].mean(),
+                       color='red',linestyle='-',linewidth=1.0,legend=True,
+                       label='Unloading',ax=ax['Ecyc'])
     ax['Ecyc'].legend_.remove()
     ln = lns.get_legend_handles_labels()[0]
     la = lns.get_legend_handles_labels()[1]
     ax2=ax['Ecyc'].twinx()
     sns.lineplot(data=cs_epl_m.loc[cs_epl_m_si].T,palette=('limegreen',),
                  linestyle='dashed',linewidth=0.25,legend=False,ax=ax2)
-    lns = sns.lineplot(data=cs_epl_m.loc[cs_epl_m_si].mean(),color='green',
-                 linestyle='-',linewidth=1.0,legend=True,
-                 label='Plastic strain',ax=ax2)
+    lns = sns.lineplot(data=cs_epl_m.loc[cs_epl_m_si].mean(),
+                       color='green',linestyle='-',linewidth=1.0,legend=True,
+                       label='Plastic strain',ax=ax2)
     ln += lns.get_legend_handles_labels()[0]
     la += lns.get_legend_handles_labels()[1]
     ax2.legend_.remove()
@@ -1382,8 +1536,8 @@ elif ptype == 'ATT':
     Vsr={'F3':'L'}
     # Vs1=['S','L','YK','Y','U','B','E','SU','SE']
     Vs1=['S','C1+', 'C1-', 'C2+', 'C2-', 'C3+', 'C3-', 'C4+', 'C4-', 'C5+',
-       'C5-', 'C6+', 'C6-', 'C7+', 'C7-', 'C8+', 'C8-', 'C9+', 'C9-', 'C10+',
-       'C10-','L','YK','Y','U','B','E','SU','SE']
+         'C5-', 'C6+', 'C6-', 'C7+', 'C7-', 'C8+', 'C8-', 'C9+', 'C9-', 'C10+',
+         'C10-','L','YK','Y','U','B','E','SU','SE']
     Vs2=['S','L','YK','Y0','Y1','Y2','Y','U','B','E']
     Vs3=['L','Y','U','B']
 tmp=dft[subj]
@@ -1679,7 +1833,8 @@ fig, ax = plt.subplot_mosaic([['ED','EL'],
                               figsize=figsize_sup,
                               constrained_layout=True)
 boxplt_dl(pdf=cs, var=pltvartmp, ytxt='Elastic modulus in MPa',
-          xl='Origin_sshort', axl=ax['EL'], tl='By harvesting region', xtxtl='Region',
+          xl='Origin_sshort', axl=ax['EL'], 
+          tl='By harvesting region', xtxtl='Region',
           xd='Donor', axd=ax['ED'], td='By cadaver', xtxtd='Cadaver', 
           xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='fy', ytxt='Yield strength in MPa',
@@ -1709,7 +1864,8 @@ fig, ax = plt.subplot_mosaic([['fuD','fuL'],
                               figsize=figsize_sup,
                               constrained_layout=True)
 boxplt_dl(pdf=cs, var='fu', ytxt='Ultimate strength in MPa',
-          xl='Origin_sshort', axl=ax['fuL'], tl='By harvesting region', xtxtl='Region',
+          xl='Origin_sshort', axl=ax['fuL'], 
+          tl='By harvesting region', xtxtl='Region',
           xd='Donor', axd=ax['fuD'], td='By cadaver', xtxtd='Cadaver', 
           xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='eu'+pltvarco, ytxt='Strain at ultimate stress',
@@ -1734,7 +1890,8 @@ fig, ax = plt.subplot_mosaic([['fbD','fbL'],
                               figsize=figsize_sup,
                               constrained_layout=True)
 boxplt_dl(pdf=cs, var='fb', ytxt='Fracture strength in MPa',
-          xl='Origin_sshort', axl=ax['fbL'], tl='By harvesting region', xtxtl='Region',
+          xl='Origin_sshort', axl=ax['fbL'], 
+          tl='By harvesting region', xtxtl='Region',
           xd='Donor', axd=ax['fbD'], td='By cadaver', xtxtd='Cadaver', 
           xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values())
 boxplt_dl(pdf=cs, var='eb'+pltvarco, ytxt='Strain at fracture stress',
@@ -1846,7 +2003,8 @@ tmp=cs.query("Side_LR =='L' or Side_LR =='R'")
 # tmp=tmp.sort_values(['Side_LR','Donor','Origin_sshort'])
 # tmp=tmp.sort_values('Side_LR')
 boxplt_dl(pdf=tmp, var=pltvartmp, ytxt='Elastic modulus in MPa',
-          xl='Origin_sshort', axl=ax['EL'], tl='By harvesting region', xtxtl='Region',
+          xl='Origin_sshort', axl=ax['EL'], 
+          tl='By harvesting region', xtxtl='Region',
           xd='Donor', axd=ax['ED'], td='By cadaver', xtxtd='Cadaver', 
           xltirep={}, xdtirep=doda.Naming, orderl=Locdict.values(),
           hue='Side_LR', htirep={'L':'Left','R':'Right'}, hn=None)
@@ -1983,7 +2141,8 @@ sns.heatmap(doda_corr1.loc[doda_corr_d_num_cols,css_ncols],
             annot = doda_corr2.loc[doda_corr_d_num_cols,css_ncols], fmt='',
             center=0, annot_kws={"size":8, 'rotation':90},
             xticklabels=1, ax=ax['d'], cbar_ax=ax['b'])
-emec.plotting.tick_label_renamer(ax=ax['d'], renamer=VIPar_plt_renamer, axis='both')
+emec.plotting.tick_label_renamer(ax=ax['d'], 
+                                 renamer=VIPar_plt_renamer, axis='both')
 ax['d'].set_ylabel('Donor data')
 ax['d'].set_xlabel('Material parameters')
 ax['d'].tick_params(axis='y', labelrotation=90)
@@ -1995,7 +2154,8 @@ sns.heatmap(doda_corr1.loc[doda_corr_i.columns,css_ncols],
             annot = doda_corr2.loc[doda_corr_i.columns,css_ncols], fmt='',
             center=0, annot_kws={"size":8, 'rotation':90},
             xticklabels=1, ax=ax['di'], cbar_ax=ax['bi'])
-emec.plotting.tick_label_renamer(ax=ax['di'], renamer=VIPar_plt_renamer, axis='both')
+emec.plotting.tick_label_renamer(ax=ax['di'], 
+                                 renamer=VIPar_plt_renamer, axis='both')
 ax['di'].set_ylabel('Donor ICD-codes')
 ax['di'].tick_params(axis='y', labelrotation=90)
 ax['di'].tick_params(left=True, bottom=True)
@@ -2028,12 +2188,14 @@ emec.plotting.plt_ax_regfit(
     title=None, t_form={'var':'{a:.3e},{b:.3e},{c:.3e}','Rquad':'{:.3f}'})
 
 emec.plotting.plt_ax_regfit(
-    pdo=cs_doda, x="Density_app", y=pltvartmp, fit=reg_l_df.loc[pltvartmp+"-Density_app"],
+    pdo=cs_doda, x="Density_app", y=pltvartmp, 
+    fit=reg_l_df.loc[pltvartmp+"-Density_app"],
     ax=ax['ERho'], plt_d=True, label_f="restring_eq_rquad", label_d='Data',
     xlabel='Apparent density in g/cm³', ylabel='Elastic modulus in MPa',
     title=None, t_form={'var':'{a:.3e},{b:.3e}','Rquad':'{:.3f}'})
 emec.plotting.plt_ax_regfit(
-    pdo=cs_doda, x="Density_app", y=pltvartmp, fit=reg_p_df.loc[pltvartmp+"-Density_app"],
+    pdo=cs_doda, x="Density_app", y=pltvartmp, 
+    fit=reg_p_df.loc[pltvartmp+"-Density_app"],
     ax=ax['ERho'], plt_d=False, label_f="restring_eq_rquad", label_d=None,
     xlabel='Apparent density in g/cm³', ylabel='Elastic modulus in MPa',
     title=None, t_form={'var':'{a:.3e},{b:.3e},{c:.3e}','Rquad':'{:.3f}'})

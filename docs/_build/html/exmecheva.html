@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>exmecheva package &mdash; ExMechEva v0.1.1 documentation</title>
+  <title>exmecheva package &mdash; ExMechEva v0.1.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
 
@@ -241,6 +241,14 @@
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.YM_eva_com_sel"><code class="docutils literal notranslate"><span class="pre">YM_eva_com_sel()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.YM_sigeps_lin"><code class="docutils literal notranslate"><span class="pre">YM_sigeps_lin()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.fit_report_adder"><code class="docutils literal notranslate"><span class="pre">fit_report_adder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.func_exp"><code class="docutils literal notranslate"><span class="pre">func_exp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.func_exp_str"><code class="docutils literal notranslate"><span class="pre">func_exp_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.func_lin"><code class="docutils literal notranslate"><span class="pre">func_lin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.func_lin_str"><code class="docutils literal notranslate"><span class="pre">func_lin_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.func_pow"><code class="docutils literal notranslate"><span class="pre">func_pow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.func_pow_str"><code class="docutils literal notranslate"><span class="pre">func_pow_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.regfitret"><code class="docutils literal notranslate"><span class="pre">regfitret()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.regfitret_restring_func"><code class="docutils literal notranslate"><span class="pre">regfitret_restring_func()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.strain_linfit"><code class="docutils literal notranslate"><span class="pre">strain_linfit()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.stress_linfit"><code class="docutils literal notranslate"><span class="pre">stress_linfit()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.fitting.stress_linfit_plt"><code class="docutils literal notranslate"><span class="pre">stress_linfit_plt()</span></code></a></li>
@@ -349,6 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="exmecheva.common.html#module-exmecheva.common.plotting">exmecheva.common.plotting module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.curve_char_plotter"><code class="docutils literal notranslate"><span class="pre">curve_char_plotter()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.plt_add_DaAnno"><code class="docutils literal notranslate"><span class="pre">plt_add_DaAnno()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.plt_ax_regfit"><code class="docutils literal notranslate"><span class="pre">plt_ax_regfit()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.plt_handle_suffix"><code class="docutils literal notranslate"><span class="pre">plt_handle_suffix()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.sns_pointplot_MMeb"><code class="docutils literal notranslate"><span class="pre">sns_pointplot_MMeb()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.plotting.tick_label_inserter"><code class="docutils literal notranslate"><span class="pre">tick_label_inserter()</span></code></a></li>
@@ -381,6 +390,7 @@
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.meanwoso"><code class="docutils literal notranslate"><span class="pre">meanwoso()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.pd_agg"><code class="docutils literal notranslate"><span class="pre">pd_agg()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.pd_agg_custom"><code class="docutils literal notranslate"><span class="pre">pd_agg_custom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.reg_stats_multi"><code class="docutils literal notranslate"><span class="pre">reg_stats_multi()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.relative_deviation"><code class="docutils literal notranslate"><span class="pre">relative_deviation()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.stat_box_vals"><code class="docutils literal notranslate"><span class="pre">stat_box_vals()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="exmecheva.common.html#exmecheva.common.stat_ext.stat_outliers"><code class="docutils literal notranslate"><span class="pre">stat_outliers()</span></code></a></li>

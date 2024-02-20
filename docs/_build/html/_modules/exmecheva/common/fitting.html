@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>exmecheva.common.fitting &mdash; ExMechEva 0.1.0 documentation</title>
+  <title>exmecheva.common.fitting &mdash; ExMechEva v0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
 
@@ -85,12 +85,241 @@
 <span class="kn">import</span> <span class="nn">lmfit</span>
 
 <span class="kn">from</span> <span class="nn">.pd_ext</span> <span class="kn">import</span> <span class="p">(</span><span class="n">pd_combine_index</span><span class="p">)</span>
+<span class="c1">#%% General functions with string equations</span>
+<div class="viewcode-block" id="func_lin"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.func_lin">[docs]</a><span class="k">def</span> <span class="nf">func_lin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return values from a general linear function.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">x</span></div>
+
+<div class="viewcode-block" id="func_lin_str"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.func_lin_str">[docs]</a><span class="k">def</span> <span class="nf">func_lin_str</span><span class="p">(</span><span class="n">xl</span><span class="p">,</span> <span class="n">yl</span><span class="p">,</span> 
+                 <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span>
+                 <span class="n">t_form</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{a:.3e}</span><span class="s1">,</span><span class="si">{b:.3e}</span><span class="s1">&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return string from a general linear function.&quot;&quot;&quot;</span>
+    <span class="n">txtc</span> <span class="o">=</span> <span class="n">t_form</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span><span class="n">a</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">:</span><span class="n">b</span><span class="p">},)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{y}</span><span class="s1">\,=\,</span><span class="si">{0}</span><span class="s1"> \cdot </span><span class="si">{x}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+			<span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">yl</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="n">xl</span><span class="p">},</span>
+			<span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">b</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{y}</span><span class="s1">\,=\,</span><span class="si">{0}</span><span class="s1">\,+\,</span><span class="si">{1}</span><span class="s1"> \cdot </span><span class="si">{x}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">txtc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">yl</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="n">xl</span><span class="p">},</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{y}</span><span class="s1">\,=\,</span><span class="si">{0}</span><span class="s1">\,-\,</span><span class="si">{1}</span><span class="s1"> \cdot </span><span class="si">{x}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">txtc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">yl</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="n">xl</span><span class="p">},</span>
+                <span class="p">)</span>
+    <span class="k">return</span> <span class="n">txt</span></div>
+	
+<div class="viewcode-block" id="func_exp"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.func_exp">[docs]</a><span class="k">def</span> <span class="nf">func_exp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return values from a general exponential function.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="func_exp_str"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.func_exp_str">[docs]</a><span class="k">def</span> <span class="nf">func_exp_str</span><span class="p">(</span><span class="n">xl</span><span class="p">,</span> <span class="n">yl</span><span class="p">,</span> 
+                 <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> 
+                 <span class="n">t_form</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{a:.3e}</span><span class="s1">,</span><span class="si">{b:.3e}</span><span class="s1">,</span><span class="si">{c:.3e}</span><span class="s1">&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return string from a general exponential function.&quot;&quot;&quot;</span>
+    <span class="n">txtc</span> <span class="o">=</span> <span class="n">t_form</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span><span class="n">a</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">:</span><span class="n">b</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">:</span><span class="n">c</span><span class="p">},)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="n">txtd</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">\,</span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">txtc</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">xl</span><span class="p">,)</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{y}</span><span class="s1">\,=\,</span><span class="si">{0}</span><span class="s1"> \cdot e^</span><span class="si">{1}{2}{3}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+			<span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;{&#39;</span><span class="p">,</span><span class="n">txtd</span><span class="p">,</span><span class="s1">&#39;}&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">yl</span><span class="p">},</span>
+			<span class="p">)</span>
+    <span class="k">elif</span> <span class="n">a</span><span class="o">==</span><span class="p">(</span><span class="o">-</span><span class="n">b</span><span class="p">):</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{y}</span><span class="s1">\,=\,</span><span class="si">{0}</span><span class="s1"> \cdot (e^</span><span class="si">{1}{2}{3}</span><span class="s1">-1)$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+			<span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;{&#39;</span><span class="p">,</span><span class="n">txtd</span><span class="p">,</span><span class="s1">&#39;}&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">yl</span><span class="p">},</span>
+			<span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{y}</span><span class="s1">\,=\,</span><span class="si">{0}</span><span class="s1">\,+\,</span><span class="si">{1}</span><span class="s1"> \cdot e^</span><span class="si">{2}{3}{4}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+			<span class="n">txtc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;{&#39;</span><span class="p">,</span><span class="n">txtd</span><span class="p">,</span><span class="s1">&#39;}&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">yl</span><span class="p">},</span>
+			<span class="p">)</span>
+    <span class="k">return</span> <span class="n">txt</span></div>
+
+<div class="viewcode-block" id="func_pow"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.func_pow">[docs]</a><span class="k">def</span> <span class="nf">func_pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return values from a general power function.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">c</span><span class="p">)</span></div>
+	
+<div class="viewcode-block" id="func_pow_str"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.func_pow_str">[docs]</a><span class="k">def</span> <span class="nf">func_pow_str</span><span class="p">(</span><span class="n">xl</span><span class="p">,</span> <span class="n">yl</span><span class="p">,</span> 
+                 <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> 
+                 <span class="n">t_form</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{a:.3e}</span><span class="s1">,</span><span class="si">{b:.3e}</span><span class="s1">,</span><span class="si">{c:.3e}</span><span class="s1">&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return string from a general power function.&quot;&quot;&quot;</span>
+    <span class="n">txtc</span> <span class="o">=</span> <span class="n">t_form</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span><span class="n">a</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">:</span><span class="n">b</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">:</span><span class="n">c</span><span class="p">},)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{y}</span><span class="s1">\,=\,</span><span class="si">{0}</span><span class="s1"> \cdot </span><span class="si">{x}</span><span class="s1">^</span><span class="si">{1}{2}{3}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;{&#39;</span><span class="p">,</span><span class="n">txtc</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="s1">&#39;}&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="n">xl</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">yl</span><span class="p">},</span>
+                <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">b</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{y}</span><span class="s1">\,=\,</span><span class="si">{0}</span><span class="s1">\,+\,</span><span class="si">{1}</span><span class="s1"> \cdot </span><span class="si">{x}</span><span class="s1">^</span><span class="si">{2}{3}{4}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">txtc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;{&#39;</span><span class="p">,</span><span class="n">txtc</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="s1">&#39;}&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="n">xl</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">yl</span><span class="p">},</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$</span><span class="si">{y}</span><span class="s1">\,=\,</span><span class="si">{0}</span><span class="s1">\,-\,</span><span class="si">{1}</span><span class="s1"> \cdot </span><span class="si">{x}</span><span class="s1">^</span><span class="si">{2}{3}{4}</span><span class="s1">$&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">txtc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">txtc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;{&#39;</span><span class="p">,</span><span class="n">txtc</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="s1">&#39;}&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="n">xl</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">yl</span><span class="p">},</span>
+                <span class="p">)</span>
+    <span class="k">return</span> <span class="n">txt</span></div>
+
+<span class="c1">#%% Fitting</span>
+<div class="viewcode-block" id="regfitret"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.regfitret">[docs]</a><span class="k">def</span> <span class="nf">regfitret</span><span class="p">(</span><span class="n">pdo</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">guess</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
+              <span class="n">xl</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$X$&#39;</span><span class="p">,</span> <span class="n">yl</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$Y$&#39;</span><span class="p">,</span> <span class="n">t_form</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{a:.3e}</span><span class="s1">,</span><span class="si">{b:.3e}</span><span class="s1">&#39;</span><span class="p">,</span>
+              <span class="n">xt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+			  <span class="n">max_nfev</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">,</span> <span class="n">outtype</span><span class="o">=</span><span class="s1">&#39;Series&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs a least square regression fit according given function type.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pdo : pd.DataFrame</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    x : str</span>
+<span class="sd">        Column name for abscissa data.</span>
+<span class="sd">    y : str</span>
+<span class="sd">        Column name for ordinate data.</span>
+<span class="sd">    name : str, optional</span>
+<span class="sd">        Type and name of function to adjust. </span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - &#39;linear&#39;: linear and constant function (see func_lin)</span>
+<span class="sd">            - &#39;power&#39;: power and constant function (see func_pow)</span>
+<span class="sd">            - &#39;exponential&#39;: exponantial and constant function (see func_exp)</span>
+<span class="sd">            - additional endings:</span>
+<span class="sd">                - &#39;_nc&#39;: no constant value</span>
+<span class="sd">                - &#39;_x0&#39;: fixed to zero</span>
+<span class="sd">        The default is &#39;linear&#39;.</span>
+<span class="sd">    guess : dictionary, optional</span>
+<span class="sd">        First guess for fitting. The default is dict(a=0.01, b=0.1).</span>
+<span class="sd">    xl : str, optional</span>
+<span class="sd">        Variable name for abscissa. The default is r&#39;$X$&#39;.</span>
+<span class="sd">    yl : str, optional</span>
+<span class="sd">        Variable name for ordinate. The default is r&#39;$Y$&#39;.</span>
+<span class="sd">    t_form : str, optional</span>
+<span class="sd">        String of dictionary with variables and format strings. </span>
+<span class="sd">        The default is &#39;{a:.3e},{b:.3e}&#39;.</span>
+<span class="sd">    xt : str, optional</span>
+<span class="sd">        Variable string for description. The default is None.</span>
+<span class="sd">    yt : str, optional</span>
+<span class="sd">        Variable string for description. The default is None.</span>
+<span class="sd">    max_nfev : int, optional</span>
+<span class="sd">        Maximum number of evaluations. The default is 1000.</span>
+<span class="sd">    nan_policy : string, optional</span>
+<span class="sd">        NaN policy (omit, raise or propagate). The default is &#39;omit&#39;.</span>
+<span class="sd">    outtype : string, optional</span>
+<span class="sd">        Type for output (dictionary or pd.Series). The default is &#39;Series&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Function type not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : pd:series or dict</span>
+<span class="sd">        Output data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">des_t_name</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">out</span><span class="o">=</span><span class="n">i</span>
+        <span class="k">return</span> <span class="n">out</span>
+    <span class="n">xd</span> <span class="o">=</span> <span class="n">des_t_name</span><span class="p">([</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">xl</span><span class="p">,</span><span class="n">xt</span><span class="p">])</span>
+    <span class="n">yd</span> <span class="o">=</span> <span class="n">des_t_name</span><span class="p">([</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">yl</span><span class="p">,</span><span class="n">yt</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span><span class="s1">&#39;linear_nc&#39;</span><span class="p">,</span><span class="s1">&#39;linear_x0&#39;</span><span class="p">]:</span>
+        <span class="n">dtxt</span><span class="o">=</span><span class="s1">&#39;Linear relation between </span><span class="si">{}</span><span class="s1"> and </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">yd</span><span class="p">,</span><span class="n">xd</span><span class="p">)</span>
+        <span class="n">func</span><span class="o">=</span><span class="n">func_lin</span>
+        <span class="n">func_str</span><span class="o">=</span><span class="n">func_lin_str</span>
+    <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;power&#39;</span><span class="p">,</span><span class="s1">&#39;power_nc&#39;</span><span class="p">,</span><span class="s1">&#39;power_x0&#39;</span><span class="p">]:</span>
+        <span class="n">dtxt</span><span class="o">=</span><span class="s1">&#39;Power relation between </span><span class="si">{}</span><span class="s1"> and </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">yd</span><span class="p">,</span><span class="n">xd</span><span class="p">)</span>
+        <span class="n">func</span><span class="o">=</span><span class="n">func_pow</span>
+        <span class="n">func_str</span><span class="o">=</span><span class="n">func_pow_str</span>
+    <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;exponential&#39;</span><span class="p">,</span><span class="s1">&#39;exponential_nc&#39;</span><span class="p">,</span><span class="s1">&#39;exponential_x0&#39;</span><span class="p">]:</span>
+        <span class="n">dtxt</span><span class="o">=</span><span class="s1">&#39;Exponential relation between </span><span class="si">{}</span><span class="s1"> and </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">yd</span><span class="p">,</span><span class="n">xd</span><span class="p">)</span>
+        <span class="n">func</span><span class="o">=</span><span class="n">func_exp</span>
+        <span class="n">func_str</span><span class="o">=</span><span class="n">func_exp_str</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Type </span><span class="si">%s</span><span class="s1"> not implemented!&#39;</span><span class="o">%</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_nc&#39;</span><span class="p">):</span>
+        <span class="n">dtxt</span><span class="o">+=</span> <span class="s1">&#39; (no constant value)&#39;</span>
+    <span class="k">elif</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_x0&#39;</span><span class="p">):</span>
+        <span class="n">dtxt</span><span class="o">+=</span> <span class="s1">&#39; (fixed to zero)&#39;</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">lmfit</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="n">params</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">make_params</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;linear_nc&#39;</span><span class="p">,</span><span class="s1">&#39;power_nc&#39;</span><span class="p">,</span><span class="s1">&#39;exponential_nc&#39;</span><span class="p">]:</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;linear_x0&#39;</span><span class="p">,</span><span class="s1">&#39;power_x0&#39;</span><span class="p">]:</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">guess</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">],</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;exponential_x0&#39;</span><span class="p">]:</span>
+        <span class="n">y0</span><span class="o">=</span><span class="n">guess</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{:.8e}</span><span class="s2">-b&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y0</span><span class="p">),</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">pdo</span><span class="p">[</span><span class="n">y</span><span class="p">],</span> <span class="n">x</span><span class="o">=</span><span class="n">pdo</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="n">nan_policy</span><span class="p">,</span> <span class="o">**</span><span class="n">guess</span><span class="p">)</span>
+    <span class="n">Rquad</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">fit</span><span class="o">.</span><span class="n">residual</span><span class="o">.</span><span class="n">var</span><span class="p">()</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">nanvar</span><span class="p">(</span><span class="n">pdo</span><span class="p">[</span><span class="n">y</span><span class="p">])</span>     
+    <span class="n">fit</span><span class="o">.</span><span class="n">rsqur</span><span class="o">=</span><span class="n">Rquad</span>
+    <span class="c1"># rtxt=lmfit.fit_report(fit.result)</span>
+    <span class="c1"># rtxt=rtxt.replace(&quot;\n[[Variables]]&quot;,</span>
+    <span class="c1">#                   &quot;\n    R-square           = %1.8f\n[[Variables]]&quot;%Rquad)</span>
+    <span class="n">rtxt</span><span class="o">=</span><span class="n">fit_report_adder</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span><span class="n">Rquad</span><span class="p">,</span> <span class="n">show_correl</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">etxt</span><span class="o">=</span><span class="n">func_str</span><span class="p">(</span><span class="n">xl</span><span class="o">=</span><span class="n">xl</span><span class="p">,</span> <span class="n">yl</span><span class="o">=</span><span class="n">yl</span><span class="p">,</span> <span class="n">t_form</span><span class="o">=</span><span class="n">t_form</span><span class="p">,</span> <span class="o">**</span><span class="n">fit</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">valuesdict</span><span class="p">())</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;Model&#39;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span> <span class="s1">&#39;Result&#39;</span><span class="p">:</span> <span class="n">fit</span><span class="p">,</span> 
+           <span class="s1">&#39;PD&#39;</span><span class="p">:</span> <span class="n">fit</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">valuesdict</span><span class="p">(),</span>
+		   <span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="n">dtxt</span><span class="p">,</span>
+           <span class="s1">&#39;Exp_txt&#39;</span><span class="p">:</span> <span class="n">etxt</span><span class="p">,</span> <span class="s1">&#39;Rep_txt&#39;</span><span class="p">:</span> <span class="n">rtxt</span><span class="p">,</span> <span class="s1">&#39;Rquad&#39;</span><span class="p">:</span> <span class="n">Rquad</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">outtype</span><span class="o">==</span><span class="s1">&#39;Series&#39;</span><span class="p">:</span> <span class="n">out</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="regfitret_restring_func"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.regfitret_restring_func">[docs]</a><span class="k">def</span> <span class="nf">regfitret_restring_func</span><span class="p">(</span><span class="n">reg_res</span><span class="p">,</span> <span class="n">xl</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$X$&#39;</span><span class="p">,</span> <span class="n">yl</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$Y$&#39;</span><span class="p">,</span>
+                            <span class="n">t_form</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{a:.3e}</span><span class="s1">,</span><span class="si">{b:.3e}</span><span class="s1">&#39;</span><span class="p">,</span>
+                            <span class="n">rquad_add</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rq_form</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{:.3f}</span><span class="s1">&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rebuild equation string for regfit result.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reg_res : pd.Series</span>
+<span class="sd">        Result of regfitret.</span>
+<span class="sd">    xl : str, optional</span>
+<span class="sd">        Variable name for abscissa. The default is r&#39;$X$&#39;.</span>
+<span class="sd">    yl : str, optional</span>
+<span class="sd">        Variable name for ordinate. The default is r&#39;$Y$&#39;.</span>
+<span class="sd">    t_form : str, optional</span>
+<span class="sd">        String of dictionary with variables and format strings. </span>
+<span class="sd">        The default is &#39;{a:.3e},{b:.3e}&#39;.</span>
+<span class="sd">    rquad_add : bool, optional</span>
+<span class="sd">        Switch for adding coefficent of determination. The default is True.</span>
+<span class="sd">    rq_form : string, optional</span>
+<span class="sd">        Format string for coefficent of determination. The default is &#39;{:.3f}&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        Function type not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : string</span>
+<span class="sd">        Equation string.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">reg_res</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span><span class="s1">&#39;linear_nc&#39;</span><span class="p">,</span><span class="s1">&#39;linear_x0&#39;</span><span class="p">]:</span>
+        <span class="n">func_str</span><span class="o">=</span><span class="n">func_lin_str</span>
+    <span class="k">elif</span> <span class="n">reg_res</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;power&#39;</span><span class="p">,</span><span class="s1">&#39;power_nc&#39;</span><span class="p">,</span><span class="s1">&#39;power_x0&#39;</span><span class="p">]:</span>
+        <span class="n">func_str</span><span class="o">=</span><span class="n">func_pow_str</span>
+    <span class="k">elif</span> <span class="n">reg_res</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;exponential&#39;</span><span class="p">,</span><span class="s1">&#39;exponential_nc&#39;</span><span class="p">,</span><span class="s1">&#39;exponential_x0&#39;</span><span class="p">]:</span>
+        <span class="n">func_str</span><span class="o">=</span><span class="n">func_exp_str</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Type </span><span class="si">%s</span><span class="s1"> not implemented!&#39;</span><span class="o">%</span><span class="n">reg_res</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">xl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">xl</span><span class="o">=</span><span class="n">reg_res</span><span class="p">[</span><span class="s1">&#39;varxsym&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">yl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">yl</span><span class="o">=</span><span class="n">reg_res</span><span class="p">[</span><span class="s1">&#39;varysym&#39;</span><span class="p">]</span>
+    <span class="n">out</span><span class="o">=</span><span class="n">func_str</span><span class="p">(</span><span class="n">xl</span><span class="o">=</span><span class="n">xl</span><span class="p">,</span> <span class="n">yl</span><span class="o">=</span><span class="n">yl</span><span class="p">,</span> <span class="n">t_form</span><span class="o">=</span><span class="n">t_form</span><span class="p">,</span> <span class="o">**</span><span class="n">reg_res</span><span class="p">[</span><span class="s1">&#39;PD&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">rquad_add</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">+=</span><span class="s1">&#39; ($R²$ = &#39;</span>
+        <span class="n">out</span><span class="o">+=</span><span class="p">(</span><span class="n">rq_form</span><span class="o">+</span><span class="s1">&#39;)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reg_res</span><span class="p">[</span><span class="s1">&#39;Rquad&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">out</span></div>
 
 <div class="viewcode-block" id="YM_sigeps_lin"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.YM_sigeps_lin">[docs]</a><span class="k">def</span> <span class="nf">YM_sigeps_lin</span><span class="p">(</span><span class="n">stress_ser</span><span class="p">,</span> <span class="n">strain_ser</span><span class="p">,</span> 
                   <span class="n">method</span><span class="o">=</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">,</span>
                   <span class="n">ind_S</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ind_E</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates Youngs Modulus of a stress-strain-curve with linear approach using non linear least squares curve fitting.</span>
+<span class="sd">    Calculates Youngs Modulus of a stress-strain-curve with linear approach </span>
+<span class="sd">    using non linear least squares curve fitting.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -139,11 +368,37 @@
         <span class="n">E</span><span class="p">,</span> <span class="n">Eabs</span><span class="p">,</span> <span class="n">Rquad</span><span class="p">,</span> <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span><span class="s1">&#39;SVD-Error&#39;</span>
     <span class="k">return</span> <span class="n">E</span><span class="p">,</span> <span class="n">Eabs</span><span class="p">,</span> <span class="n">Rquad</span><span class="p">,</span> <span class="n">fit</span></div>
 
-<div class="viewcode-block" id="fit_report_adder"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.fit_report_adder">[docs]</a><span class="k">def</span> <span class="nf">fit_report_adder</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span><span class="n">Var</span><span class="p">,</span><span class="n">Varname</span><span class="o">=</span><span class="s1">&#39;R-square&#39;</span><span class="p">,</span> <span class="n">show_correl</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="fit_report_adder"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.fit_report_adder">[docs]</a><span class="k">def</span> <span class="nf">fit_report_adder</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="n">Var</span><span class="p">,</span> <span class="n">Varname</span><span class="o">=</span><span class="s1">&#39;R-square&#39;</span><span class="p">,</span> <span class="n">show_correl</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adds a statistical entry to the fit report of lmfit (p.e. coefficient of </span>
+<span class="sd">    determination). </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fit : string or lmfit.model.ModelResult</span>
+<span class="sd">        Fit report.</span>
+<span class="sd">    Var : float</span>
+<span class="sd">        Value of addional statistics entry.</span>
+<span class="sd">    Varname : string, optional</span>
+<span class="sd">        Name of addional statistics entry. The default is &#39;R-square&#39;.</span>
+<span class="sd">    show_correl : bool, optional</span>
+<span class="sd">        Show or hide correlation. The default is False.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        Fit has wrong type.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    txt : string</span>
+<span class="sd">        Fit report with additional statistics value.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">fit</span> <span class="o">=</span> <span class="n">fit</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="n">lmfit</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ModelResult</span><span class="p">):</span>
-        <span class="n">fit</span><span class="o">=</span><span class="n">fit</span><span class="o">.</span><span class="n">fit_report</span><span class="p">(</span><span class="n">show_correl</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">fit</span><span class="o">=</span><span class="n">fit</span><span class="o">.</span><span class="n">fit_report</span><span class="p">(</span><span class="n">show_correl</span><span class="o">=</span><span class="n">show_correl</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Datatype </span><span class="si">%s</span><span class="s1"> is not implemented!&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">fit</span><span class="p">)))</span>
     <span class="n">orgstr</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[[Variables]]&quot;</span>
@@ -250,6 +505,31 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 <div class="viewcode-block" id="Rquad"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.Rquad">[docs]</a><span class="k">def</span> <span class="nf">Rquad</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_predicted</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns coefficient of determination.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_true : array of float</span>
+<span class="sd">        True values.</span>
+<span class="sd">    y_predicted : array of float</span>
+<span class="sd">        Predicted values.</span>
+<span class="sd">    nan_policy : bool, optional</span>
+<span class="sd">        NaN policy (omit, raise or propagate). The default is &#39;omit&#39;.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        NaN values during Rquad detected (nan_policy is raise).</span>
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        NaN policy type not implemented.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r2_score : TYPE</span>
+<span class="sd">        Coefficient of determination.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">nan_policy</span> <span class="o">==</span> <span class="s1">&#39;omit&#39;</span><span class="p">:</span>
         <span class="n">sse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_predicted</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">y_t_l_woNan</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y_true</span><span class="p">))</span>
@@ -276,8 +556,10 @@
 <div class="viewcode-block" id="stress_linfit_plt"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.fitting.stress_linfit_plt">[docs]</a><span class="k">def</span> <span class="nf">stress_linfit_plt</span><span class="p">(</span><span class="n">strain_ser</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Linearised stress fit for plotting corresponding Youngs Modulus and strain&quot;&quot;&quot;</span>
     <span class="n">strain_vals</span> <span class="o">=</span> <span class="n">strain_ser</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">strain_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">strain_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">ext</span><span class="o">*</span><span class="p">(</span><span class="n">strain_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">strain_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
-                          <span class="nb">min</span><span class="p">(</span><span class="n">strain_ser</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="n">strain_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">ext</span><span class="o">*</span><span class="p">(</span><span class="n">strain_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">strain_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]))])</span>
+    <span class="n">strain_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">strain_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">ext</span><span class="o">*</span><span class="p">(</span><span class="n">strain_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">strain_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
+        <span class="nb">min</span><span class="p">(</span><span class="n">strain_ser</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="n">strain_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">ext</span><span class="o">*</span><span class="p">(</span><span class="n">strain_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">strain_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="p">])</span>
     <span class="n">stress_vals</span> <span class="o">=</span> <span class="n">stress_linfit</span><span class="p">(</span><span class="n">strain_vals</span><span class="p">,</span> <span class="n">YM</span><span class="p">,</span> <span class="n">YM_abs</span><span class="p">,</span> <span class="n">strain_offset</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">strain_vals</span><span class="p">,</span> <span class="n">stress_vals</span></div>
 

@@ -492,6 +492,7 @@ def CImax(data, confidence=0.95, method="Seaborn_Bootstrap",
 def relative_deviation(a, b, axis=0):
     """
     Calculates the relative deviation from second argument to first.
+    
     .. math::
         RD_{b-a} = (b-a)/a
 
@@ -1665,14 +1666,14 @@ def reg_stats_multi(df, lRd, var_ren={}, var_sym={}, ftype='linear',
         Input data.
     lRd : list
         List of compared variables (must be column names in df).
-        Example: [['Density_app','Age']]
+        Example [['Density_app','Age']]
     var_ren : dict, optional
         Renamer for given variables (description). 
-        Example: {'Density_app':'apparent density','Age':'donor age'}
+        Example dict('Density_app'='apparent density','Age'='donor age')
         The default is {}.
     var_sym : dict, optional
         Renamer for given variables (symbols).
-        Example: {'Density_app':'\rho_{app}','Age':'age'}
+        Example dict('Density_app'='rho_{app}','Age'='age')
         The default is {}.
     ftype : str, optional
         Type and name of function to adjust. 

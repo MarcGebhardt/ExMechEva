@@ -92,7 +92,7 @@ def main():
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
         
     # Additional path for hdf-packing
-    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240118/ACT/B3-B7_ACT-Summary"  
+    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240219/ACT/B3-B7_ACT-Summary"  
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function

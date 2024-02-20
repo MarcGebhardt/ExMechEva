@@ -61,6 +61,7 @@ def main():
     var_suffix = [""]
          
     # Path selection
+    ## Series dependend paths or file names
     # protpaths.loc['PT1','path_main'] = "F:/Messung/003-190822-Becken1-DBV/"
     # protpaths.loc['PT1','name_prot'] = "190822_Becken1_DBV_Protokoll.xlsx"
     # protpaths.loc['PT2','path_main'] = "F:/Messung/004-200515-Becken2-DBV/"
@@ -91,7 +92,7 @@ def main():
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
         
     # Additional path for hdf-packing 
-    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240118/TBT/B3-B7_TBT-Summary"
+    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240219/TBT/B3-B7_TBT-Summary"
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function

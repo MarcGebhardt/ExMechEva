@@ -287,11 +287,12 @@ def TBT_single(prot_ser, paths, mfile_add='',
         mess['L_IWA']=pd.Series(
             mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']].mean(axis=1)
             )
-        _opts['OPT_Measurement_file']['used_names_dict']['Way'] ='L_IWA'
+        # automatic number of LVDTs by list elements in used way
         n_IWAs=len(_opts['OPT_Measurement_file']['used_names_dict']['Way'])
+        _opts['OPT_Measurement_file']['used_names_dict']['Way'] ='L_IWA'
     #Applying spring correction factor (if true)
     if _opts['OPT_Springreduction']: 
-        mess['F_IWA_red']=(mess['L_IWA'])*_opts['OPT_Springreduction_K']*n_IWAs
+        mess['F_IWA_red']=mess['L_IWA']*_opts['OPT_Springreduction_K']*n_IWAs
         
     # # =============================================================================
     # #%%% 3.2 Specify used conventional measured force and way
@@ -663,7 +664,7 @@ def TBT_single(prot_ser, paths, mfile_add='',
     ax1.plot(mess.Time, -mess.F_WZ, 'r-', label='Force-WZ')
     ax1.plot(mess.Time, -mess.F_PM, 'm-', label='Force-PM')
     if _opts['OPT_Springreduction']: 
-        ax1.plot(mess.Time, -mess.F_IWA_red, 'b:', label='Force-IWA')
+        ax1.plot(mess.Time, mess.F_IWA_red, 'b:', label='Force-red. (LVDT)')
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     ax2.grid(False)
     color2 = 'tab:blue'
@@ -2985,69 +2986,6 @@ def TBT_single(prot_ser, paths, mfile_add='',
         ax1.plot(a, b, 'b-',label='$E_{opt}$')
     ax1.legend()
     plt_hsuf(fig,path=out_full+"-sigeps_fin",**plt_scopt)
-    
-    mun_tmp = messu.loc[:VIP_messu['U']]
-    fig, ax1 = plt.subplots()
-    ax1.set_title('%s - Stress vs. strain curve comparison to selected YM-Methods'%plt_name)
-    ax1.set_xlabel('Strain / -')
-    ax1.set_ylabel('Stress / MPa')
-    ax1.set_xlim(0,mun_tmp['Strain'].max())
-    ax1.plot(mun_tmp['Strain'], mun_tmp['Stress'], 'r--',label='con')
-    a, b=messu.Strain[VIP_messu[:'U']],messu.Stress[VIP_messu[:'U']]
-    j=np.int64(-1)
-    ax1.plot(a, b, 'bx')
-    for x in VIP_messu[:'U'].index:
-        j+=1
-        if j%2: c=(6,-6)
-        else:   c=(-6,6)
-        ax1.annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), xycoords='data',
-                      xytext=c, ha="center", va="center", textcoords='offset points')
-    ax1.plot(mun_tmp[dic_used_Strain], mun_tmp['Stress'],'m--',
-             label='opt %s'%_opts['OPT_YM_Determination_refinement'][3])
-    a,b=messu.loc[VIP_dicu[:'U'],dic_used_Strain],messu.Stress[VIP_dicu[:'U']]
-    ax1.plot(a, b, 'yx')    
-    t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['A0Al']
-    tra = emec.fitting.Rquad(mun_tmp.Strain, t)
-    trf = emec.fitting.Rquad(mun_tmp.Strain.loc[sf_eva_con], 
-                             t.loc[sf_eva_con])
-    trr = emec.fitting.Rquad(mun_tmp.Strain.loc[sr_eva_con], 
-                             t.loc[sr_eva_con])
-    ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'r:',
-             label='A0Al %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
-    t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['B2Ml']
-    tra = emec.fitting.Rquad(mun_tmp[dic_used_Strain], t)
-    trf = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic],
-                             t.loc[sf_eva_dic])
-    trr = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], 
-                             t.loc[sr_eva_dic])
-    ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'y:',
-             label='B2Ml %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
-    t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['E4Mg']
-    tra = emec.fitting.Rquad(mun_tmp[dic_used_Strain], t)
-    trf = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic], 
-                             t.loc[sf_eva_dic])
-    trr = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], 
-                             t.loc[sr_eva_dic])
-    ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'm:',
-             label='E4Mg %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
-    t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['G3Mg']
-    tra = emec.fitting.Rquad(mun_tmp[dic_used_Strain], t)
-    trf = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic],
-                             t.loc[sf_eva_dic])
-    trr = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], 
-                             t.loc[sr_eva_dic])
-    ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'b:',
-             label='G3Mg %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
-    t = mun_tmp.Stress / E_Methods_df.loc[mun_tmp.index[1:]]['D2Mgwt']
-    tra = emec.fitting.Rquad(mun_tmp[dic_used_Strain], t)
-    trf = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sf_eva_dic], 
-                             t.loc[sf_eva_dic])
-    trr = emec.fitting.Rquad(mun_tmp[dic_used_Strain].loc[sr_eva_dic], 
-                             t.loc[sr_eva_dic])
-    ax1.plot(t, mun_tmp.loc[t.index]['Stress'], 'g:',
-             label='D2Mgwt %1.4f|%1.4f|%1.4f'%(tra,trf,trr))
-    ax1.legend()
-    plt_hsuf(fig,path=out_full+"-sigeps_YMcomp",**plt_scopt)
 
     # =============================================================================
     #%%% 7.3 Generate outputs

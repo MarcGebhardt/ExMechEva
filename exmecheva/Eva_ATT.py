@@ -240,8 +240,9 @@ def ATT_single(prot_ser, paths, mfile_add='',
         mess['L_IWA']=pd.Series(
             mess[_opts['OPT_Measurement_file']['used_names_dict']['Way']].mean(axis=1)
             )
-        _opts['OPT_Measurement_file']['used_names_dict']['Way'] ='L_IWA'
+        # automatic number of LVDTs by list elements in used way
         n_IWAs=len(_opts['OPT_Measurement_file']['used_names_dict']['Way'])
+        _opts['OPT_Measurement_file']['used_names_dict']['Way'] ='L_IWA'
     # Additional option for easy switching of force measurement type 
     if ('OPT_Force_measure_type' in _opts.index):
         if not emec.helper.check_empty(_opts['OPT_Force_measure_type']):
@@ -252,7 +253,7 @@ def ATT_single(prot_ser, paths, mfile_add='',
     # is defined positive by sliding together, Springreduction_K have to be negative.
     # The resulting correction force is then positive.
     if _opts['OPT_Springreduction']:
-        mess['F_IWA_red']=(mess['L_IWA'])*_opts['OPT_Springreduction_K']*n_IWAs
+        mess['F_IWA_red']=mess['L_IWA']*_opts['OPT_Springreduction_K']*n_IWAs
         
     # # =============================================================================
     # #%%% 3.2 Specify used conventional measured force and way
@@ -453,7 +454,6 @@ def ATT_single(prot_ser, paths, mfile_add='',
             messu_iS:messu_iS+_opts['OPT_Determination_Distance'][0],
             'driF'
             ],
-        # abs(messu['driF']).quantile(0.5),
         abs(messu['driF']).quantile(0.5),
         "pgm_other", 0.1)
 
@@ -485,12 +485,11 @@ def ATT_single(prot_ser, paths, mfile_add='',
     ax1.axvline(x=messu.Time.loc[messu_iE], color='gray', linestyle='-')
     if np.invert(np.isnan(_opts['OPT_End'])):
         ax1.axvline(x=_opts['OPT_End'], color='gray', linestyle='-.')
-    ax1.plot(mess.Time, mess[_opts['OPT_Measurement_file']['used_names_dict']['Force']],
+    ax1.plot(mess.Time, 
+             mess[_opts['OPT_Measurement_file']['used_names_dict']['Force']],
              'r-', label='Force')
-    # ax1.plot(mess.Time, mess.F_WZ, 'r-', label='Force-WZ')
-    # ax1.plot(mess.Time, mess.F_PM, 'm-', label='Force-PM')
     if _opts['OPT_Springreduction']: 
-        ax1.plot(mess.Time, -mess.F_IWA_red, 'b:', label='Force-IWA')
+        ax1.plot(mess.Time, mess.F_IWA_red, 'b:', label='Force-red. (LVDT)')
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     color2 = 'tab:blue'
     ax2.grid(False)

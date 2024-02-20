@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>exmecheva.common package &mdash; ExMechEva v0.1.1 documentation</title>
+  <title>exmecheva.common package &mdash; ExMechEva v0.1.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
 
@@ -19,6 +19,7 @@
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -80,6 +81,14 @@
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.YM_eva_com_sel"><code class="docutils literal notranslate"><span class="pre">YM_eva_com_sel()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.YM_sigeps_lin"><code class="docutils literal notranslate"><span class="pre">YM_sigeps_lin()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.fit_report_adder"><code class="docutils literal notranslate"><span class="pre">fit_report_adder()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.func_exp"><code class="docutils literal notranslate"><span class="pre">func_exp()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.func_exp_str"><code class="docutils literal notranslate"><span class="pre">func_exp_str()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.func_lin"><code class="docutils literal notranslate"><span class="pre">func_lin()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.func_lin_str"><code class="docutils literal notranslate"><span class="pre">func_lin_str()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.func_pow"><code class="docutils literal notranslate"><span class="pre">func_pow()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.func_pow_str"><code class="docutils literal notranslate"><span class="pre">func_pow_str()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.regfitret"><code class="docutils literal notranslate"><span class="pre">regfitret()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.regfitret_restring_func"><code class="docutils literal notranslate"><span class="pre">regfitret_restring_func()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.strain_linfit"><code class="docutils literal notranslate"><span class="pre">strain_linfit()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.stress_linfit"><code class="docutils literal notranslate"><span class="pre">stress_linfit()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.fitting.stress_linfit_plt"><code class="docutils literal notranslate"><span class="pre">stress_linfit_plt()</span></code></a></li>
@@ -188,6 +197,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#module-exmecheva.common.plotting">exmecheva.common.plotting module</a><ul>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.plotting.curve_char_plotter"><code class="docutils literal notranslate"><span class="pre">curve_char_plotter()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.plotting.plt_add_DaAnno"><code class="docutils literal notranslate"><span class="pre">plt_add_DaAnno()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.plotting.plt_ax_regfit"><code class="docutils literal notranslate"><span class="pre">plt_ax_regfit()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.plotting.plt_handle_suffix"><code class="docutils literal notranslate"><span class="pre">plt_handle_suffix()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.plotting.sns_pointplot_MMeb"><code class="docutils literal notranslate"><span class="pre">sns_pointplot_MMeb()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.plotting.tick_label_inserter"><code class="docutils literal notranslate"><span class="pre">tick_label_inserter()</span></code></a></li>
@@ -220,6 +230,7 @@
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.stat_ext.meanwoso"><code class="docutils literal notranslate"><span class="pre">meanwoso()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.stat_ext.pd_agg"><code class="docutils literal notranslate"><span class="pre">pd_agg()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.stat_ext.pd_agg_custom"><code class="docutils literal notranslate"><span class="pre">pd_agg_custom()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.stat_ext.reg_stats_multi"><code class="docutils literal notranslate"><span class="pre">reg_stats_multi()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.stat_ext.relative_deviation"><code class="docutils literal notranslate"><span class="pre">relative_deviation()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.stat_ext.stat_box_vals"><code class="docutils literal notranslate"><span class="pre">stat_box_vals()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="#exmecheva.common.stat_ext.stat_outliers"><code class="docutils literal notranslate"><span class="pre">stat_outliers()</span></code></a></li>
@@ -678,7 +689,29 @@ The default is dict(header=3, skiprows=range(4,5), index_col=0).</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.common.fitting.Rquad">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">Rquad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_predicted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nan_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'omit'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#Rquad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.Rquad" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Returns coefficient of determination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> (<em>array</em><em> of </em><em>float</em>) – True values.</p></li>
+<li><p><strong>y_predicted</strong> (<em>array</em><em> of </em><em>float</em>) – Predicted values.</p></li>
+<li><p><strong>nan_policy</strong> (<em>bool</em><em>, </em><em>optional</em>) – NaN policy (omit, raise or propagate). The default is ‘omit’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – NaN values during Rquad detected (nan_policy is raise).</p></li>
+<li><p><strong>NotImplementedError</strong> – NaN policy type not implemented.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>r2_score</strong> – Coefficient of determination.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>TYPE</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.common.fitting.YM_eva_com_sel">
@@ -726,7 +759,8 @@ Ether incremental or leastsq. The default is ‘incremental’.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.common.fitting.YM_sigeps_lin">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">YM_sigeps_lin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stress_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strain_ser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'leastsq'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nan_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'omit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind_S</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind_E</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#YM_sigeps_lin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.YM_sigeps_lin" title="Permalink to this definition"></a></dt>
-<dd><p>Calculates Youngs Modulus of a stress-strain-curve with linear approach using non linear least squares curve fitting.</p>
+<dd><p>Calculates Youngs Modulus of a stress-strain-curve with linear approach
+using non linear least squares curve fitting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -751,7 +785,145 @@ Ether incremental or leastsq. The default is ‘incremental’.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.common.fitting.fit_report_adder">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">fit_report_adder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Varname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'R-square'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_correl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#fit_report_adder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.fit_report_adder" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Adds a statistical entry to the fit report of lmfit (p.e. coefficient of
+determination).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fit</strong> (<em>string</em><em> or </em><em>lmfit.model.ModelResult</em>) – Fit report.</p></li>
+<li><p><strong>Var</strong> (<em>float</em>) – Value of addional statistics entry.</p></li>
+<li><p><strong>Varname</strong> (<em>string</em><em>, </em><em>optional</em>) – Name of addional statistics entry. The default is ‘R-square’.</p></li>
+<li><p><strong>show_correl</strong> (<em>bool</em><em>, </em><em>optional</em>) – Show or hide correlation. The default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>TypeError</strong> – Fit has wrong type.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>txt</strong> – Fit report with additional statistics value.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.fitting.func_exp">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">func_exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#func_exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.func_exp" title="Permalink to this definition"></a></dt>
+<dd><p>Return values from a general exponential function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.fitting.func_exp_str">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">func_exp_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'{a:.3e},{b:.3e},{c:.3e}'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#func_exp_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.func_exp_str" title="Permalink to this definition"></a></dt>
+<dd><p>Return string from a general exponential function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.fitting.func_lin">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">func_lin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#func_lin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.func_lin" title="Permalink to this definition"></a></dt>
+<dd><p>Return values from a general linear function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.fitting.func_lin_str">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">func_lin_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'{a:.3e},{b:.3e}'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#func_lin_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.func_lin_str" title="Permalink to this definition"></a></dt>
+<dd><p>Return string from a general linear function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.fitting.func_pow">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">func_pow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#func_pow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.func_pow" title="Permalink to this definition"></a></dt>
+<dd><p>Return values from a general power function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.fitting.func_pow_str">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">func_pow_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'{a:.3e},{b:.3e},{c:.3e}'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#func_pow_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.func_pow_str" title="Permalink to this definition"></a></dt>
+<dd><p>Return string from a general power function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.fitting.regfitret">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">regfitret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'a':</span> <span class="pre">0.01,</span> <span class="pre">'b':</span> <span class="pre">0.1}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'$X$'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'$Y$'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'{a:.3e},{b:.3e}'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_nfev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nan_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'omit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Series'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#regfitret"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.regfitret" title="Permalink to this definition"></a></dt>
+<dd><p>Performs a least square regression fit according given function type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pdo</strong> (<em>pd.DataFrame</em>) – Input data.</p></li>
+<li><p><strong>x</strong> (<em>str</em>) – Column name for abscissa data.</p></li>
+<li><p><strong>y</strong> (<em>str</em>) – Column name for ordinate data.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Type and name of function to adjust.
+Implemented are:</p>
+<blockquote>
+<div><ul>
+<li><p>’linear’: linear and constant function (see func_lin)</p></li>
+<li><p>’power’: power and constant function (see func_pow)</p></li>
+<li><p>’exponential’: exponantial and constant function (see func_exp)</p></li>
+<li><dl class="simple">
+<dt>additional endings:</dt><dd><ul>
+<li><p>’_nc’: no constant value</p></li>
+<li><p>’_x0’: fixed to zero</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>The default is ‘linear’.</p>
+</p></li>
+<li><p><strong>guess</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – First guess for fitting. The default is dict(a=0.01, b=0.1).</p></li>
+<li><p><strong>xl</strong> (<em>str</em><em>, </em><em>optional</em>) – Variable name for abscissa. The default is r’$X$’.</p></li>
+<li><p><strong>yl</strong> (<em>str</em><em>, </em><em>optional</em>) – Variable name for ordinate. The default is r’$Y$’.</p></li>
+<li><p><strong>t_form</strong> (<em>str</em><em>, </em><em>optional</em>) – String of dictionary with variables and format strings.
+The default is ‘{a:.3e},{b:.3e}’.</p></li>
+<li><p><strong>xt</strong> (<em>str</em><em>, </em><em>optional</em>) – Variable string for description. The default is None.</p></li>
+<li><p><strong>yt</strong> (<em>str</em><em>, </em><em>optional</em>) – Variable string for description. The default is None.</p></li>
+<li><p><strong>max_nfev</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of evaluations. The default is 1000.</p></li>
+<li><p><strong>nan_policy</strong> (<em>string</em><em>, </em><em>optional</em>) – NaN policy (omit, raise or propagate). The default is ‘omit’.</p></li>
+<li><p><strong>outtype</strong> (<em>string</em><em>, </em><em>optional</em>) – Type for output (dictionary or pd.Series). The default is ‘Series’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – Function type not implemented.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>out</strong> – Output data.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd:series or dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.fitting.regfitret_restring_func">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.fitting.</span></span><span class="sig-name descname"><span class="pre">regfitret_restring_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'$X$'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'$Y$'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'{a:.3e},{b:.3e}'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rquad_add</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rq_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'{:.3f}'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/fitting.html#regfitret_restring_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.fitting.regfitret_restring_func" title="Permalink to this definition"></a></dt>
+<dd><p>Rebuild equation string for regfit result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reg_res</strong> (<em>pd.Series</em>) – Result of regfitret.</p></li>
+<li><p><strong>xl</strong> (<em>str</em><em>, </em><em>optional</em>) – Variable name for abscissa. The default is r’$X$’.</p></li>
+<li><p><strong>yl</strong> (<em>str</em><em>, </em><em>optional</em>) – Variable name for ordinate. The default is r’$Y$’.</p></li>
+<li><p><strong>t_form</strong> (<em>str</em><em>, </em><em>optional</em>) – String of dictionary with variables and format strings.
+The default is ‘{a:.3e},{b:.3e}’.</p></li>
+<li><p><strong>rquad_add</strong> (<em>bool</em><em>, </em><em>optional</em>) – Switch for adding coefficent of determination. The default is True.</p></li>
+<li><p><strong>rq_form</strong> (<em>string</em><em>, </em><em>optional</em>) – Format string for coefficent of determination. The default is ‘{:.3f}’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – Function type not implemented.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>out</strong> – Equation string.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.common.fitting.strain_linfit">
@@ -3151,6 +3323,37 @@ The default is {‘xycoords’:’data’, ‘textcoords’:’offset points’,
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.plotting.plt_ax_regfit">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.plotting.</span></span><span class="sig-name descname"><span class="pre">plt_ax_regfit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lkws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/plotting.html#plt_ax_regfit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.plotting.plt_ax_regfit" title="Permalink to this definition"></a></dt>
+<dd><p>Plots a regression (done by fitting.regfitret) and data (optional).
+Optional legend entry with fitting function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pdo</strong> (<em>pd.DataFrame</em>) – Input data.</p></li>
+<li><p><strong>x</strong> (<em>str</em>) – Column name for abscissa data.</p></li>
+<li><p><strong>y</strong> (<em>str</em><em> or </em><em>None</em>) – Column name for ordinate data or none, if plt_d is False.
+The default is None.</p></li>
+<li><p><strong>fit</strong> (<em>pd.DataFrame</em><em> (</em><em>result</em><em> of </em><em>fitting.regfitret</em><em>)</em><em>, </em><em>optional</em>) – Least square regression fit results. The default is {}.</p></li>
+<li><p><strong>ax</strong> (<em>plt.axis</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Axis to plote result. The default is None.</p></li>
+<li><p><strong>plt_d</strong> (<em>bool</em><em>, </em><em>optional</em>) – Switch for plotting data. The default is False.</p></li>
+<li><p><strong>label_d</strong> (<em>string</em><em>, </em><em>optional</em>) – Label for data plot. The default is ‘Data’.</p></li>
+<li><p><strong>label_f</strong> (<em>bool</em><em>, </em><em>optional</em>) – Label for function plot. The default is False.</p></li>
+<li><p><strong>xlabel</strong> (<em>string</em><em>, </em><em>optional</em>) – label for x-axis. The default is None.</p></li>
+<li><p><strong>ylabel</strong> (<em>string</em><em>, </em><em>optional</em>) – Label for y-axis. The default is None.</p></li>
+<li><p><strong>title</strong> (<em>string</em><em>, </em><em>optional</em>) – Axis title. The default is None.</p></li>
+<li><p><strong>skws</strong> (<em>dict</em><em>, </em><em>optional</em>) – Dictionary for scatter plot (data). The default is {}.</p></li>
+<li><p><strong>lkws</strong> (<em>dict</em><em>, </em><em>optional</em>) – Dictionary for lineplot (function). The default is {}.</p></li>
+<li><p><strong>legend</strong> (<em>bool</em><em>, </em><em>optional</em>) – Switch for showing legend. The default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.common.plotting.plt_handle_suffix">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.common.plotting.</span></span><span class="sig-name descname"><span class="pre">plt_handle_suffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'foo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['pdf',</span> <span class="pre">'png']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">close</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/plotting.html#plt_handle_suffix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.plotting.plt_handle_suffix" title="Permalink to this definition"></a></dt>
 <dd><p>Handler for end of plotting procedure.</p>
@@ -3907,13 +4110,66 @@ The default is {‘confidence_interval’: [‘CImin’,’CImax’]}.</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="exmecheva.common.stat_ext.reg_stats_multi">
+<span class="sig-prename descclassname"><span class="pre">exmecheva.common.stat_ext.</span></span><span class="sig-name descname"><span class="pre">reg_stats_multi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lRd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_ren</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_sym</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'a':</span> <span class="pre">0.01,</span> <span class="pre">'b':</span> <span class="pre">0.1}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'{a:.3e},{b:.3e}'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_nfev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nan_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'omit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">addind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/stat_ext.html#reg_stats_multi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.stat_ext.reg_stats_multi" title="Permalink to this definition"></a></dt>
+<dd><p>Performs multiple regression fits (according fitting.regfitret) on given
+data. Returns a DataFrame and textual output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>pd.DataFrame</em>) – Input data.</p></li>
+<li><p><strong>lRd</strong> (<em>list</em>) – List of compared variables (must be column names in df).
+Example [[‘Density_app’,’Age’]]</p></li>
+<li><p><strong>var_ren</strong> (<em>dict</em><em>, </em><em>optional</em>) – Renamer for given variables (description).
+Example dict(‘Density_app’=’apparent density’,’Age’=’donor age’)
+The default is {}.</p></li>
+<li><p><strong>var_sym</strong> (<em>dict</em><em>, </em><em>optional</em>) – Renamer for given variables (symbols).
+Example dict(‘Density_app’=’rho_{app}’,’Age’=’age’)
+The default is {}.</p></li>
+<li><p><strong>ftype</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Type and name of function to adjust.
+Implemented are:</p>
+<blockquote>
+<div><ul>
+<li><p>’linear’: linear and constant function (see func_lin)</p></li>
+<li><p>’power’: power and constant function (see func_pow)</p></li>
+<li><p>’exponential’: exponantial and constant function (see func_exp)</p></li>
+<li><dl class="simple">
+<dt>additional endings:</dt><dd><ul>
+<li><p>’_nc’: no constant value</p></li>
+<li><p>’_x0’: fixed to zero</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>The default is ‘linear’.</p>
+</p></li>
+<li><p><strong>guess</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Dictionary for first guess. The default is dict(a=0.01, b=0.1).</p></li>
+<li><p><strong>t_form</strong> (<em>str</em><em>, </em><em>optional</em>) – String of dictionary with variables and format strings.
+The default is ‘{a:.3e},{b:.3e}’.</p></li>
+<li><p><strong>max_nfev</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of evaluations. The default is 1000.</p></li>
+<li><p><strong>nan_policy</strong> (<em>string</em><em>, </em><em>optional</em>) – NaN policy (omit, raise or propagate). The default is ‘omit’.</p></li>
+<li><p><strong>ind</strong> (<em>TYPE</em><em>, </em><em>optional</em>) – Indentation for text output. The default is 3.</p></li>
+<li><p><strong>addind</strong> (<em>int</em><em>, </em><em>optional</em>) – Additional indentation for text output. The default is 3.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>reg_df</strong> (<em>pd.Dataframe</em>) – Results of regressions.</p></li>
+<li><p><strong>txt</strong> (<em>str</em>) – Textual output.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="exmecheva.common.stat_ext.relative_deviation">
 <span class="sig-prename descclassname"><span class="pre">exmecheva.common.stat_ext.</span></span><span class="sig-name descname"><span class="pre">relative_deviation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exmecheva/common/stat_ext.html#relative_deviation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exmecheva.common.stat_ext.relative_deviation" title="Permalink to this definition"></a></dt>
-<dd><p>Calculates the relative deviation from second argument to first.
-.. math:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">RD_</span><span class="p">{</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">}</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="n">a</span>
-</pre></div>
-</div>
+<dd><p>Calculates the relative deviation from second argument to first.</p>
+<div class="math notranslate nohighlight">
+\[RD_{b-a} = (b-a)/a\]</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

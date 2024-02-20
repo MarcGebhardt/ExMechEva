@@ -48,8 +48,8 @@ def main():
     option = 'pack-all'
     
     #PF:
-    ser='PT5'
-    des='sr11'
+    ser='PT7'
+    des='sr02'
     
     # No Evaluation for list of Assessment Codes
     no_stats_fc = ['A01.1','A01.2','A01.3', 'A02.3',
@@ -92,7 +92,7 @@ def main():
     combpaths['out']  = protpaths['path_main']+protpaths['path_eva1']+protpaths['path_eva2']
         
     # Additional path for hdf-packing 
-    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240118/ATT/B3-B7_ATT-Summary"
+    out_path="D:/Gebhardt/Projekte/001_PARAFEMM/Auswertung/240219/ATT/B3-B7_ATT-Summary"
     if option == 'pack-all': out_path+='-all'  
 
     # Start evaluation by selector function

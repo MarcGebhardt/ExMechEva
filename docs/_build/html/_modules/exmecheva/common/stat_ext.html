@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>exmecheva.common.stat_ext &mdash; ExMechEva 0.1.0 documentation</title>
+  <title>exmecheva.common.stat_ext &mdash; ExMechEva v0.1.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
 
@@ -89,6 +89,7 @@
 
 <span class="kn">from</span> <span class="nn">.helper</span> <span class="kn">import</span> <span class="n">type_str_return</span>
 <span class="kn">from</span> <span class="nn">.pd_ext</span> <span class="kn">import</span> <span class="p">(</span><span class="n">pd_outsort</span><span class="p">,</span> <span class="n">deal_dupl_index</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.fitting</span> <span class="kn">import</span> <span class="n">regfitret</span>
 <span class="kn">from</span> <span class="nn">.output</span> <span class="kn">import</span> <span class="n">str_indent</span>
 
 <span class="c1">#%% statistical outliers</span>
@@ -565,6 +566,7 @@
 <div class="viewcode-block" id="relative_deviation"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.relative_deviation">[docs]</a><span class="k">def</span> <span class="nf">relative_deviation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates the relative deviation from second argument to first.</span>
+<span class="sd">    </span>
 <span class="sd">    .. math::</span>
 <span class="sd">        RD_{b-a} = (b-a)/a</span>
 
@@ -691,6 +693,7 @@
         <span class="n">pda</span> <span class="o">=</span> <span class="n">pda</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">af_ren</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">pda</span></div>
 
+<span class="c1">#%% tests (distribution, variance, hypothesis,...)</span>
 <div class="viewcode-block" id="Dist_test"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.Dist_test">[docs]</a><span class="k">def</span> <span class="nf">Dist_test</span><span class="p">(</span><span class="n">pds</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">mcomp</span><span class="o">=</span><span class="s1">&#39;Shapiro&#39;</span><span class="p">,</span> <span class="n">mkws</span><span class="o">=</span><span class="p">{},</span>
               <span class="n">skipna</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">add_out</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1722,6 +1725,81 @@
     <span class="n">tmpf</span><span class="o">=</span><span class="s1">&#39;{&#39;</span><span class="o">+</span><span class="s1">&#39;:.&#39;</span><span class="o">+</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">corr_round</span><span class="p">)</span> <span class="o">+</span><span class="s1">&#39;f}&#39;</span>
     <span class="n">df_c2</span> <span class="o">=</span> <span class="n">df_c</span><span class="o">.</span><span class="n">applymap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">tmpf</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="n">p</span>
     <span class="k">return</span> <span class="n">df_c</span><span class="p">,</span> <span class="n">df_c2</span></div>
+
+<div class="viewcode-block" id="reg_stats_multi"><a class="viewcode-back" href="../../../exmecheva.common.html#exmecheva.common.stat_ext.reg_stats_multi">[docs]</a><span class="k">def</span> <span class="nf">reg_stats_multi</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">lRd</span><span class="p">,</span> <span class="n">var_ren</span><span class="o">=</span><span class="p">{},</span> <span class="n">var_sym</span><span class="o">=</span><span class="p">{},</span> <span class="n">ftype</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+                    <span class="n">guess</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span> <span class="n">t_form</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{a:.3e}</span><span class="s1">,</span><span class="si">{b:.3e}</span><span class="s1">&#39;</span><span class="p">,</span> 
+       			  <span class="n">max_nfev</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;omit&#39;</span><span class="p">,</span>
+                    <span class="n">ind</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">addind</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs multiple regression fits (according fitting.regfitret) on given </span>
+<span class="sd">    data. Returns a DataFrame and textual output.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pd.DataFrame</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    lRd : list</span>
+<span class="sd">        List of compared variables (must be column names in df).</span>
+<span class="sd">        Example [[&#39;Density_app&#39;,&#39;Age&#39;]]</span>
+<span class="sd">    var_ren : dict, optional</span>
+<span class="sd">        Renamer for given variables (description). </span>
+<span class="sd">        Example dict(&#39;Density_app&#39;=&#39;apparent density&#39;,&#39;Age&#39;=&#39;donor age&#39;)</span>
+<span class="sd">        The default is {}.</span>
+<span class="sd">    var_sym : dict, optional</span>
+<span class="sd">        Renamer for given variables (symbols).</span>
+<span class="sd">        Example dict(&#39;Density_app&#39;=&#39;rho_{app}&#39;,&#39;Age&#39;=&#39;age&#39;)</span>
+<span class="sd">        The default is {}.</span>
+<span class="sd">    ftype : str, optional</span>
+<span class="sd">        Type and name of function to adjust. </span>
+<span class="sd">        Implemented are:</span>
+<span class="sd">            - &#39;linear&#39;: linear and constant function (see func_lin)</span>
+<span class="sd">            - &#39;power&#39;: power and constant function (see func_pow)</span>
+<span class="sd">            - &#39;exponential&#39;: exponantial and constant function (see func_exp)</span>
+<span class="sd">            - additional endings:</span>
+<span class="sd">                - &#39;_nc&#39;: no constant value</span>
+<span class="sd">                - &#39;_x0&#39;: fixed to zero</span>
+<span class="sd">        The default is &#39;linear&#39;.</span>
+<span class="sd">    guess : dictionary, optional</span>
+<span class="sd">        Dictionary for first guess. The default is dict(a=0.01, b=0.1).</span>
+<span class="sd">    t_form : str, optional</span>
+<span class="sd">        String of dictionary with variables and format strings. </span>
+<span class="sd">        The default is &#39;{a:.3e},{b:.3e}&#39;.</span>
+<span class="sd">    max_nfev : int, optional</span>
+<span class="sd">        Maximum number of evaluations. The default is 1000.</span>
+<span class="sd">    nan_policy : string, optional</span>
+<span class="sd">        NaN policy (omit, raise or propagate). The default is &#39;omit&#39;.</span>
+<span class="sd">    ind : TYPE, optional</span>
+<span class="sd">        Indentation for text output. The default is 3.</span>
+<span class="sd">    addind : int, optional</span>
+<span class="sd">        Additional indentation for text output. The default is 3.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    reg_df : pd.Dataframe</span>
+<span class="sd">        Results of regressions.</span>
+<span class="sd">    txt : str</span>
+<span class="sd">        Textual output.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">reg_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">lRd</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;vary&#39;</span><span class="p">,</span><span class="s1">&#39;varx&#39;</span><span class="p">])</span>
+    <span class="n">reg_df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">reg_df</span><span class="p">[</span><span class="s1">&#39;vary&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;-&#39;</span><span class="o">+</span><span class="n">reg_df</span><span class="p">[</span><span class="s1">&#39;varx&#39;</span><span class="p">]</span>
+    <span class="n">reg_df</span><span class="p">[[</span><span class="s1">&#39;varyren&#39;</span><span class="p">,</span><span class="s1">&#39;varxren&#39;</span><span class="p">]]</span><span class="o">=</span><span class="n">reg_df</span><span class="p">[[</span><span class="s1">&#39;vary&#39;</span><span class="p">,</span><span class="s1">&#39;varx&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">var_ren</span><span class="p">)</span>
+    <span class="n">reg_df</span><span class="p">[[</span><span class="s1">&#39;varysym&#39;</span><span class="p">,</span><span class="s1">&#39;varxsym&#39;</span><span class="p">]]</span><span class="o">=</span><span class="n">reg_df</span><span class="p">[[</span><span class="s1">&#39;vary&#39;</span><span class="p">,</span><span class="s1">&#39;varx&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">var_sym</span><span class="p">)</span>
+    <span class="n">tmp</span><span class="o">=</span><span class="n">reg_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">regfitret</span><span class="p">(</span>
+            <span class="n">pdo</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;varx&#39;</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;vary&#39;</span><span class="p">],</span> 
+            <span class="n">xl</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;varxsym&#39;</span><span class="p">],</span> <span class="n">yl</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;varysym&#39;</span><span class="p">],</span> <span class="n">xt</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;varxren&#39;</span><span class="p">],</span> <span class="n">yt</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;varyren&#39;</span><span class="p">],</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">ftype</span><span class="p">,</span> <span class="n">guess</span><span class="o">=</span><span class="n">guess</span><span class="p">,</span> <span class="n">t_form</span><span class="o">=</span><span class="n">t_form</span><span class="p">,</span> 
+            <span class="n">max_nfev</span><span class="o">=</span><span class="n">max_nfev</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="n">nan_policy</span><span class="p">,</span> <span class="n">outtype</span><span class="o">=</span><span class="s1">&#39;Series&#39;</span>
+            <span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+    <span class="n">reg_df</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">reg_df</span><span class="p">,</span><span class="n">tmp</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">txt</span><span class="o">=</span><span class="n">reg_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">str_indent</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;Description&#39;</span><span class="p">],</span> <span class="n">ind</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">str_indent</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;Exp_txt&#39;</span><span class="p">],</span> <span class="n">ind</span><span class="o">+</span><span class="n">addind</span><span class="p">)</span> 
+            <span class="o">+</span> <span class="n">str_indent</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;Rep_txt&#39;</span><span class="p">],</span> <span class="n">ind</span><span class="o">+</span><span class="n">addind</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">reg_df</span><span class="p">,</span> <span class="n">txt</span></div>
 </pre></div>
 
            </div>
