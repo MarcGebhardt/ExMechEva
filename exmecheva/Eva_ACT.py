@@ -927,6 +927,27 @@ def ACT_single(prot_ser, paths, mfile_add='',
     YM_pref_con=E_lsq['E_lsq_R_A0Al']
     if _opts['OPT_Determination_SecHard']: YM_pref_conS=E_lsq['E_lsq_S_A0Al']
     
+    if _opts['OPT_DIC']:
+        if loc_Yd_tmp.startswith('E_lsq'):
+            YM_pref_opt=E_lsq[loc_Yd_tmp]
+        elif loc_Yd_tmp.startswith('E_inc_R'):
+            YM_pref_opt=emec.fitting.Refit_YM_vals(
+                m_df=messu, 
+                YM = E_inc_R_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
+                VIP=VIP_dicu,
+                n_strain=dic_used_Strain, n_stress='Stress',
+                n_loBo=['F3'], n_upBo=['F4']
+                )
+        elif loc_Yd_tmp.startswith('E_inc_F'):
+            YM_pref_opt=emec.fitting.Refit_YM_vals(
+                m_df=messu, 
+                YM = E_inc_F_comp[loc_Yd_tmp.split('_')[-1]]['meanwoso'], 
+                VIP=VIP_dicu,
+                n_strain=dic_used_Strain, n_stress='Stress',
+                n_loBo=['F1'], n_upBo=['F2']
+                )
+        else:
+            raise NotImplementedError('Prefered YM-method not selectable!')
     # --------------------------------------------------------------------------
     #%%% 6.5 Determine yield point
     log_custom("\n "+"-"*100, **log_scopt)
@@ -955,6 +976,24 @@ def ACT_single(prot_ser, paths, mfile_add='',
         )
     VIP_messu, yield_df_con, txt = tmp
     log_custom(log_cind(txt,3),  **log_scoptf)
+    if _opts['OPT_DIC']:
+        log_custom("\n  Determination of yield strain-optical:",**log_scoptf)
+        tmp=emec.mc_yield.Yield_redet2_Multi(
+            m_df=messu, VIP=VIP_dicu,
+            strain_osd=strain_osd, strain_osdf=strain_osdf,
+            n_strain=dic_used_Strain, n_stress='Stress',
+            n_loBo=['F3'], n_upBo=['U'], n_loBo_int=['F3'],
+            YM     = YM_pref_opt['E'],
+            YM_abs = YM_pref_opt['E_abs'],
+            use_rd =True,
+            rise_det=[
+                _opts['OPT_Rise_Smoothing'][0],
+                _opts['OPT_Rise_Smoothing'][1]
+                ],  
+            ywhere='n'
+            )
+        VIP_dicu, yield_df_opt, txt = tmp
+        log_custom(log_cind(txt,3),**log_scoptf)
     if _opts['OPT_Determination_SecHard']:
         log_custom("\n  Determination of yield strain-second hardening:",
                    **log_scoptf)
@@ -975,6 +1014,72 @@ def ACT_single(prot_ser, paths, mfile_add='',
             )
         VIP_messu, yield_df_conS, txt = tmp
         log_custom(log_cind(txt,3), **log_scoptf)
+        
+    fig, (ax1,ax2) = plt.subplots(nrows=2, ncols=1, 
+                                  sharex=False, sharey=False, 
+                                  figsize = np.multiply(figsize,[1,2]))
+    fig.suptitle('%s - Stress vs. strain curve - yield point determination'%plt_name)
+    ax1.set_title('Conventional strain')
+    ax1.set_xlabel('Strain / -')
+    ax1.set_ylabel('Stress / MPa')
+    ax1.plot(messu.loc[:VIP_messu['B']]['Strain'], 
+             messu.loc[:VIP_messu['B']]['Stress'], 'r--',label='con')
+    tmp=ax1.get_xlim(),ax1.get_ylim()
+    for i in strain_osd.keys():
+        ax1.plot(emec.fitting.strain_linfit(
+            [0,1000],
+            YM_pref_con['E'], 
+            YM_pref_con['E_abs'], 
+            strain_offset=strain_osd[i]
+            ),
+            [0,1000],
+            '-',
+            label='$E_{off-%.3fp}$'%(strain_osd[i]*100)
+            )
+    ax1.set_xlim(tmp[0])
+    ax1.set_ylim(tmp[1])
+    a, b=messu.Strain[VIP_messu[:'B']],messu.Stress[VIP_messu[:'B']]
+    j=np.int64(-1)
+    ax1.plot(a, b, 'bx')
+    for x in VIP_messu[:'B'].index:
+        j+=1
+        if j%2: c=(6,-6)
+        else:   c=(-6,6)
+        ax1.annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), xycoords='data',
+                      xytext=c, ha="center", va="center", textcoords='offset points')
+    ax1.legend()
+    ax2.set_title('Optical strain')
+    if _opts['OPT_DIC']:
+        ax2.set_xlabel('Strain / -')
+        ax2.set_ylabel('Stress / MPa')
+        ax2.plot(messu.loc[:VIP_dicu['B']][dic_used_Strain], 
+                 messu.loc[:VIP_dicu['B']]['Stress'], 
+                 'r--',label='opt')
+        tmp=ax2.get_xlim(),ax1.get_ylim()
+        for i in strain_osd.keys():
+            ax2.plot(emec.fitting.strain_linfit(
+                [0,1000],
+                YM_pref_opt['E'], 
+                YM_pref_opt['E_abs'], 
+                strain_offset=strain_osd[i]
+                ),
+                [0,1000],
+                '-',
+                label='$E_{off-%.3fp}$'%(strain_osd[i]*100)
+                )
+        ax2.set_xlim(tmp[0])
+        ax2.set_ylim(tmp[1])
+        a, b=messu[dic_used_Strain][VIP_dicu[:'B']],messu.Stress[VIP_dicu[:'B']]
+        j=np.int64(-1)
+        ax2.plot(a, b, 'bx')
+        for x in VIP_dicu[:'B'].index:
+            j+=1
+            if j%2: c=(6,-6)
+            else:   c=(-6,6)
+            ax2.annotate('%s' % x, xy=(a.iloc[j],b.iloc[j]), xycoords='data',
+                          xytext=c, ha="center", va="center", textcoords='offset points')
+        ax2.legend()
+    plt_hsuf(fig,path=out_full+"-sigeps_yielddet",**plt_scopt)
 
     #%%% 6.6 Determine final curve
     log_custom("\n "+"-"*100, **log_scopt)
