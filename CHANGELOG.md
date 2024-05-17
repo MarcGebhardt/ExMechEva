@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Plot of yield point determination added for ACT (like ATT and TBT)
+- Citation in README.md changed to Preprint version (bioRxiv)
 
 ## [v0.1.2] – 2024-02-20
 

@@ -57,11 +57,12 @@ If you use this framework, please cite this paper:
 ```
 @article{GebhardtKurz_2024_ASCTE,
   author          = {Marc Gebhardt, Sascha Kurz, Fanny Grundmann, Thomas Klink, Volker Slowik, Christoph-Eckhard Heyde, Hanno Steinke},
-  date            = {planned 2024},
-  journaltitle    = {Plos One},
-  title           = {Approach to standardized material characterization of the human lumbopelvic system – testing and evaluation},
-  doi             = {...},
-  issn            = {1932-6203},
+  year            = {2024},
+  title           = {Approach to standardized material characterization of the human lumbopelvic system – Testing and evaluation},
+  elocation-id    = {2024.03.24.586492},
+  journal         = {bioRxiv},
+  publisher       = {Cold Spring Harbor Laboratory},
+  doi             = {10.1101/2024.03.24.586492},
   language        = {english},
 }
 ```
